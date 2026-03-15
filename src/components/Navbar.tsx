@@ -63,7 +63,7 @@ export default function Navbar() {
 
   return (
     <nav className="flex items-center justify-between px-10 py-4 bg-background/50 border-b border-border sticky top-0 z-50 backdrop-blur-md">
-      <Link href={user ? "/dashboard" : "/"} className="text-2xl font-black text-primary tracking-tighter">
+      <Link href="/" className="text-2xl font-black text-primary tracking-tighter">
         CBGPU
       </Link>
       
