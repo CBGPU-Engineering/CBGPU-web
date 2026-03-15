@@ -72,9 +72,9 @@ export default function Signup() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID - e.g. 2309)</label>
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID)</label>
           <Input 
-            placeholder="2309" 
+            placeholder="Student ID" 
             className="bg-background border-input text-foreground font-bold"
             onChange={(e: any) => setStudentId(e.target.value)} 
             required 

@@ -87,7 +87,7 @@ export default function Profile() {
               value={studentId} 
               onChange={(e: any) => setStudentId(e.target.value)} 
               className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
-              placeholder="e.g. 2309"
+              placeholder="Student ID"
             />
           </div>
         </div>
