@@ -111,5 +111,5 @@ export default function Signup() {
         Already have an account? <Link href="/auth/login" className="text-primary font-bold hover:underline ml-1">Log In</Link>
       </p>
     </div>
-  );
+    );
 }
