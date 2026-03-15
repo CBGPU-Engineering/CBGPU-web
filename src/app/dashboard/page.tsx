@@ -39,8 +39,12 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm("Are you sure you want to cancel this reservation?")) return;
+  const handleCancel = async (id: string, status: string) => {
+    const message = status === 'approved' 
+      ? "This reservation is already approved. Are you sure you want to cancel it?" 
+      : "Are you sure you want to cancel this reservation?";
+      
+    if (!confirm(message)) return;
 
     try {
       const { error } = await supabase
@@ -142,16 +146,16 @@ export default function Dashboard() {
                     <p className="text-xs md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
                       {start.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
                       <span className="mx-2 opacity-30">→</span>
-                      {end.toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                      {end.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3 w-full md:w-auto">
-                    {isPending && (
+                    {(isPending || isApproved) && (
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => handleCancel(res.id)}
+                        onClick={() => handleCancel(res.id, res.status)}
                         className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                       >
                         <Trash2 className="size-4" />
