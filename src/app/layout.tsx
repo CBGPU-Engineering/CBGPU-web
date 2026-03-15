@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/lib/useAuth';
 import { Toaster } from 'sonner';
 import { Metadata } from 'next';
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: 'CBGPU | GPU Rental System',
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </footer>
             <Toaster position="top-center" richColors />
+            <Analytics />
           </AuthProvider>
         </ThemeProvider>
       </body>
