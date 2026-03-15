@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { format, isSameDay, parseISO, addDays, startOfDay } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 export default function GPUCard({ id, name }: { id: number; name: string }) {
   const [startTime, setStartTime] = useState('');
@@ -95,6 +97,13 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
     }
   };
 
+  // 캘린더 형태를 위한 날짜 그룹화 로직
+  const next7Days = Array.from({ length: 7 }, (_, i) => addDays(startOfDay(new Date()), i));
+  
+  const getReservationsForDay = (day: Date) => {
+    return approvedReservations.filter(res => isSameDay(parseISO(res.start_time), day));
+  };
+
   return (
     <Card className="overflow-hidden border-border bg-card hover:border-primary transition-all group shadow-lg flex flex-col h-full">
       <CardHeader className="p-0 overflow-hidden relative">
@@ -107,10 +116,10 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
             <Button 
                 variant="secondary" 
                 size="xs" 
-                className="text-[10px] font-black h-6 bg-background/80 backdrop-blur-sm"
+                className="text-[10px] font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
                 onClick={() => setShowSchedule(!showSchedule)}
             >
-                {showSchedule ? "CLOSE SCHEDULE" : "VIEW SCHEDULE"}
+                {showSchedule ? "CLOSE SCHEDULE" : "VIEW CALENDAR"}
             </Button>
         </div>
       </CardHeader>
@@ -127,26 +136,38 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
         </div>
 
         {showSchedule ? (
-          <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-            <h4 className="text-[10px] font-black uppercase text-muted-foreground border-b pb-1">Current Reservations</h4>
-            <div className="max-h-40 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-              {approvedReservations.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground py-2 text-center">예약된 일정이 없습니다.</p>
-              ) : (
-                approvedReservations.map((res, i) => {
-                  const s = new Date(res.start_time);
-                  const e = new Date(res.end_time);
-                  return (
-                    <div key={i} className="text-[10px] p-2 bg-muted/50 rounded-lg border border-border/50">
-                      <div className="flex justify-between font-bold mb-1">
-                        <span className="text-primary">{s.toLocaleDateString()}</span>
-                        <span>{s.getHours()}:00 - {e.getHours()}:00</span>
-                      </div>
-                      <p className="text-muted-foreground truncate">{res.user_email}</p>
+          <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="max-h-60 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+              {next7Days.map((day, idx) => {
+                const dayReservations = getReservationsForDay(day);
+                return (
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                        {format(day, 'MMM d (eee)', { locale: ko })}
+                      </span>
+                      <div className="h-[1px] flex-grow bg-border/50"></div>
                     </div>
-                  );
-                })
-              )}
+                    {dayReservations.length === 0 ? (
+                      <p className="text-[10px] text-muted-foreground/50 italic pl-2">No reservations</p>
+                    ) : (
+                      dayReservations.map((res, i) => {
+                        const s = parseISO(res.start_time);
+                        const e = parseISO(res.end_time);
+                        return (
+                          <div key={i} className="text-[10px] p-2 bg-muted/30 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors">
+                            <div className="flex justify-between font-bold text-foreground">
+                              <span>{format(s, 'HH:mm')} - {format(e, 'HH:mm')}</span>
+                              <span className="text-[9px] text-muted-foreground uppercase opacity-70">Approved</span>
+                            </div>
+                            <p className="text-muted-foreground truncate mt-0.5">{res.user_email}</p>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         ) : (
