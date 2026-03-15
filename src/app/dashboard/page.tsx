@@ -11,10 +11,10 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const gpus = [
-    { id: 1, name: "RTX5000-1" },
-    { id: 2, name: "RTX5000-2" },
-    { id: 3, name: "RTX5000-3" },
-    { id: 4, name: "RTX5000-4" },
+    { id: 1, name: "RTX5000" },
+    { id: 2, name: "RTX5000" },
+    { id: 3, name: "RTX5000" },
+    { id: 4, name: "RTX5000" },
   ];
 
   useEffect(() => {
@@ -86,7 +86,7 @@ export default function Dashboard() {
                 <div key={res.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 border rounded-2xl bg-card shadow-sm hover:shadow-md transition-all duration-500">
                   <div className="space-y-1 mb-4 md:mb-0">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-primary">Node #{res.gpu_id}</span>
+                      <span className="text-lg font-bold text-primary italic tracking-tighter">GPU #{res.gpu_id}</span>
                       {isPending && <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">승인 대기중</span>}
                       {isRejected && <span className="bg-destructive/10 text-destructive text-[10px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">거절됨</span>}
                       {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">승인됨 (대기)</span>}

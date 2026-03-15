@@ -5,44 +5,56 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [studentId, setStudentId] = useState('');
   const [fullName, setFullName] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSignup = async (e: any) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+      });
 
-    if (error) return alert("회원가입 에러: " + error.message);
-
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          { 
-            id: data.user.id, 
-            student_id: studentId, 
-            full_name: fullName,
-            is_admin: false,
-            is_approved: false
-          }
-        ]);
-
-      if (profileError) {
-        console.error(profileError);
-        alert("프로필 생성 실패: " + profileError.message);
-      } else {
-        alert('회원가입 성공! 관리자 승인을 기다려주세요.');
-        router.push('/auth/login');
+      if (error) {
+        toast.error("회원가입 에러: " + error.message);
+        return;
       }
+
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { 
+              id: data.user.id, 
+              student_id: studentId, 
+              full_name: fullName,
+              is_admin: false,
+              is_approved: false
+            }
+          ]);
+
+        if (profileError) {
+          console.error(profileError);
+          toast.error("프로필 생성 실패: " + profileError.message);
+        } else {
+          toast.success('회원가입 성공! 관리자 승인을 기다려주세요.');
+          router.push('/auth/login');
+        }
+      }
+    } catch (err: any) {
+        toast.error("오류가 발생했습니다.");
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -57,7 +69,7 @@ export default function Signup() {
           required 
         />
         <Input 
-          placeholder="학번 (예: 2309)" 
+          placeholder="학번 (예: 30101)" 
           className="bg-background border-input text-foreground"
           onChange={(e: any) => setStudentId(e.target.value)} 
           required 
@@ -76,8 +88,11 @@ export default function Signup() {
           onChange={(e: any) => setPassword(e.target.value)} 
           required 
         />
-        <Button className="w-full bg-primary py-6 text-lg font-bold text-primary-foreground hover:bg-primary/90">
-          가입하기
+        <Button 
+          disabled={isSubmitting}
+          className="w-full bg-primary py-6 text-lg font-bold text-primary-foreground hover:bg-primary/90 transition-all active:scale-95"
+        >
+          {isSubmitting ? "가입 중..." : "가입하기"}
         </Button>
       </form>
       <p className="mt-4 text-center text-sm text-muted-foreground">

@@ -3,12 +3,37 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPage() {
   const [reservations, setReservations] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchReservations();
+    const checkAdmin = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single();
+
+      if (error || !data?.is_admin) {
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(true);
+        fetchReservations();
+      }
+    };
+
+    checkAdmin();
   }, []);
 
   async function fetchReservations() {
@@ -23,8 +48,12 @@ export default function AdminPage() {
       `)
       .order('created_at', { ascending: false });
     
-    if (error) console.error("Data Load Error:", error);
-    else setReservations(data || []);
+    if (error) {
+        console.error("Data Load Error:", error);
+        toast.error("데이터 로드 실패");
+    } else {
+        setReservations(data || []);
+    }
   }
 
   async function updateStatus(id: string, newStatus: 'approved' | 'rejected' | 'pending') {
@@ -33,8 +62,33 @@ export default function AdminPage() {
       .update({ status: newStatus })
       .eq('id', id);
 
-    if (error) alert("변경 실패: " + error.message);
-    else fetchReservations();
+    if (error) {
+        toast.error("변경 실패: " + error.message);
+    } else {
+        toast.success("상태가 변경되었습니다.");
+        fetchReservations();
+    }
+  }
+
+  if (isAdmin === null) {
+    return <div className="flex items-center justify-center min-h-[50vh]">권한 확인 중...</div>;
+  }
+
+  if (isAdmin === false) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+        <div className="bg-destructive/10 p-6 rounded-full">
+          <svg className="w-16 h-16 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-black tracking-tighter italic uppercase">Access Denied</h1>
+        <p className="text-muted-foreground text-lg max-w-md font-medium">
+          이 페이지에 접근할 권한이 없습니다. 어드민 계정으로 로그인해 주세요.
+        </p>
+        <Button onClick={() => router.push('/')} variant="outline" className="font-bold px-8">홈으로 돌아가기</Button>
+      </div>
+    );
   }
 
   return (
@@ -68,7 +122,7 @@ export default function AdminPage() {
                         <span className="text-xs text-muted-foreground">{res.profiles?.student_id || res.user_email}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">Unit #{res.gpu_id}</TableCell>
+                    <TableCell className="font-medium">GPU #{res.gpu_id}</TableCell>
                     <TableCell className="text-[11px] leading-tight">
                       {new Date(res.start_time).toLocaleString('ko-KR')} <br/>
                       ~ {new Date(res.end_time).toLocaleString('ko-KR')}

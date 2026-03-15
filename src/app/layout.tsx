@@ -1,6 +1,7 @@
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from 'sonner';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const currentYear = new Date().getFullYear();
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <p className="font-bold mb-1">CBGPU Computing Service</p>
             <p>© {currentYear} CBGPU. All rights reserved.</p>
           </footer>
+          <Toaster position="top-center" richColors />
         </ThemeProvider>
       </body>
     </html>

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 export default function GPUCard({ id, name }: { id: number; name: string }) {
   const [startTime, setStartTime] = useState('');
@@ -13,41 +14,62 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
 
   const handleRequest = async () => {
     if (!startTime || !endTime) {
-      return alert('시작 시간과 종료 시간을 모두 선택해 주세요.');
+      return toast.error('시작 시간과 종료 시간을 모두 선택해 주세요.');
     }
 
     const start = new Date(startTime);
     const end = new Date(endTime);
 
     if (start >= end) {
-      return alert('종료 시간은 시작 시간보다 늦어야 합니다.');
+      return toast.error('종료 시간은 시작 시간보다 늦어야 합니다.');
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return alert('로그인이 필요합니다.');
+    if (!user) return toast.error('로그인이 필요합니다.');
 
     setIsSubmitting(true);
 
-    const { error } = await supabase
-    .from('reservations')
-    .insert({ 
-        gpu_id: id, 
-        user_id: user.id, 
-        user_email: user.email,
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-        status: 'pending' 
-    });
+    try {
+      const { data: existingReservations, error: checkError } = await supabase
+        .from('reservations')
+        .select('id, start_time, end_time')
+        .eq('gpu_id', id)
+        .eq('status', 'approved');
 
-    setIsSubmitting(false);
+      if (checkError) throw checkError;
 
-    if (error) {
-      console.error('Reservation Error:', error);
-      alert('예약 실패: ' + error.message);
-    } else {
-      alert(`Unit #${id} 예약 신청이 완료되었습니다!`);
+      const hasConflict = existingReservations?.some((res) => {
+        const resStart = new Date(res.start_time);
+        const resEnd = new Date(res.end_time);
+        return (start < resEnd && end > resStart);
+      });
+
+      if (hasConflict) {
+        setIsSubmitting(false);
+        return toast.error('해당 시간에는 이미 확정된 예약이 있습니다. 다른 시간을 선택해 주세요.');
+      }
+
+      const { error } = await supabase
+        .from('reservations')
+        .insert({ 
+            gpu_id: id, 
+            user_id: user.id, 
+            user_email: user.email,
+            start_time: start.toISOString(),
+            end_time: end.toISOString(),
+            status: 'pending' 
+        });
+
+      if (error) throw error;
+
+      toast.success(`GPU #${id} 예약 신청이 완료되었습니다!`);
       setStartTime('');
       setEndTime('');
+    } catch (error: any) {
+      console.error('Reservation Error:', error);
+      toast.error('예약 실패: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,8 +85,8 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
       
       <CardContent className="p-5 space-y-4">
         <div>
-          <h3 className="text-xl font-bold">Unit #{id}</h3>
-          <p className="text-xs text-muted-foreground">{name}</p>
+          <h3 className="text-xl font-bold italic tracking-tighter">GPU #{id}</h3>
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">RTX5000</p>
         </div>
 
         <div className="space-y-3">

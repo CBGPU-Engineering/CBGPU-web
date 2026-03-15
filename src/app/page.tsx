@@ -13,10 +13,10 @@ export default function Dashboard() {
         setGpus(data);
       } else {
         setGpus([
-          { id: 1, name: "RTX5000-1" },
-          { id: 2, name: "RTX5000-2" },
-          { id: 3, name: "RTX5000-3" },
-          { id: 4, name: "RTX5000-4" },
+          { id: 1, name: "RTX5000" },
+          { id: 2, name: "RTX5000" },
+          { id: 3, name: "RTX5000" },
+          { id: 4, name: "RTX5000" },
         ]);
       }
     };
