@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 export default function Profile() {
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [studentId, setStudentId] = useState('');
   const [fullName, setFullName] = useState('');
 
@@ -14,43 +16,76 @@ export default function Profile() {
   }, []);
 
   async function getProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      let { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if (data) {
-        setStudentId(data.student_id);
-        setFullName(data.full_name);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        let { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (error) throw error;
+        if (data) {
+          setStudentId(data.student_id);
+          setFullName(data.full_name);
+        }
       }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function updateProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('profiles').update({
-      student_id: studentId,
-      full_name: fullName,
-    }).eq('id', user?.id);
+    setIsUpdating(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("로그인이 필요합니다.");
 
-    if (error) alert(error.message);
-    else alert('프로필이 업데이트되었습니다!');
+      const { error } = await supabase.from('profiles').update({
+        student_id: studentId,
+        full_name: fullName,
+      }).eq('id', user.id);
+
+      if (error) throw error;
+      toast.success('프로필이 업데이트되었습니다!');
+    } catch (error: any) {
+      toast.error(error.message || '업데이트 실패');
+    } finally {
+      setIsUpdating(false);
+    }
   }
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="animate-pulse text-muted-foreground font-bold">Loading Profile...</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-8 bg-card border border-border rounded-2xl">
-      <h2 className="text-2xl font-bold mb-6">프로필 수정</h2>
-      <div className="space-y-4">
-        <div>
-          <label className="text-sm text-muted-foreground">이름</label>
-          <Input value={fullName} onChange={(e: any) => setFullName(e.target.value)} />
+    <div className="max-w-md mx-auto mt-10 p-8 bg-card border border-border rounded-2xl shadow-xl transition-colors duration-500">
+      <h2 className="text-3xl font-black mb-8 italic uppercase tracking-tighter">My Profile</h2>
+      <div className="space-y-6">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름</label>
+          <Input 
+            value={fullName} 
+            onChange={(e: any) => setFullName(e.target.value)} 
+            className="bg-background border-input font-bold"
+          />
         </div>
-        <div>
-          <label className="text-sm text-muted-foreground">학번 (학년/반 변경 시 수정)</label>
-          <Input value={studentId} onChange={(e: any) => setStudentId(e.target.value)} />
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (학년/반 변경 시 수정)</label>
+          <Input 
+            value={studentId} 
+            onChange={(e: any) => setStudentId(e.target.value)} 
+            className="bg-background border-input font-bold"
+          />
         </div>
-        <Button onClick={updateProfile} className="w-full">정보 저장</Button>
+        <Button 
+          onClick={updateProfile} 
+          disabled={isUpdating}
+          className="w-full py-6 font-black text-lg transition-all active:scale-95"
+        >
+          {isUpdating ? "저장 중..." : "정보 저장"}
+        </Button>
       </div>
     </div>
   );
