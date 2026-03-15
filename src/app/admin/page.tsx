@@ -111,54 +111,65 @@ export default function AdminPage() {
                 ) : reservations.length === 0 ? (
                   <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">No pending requests found.</TableCell></TableRow>
                 ) : (
-                  reservations.map((res) => (
-                    <TableRow key={res.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
-                      <TableCell className="py-5 px-6">
-                        <div className="flex flex-col">
-                          <span className="font-black text-sm uppercase tracking-tight">{res.profiles?.full_name || 'Unknown'}</span>
-                          <span className="text-[10px] text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-black italic text-primary">GPU #{res.gpu_id}</TableCell>
-                      <TableCell className="text-[11px] font-bold leading-tight py-5">
-                        <div className="bg-muted/50 px-2 py-1 rounded inline-block">
-                          {new Date(res.start_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} <br/>
-                          <span className="opacity-30">to</span> {new Date(res.end_time).toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-5">
-                        {res.status === 'pending' && (
-                          <div className="flex items-center gap-1.5 text-amber-500 font-black text-[10px] uppercase bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-                            <Clock className="size-3" /> Pending
+                  reservations.map((res) => {
+                    const start = new Date(res.start_time);
+                    const end = new Date(res.end_time);
+                    const dateOptions: Intl.DateTimeFormatOptions = { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    };
+
+                    return (
+                      <TableRow key={res.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
+                        <TableCell className="py-5 px-6">
+                          <div className="flex flex-col">
+                            <span className="font-black text-sm uppercase tracking-tight">{res.profiles?.full_name || 'Unknown'}</span>
+                            <span className="text-[10px] text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
                           </div>
-                        )}
-                        {res.status === 'approved' && (
-                          <div className="flex items-center gap-1.5 text-emerald-500 font-black text-[10px] uppercase bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                            <CheckCircle2 className="size-3" /> Approved
+                        </TableCell>
+                        <TableCell className="font-black italic text-primary">GPU #{res.gpu_id}</TableCell>
+                        <TableCell className="text-[11px] font-bold leading-tight py-5">
+                          <div className="bg-muted/50 px-3 py-2 rounded-xl inline-block border border-border/50">
+                            {start.toLocaleString('ko-KR', dateOptions)} <br/>
+                            <span className="opacity-30 mx-1">to</span> {end.toLocaleString('ko-KR', dateOptions)}
                           </div>
-                        )}
-                        {res.status === 'rejected' && (
-                          <div className="flex items-center gap-1.5 text-red-500 font-black text-[10px] uppercase bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
-                            <XCircle className="size-3" /> Rejected
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right py-5 px-6">
-                        <div className="flex justify-end gap-2">
-                          {res.status === 'pending' ? (
-                            <>
-                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved')}>Approve</Button>
-                              <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
-                            </>
-                          ) : (
-                            <Button size="sm" variant="outline" className="font-black text-[10px] uppercase h-8 px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" onClick={() => updateStatus(res.id, 'pending')}>
-                              <Undo2 className="size-3" /> Reset
-                            </Button>
+                        </TableCell>
+                        <TableCell className="py-5">
+                          {res.status === 'pending' && (
+                            <div className="flex items-center gap-1.5 text-amber-500 font-black text-[10px] uppercase bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                              <Clock className="size-3" /> Pending
+                            </div>
                           )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                          {res.status === 'approved' && (
+                            <div className="flex items-center gap-1.5 text-emerald-500 font-black text-[10px] uppercase bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                              <CheckCircle2 className="size-3" /> Approved
+                            </div>
+                          )}
+                          {res.status === 'rejected' && (
+                            <div className="flex items-center gap-1.5 text-red-500 font-black text-[10px] uppercase bg-red-500/10 px-2.5 py-1 rounded-full border border-red-500/20">
+                              <XCircle className="size-3" /> Rejected
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right py-5 px-6">
+                          <div className="flex justify-end gap-2">
+                            {res.status === 'pending' ? (
+                              <>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved')}>Approve</Button>
+                                <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
+                              </>
+                            ) : (
+                              <Button size="sm" variant="outline" className="font-black text-[10px] uppercase h-8 px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" onClick={() => updateStatus(res.id, 'pending')}>
+                                <Undo2 className="size-3" /> Reset
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
