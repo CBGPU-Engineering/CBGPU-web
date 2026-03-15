@@ -2,6 +2,15 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from 'sonner';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'CBGPU | GPU Rental System',
+  description: 'Chungbuk Science High School GPU Rental System',
+  icons: {
+    icon: 'https://i.namu.wiki/i/qMgg10XRSaTorhAnQaV-bKbUWK_xIlq2socc7pVyw1SJmovke8gEWfeofFitiIJ1VBMngGy4o1NuAnjrOA0m1w.webp',
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const currentYear = new Date().getFullYear();
@@ -19,9 +28,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-grow container mx-auto px-6 py-10">
             {children}
           </main>
-          <footer className="border-t py-10 bg-muted/30 text-center text-sm text-muted-foreground">
-            <p className="font-bold mb-1">CBGPU Computing Service</p>
-            <p>© {currentYear} CBGPU. All rights reserved.</p>
+          <footer className="border-t py-12 bg-muted/20 text-center text-sm text-muted-foreground transition-all">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                <img 
+                  src="https://i.namu.wiki/i/qMgg10XRSaTorhAnQaV-bKbUWK_xIlq2socc7pVyw1SJmovke8gEWfeofFitiIJ1VBMngGy4o1NuAnjrOA0m1w.webp" 
+                  alt="School Logo" 
+                  className="w-6 h-6 object-contain"
+                />
+                <span className="font-black tracking-tighter italic">CBGPU</span>
+              </div>
+              <div className="space-y-1">
+                <p className="font-bold text-foreground/80">Chungbuk Science High School Computing Service</p>
+                <p className="text-[10px] uppercase tracking-widest opacity-60">© {currentYear} CBGPU. All rights reserved.</p>
+              </div>
+            </div>
           </footer>
           <Toaster position="top-center" richColors />
         </ThemeProvider>
