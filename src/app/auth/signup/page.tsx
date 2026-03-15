@@ -63,13 +63,13 @@ export default function Signup() {
       <h2 className="text-3xl font-bold mb-6 text-center text-foreground uppercase tracking-tighter italic">CBGPU 가입</h2>
       <form onSubmit={handleSignup} className="space-y-4">
         <Input 
-          placeholder="실명" 
+          placeholder="이름" 
           className="bg-background border-input text-foreground"
           onChange={(e: any) => setFullName(e.target.value)} 
           required 
         />
         <Input 
-          placeholder="학번 (예: 30101)" 
+          placeholder="학번 (예: 2309)"
           className="bg-background border-input text-foreground"
           onChange={(e: any) => setStudentId(e.target.value)} 
           required 
