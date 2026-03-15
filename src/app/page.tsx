@@ -36,7 +36,7 @@ export default function Dashboard() {
           <span className="text-primary">서버컴퓨터 GPU 대여 시스템</span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl font-medium">
-          고성능 GPU 자원을 효율적으로 관리하고 연구 및 학습을 위해 예약하세요.
+          AI 학습을 위한 충곽 유일의 서비스
         </p>
       </div>
 
