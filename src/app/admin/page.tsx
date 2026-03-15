@@ -123,7 +123,7 @@ export default function AdminPage() {
                       <TableCell className="text-[11px] font-bold leading-tight py-5">
                         <div className="bg-muted/50 px-2 py-1 rounded inline-block">
                           {new Date(res.start_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} <br/>
-                          <span className="opacity-30">to</span> {new Date(res.end_time).toLocaleString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                          <span className="opacity-30">to</span> {new Date(res.end_time).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </TableCell>
                       <TableCell className="py-5">
