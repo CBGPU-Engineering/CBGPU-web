@@ -37,7 +37,7 @@ export default function Profile() {
     setIsUpdating(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("로그인이 필요합니다.");
+      if (!user) throw new Error("Authentication required.");
 
       const { error } = await supabase.from('profiles').update({
         student_id: studentId,
@@ -45,9 +45,9 @@ export default function Profile() {
       }).eq('id', user.id);
 
       if (error) throw error;
-      toast.success('프로필이 업데이트되었습니다!');
+      toast.success('Profile updated successfully!');
     } catch (error: any) {
-      toast.error(error.message || '업데이트 실패');
+      toast.error(error.message || 'Update failed');
     } finally {
       setIsUpdating(false);
     }
@@ -55,7 +55,7 @@ export default function Profile() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <div className="animate-pulse text-muted-foreground font-bold">Loading Profile...</div>
+      <div className="animate-pulse text-muted-foreground font-black uppercase tracking-tighter">Loading Profile...</div>
     </div>
   );
 
@@ -64,7 +64,7 @@ export default function Profile() {
       <h2 className="text-3xl font-black mb-8 italic uppercase tracking-tighter">My Profile</h2>
       <div className="space-y-6">
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름</label>
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름 (Name)</label>
           <Input 
             value={fullName} 
             onChange={(e: any) => setFullName(e.target.value)} 
@@ -72,7 +72,7 @@ export default function Profile() {
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (학년/반 변경 시 수정)</label>
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID)</label>
           <Input 
             value={studentId} 
             onChange={(e: any) => setStudentId(e.target.value)} 
@@ -82,9 +82,9 @@ export default function Profile() {
         <Button 
           onClick={updateProfile} 
           disabled={isUpdating}
-          className="w-full py-6 font-black text-lg transition-all active:scale-95"
+          className="w-full py-6 font-black text-lg uppercase tracking-widest transition-all active:scale-95"
         >
-          {isUpdating ? "저장 중..." : "정보 저장"}
+          {isUpdating ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </div>

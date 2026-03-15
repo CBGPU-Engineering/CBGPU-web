@@ -32,12 +32,12 @@ export default function Dashboard() {
       <div className="mb-16 flex flex-col items-center text-center">
         <img 
           src="https://i.namu.wiki/i/qMgg10XRSaTorhAnQaV-bKbUWK_xIlq2socc7pVyw1SJmovke8gEWfeofFitiIJ1VBMngGy4o1NuAnjrOA0m1w.webp" 
-          alt="충북과학고등학교 로고" 
+          alt="School Logo" 
           className="w-32 h-32 mb-6 object-contain"
         />
         <h1 className="text-5xl font-black tracking-tighter italic uppercase mb-4">
           충북과학고등학교 <br/>
-          <span className="text-primary">서버컴퓨터 GPU 대여 시스템</span>
+          <span className="text-primary">GPU Rental System</span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl font-medium">
           AI 학습을 위한 충곽 유일의 서비스

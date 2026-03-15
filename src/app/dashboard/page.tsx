@@ -60,15 +60,15 @@ export default function Dashboard() {
 
       <section className="pb-20">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">내 예약 및 사용 현황</h2>
-          <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10">새로고침</Button>
+          <h2 className="text-2xl font-bold tracking-tight uppercase italic">My Reservations</h2>
+          <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10 font-bold uppercase text-[10px]">Refresh</Button>
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground animate-pulse">데이터를 불러오는 중...</p>
+          <p className="text-muted-foreground animate-pulse font-medium">Loading status...</p>
         ) : myReservations.length === 0 ? (
-          <div className="text-center py-16 border-2 border-dashed rounded-3xl text-muted-foreground transition-colors duration-500">
-            아직 예약 내역이 없습니다.
+          <div className="text-center py-16 border-2 border-dashed rounded-3xl text-muted-foreground transition-colors duration-500 font-medium">
+            No reservation history found.
           </div>
         ) : (
           <div className="grid gap-4">
@@ -89,11 +89,11 @@ export default function Dashboard() {
                   <div className="space-y-1 mb-4 md:mb-0">
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-primary italic tracking-tighter">GPU #{displayId}</span>
-                      {isPending && <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">승인 대기중</span>}
-                      {isRejected && <span className="bg-destructive/10 text-destructive text-[10px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">거절됨</span>}
-                      {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">승인됨 (대기)</span>}
-                      {isApproved && isStarted && !isEnded && <span className="bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">사용 가능</span>}
-                      {isApproved && isEnded && <span className="bg-slate-500/10 text-slate-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-slate-500/20">사용 종료</span>}
+                      {isPending && <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">Pending</span>}
+                      {isRejected && <span className="bg-destructive/10 text-destructive text-[10px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">Rejected</span>}
+                      {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">Approved (Wait)</span>}
+                      {isApproved && isStarted && !isEnded && <span className="bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">Active</span>}
+                      {isApproved && isEnded && <span className="bg-slate-500/10 text-slate-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-slate-500/20">Finished</span>}
                     </div>
                     <p className="text-sm text-muted-foreground font-medium">
                       {start.toLocaleString('ko-KR')} ~ {end.toLocaleTimeString('ko-KR')}
@@ -102,12 +102,12 @@ export default function Dashboard() {
 
                   <div className="flex items-center gap-3 w-full md:w-auto">
                     <Button 
-                      className="w-full md:w-auto font-bold px-8 transition-all duration-300"
+                      className="w-full md:w-auto font-black px-8 transition-all duration-300 uppercase italic text-[12px]"
                       variant={canStart ? "default" : "secondary"}
                       disabled={!canStart}
                       onClick={() => window.open(`ssh://user@server-node-${displayId}`, '_blank', 'noopener,noreferrer')}
                     >
-                      {isRejected ? "사용 불가" : isApproved && !isStarted ? "시작 시간 대기" : isApproved && isEnded ? "종료됨" : isApproved ? "사용 시작 (SSH)" : "승인 대기 중"}
+                      {isRejected ? "Unavailable" : isApproved && !isStarted ? "Waiting for Start" : isApproved && isEnded ? "Ended" : isApproved ? "Start Session (SSH)" : "Under Review"}
                     </Button>
                   </div>
                 </div>

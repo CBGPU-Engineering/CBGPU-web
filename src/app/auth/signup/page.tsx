@@ -26,7 +26,7 @@ export default function Signup() {
       });
 
       if (error) {
-        toast.error("회원가입 에러: " + error.message);
+        toast.error("Signup failed: " + error.message);
         return;
       }
 
@@ -45,14 +45,14 @@ export default function Signup() {
 
         if (profileError) {
           console.error(profileError);
-          toast.error("프로필 생성 실패: " + profileError.message);
+          toast.error("Profile creation failed: " + profileError.message);
         } else {
-          toast.success('회원가입 성공! 관리자 승인을 기다려주세요.');
+          toast.success('Sign up complete! Please wait for admin approval.');
           router.push('/auth/login');
         }
       }
     } catch (err: any) {
-        toast.error("오류가 발생했습니다.");
+        toast.error("An error occurred during signup.");
     } finally {
         setIsSubmitting(false);
     }
@@ -60,43 +60,55 @@ export default function Signup() {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-8 bg-card border border-border rounded-2xl shadow-xl transition-colors duration-500">
-      <h2 className="text-3xl font-bold mb-6 text-center text-foreground uppercase tracking-tighter italic">CBGPU 가입</h2>
+      <h2 className="text-3xl font-black mb-6 text-center text-foreground uppercase tracking-tighter italic">Join CBGPU</h2>
       <form onSubmit={handleSignup} className="space-y-4">
-        <Input 
-          placeholder="이름" 
-          className="bg-background border-input text-foreground"
-          onChange={(e: any) => setFullName(e.target.value)} 
-          required 
-        />
-        <Input 
-          placeholder="학번 (예: 2309)"
-          className="bg-background border-input text-foreground"
-          onChange={(e: any) => setStudentId(e.target.value)} 
-          required 
-        />
-        <Input 
-          type="email" 
-          placeholder="이메일" 
-          className="bg-background border-input text-foreground"
-          onChange={(e: any) => setEmail(e.target.value)} 
-          required 
-        />
-        <Input 
-          type="password" 
-          placeholder="비밀번호" 
-          className="bg-background border-input text-foreground"
-          onChange={(e: any) => setPassword(e.target.value)} 
-          required 
-        />
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름 (Name)</label>
+          <Input 
+            placeholder="Name" 
+            className="bg-background border-input text-foreground font-bold"
+            onChange={(e: any) => setFullName(e.target.value)} 
+            required 
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID - e.g. 2309)</label>
+          <Input 
+            placeholder="2309" 
+            className="bg-background border-input text-foreground font-bold"
+            onChange={(e: any) => setStudentId(e.target.value)} 
+            required 
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email</label>
+          <Input 
+            type="email" 
+            placeholder="your@email.com" 
+            className="bg-background border-input text-foreground font-bold"
+            onChange={(e: any) => setEmail(e.target.value)} 
+            required 
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Password</label>
+          <Input 
+            type="password" 
+            placeholder="••••••••" 
+            className="bg-background border-input text-foreground font-bold"
+            onChange={(e: any) => setPassword(e.target.value)} 
+            required 
+          />
+        </div>
         <Button 
           disabled={isSubmitting}
-          className="w-full bg-primary py-6 text-lg font-bold text-primary-foreground hover:bg-primary/90 transition-all active:scale-95"
+          className="w-full bg-primary py-6 text-lg font-black uppercase tracking-widest transition-all active:scale-95 mt-2"
         >
-          {isSubmitting ? "가입 중..." : "가입하기"}
+          {isSubmitting ? "Creating..." : "Sign Up"}
         </Button>
       </form>
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        이미 계정이 있으신가요? <Link href="/auth/login" className="text-primary font-bold hover:underline">로그인</Link>
+      <p className="mt-6 text-center text-sm text-muted-foreground font-medium">
+        Already have an account? <Link href="/auth/login" className="text-primary font-bold hover:underline ml-1">Log In</Link>
       </p>
     </div>
   );
