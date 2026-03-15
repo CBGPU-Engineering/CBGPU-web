@@ -57,7 +57,7 @@ export default function Signup() {
           required 
         />
         <Input 
-          placeholder="학번 (예: 30101)" 
+          placeholder="학번 (예: 2309)" 
           className="bg-background border-input text-foreground"
           onChange={(e: any) => setStudentId(e.target.value)} 
           required 
