@@ -4,47 +4,33 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useAuth } from '@/lib/useAuth';
+import { UserCircle2, Mail, Hash, Save, Loader2 } from 'lucide-react';
 
 export default function Profile() {
-  const [loading, setLoading] = useState(true);
+  const { user, profile, refreshProfile, isLoading: authLoading } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [studentId, setStudentId] = useState('');
   const [fullName, setFullName] = useState('');
 
   useEffect(() => {
-    getProfile();
-  }, []);
-
-  async function getProfile() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        let { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        if (error) throw error;
-        if (data) {
-          setStudentId(data.student_id);
-          setFullName(data.full_name);
-        }
-      }
-    } catch (err: any) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+    if (profile) {
+      setStudentId(profile.student_id || '');
+      setFullName(profile.full_name || '');
     }
-  }
+  }, [profile]);
 
   async function updateProfile() {
+    if (!user) return;
     setIsUpdating(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Authentication required.");
-
       const { error } = await supabase.from('profiles').update({
         student_id: studentId,
         full_name: fullName,
       }).eq('id', user.id);
 
       if (error) throw error;
+      await refreshProfile();
       toast.success('Profile updated successfully!');
     } catch (error: any) {
       toast.error(error.message || 'Update failed');
@@ -53,38 +39,66 @@ export default function Profile() {
     }
   }
 
-  if (loading) return (
+  if (authLoading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <div className="animate-pulse text-muted-foreground font-black uppercase tracking-tighter">Loading Profile...</div>
+      <div className="animate-pulse font-black uppercase tracking-widest text-muted-foreground">Loading Profile...</div>
+    </div>
+  );
+
+  if (!user) return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
+      <h2 className="text-2xl font-black uppercase italic">Access Denied</h2>
+      <p className="text-muted-foreground">Please sign in to view your profile.</p>
     </div>
   );
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-8 bg-card border border-border rounded-2xl shadow-xl transition-colors duration-500">
-      <h2 className="text-3xl font-black mb-8 italic uppercase tracking-tighter">My Profile</h2>
-      <div className="space-y-6">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름 (Name)</label>
-          <Input 
-            value={fullName} 
-            onChange={(e: any) => setFullName(e.target.value)} 
-            className="bg-background border-input font-bold"
-          />
+    <div className="max-w-2xl mx-auto mt-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row items-center gap-6 bg-card border-2 p-8 rounded-[2.5rem] shadow-2xl">
+        <div className="bg-primary/10 p-6 rounded-full ring-8 ring-primary/5">
+          <UserCircle2 className="w-16 h-16 text-primary" />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID)</label>
-          <Input 
-            value={studentId} 
-            onChange={(e: any) => setStudentId(e.target.value)} 
-            className="bg-background border-input font-bold"
-          />
+        <div className="text-center md:text-left space-y-1">
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter">{profile?.full_name || 'Anonymous User'}</h1>
+          <p className="text-muted-foreground font-bold flex items-center justify-center md:justify-start gap-2 uppercase text-xs tracking-widest opacity-60">
+            <Mail className="size-3" /> {user.email}
+          </p>
         </div>
+      </div>
+
+      <div className="bg-card border-2 p-10 rounded-[2.5rem] shadow-2xl space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <UserCircle2 className="size-3" /> 이름 (Name)
+            </label>
+            <Input 
+              value={fullName} 
+              onChange={(e: any) => setFullName(e.target.value)} 
+              className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+              placeholder="Your Name"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <Hash className="size-3" /> 학번 (Student ID)
+            </label>
+            <Input 
+              value={studentId} 
+              onChange={(e: any) => setStudentId(e.target.value)} 
+              className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+              placeholder="e.g. 2309"
+            />
+          </div>
+        </div>
+
         <Button 
           onClick={updateProfile} 
           disabled={isUpdating}
-          className="w-full py-6 font-black text-lg uppercase tracking-widest transition-all active:scale-95"
+          className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98] gap-3"
         >
-          {isUpdating ? "Saving..." : "Save Changes"}
+          {isUpdating ? <Loader2 className="size-6 animate-spin" /> : <Save className="size-6" />}
+          {isUpdating ? "Saving Changes..." : "Save Profile"}
         </Button>
       </div>
     </div>
