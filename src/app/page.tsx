@@ -10,13 +10,17 @@ export default function Dashboard() {
     const fetchGPUs = async () => {
       const { data } = await supabase.from('gpus').select('*').order('id');
       if (data && data.length > 0) {
-        setGpus(data);
+        const formattedData = data.map((gpu, index) => ({
+          ...gpu,
+          displayId: index + 1
+        }));
+        setGpus(formattedData);
       } else {
         setGpus([
-          { id: 1, name: "RTX5000" },
-          { id: 2, name: "RTX5000" },
-          { id: 3, name: "RTX5000" },
-          { id: 4, name: "RTX5000" },
+          { id: 1, displayId: 1, name: "RTX5000" },
+          { id: 2, displayId: 2, name: "RTX5000" },
+          { id: 3, displayId: 3, name: "RTX5000" },
+          { id: 4, displayId: 4, name: "RTX5000" },
         ]);
       }
     };
@@ -42,7 +46,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {gpus.map((gpu) => (
-          <GPUCard key={gpu.id} id={gpu.id} name={gpu.name} />
+          <GPUCard key={gpu.id} id={gpu.displayId || gpu.id} name={gpu.name} />
         ))}
       </div>
     </div>

@@ -82,11 +82,13 @@ export default function Dashboard() {
               const isPending = res.status === 'pending';
               const canStart = isApproved && isStarted && !isEnded;
 
+              const displayId = res.gpu_id === 0 ? 1 : res.gpu_id;
+
               return (
                 <div key={res.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 border rounded-2xl bg-card shadow-sm hover:shadow-md transition-all duration-500">
                   <div className="space-y-1 mb-4 md:mb-0">
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-bold text-primary italic tracking-tighter">GPU #{res.gpu_id}</span>
+                      <span className="text-lg font-bold text-primary italic tracking-tighter">GPU #{displayId}</span>
                       {isPending && <span className="bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">승인 대기중</span>}
                       {isRejected && <span className="bg-destructive/10 text-destructive text-[10px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">거절됨</span>}
                       {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">승인됨 (대기)</span>}
@@ -103,7 +105,7 @@ export default function Dashboard() {
                       className="w-full md:w-auto font-bold px-8 transition-all duration-300"
                       variant={canStart ? "default" : "secondary"}
                       disabled={!canStart}
-                      onClick={() => window.open(`ssh://user@server-node-${res.gpu_id}`, '_blank', 'noopener,noreferrer')}
+                      onClick={() => window.open(`ssh://user@server-node-${displayId}`, '_blank', 'noopener,noreferrer')}
                     >
                       {isRejected ? "사용 불가" : isApproved && !isStarted ? "시작 시간 대기" : isApproved && isEnded ? "종료됨" : isApproved ? "사용 시작 (SSH)" : "승인 대기 중"}
                     </Button>
