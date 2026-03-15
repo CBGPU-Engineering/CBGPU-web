@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { format, isSameDay, parseISO, addDays, startOfDay } from 'date-fns';
+import { format, isSameDay, parseISO, addDays, startOfDay, endOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 export default function GPUCard({ id, name }: { id: number; name: string }) {
@@ -36,6 +36,11 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
   };
 
   const handleRequest = async () => {
+    if (showSchedule && (!startTime || !endTime)) {
+      setShowSchedule(false);
+      return toast.info('예약 시간을 선택해 주세요.');
+    }
+
     if (!startTime || !endTime) {
       return toast.error('시작 시간과 종료 시간을 모두 선택해 주세요.');
     }
@@ -97,11 +102,17 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
     }
   };
 
-  // 캘린더 형태를 위한 날짜 그룹화 로직
   const next7Days = Array.from({ length: 7 }, (_, i) => addDays(startOfDay(new Date()), i));
   
   const getReservationsForDay = (day: Date) => {
-    return approvedReservations.filter(res => isSameDay(parseISO(res.start_time), day));
+    const dayStart = startOfDay(day);
+    const dayEnd = endOfDay(day);
+    
+    return approvedReservations.filter(res => {
+      const resStart = parseISO(res.start_time);
+      const resEnd = parseISO(res.end_time);
+      return resStart <= dayEnd && resEnd >= dayStart;
+    });
   };
 
   return (
@@ -154,10 +165,16 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                       dayReservations.map((res, i) => {
                         const s = parseISO(res.start_time);
                         const e = parseISO(res.end_time);
+                        const isStart = isSameDay(s, day);
+                        const isEnd = isSameDay(e, day);
+                        
                         return (
                           <div key={i} className="text-[10px] p-2 bg-muted/30 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors">
                             <div className="flex justify-between font-bold text-foreground">
-                              <span>{format(s, 'HH:mm')} - {format(e, 'HH:mm')}</span>
+                              <span>
+                                {isStart ? format(s, 'HH:mm') : '00:00'} - {isEnd ? format(e, 'HH:mm') : '23:59'}
+                              </span>
+                              {!isStart && !isEnd && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">ALL DAY</span>}
                               <span className="text-[9px] text-muted-foreground uppercase opacity-70">Approved</span>
                             </div>
                             <p className="text-muted-foreground truncate mt-0.5">{res.user_email}</p>
