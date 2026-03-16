@@ -6,13 +6,14 @@ import GPUCard from '@/components/GPUCard';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/useAuth';
 import { toast } from 'sonner';
-import { RefreshCw, Trash2 } from 'lucide-react';
+import { RefreshCw, Trash2, Copy, BookOpen, Key, Terminal, Monitor } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [myReservations, setMyReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedRes, setSelectedRes] = useState<any>(null);
 
   const gpus = [
     { id: 1, name: "RTX5000" },
@@ -58,6 +59,11 @@ export default function Dashboard() {
     } catch (err: any) {
       toast.error("Failed to cancel: " + err.message);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
   };
 
   useEffect(() => {
@@ -133,43 +139,156 @@ export default function Dashboard() {
               const displayId = res.gpu_id === 0 ? 1 : res.gpu_id;
 
               return (
-                <div key={res.id} className="group flex flex-col md:flex-row items-start md:items-center justify-between p-5 md:p-6 border rounded-2xl bg-card shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-500">
-                  <div className="space-y-2 mb-4 md:mb-0 w-full md:w-auto">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="text-lg md:text-xl font-black text-primary italic tracking-tighter">GPU #{displayId}</span>
-                      {isPending && <span className="bg-amber-500/10 text-amber-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">Pending</span>}
-                      {isRejected && <span className="bg-destructive/10 text-destructive text-[9px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">Rejected</span>}
-                      {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">Upcoming</span>}
-                      {isApproved && isStarted && !isEnded && <span className="bg-emerald-500/10 text-emerald-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">Active Now</span>}
-                      {isApproved && isEnded && <span className="bg-slate-500/10 text-slate-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-slate-500/20">Finished</span>}
+                <div key={res.id} className="group flex flex-col p-5 md:p-6 border rounded-2xl bg-card shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-500">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full">
+                    <div className="space-y-2 mb-4 md:mb-0 w-full md:w-auto">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="text-lg md:text-xl font-black text-primary italic tracking-tighter">GPU #{displayId}</span>
+                        {isPending && <span className="bg-amber-500/10 text-amber-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-amber-500/20">Pending</span>}
+                        {isRejected && <span className="bg-destructive/10 text-destructive text-[9px] font-black uppercase px-2 py-0.5 rounded border border-destructive/20">Rejected</span>}
+                        {isApproved && !isStarted && <span className="bg-blue-500/10 text-blue-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-blue-500/20">Upcoming</span>}
+                        {isApproved && isStarted && !isEnded && <span className="bg-emerald-500/10 text-emerald-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-emerald-500/20">Active Now</span>}
+                        {isApproved && isEnded && <span className="bg-slate-500/10 text-slate-600 text-[9px] font-black uppercase px-2 py-0.5 rounded border border-slate-500/20">Finished</span>}
+                      </div>
+                      <p className="text-xs md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
+                        {start.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
+                        <span className="mx-2 opacity-30">→</span>
+                        {end.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
-                    <p className="text-xs md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
-                      {start.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
-                      <span className="mx-2 opacity-30">→</span>
-                      {end.toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </p>
+
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                      {(isPending || (isApproved && !isEnded)) && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleCancel(res.id, res.status)}
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-black px-8 transition-all duration-300 uppercase italic text-[11px] h-11 gap-2"
+                        variant={canStart ? "default" : "secondary"}
+                        disabled={!canStart}
+                        onClick={() => setSelectedRes(selectedRes?.id === res.id ? null : res)}
+                      >
+                        {isRejected ? "Access Denied" : isApproved && !isStarted ? "Waiting" : isApproved && isEnded ? "Session Ended" : isApproved ? (selectedRes?.id === res.id ? "Close Guide" : "Start Session") : "Under Review"}
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 w-full md:w-auto">
-                    {(isPending || (isApproved && !isEnded)) && (
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleCancel(res.id, res.status)}
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    )}
-                    <Button 
-                      className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-black px-8 transition-all duration-300 uppercase italic text-[11px] h-11"
-                      variant={canStart ? "default" : "secondary"}
-                      disabled={!canStart}
-                      onClick={() => window.open(`ssh://user@server-node-${displayId}`, '_blank', 'noopener,noreferrer')}
-                    >
-                      {isRejected ? "Access Denied" : isApproved && !isStarted ? "Waiting" : isApproved && isEnded ? "Session Ended" : isApproved ? "Start SSH" : "Under Review"}
-                    </Button>
-                  </div>
+                  {/* Usage Guide & Credentials Panel */}
+                  {selectedRes?.id === res.id && isApproved && (
+                    <div className="mt-6 p-6 bg-muted/30 border-2 border-dashed border-primary/20 rounded-2xl animate-in slide-in-from-top-4 duration-500">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="space-y-6">
+                          <div className="space-y-4">
+                            <h3 className="flex items-center gap-2 font-black uppercase tracking-tighter italic text-primary">
+                              <Key className="size-4" /> Access Credentials
+                            </h3>
+                            <div className="space-y-3">
+                              <div className="flex flex-col gap-1.5 p-4 bg-background border rounded-xl shadow-inner">
+                                <span className="text-[10px] font-black uppercase opacity-50 tracking-widest">SSH Password</span>
+                                <div className="flex items-center justify-between">
+                                  <code className="text-lg font-black text-blue-500 tracking-wider">
+                                    {res.ssh_password || "••••••••"}
+                                  </code>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => copyToClipboard(res.ssh_password)}
+                                    className="h-8 w-8 hover:bg-primary/10"
+                                  >
+                                    <Copy className="size-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                              <p className="text-[10px] text-muted-foreground font-bold leading-tight px-1 italic">
+                                ※ 이 비밀번호는 예약된 시간에만 유효하며, 세션 종료 후에는 자동으로 무효화됩니다.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-4 pt-2">
+                            <h3 className="flex items-center gap-2 font-black uppercase tracking-tighter italic text-primary">
+                              <Monitor className="size-4" /> VS Code Remote - SSH
+                            </h3>
+                            <div className="space-y-3 bg-background border p-4 rounded-xl shadow-inner">
+                              <ol className="text-[11px] font-bold space-y-2 list-decimal list-inside">
+                                <li>VS Code에서 <span className="text-primary">Remote - SSH</span> 확장을 설치합니다.</li>
+                                <li><span className="text-primary">F1</span>을 누르고 <span className="bg-muted px-1 rounded">Connect to Host...</span>를 선택합니다.</li>
+                                <li>주소창에 아래의 정보를 입력합니다:</li>
+                                <div className="flex items-center justify-between bg-muted/50 p-2 rounded-lg mt-1 group">
+                                  <code className="text-[10px] font-black">user@192.168.0.50</code>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    onClick={() => copyToClipboard("user@192.168.0.50")}
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <Copy className="size-3" />
+                                  </Button>
+                                </div>
+                                <li>비밀번호 입력창이 뜨면 왼쪽의 패스워드를 입력하세요.</li>
+                              </ol>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h3 className="flex items-center gap-2 font-black uppercase tracking-tighter italic text-primary">
+                            <BookOpen className="size-4" /> CLI Terminal Guide
+                          </h3>
+                          <div className="space-y-4 bg-background border p-5 rounded-xl shadow-inner">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Terminal className="size-3.5 text-primary" />
+                                <p className="text-[11px] font-black uppercase tracking-widest">Connect via IP</p>
+                              </div>
+                              <div className="flex items-center justify-between bg-muted/50 p-2.5 rounded-lg group">
+                                <code className="text-[10px] font-black truncate">ssh user@192.168.0.50</code>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => copyToClipboard("ssh user@192.168.0.50")}
+                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <Copy className="size-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-2 pt-2 border-t border-dashed">
+                              <p className="text-[10px] font-black uppercase tracking-widest opacity-50">Network Interface Details</p>
+                              <div className="flex items-center gap-4 text-[10px] font-bold">
+                                <div className="bg-primary/5 px-2 py-1 rounded">INTERFACE: <span className="text-primary">enp5s0</span></div>
+                                <div className="bg-primary/5 px-2 py-1 rounded">SUBNET: <span className="text-primary">/24</span></div>
+                              </div>
+                            </div>
+
+                            <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
+                              <p className="text-[10px] font-medium leading-relaxed">
+                                <span className="font-black text-primary mr-1">NOTE:</span>
+                                터미널에서 위 명령어를 입력한 뒤, 왼쪽의 비밀번호를 복사하여 입력하세요. (입력 시 문자가 보이지 않는 것이 정상입니다)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-8 flex justify-center gap-4">
+                        <Button 
+                          variant="outline" 
+                          className="font-black text-[10px] uppercase tracking-widest h-11 px-8 border-2 hover:bg-foreground hover:text-background transition-all"
+                          onClick={() => window.open(`ssh://user@192.168.0.50`, '_blank', 'noopener,noreferrer')}
+                        >
+                          Open in External Client
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
