@@ -114,6 +114,7 @@ export default function AdminPage() {
                   reservations.map((res) => {
                     const start = new Date(res.start_time);
                     const end = new Date(res.end_time);
+                    const isEnded = new Date() > end;
                     const dateOptions: Intl.DateTimeFormatOptions = { 
                       month: 'short', 
                       day: 'numeric', 
@@ -155,7 +156,9 @@ export default function AdminPage() {
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2">
-                            {res.status === 'pending' ? (
+                            {isEnded ? (
+                              <span className="text-[10px] font-black uppercase opacity-30 px-4">Session Finished</span>
+                            ) : res.status === 'pending' ? (
                               <>
                                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved')}>Approve</Button>
                                 <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
