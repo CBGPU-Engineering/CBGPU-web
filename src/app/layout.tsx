@@ -50,7 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
                 <div className="space-y-1">
                   <p className="font-bold text-foreground/80 px-4">Chungbuk Science High School Computing Service</p>
-                  <p className="text-[10px] uppercase tracking-widest opacity-60">© {currentYear} CBGPU. All rights reserved.</p>
+                  <p className="text-[10px] uppercase tracking-widest opacity-60">
+                  © {currentYear} <a href="https://github.com/lmwmason" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline-offset-4 hover:underline">just_grassy</a>. All rights reserved.
+                </p>
                 </div>
               </div>
             </footer>
