@@ -60,7 +60,7 @@ export default function Profile() {
         </div>
         <div className="text-center md:text-left space-y-1">
           <h1 className="text-4xl font-black italic uppercase tracking-tighter">{profile?.full_name || 'Anonymous User'}</h1>
-          <p className="text-muted-foreground font-bold flex items-center justify-center md:justify-start gap-2 uppercase text-xs tracking-widest opacity-60">
+          <p className="text-muted-foreground font-bold flex items-center justify-center md:justify-start gap-2 text-xs opacity-60">
             <Mail className="size-3" /> {user.email}
           </p>
         </div>
