@@ -191,10 +191,11 @@ export default function Dashboard() {
                             <div className="space-y-3">
                               <div className="flex flex-col gap-1.5 p-4 bg-background border rounded-xl shadow-inner">
                                 <span className="text-[10px] font-black uppercase opacity-50 tracking-widest">SSH Password</span>
-                                <div className="flex items-center justify-between">
-                                  <code className="text-lg font-black text-blue-500 tracking-wider">
-                                    {res.ssh_password || "••••••••"}
-                                  </code>
+                              <div className="flex items-center justify-between">
+                                <code className={res.ssh_password ? "text-lg font-black text-blue-500 tracking-wider" : "text-sm font-bold text-muted-foreground animate-pulse"}>
+                                  {res.ssh_password || "서버 가동 중 (잠시만 기다려주세요)"}
+                                </code>
+                                {res.ssh_password && (
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
@@ -203,7 +204,8 @@ export default function Dashboard() {
                                   >
                                     <Copy className="size-3.5" />
                                   </Button>
-                                </div>
+                                )}
+                              </div>
                               </div>
                               <p className="text-[10px] text-muted-foreground font-bold leading-tight px-1 italic">
                                 ※ 이 비밀번호는 예약된 시간에만 유효하며, 세션 종료 후에는 자동으로 무효화됩니다.
