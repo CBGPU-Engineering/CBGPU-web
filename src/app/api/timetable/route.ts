@@ -7,6 +7,9 @@ export async function GET(req: NextRequest) {
   const sp     = req.nextUrl.searchParams;
   const grade  = parseInt(sp.get('grade') || '1');
   const cls    = parseInt(sp.get('class') || '1');
+  if (!Number.isInteger(grade) || grade < 1 || grade > 3 || !Number.isInteger(cls) || cls < 1 || cls > 20) {
+    return NextResponse.json({ error: '학년과 반을 확인해주세요.' }, { status: 400 });
+  }
   const forceRefresh = sp.get('refresh') === '1';
 
   try {

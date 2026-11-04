@@ -7,6 +7,7 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
+import { extractComciganMetadata } from './comciganSource';
 
 const ENTRY_URL = 'http://컴시간학생.kr';
 const SCHOOL_KEYWORD = '충북과학고';
@@ -70,28 +71,12 @@ function hexEncodeEucKr(text: string): string {
 
 async function loadMeta(): Promise<SiteMeta> {
   const entryHtml = await fetchUtf8(ENTRY_URL);
-  const frameTag = entryHtml.toLowerCase().replace(/'/g, '"').match(/<frame [^>]*src="[^"]*"[^>]*>/);
-  if (!frameTag) throw new Error('frame을 찾을 수 없습니다');
-  const hrefMatch = frameTag[0].match(/"(.*)"/);
-  if (!hrefMatch) throw new Error('접근 주소를 찾을 수 없습니다');
-  const frameUrl = hrefMatch[1];
-  const baseUrl = new URL(frameUrl).origin;
-
-  const pageSource = await fetchEucKr(frameUrl);
-  const idx = pageSource.toLowerCase().indexOf('school_ra(sc)');
-  const idx2 = pageSource.indexOf("sc_data('");
-  if (idx === -1 || idx2 === -1) throw new Error('소스에서 식별 코드를 찾을 수 없습니다');
-
-  const chunk1 = pageSource.slice(idx, idx + 50).replace(' ', '');
-  const schoolRaMatch = chunk1.match(/url:'.(.*?)'/);
-  if (!schoolRaMatch) throw new Error('school_ra 값을 찾을 수 없습니다');
-
-  const chunk2 = pageSource.slice(idx2, idx2 + 30).replace(' ', '');
-  const scDataMatch = chunk2.match(/\((.*?)\)/);
-  if (!scDataMatch) throw new Error('sc_data 값을 찾을 수 없습니다');
-  const scParts = scDataMatch[1].replace(/'/g, '').split(',');
-
-  return { baseUrl, extractCode: schoolRaMatch[1], scPrefix: scParts[0], scSuffix: scParts[2] };
+  const frame = entryHtml.match(/<frame\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i);
+  if (!frame) throw new Error('시간표 제공처의 접근 주소를 찾지 못했습니다');
+  const frameUrl = new URL(frame[1], ENTRY_URL);
+  if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
+  const pageSource = await fetchEucKr(frameUrl.href);
+  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -113,7 +98,9 @@ async function searchSchool(meta: SiteMeta, keyword: string) {
 async function resolveSchoolCode(meta: SiteMeta): Promise<number> {
   if (schoolCodeCache != null) return schoolCodeCache;
   const schools = await searchSchool(meta, SCHOOL_KEYWORD);
-  schoolCodeCache = schools[0].code;
+  const school = schools.find(item => item.name === SCHOOL_DISPLAY_NAME || item.name === SCHOOL_KEYWORD);
+  if (!school) throw new Error('학교 검색 결과에서 충북과학고를 찾지 못했습니다');
+  schoolCodeCache = school.code;
   return schoolCodeCache;
 }
 
