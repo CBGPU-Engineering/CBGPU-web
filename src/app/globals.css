@@ -493,3 +493,15 @@ input[data-no-focus-ring]:focus-visible {
 
 :root{--cb-font-sans:var(--font-pretendard),"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif}
 body{font-family:var(--cb-font-sans)}
+
+/* ── 화면 규격 ──────────────────────────────────────────────────────────────
+   자습신청·홈·급식에서 실제로 측정한 값을 기준으로 한다. 도메인별 CSS는 새 값을 만들지 말고 이 토큰을 쓴다.
+   본문 폭 3단계: narrow(폼·단일 열) / page(기본) / wide(대시보드·콘솔). */
+:root{
+  --cb-page-narrow:672px;--cb-page:896px;--cb-page-wide:1152px;
+  --cb-title-size:30px;--cb-title-weight:600;--cb-title-ls:-.025em;--cb-title-lh:36px;
+  --cb-sub-size:14px;--cb-sub-lh:1.6;
+  --cb-section-gap:24px;--cb-card-radius:18px;--cb-card-pad:20px;--cb-control-radius:10px;
+}
+.cb-page-title{font-size:var(--cb-title-size);font-weight:var(--cb-title-weight);letter-spacing:var(--cb-title-ls);line-height:var(--cb-title-lh);font-style:normal;text-transform:none}
+.cb-page-sub{font-size:var(--cb-sub-size);line-height:var(--cb-sub-lh);font-weight:400;color:var(--muted-foreground)}
