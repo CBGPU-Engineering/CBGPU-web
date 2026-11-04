@@ -197,10 +197,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
             ) : (
               <div className="flex gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm" className="font-semibold text-sm">Login</Button>
+                  <Button variant="ghost" size="sm" className="font-semibold text-sm">로그인</Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm" className="font-semibold text-sm shadow-md">Join</Button>
+                  <Button size="sm" className="font-semibold text-sm shadow-md">회원가입</Button>
                 </Link>
               </div>
             )
@@ -270,10 +270,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                 Contact
               </Link>
               <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full font-black uppercase tracking-widest">Login</Button>
+                <Button variant="outline" className="w-full font-black uppercase tracking-widest">로그인</Button>
               </Link>
               <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full font-black uppercase tracking-widest shadow-md">Join Now</Button>
+                <Button className="w-full font-black uppercase tracking-widest shadow-md">회원가입</Button>
               </Link>
             </div>
           )}
