@@ -108,7 +108,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           disableTransitionOnChange
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
-          <AuthProvider>
+          <AuthProvider siteHost={host || undefined}>
             <AlertProvider english={adminSite||manufacturingSite}>
               {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'}>{children}</ManufacturingShell> : adminSite ? <AdminShell><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
