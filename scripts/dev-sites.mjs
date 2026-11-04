@@ -4,8 +4,9 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const sites=new Map([[3000,'cbgpu.com'],[3001,'researcher.cbgpu.com'],[3002,'admin.cbgpu.com'],[3003,'student.cbgpu.com'],[3004,'app.cbgpu.com'],[3005,'docs.cbgpu.com'],[3006,'arxiv.cbgpu.com'],[3007,'manufacturing.cbgpu.com'],[3008,'print.cbgpu.com'],[3009,'laser.cbgpu.com']]);
+const sites=new Map([[3000,'cbgpu.com'],[3001,'researcher.cbgpu.com'],[3002,'admin.cbgpu.com'],[3004,'app.cbgpu.com'],[3005,'docs.cbgpu.com'],[3006,'arxiv.cbgpu.com'],[3007,'manufacturing.cbgpu.com'],[3008,'print.cbgpu.com'],[3009,'laser.cbgpu.com']]);
 const ports=new Map([...sites].map(([port,host])=>[host,port]));
+ports.set('student.cbgpu.com',3000);
 const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--hostname','127.0.0.1','--port','3099'],{cwd:root,stdio:'inherit',env:process.env});
 const servers=[];
 for(const [port,host] of sites){
