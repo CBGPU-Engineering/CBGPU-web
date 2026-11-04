@@ -5,3 +5,7 @@ Extracted on 2026-11-04 from [CBGPU-platform](https://github.com/CBGPU-Engineeri
 The component history preserves original authors, dates and messages. Commit IDs change when paths and trees are filtered; `history-map.txt` maps original commits to component commits (all-zero IDs denote commits with no retained changes). The complete original history, tags and releases remain in CBGPU-platform.
 
 Source selection: `FrontEnd/cbgpu`. Database schemas belong to CBGPU-backend. LaTeX remains separately licensed AGPL-3.0.
+
+Generated APK binaries are excluded from this extracted repository history.
+The complete original artifact history and releases remain in CBGPU-platform.
+Source-code authorship and relevant component commits are preserved.
