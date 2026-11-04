@@ -23,3 +23,8 @@ real emails, submit school applications, run equipment or touch production data.
 Original contributions use Apache-2.0; preserve all third-party notices.
 Report vulnerabilities privately using SECURITY.md. Participation follows
 CODE_OF_CONDUCT.md; support and reviews are best effort.
+
+Dependency version PRs are grouped monthly with at most one open version PR per
+ecosystem. Dependency-only changes do not automatically request a code-owner
+review. Security updates remain enabled and are not delayed by the version-update
+schedule; maintainers still review changes and CI before merging.
