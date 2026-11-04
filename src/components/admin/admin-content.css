@@ -5,14 +5,14 @@
 .admin-developer-shell .admin-page-heading p{margin-top:12px;color:var(--dev-muted);font-size:13px;line-height:1.7}
 .admin-developer-shell [data-slot="button"]{min-height:40px;border-radius:8px;font-size:13px;line-height:1.4;padding:9px 15px;font-weight:600;box-shadow:none;letter-spacing:0;text-transform:none;transform:none}
 .admin-developer-shell main :is(input,select,textarea){font-size:12px!important;border-radius:8px;min-height:36px;color:var(--dev-ink)}
-.admin-developer-shell :is([class~="bg-card"],[data-slot="card"]):not(button):not(a){background:var(--dev-surface);border:1px solid var(--dev-border);border-radius:0;box-shadow:none}
+.admin-developer-shell :is([class~="bg-card"],[data-slot="card"]):not(button):not(a){background:var(--dev-surface);border:1px solid var(--dev-border);border-radius:14px;box-shadow:none}
 .admin-developer-shell table{font-size:12px;border-collapse:collapse}
 .admin-developer-shell th{font-size:11px;text-transform:none;letter-spacing:0;font-weight:600}
 .admin-developer-shell td{font-size:12px}
 .admin-developer-shell :is(.font-black,.font-extrabold,.font-bold){font-weight:600}
 .admin-developer-shell .italic{font-style:normal}
 .admin-developer-shell :is(h2,h3){font-weight:600;font-size:15px}
-.admin-developer-shell [data-slot="table-container"]{border-radius:0}
+.admin-developer-shell [data-slot="table-container"]{border-radius:14px}
 @media(max-width:720px){.admin-developer-shell .environment-badge{display:none}.admin-developer-shell [data-slot="button"]{min-height:40px}.admin-developer-shell .breadcrumbs{min-width:0}.admin-developer-shell .breadcrumbs strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:110px}}
 
 .admin-developer-shell [data-slot="button"][data-size="sm"]{min-height:34px;font-size:12px;padding:7px 11px}
