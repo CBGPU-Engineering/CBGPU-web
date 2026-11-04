@@ -81,7 +81,7 @@ export default function Signup() {
       <h2 className="text-3xl font-black mb-6 text-center text-foreground uppercase tracking-tighter italic">Join CBGPU</h2>
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">이름 (Name)</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">이름 (Name)</label>
           <Input
             placeholder="Name"
             className="bg-background border-input text-foreground font-bold"
@@ -90,7 +90,7 @@ export default function Signup() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">학번 (Student ID)</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">학번 (Student ID)</label>
           <Input
             placeholder="2309"
             inputMode="numeric"
@@ -100,11 +100,11 @@ export default function Signup() {
             onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
             required
           />
-          <p className="text-[10px] text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
+          <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
           <p className="text-xs text-muted-foreground font-medium ml-1">같은 학년도에는 한 학번으로 한 계정만 사용할 수 있습니다.</p>
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">Email</label>
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
@@ -114,7 +114,7 @@ export default function Signup() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Password</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">Password</label>
           <Input
             type="password"
             placeholder="••••••••"

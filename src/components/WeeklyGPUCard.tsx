@@ -191,14 +191,14 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
           <Button
             variant="secondary"
             size="xs"
-            className="text-[10px] font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
+            className="text-xs font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
             onClick={() => setShowSchedule(!showSchedule)}
           >
             {showSchedule ? 'CLOSE SCHEDULE' : 'VIEW CALENDAR'}
           </Button>
         </div>
         <div className="absolute top-2 left-2">
-          <span className="text-[9px] font-black px-2 py-0.5 rounded bg-violet-500/80 text-white backdrop-blur-sm">
+          <span className="text-xs font-black px-2 py-0.5 rounded bg-violet-500/80 text-white backdrop-blur-sm">
             WEEKLY
           </span>
         </div>
@@ -208,25 +208,25 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold italic tracking-tighter">GPU #{id}</h3>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">RTX5000</p>
+            <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">RTX5000</p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Badge variant="success">Ready</Badge>
-            <span className="text-[9px] font-black px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 border border-violet-500/20">주 단위 예약</span>
+            <span className="text-xs font-black px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 border border-violet-500/20">주 단위 예약</span>
           </div>
         </div>
 
         {showSchedule ? (
           <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
+            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
               <CalendarDays className="size-3" /> 신청된 예약
             </p>
             <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
               {approvedReservations.length === 0 ? (
-                <p className="text-[10px] text-muted-foreground/50 italic pl-1">No approved reservations</p>
+                <p className="text-xs text-muted-foreground/50 italic pl-1">No approved reservations</p>
               ) : (
                 approvedReservations.map((res, i) => (
-                  <div key={i} className="text-[10px] p-2.5 bg-muted/30 rounded-xl border border-border/30">
+                  <div key={i} className="text-xs p-2.5 bg-muted/30 rounded-xl border border-border/30">
                     <div className="flex justify-between font-black">
                       <span>
                         {format(parseISO(res.start_time), 'M/d (eee)', { locale: ko })}
@@ -242,7 +242,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
           </div>
         ) : (
           <div className="space-y-2 animate-in fade-in duration-300">
-            <p className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">예약할 주차 선택</p>
+            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">예약할 주차 선택</p>
             <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {weeks.map(({ mon, sun }, i) => {
                 const { taken, availableFrom } = getWeekAvailability(mon, sun);
@@ -264,16 +264,16 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                     )}
                   >
                     <div>
-                      <p className="text-[11px] font-black">
+                      <p className="text-xs font-black">
                         {format(mon, 'M월 d일', { locale: ko })}
                         <span className="mx-1 opacity-40">–</span>
                         {format(sun, 'M월 d일 (eee)', { locale: ko })}
                       </p>
-                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {i === 0 ? '이번 주' : `${i}주 후`}
                       </p>
                       {partial && (
-                        <p className="text-[9px] text-amber-600 font-bold mt-0.5">
+                        <p className="text-xs text-amber-600 font-bold mt-0.5">
                           {format(availableFrom, 'M/d HH:mm', { locale: ko })}부터 신청 가능(조기 종료로 일부 남음)
                         </p>
                       )}

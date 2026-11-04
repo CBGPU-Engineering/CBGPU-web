@@ -32,7 +32,7 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
 
   return (
     <>
-      <Button size="sm" variant="outline" className="font-black text-[10px] uppercase gap-1.5" onClick={handleOpen}>
+      <Button size="sm" variant="outline" className="font-black text-xs uppercase gap-1.5" onClick={handleOpen}>
         <MapPin className="size-3.5" />  Locate requester
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -55,7 +55,7 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
                   {result.period ? `School hours · period ${result.period}${result.subject ? ` (${result.subject})` : ''}` : "Outside self-study hours"}
                 </p>
                 <p className="text-2xl font-black">Grade {result.identity.grade}, Class {result.identity.classNo} classroom</p>
-                <p className="text-[10px] text-muted-foreground opacity-60">The student may be in this classroom unless attending a different class.</p>
+                <p className="text-xs text-muted-foreground opacity-60">The student may be in this classroom unless attending a different class.</p>
               </div>
             ) : result.kind === 'selfstudy' ? (
               <div className="space-y-2 text-center">

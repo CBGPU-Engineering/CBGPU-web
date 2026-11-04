@@ -142,7 +142,7 @@ export default function MaterialsPage() {
       {[null, ...availableTags].map(tag => {
         const active = selectedTag === tag;
         return <button key={tag ?? '__all'} type="button" aria-pressed={active} onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-          className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-black transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-black transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
           {tag ? `#${tag}` : '전체'}
         </button>;
       })}
@@ -170,10 +170,10 @@ export default function MaterialsPage() {
             </div>
             <div className="flex min-h-5 flex-wrap items-center gap-1.5">
               {material.tags.slice(0, 3).map(tag => <Badge key={tag} className="normal-case tracking-normal">#{tag}</Badge>)}
-              {material.tags.length > 3 && <span className="text-[10px] font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
+              {material.tags.length > 3 && <span className="text-xs font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
             </div>
             <div className="mt-auto flex items-center justify-between gap-3">
-              <span className="text-[11px] text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
+              <span className="text-xs text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
               <Button variant="outline" size="sm" className="gap-1.5 font-black text-xs" disabled={busy} onClick={() => void download(material)}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}받기
               </Button>

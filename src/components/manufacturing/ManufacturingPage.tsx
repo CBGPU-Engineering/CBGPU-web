@@ -486,7 +486,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <Badge variant="warning" icon={<Clock className="size-3" />}>대기열 {printQueueLength}건</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-[10px] uppercase gap-1.5 h-9">
+            <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" /> 신청하기
             </Button>
           </div>
@@ -506,11 +506,11 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                         : <Badge variant="muted">대기</Badge>}
                 </div>
                 {p.status === 'printing' && p.estimated_end_at && (
-                  <p className="text-[11px] text-muted-foreground font-bold">
+                  <p className="text-xs text-muted-foreground font-bold">
                     {formatDistanceToNow(new Date(p.estimated_end_at), { locale: ko, addSuffix: true })} 완료 예정
                   </p>
                 )}
-                <p className="text-[10px] text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
+                <p className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
               </Card>
             ))}
           </div>
@@ -521,10 +521,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">파일</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">모드</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">상태</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">신청일</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">파일</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">모드</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">상태</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청일</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -540,8 +540,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           <TableCell className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
                               <span className="font-bold text-sm">{j.file_name || '—'}</span>
-                              {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-[10px] text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
+                              {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
                           <TableCell className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? '초보자' : '고급자'}</span></TableCell>
@@ -568,7 +568,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <Badge variant="warning" icon={<Clock className="size-3" />}>대기열 {laserQueueLength}건</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-[10px] uppercase gap-1.5 h-9">
+            <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" /> 신청하기
             </Button>
           </div>
@@ -577,10 +577,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">파일</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">재질</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">상태</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">신청일</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">파일</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">재질</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">상태</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청일</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -596,8 +596,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           <TableCell className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
                               <span className="font-bold text-sm">{j.file_name || '—'}</span>
-                              {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-[10px] text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
+                              {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
                           <TableCell className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : '아크릴'}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
@@ -619,7 +619,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         <div className="space-y-8">
           <Card className="p-6 rounded-2xl space-y-3">
             <h2 className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" /> 필라멘트 카탈로그</h2>
-            <p className="text-[11px] text-muted-foreground font-bold opacity-70">
+            <p className="text-xs text-muted-foreground font-bold opacity-70">
               지금 보유한 필라멘트만 등록하세요. 신청자는 여기 등록된 조합 중에서 고르거나 &ldquo;상관없음&rdquo;을 선택할 수 있습니다.
             </p>
             {filamentCatalog.length === 0 ? (
@@ -647,7 +647,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
               <Input value={newFilamentMaterial} onChange={e => setNewFilamentMaterial(e.target.value)} className="h-9 w-28 text-xs" placeholder="재질 (예: PLA Basic)" />
               <Input value={newFilamentColor} onChange={e => setNewFilamentColor(e.target.value)} className="h-9 w-28 text-xs" placeholder="색상 (예: 블랙)" />
               <Input type="number" min="0" value={newFilamentStock} onChange={e => setNewFilamentStock(e.target.value)} className="h-9 w-16 text-xs" placeholder="재고" />
-              <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={addFilamentEntry}>
+              <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addFilamentEntry}>
                 <Plus className="size-3.5" /> 추가
               </Button>
             </div>
@@ -671,28 +671,28 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                             ? <Badge variant="danger">고장</Badge>
                             : <Badge variant="muted">대기</Badge>}
                     </div>
-                    <p className="text-[10px] text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
+                    <p className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
 
                     {!isMine ? (
-                      <p className="text-[10px] text-muted-foreground font-bold opacity-50 text-center py-1">담당 프린터가 아닙니다</p>
+                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">담당 프린터가 아닙니다</p>
                     ) : p.status === 'maintenance' ? (
-                      <Button size="sm" variant="outline" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => repairPrinter(p)}>
+                      <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => repairPrinter(p)}>
                         <Undo2 className="size-3" /> 정상으로 복구
                       </Button>
                     ) : p.status === 'done' ? (
                       <>
-                        <p className="text-[11px] text-muted-foreground font-bold">출력이 끝났습니다. 회수해주세요.</p>
-                        <Button size="sm" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => collectPrint(p)}>
+                        <p className="text-xs text-muted-foreground font-bold">출력이 끝났습니다. 회수해주세요.</p>
+                        <Button size="sm" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => collectPrint(p)}>
                           <CheckCircle2 className="size-3" /> 회수함
                         </Button>
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" /> 고장 처리
                         </Button>
                       </>
                     ) : p.status === 'printing' ? (
                       <>
                         {p.estimated_end_at && (
-                          <p className="text-[11px] text-muted-foreground font-bold">
+                          <p className="text-xs text-muted-foreground font-bold">
                             {formatDistanceToNow(new Date(p.estimated_end_at), { locale: ko, addSuffix: true })} 완료 예정
                           </p>
                         )}
@@ -702,7 +702,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           if (job.plate_count > 1) {
                             return (
                               <div className="space-y-1">
-                                <p className="text-[10px] text-muted-foreground font-bold text-center">플레이트 {job.plates_completed}/{job.plate_count} 완료</p>
+                                <p className="text-xs text-muted-foreground font-bold text-center">플레이트 {job.plates_completed}/{job.plate_count} 완료</p>
                                 <div className="grid grid-cols-4 gap-1">
                                   {Array.from({ length: job.plate_count }, (_, idx) => {
                                     const plateNum = idx + 1;
@@ -714,7 +714,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                                         size="sm"
                                         variant={done ? 'outline' : 'default'}
                                         disabled={!isNext}
-                                        className="text-[10px] font-black px-0"
+                                        className="text-xs font-black px-0"
                                         onClick={() => openPlateComplete(p, job)}
                                       >
                                         {done ? <CheckCircle2 className="size-3" /> : plateNum}
@@ -726,12 +726,12 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                             );
                           }
                           return (
-                            <Button size="sm" variant="outline" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => openPlateComplete(p, job)}>
+                            <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => openPlateComplete(p, job)}>
                               <Square className="size-3" /> 출력 완료
                             </Button>
                           );
                         })()}
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" /> 고장 처리
                         </Button>
                       </>
@@ -739,13 +739,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                       <>
                         <Button
                           size="sm"
-                          className="w-full font-black text-[10px] uppercase gap-1.5"
+                          className="w-full font-black text-xs uppercase gap-1.5"
                           disabled={queuedPrintJobsForPrinter(allPrintJobs,p.id).length === 0}
                           onClick={() => openQueueDialog(p)}
                         >
                           <Play className="size-3" /> 인쇄 시작
                         </Button>
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" /> 고장 처리
                         </Button>
                       </>
@@ -763,10 +763,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <Table>
                   <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent border-b-2">
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">신청자</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">모드/파일</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">상태</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6 text-right">작업</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청자</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">모드/파일</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">상태</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">작업</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -783,9 +783,9 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                             <TableCell className="py-4">
                               <div className="flex flex-col gap-1.5">
                                 <span className="text-xs font-black uppercase">{j.mode === 'beginner' ? '초보자' : '고급자'} · {j.quantity}개 · 플레이트 {j.plate_count}개{j.material ? ` · ${j.material}` : ''}{j.color ? ` · ${j.color}` : ''}</span>
-                                {j.preferred_printer_id && <span className="text-[10px] text-muted-foreground">희망 프린터: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
+                                {j.preferred_printer_id && <span className="text-xs text-muted-foreground">희망 프린터: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
                                 {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                                {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> 담당: {j.manager.full_name}</span>}
+                                {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> 담당: {j.manager.full_name}</span>}
                                 <Link href={`/manufacturing/print/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
                                   상세 보기 <ExternalLink className="size-3" />
                                 </Link>
@@ -806,14 +806,14 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                               <div className="flex justify-end gap-2 flex-wrap">
                                 {j.status === 'pending' && (
                                   <>
-                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>수락</Button>
-                                    <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>거절</Button>
+                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>수락</Button>
+                                    <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>거절</Button>
                                   </>
                                 )}
                                 {j.status === 'done' && !j.delivered_at && (
                                   <>
                                     <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
-                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
+                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
                                       <PackageCheck className="size-3.5" /> 가져다 줌
                                     </Button>
                                   </>
@@ -837,7 +837,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         <div className="space-y-8">
           <Card className="p-6 rounded-2xl space-y-3">
             <h2 className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" /> 재질 카탈로그</h2>
-            <p className="text-[11px] text-muted-foreground font-bold opacity-70">
+            <p className="text-xs text-muted-foreground font-bold opacity-70">
               지금 취급하는 재질/두께만 등록하세요. 신청자는 여기 등록된 조합만 고를 수 있습니다 (재고 수량은 관리하지 않습니다).
             </p>
             {laserCatalog.length === 0 ? (
@@ -863,7 +863,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 </SelectContent>
               </Select>
               <Input type="number" step="0.5" min="0" value={newCatalogThickness} onChange={e => setNewCatalogThickness(e.target.value)} className="h-9 w-28 text-xs" placeholder="두께(mm)" />
-              <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={addLaserCatalogEntry}>
+              <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addLaserCatalogEntry}>
                 <Plus className="size-3.5" /> 추가
               </Button>
             </div>
@@ -874,10 +874,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow className="hover:bg-transparent border-b-2">
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">신청자</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">재질/파일</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">상태</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6 text-right">작업</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청자</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">재질/파일</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">상태</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">작업</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -895,7 +895,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : '아크릴'}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''} × {j.quantity}</span>
                             {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                            {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> 담당: {j.manager.full_name}</span>}
+                            {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> 담당: {j.manager.full_name}</span>}
                             <Link href={`/manufacturing/laser/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
                               {j.file_name || '파일 보기'} <ExternalLink className="size-3" />
                             </Link>
@@ -911,20 +911,20 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           <div className="flex justify-end gap-2 flex-wrap">
                             {j.status === 'pending' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>수락</Button>
-                                <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>거절</Button>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>수락</Button>
+                                <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>거절</Button>
                               </>
                             )}
                             {j.status === 'accepted' && (
-                              <Button size="sm" variant="outline" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>작업 시작</Button>
+                              <Button size="sm" variant="outline" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>작업 시작</Button>
                             )}
                             {j.status === 'in_progress' && (
-                              <Button size="sm" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>완료</Button>
+                              <Button size="sm" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>완료</Button>
                             )}
                             {j.status === 'done' && !j.delivered_at && (
                               <>
                                 <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
                                   <PackageCheck className="size-3.5" /> 가져다 줌
                                 </Button>
                               </>
@@ -967,8 +967,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setPlateCompleteTarget(null)}>취소</Button>
-            <Button className="font-black uppercase text-[10px]" onClick={confirmPlateComplete}>완료 처리</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setPlateCompleteTarget(null)}>취소</Button>
+            <Button className="font-black uppercase text-xs" onClick={confirmPlateComplete}>완료 처리</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -982,7 +982,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">작업 선택</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">작업 선택</label>
               <Select value={queueJobId} onValueChange={setQueueJobId}>
                 <SelectTrigger aria-label="Queued print job" className="h-10 w-full text-sm"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
                 <SelectContent>
@@ -993,14 +993,14 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
               </Select>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">예상 소요 시간</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">예상 소요 시간</label>
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {DURATION_PRESETS.map(p => (
                   <button
                     key={p.hours}
                     type="button"
                     onClick={() => setQueueHours(p.hours)}
-                    className={`px-2 py-2 rounded-xl border text-[11px] font-black transition-all active:scale-95 ${
+                    className={`px-2 py-2 rounded-xl border text-xs font-black transition-all active:scale-95 ${
                       queueHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                     }`}
                   >
@@ -1018,13 +1018,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                   className="h-10 pr-14 font-bold"
                   placeholder="직접 입력"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-muted-foreground">시간</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black uppercase text-muted-foreground">시간</span>
               </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setQueueDialogPrinter(null)}>취소</Button>
-            <Button className="font-black uppercase text-[10px]" onClick={startPrint} disabled={startingPrint||!queueJobId}>시작</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setQueueDialogPrinter(null)}>취소</Button>
+            <Button className="font-black uppercase text-xs" onClick={startPrint} disabled={startingPrint||!queueJobId}>시작</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1044,8 +1044,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
             className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setRejectTarget(null)}>취소</Button>
-            <Button variant="destructive" className="font-black uppercase text-[10px]" onClick={confirmReject}>거절하기</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRejectTarget(null)}>취소</Button>
+            <Button variant="destructive" className="font-black uppercase text-xs" onClick={confirmReject}>거절하기</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

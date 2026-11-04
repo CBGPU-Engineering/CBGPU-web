@@ -142,7 +142,7 @@ export default function DailyBriefing() {
       ) : (
         <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
       )}
-      <p className="mt-3 text-[11px] text-muted-foreground">급식·공지·시간표·GPU/제작 현황을 참고한 AI 요약이에요. 자세한 내용은 각 페이지에서 확인하세요.</p>
+      <p className="mt-3 text-xs text-muted-foreground">급식·공지·시간표·GPU/제작 현황을 참고한 AI 요약이에요. 자세한 내용은 각 페이지에서 확인하세요.</p>
     </section>
   );
 }

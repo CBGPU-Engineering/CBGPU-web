@@ -396,7 +396,7 @@ export default function AdminWakeupPage() {
           }, {})
         ).map(([date, songs]) => (
           <div key={date} className="space-y-2">
-            <p className="text-[11px] font-black uppercase tracking-widest text-primary">
+            <p className="text-xs font-black uppercase tracking-widest text-primary">
               {format(new Date(date + 'T00:00:00'), 'MMM d (EEE)', { locale: enUS })}{date === todayStr() ? ' · Today' : ''}
             </p>
             {songs.map((song) => (

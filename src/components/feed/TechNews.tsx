@@ -144,7 +144,7 @@ export default function TechNews() {
           <button
             key={c.id}
             onClick={() => setCat(c.id)}
-            className={`px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-widest transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
               cat === c.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/70'
             }`}
           >
@@ -162,12 +162,12 @@ export default function TechNews() {
             onChange={(v) => setSrc(v as Source)}
           />
           {total > 0 && (
-            <span className="text-[10px] text-muted-foreground self-center ml-1 font-medium">{total}건</span>
+            <span className="text-xs text-muted-foreground self-center ml-1 font-medium">{total}건</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {refreshed && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Zap className="size-2.5 text-green-500" />
               {refreshed.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
             </span>
@@ -199,10 +199,10 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-[10px] font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold leading-snug group-hover:text-primary transition-colors">{s.title}</p>
-                <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{s.title}</p>
+                <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-0.5"><ChevronUp className="size-2.5" />{s.points ?? 0}</span>
                   <span className="flex items-center gap-0.5"><MessageSquare className="size-2.5" />{s.num_comments ?? 0}</span>
                   {domain(s.url) && <span className="opacity-60 truncate max-w-[150px]">{domain(s.url)}</span>}
@@ -224,10 +224,10 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-[10px] font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
-                <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
+                <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
                   {item.source && <span className="font-medium opacity-70 truncate max-w-[180px]">{item.source}</span>}
                   {item.pubDate && <span className="opacity-40">{ago(item.pubDate)}</span>}
                 </div>
@@ -243,7 +243,7 @@ export default function TechNews() {
       )}
 
       {total > 0 && (
-        <p className="text-center text-[10px] text-muted-foreground pt-2">
+        <p className="text-center text-xs text-muted-foreground pt-2">
           {src === 'hn'
             ? <>Via <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">Hacker News</a></>
             : '🔍 Google News · 5분마다 자동 갱신'}

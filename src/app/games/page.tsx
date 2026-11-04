@@ -39,7 +39,7 @@ export default function GamesPage() {
         onChange={(v) => { setActive(v as GameId); }}
         className="max-w-full"
       />
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
         {GAMES.find(g => g.id === active)?.label} · {GAMES.find(g => g.id === active)?.tag === 'touch' ? '👆 touch' : '⌨️ keys'}
       </p>
 

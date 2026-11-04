@@ -51,7 +51,7 @@ export default function ResetPassword() {
       <h2 className="text-3xl font-black mb-6 text-center text-foreground italic uppercase tracking-tighter">새 비밀번호 설정</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">새 비밀번호</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">새 비밀번호</label>
           <Input
             type="password"
             placeholder="••••••••"
@@ -62,7 +62,7 @@ export default function ResetPassword() {
           />
         </div>
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">새 비밀번호 확인</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">새 비밀번호 확인</label>
           <Input
             type="password"
             placeholder="••••••••"

@@ -24,7 +24,7 @@ import {
   CheckCircle2, Clock, XCircle,
 } from 'lucide-react';
 
-const labelCls = "text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block";
+const labelCls = "text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block";
 const inputCls = "h-9 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
 
 type Runtime = ServerRuntime;
@@ -219,7 +219,7 @@ export default function ServerDetailPage() {
       <div>
         <button
           onClick={() => router.push('/server')}
-          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="size-3" /> Back to Projects
         </button>
@@ -241,7 +241,7 @@ export default function ServerDetailPage() {
               {project.status !== 'deleted' && (
                 <Button
                   variant="outline"
-                  className="font-black text-[10px] uppercase gap-1.5 h-9"
+                  className="font-black text-xs uppercase gap-1.5 h-9"
                   onClick={openRedeploy}
                 >
                   <RotateCcw className="size-3.5" /> 설정 수정
@@ -249,7 +249,7 @@ export default function ServerDetailPage() {
               )}
               {isOwner&&(<Button
                 variant="destructive"
-                className="font-black text-[10px] uppercase gap-1.5 h-9"
+                className="font-black text-xs uppercase gap-1.5 h-9"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="size-3.5" /> 삭제
@@ -265,7 +265,7 @@ export default function ServerDetailPage() {
       {/* 접근 정보 — 실행 중일 때만 */}
       {isRunning && (
         <div className="p-5 rounded-2xl bg-emerald-500/5 border-2 border-emerald-500/20">
-          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-3">Access</p>
+          <p className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3">Access</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="min-w-0 break-all text-sm font-black text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
               {serverUrl ?? (isPublic ? '공개 주소 발급 중… 잠시 후 새로고침해 주세요' : `포트 ${project.host_port}`)}
@@ -279,7 +279,7 @@ export default function ServerDetailPage() {
               <ExternalLink className="size-3.5" />
             </Button>}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-2 opacity-60">
+          <p className="text-xs text-muted-foreground mt-2 opacity-60">
             {project.access_scope === 'private' && '※ Tailscale VPN 연결 시에만 접근 가능합니다'}
             {project.access_scope === 'school'  && '※ 교내 네트워크에서 접근 가능합니다'}
             {project.access_scope === 'public'  && '※ 인터넷 어디서나 접근 가능합니다 (서버가 재시작되면 주소가 바뀔 수 있습니다)'}
@@ -343,7 +343,7 @@ export default function ServerDetailPage() {
           <div>
             <label className={labelCls}>Port Mapping</label>
             <code className="font-bold text-sm">{project.host_port}:{project.container_port}</code>
-            <span className="text-[10px] text-muted-foreground ml-2 opacity-60">(host:container)</span>
+            <span className="text-xs text-muted-foreground ml-2 opacity-60">(host:container)</span>
           </div>
 
           {/* 접근 범위 */}
@@ -473,12 +473,12 @@ export default function ServerDetailPage() {
                 <label className={labelCls}>Port Mapping</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <p className="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1">Host Port</p>
+                    <p className="text-xs font-black opacity-40 uppercase tracking-widest mb-1">Host Port</p>
                     <Input type="number" value={form.hostPort} onChange={e => set('hostPort', e.target.value)} />
                   </div>
                   <span className="text-muted-foreground font-black mt-5">:</span>
                   <div className="flex-1">
-                    <p className="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1">Container Port</p>
+                    <p className="text-xs font-black opacity-40 uppercase tracking-widest mb-1">Container Port</p>
                     <Input type="number" value={form.containerPort} onChange={e => set('containerPort', e.target.value)} />
                   </div>
                 </div>
@@ -524,12 +524,12 @@ export default function ServerDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className={labelCls}>Environment Variables</label>
-                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-[10px] font-black uppercase gap-1">
+                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-xs font-black uppercase gap-1">
                     <Plus className="size-3" /> Add
                   </Button>
                 </div>
                 {form.envVars.length === 0 ? (
-                  <p className="text-[10px] text-muted-foreground opacity-50">환경변수 없음</p>
+                  <p className="text-xs text-muted-foreground opacity-50">환경변수 없음</p>
                 ) : (
                   <div className="space-y-2">
                     {form.envVars.map((e, i) => (
@@ -546,9 +546,9 @@ export default function ServerDetailPage() {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setRedeployOpen(false)}>취소</Button>
-            <Button variant="outline" className="font-black text-[10px]" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
-            <Button className="font-black uppercase text-[10px]" onClick={()=>void handleRedeploy(true)} disabled={submitting}>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
+            <Button variant="outline" className="font-black text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
+            <Button className="font-black uppercase text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting}>
               {submitting ? '요청 중...' : '저장 후 재배포'}
             </Button>
           </DialogFooter>
@@ -567,8 +567,8 @@ export default function ServerDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setDeleteOpen(false)}>취소</Button>
-            <Button variant="destructive" className="font-black uppercase text-[10px]" onClick={handleDelete}>삭제하기</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setDeleteOpen(false)}>취소</Button>
+            <Button variant="destructive" className="font-black uppercase text-xs" onClick={handleDelete}>삭제하기</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

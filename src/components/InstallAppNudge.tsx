@@ -72,12 +72,12 @@ export default function InstallAppNudge() {
           </span>
           <div className="min-w-0">
             <p className="text-sm font-black">안드로이드 앱을 설치해보세요</p>
-            <p className="text-[11px] text-muted-foreground font-medium mt-0.5 mb-2">
+            <p className="text-xs text-muted-foreground font-medium mt-0.5 mb-2">
               위젯, 알림까지 더 편하게 쓸 수 있어요
             </p>
             <Link
               href="/download"
-              className="inline-block text-[11px] font-black uppercase tracking-widest text-primary hover:underline"
+              className="inline-block text-xs font-black uppercase tracking-widest text-primary hover:underline"
             >
               설치 방법 보기 →
             </Link>

@@ -88,7 +88,7 @@ function Pomodoro() {
           <p className={`text-xs font-black uppercase tracking-widest mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
             {phase === 'work' ? '집중' : '휴식'}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{cycles} 사이클 완료</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{cycles} 사이클 완료</p>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ function Pomodoro() {
           <Bell className="size-4" />
         </Button>
       </div>
-      <p className="text-[10px] text-muted-foreground">Bell 아이콘으로 알림 허용 시 세션 종료마다 알림을 받습니다</p>
+      <p className="text-xs text-muted-foreground">Bell 아이콘으로 알림 허용 시 세션 종료마다 알림을 받습니다</p>
     </div>
   );
 }
@@ -166,7 +166,7 @@ function DDayCounter() {
               <span className="text-2xl select-none">{item.emoji}</span>
               <div className="flex-1 min-w-0">
                 <p className="font-black text-sm truncate">{item.label}</p>
-                <p className="text-[10px] text-muted-foreground">{dateStr}</p>
+                <p className="text-xs text-muted-foreground">{dateStr}</p>
               </div>
               <span className={`font-black text-sm tabular-nums shrink-0 ${color}`}>{dl}</span>
               <button onClick={() => remove(item.id)} className="text-muted-foreground/30 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
@@ -199,7 +199,7 @@ export default function ToolsPage() {
           label: (
             <span className="flex flex-col items-center gap-0.5">
               <span>{t.label}</span>
-              <span className="text-[9px] font-medium opacity-70">{t.desc}</span>
+              <span className="text-xs font-medium opacity-70">{t.desc}</span>
             </span>
           ),
         }))}

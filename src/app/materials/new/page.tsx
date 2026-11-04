@@ -13,7 +13,7 @@ import { MATERIALS_API_BASE as API_BASE, fetchMaterialsJson, materialsToken, for
 
 const MAX_BYTES = 1024 * 1024 * 1024;
 const cardClass = 'space-y-5 rounded-2xl border border-border/60 bg-card p-5 sm:p-6';
-const labelClass = 'mb-1.5 block text-[10px] font-black uppercase tracking-widest text-muted-foreground';
+const labelClass = 'mb-1.5 block text-xs font-black uppercase tracking-widest text-muted-foreground';
 
 const CHUNK_BYTES = 8 * 1024 * 1024;
 type UploadState = { offset: number; size_bytes: number; complete: boolean };
@@ -164,7 +164,7 @@ export default function NewMaterialPage() {
       </button>
       <div>
         <h1 className="text-3xl font-black uppercase italic tracking-tighter">자료 올리기</h1>
-        <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">파일 · 제목 · 태그</p>
+        <p className="mt-1 text-xs font-black uppercase tracking-widest text-muted-foreground">파일 · 제목 · 태그</p>
       </div>
     </div>
 

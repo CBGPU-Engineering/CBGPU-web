@@ -85,7 +85,7 @@ export default function MemoryMatch() {
         <div className="flex gap-1">
           {[6, 8, 12].map(p => (
             <button key={p} onClick={() => { setPairs(p); start(p); }}
-              className={`px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-widest transition-all ${
+              className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                 pairs === p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}>
               {p === 6 ? 'Easy' : p === 8 ? 'Mid' : 'Hard'}
@@ -93,9 +93,9 @@ export default function MemoryMatch() {
           ))}
         </div>
         <div className="flex gap-3 text-sm font-black">
-          <span className="text-muted-foreground uppercase tracking-widest text-[11px]">⏱ {fmt(time)}</span>
-          <span className="text-muted-foreground uppercase tracking-widest text-[11px]">🔄 {moves}</span>
-          <span className="text-muted-foreground uppercase tracking-widest text-[11px]">✅ {matched}/{pairs}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-xs">⏱ {fmt(time)}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-xs">🔄 {moves}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-xs">✅ {matched}/{pairs}</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => start()} className="font-black text-xs uppercase">Reset</Button>
       </div>

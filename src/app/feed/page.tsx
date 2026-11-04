@@ -30,7 +30,7 @@ export default function FeedPage() {
           label: (
             <span className="flex flex-col items-center gap-0.5">
               <span>{t.label}</span>
-              <span className="text-[9px] font-medium opacity-70">{t.desc}</span>
+              <span className="text-xs font-medium opacity-70">{t.desc}</span>
             </span>
           ),
         }))}

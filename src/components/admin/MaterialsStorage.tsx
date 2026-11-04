@@ -66,7 +66,7 @@ export default function MaterialsStorage() {
   const ratio = usage ? (usage.used_bytes + usage.reserved_bytes) / usage.quota_bytes : 0;
   const full = usage ? usage.remaining_bytes <= 0 : false;
   const card = 'rounded-2xl border border-border/60 bg-card p-5 space-y-4';
-  const heading = 'text-[10px] font-black uppercase tracking-widest text-muted-foreground';
+  const heading = 'text-xs font-black uppercase tracking-widest text-muted-foreground';
 
   return <div className="space-y-5">
     <div className="flex items-center justify-between gap-3">

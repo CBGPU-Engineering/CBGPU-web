@@ -15,7 +15,7 @@ import { ArrowLeft, ShieldAlert, UploadCloud, Target, X, FileBox, RefreshCw } fr
 type CatalogEntry = { id: string; material: 'mdf' | 'acrylic'; thickness_mm: number };
 type FileEntry = { file: File; quantity: string; catalogId: string; convertedFrom?: string };
 
-const labelCls = 'text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1 block';
+const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 export default function NewLaserJobPage() {
@@ -161,12 +161,12 @@ export default function NewLaserJobPage() {
         </button>
         <div>
           <h1 className="text-3xl font-black tracking-tighter italic uppercase leading-none">레이저 커팅 신청</h1>
-          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-0.5">MDF · 아크릴</p>
+          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-0.5">MDF · 아크릴</p>
         </div>
       </div>
 
       <section className={cardCls}>
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
+        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
         <Input
           placeholder="예: 동아리 전시용 케이스, 개인 프로젝트 부품 등"
           value={purpose}
@@ -176,7 +176,7 @@ export default function NewLaserJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">설계 파일 * — 여러 개 선택 가능</h2>
+        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">설계 파일 * — 여러 개 선택 가능</h2>
 
         {catalog.length === 0 ? (
           <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-xl py-6 text-center">
@@ -189,7 +189,7 @@ export default function NewLaserJobPage() {
                 <>
                   <UploadCloud className="size-6 opacity-40" />
                   <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
-                  <span className="text-[9px] text-muted-foreground opacity-50">.dxf 그대로 올리거나, .svg / .dwg를 올리면 자동으로 dxf로 변환됩니다</span>
+                  <span className="text-xs text-muted-foreground opacity-50">.dxf 그대로 올리거나, .svg / .dwg를 올리면 자동으로 dxf로 변환됩니다</span>
                 </>
               )}
               <input type="file" accept=".dxf,.svg,.dwg" multiple disabled={converting} className="hidden" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
@@ -197,7 +197,7 @@ export default function NewLaserJobPage() {
 
             {fileEntries.length > 0 && (
               <div className="space-y-3">
-                <p className="text-[10px] text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 각각 별도의 신청 건(대기열 항목)으로 접수됩니다.</p>
+                <p className="text-xs text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 각각 별도의 신청 건(대기열 항목)으로 접수됩니다.</p>
                 {fileEntries.map((entry, i) => (
                   <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
@@ -205,7 +205,7 @@ export default function NewLaserJobPage() {
                       <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
                     </div>
                     {entry.convertedFrom && (
-                      <p className="text-[9px] text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → dxf 변환됨</p>
+                      <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → dxf 변환됨</p>
                     )}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="col-span-2">
@@ -233,7 +233,7 @@ export default function NewLaserJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">담당자 지정</h2>
+        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">담당자 지정</h2>
         <div className="flex items-center gap-2">
           <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="아무나 (자동 배정) — 이름/학번 검색" />
         </div>
@@ -251,8 +251,8 @@ export default function NewLaserJobPage() {
       </section>
 
       <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 font-black text-[10px] uppercase tracking-widest h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
-        <Button className="flex-1 font-black text-[10px] uppercase tracking-widest h-11" onClick={handleSubmit} disabled={submitting || catalog.length === 0}>
+        <Button variant="outline" className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
+        <Button className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={handleSubmit} disabled={submitting || catalog.length === 0}>
           {submitting ? '신청 중…' : fileEntries.length > 1 ? `${fileEntries.length}건 신청하기` : '신청하기'}
         </Button>
       </div>

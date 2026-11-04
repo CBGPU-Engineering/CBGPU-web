@@ -150,7 +150,7 @@ export default function AdminStudyPage() {
            and sign in with your usual account.
         </li>
         <li>Press F12 to open Developer Tools, select Console, and run this command.</li>
-        <li className="font-mono text-[11px] bg-background/70 rounded px-2 py-1 select-all break-all">
+        <li className="font-mono text-xs bg-background/70 rounded px-2 py-1 select-all break-all">
           localStorage.getItem(&quot;accessToken&quot;)
         </li>
         <li>Copy the returned token without its quotation marks and paste it below.</li>

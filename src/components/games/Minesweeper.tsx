@@ -128,12 +128,12 @@ export default function Minesweeper() {
       <div className="flex items-center gap-2 flex-wrap justify-center">
         {(Object.keys(LEVELS) as Level[]).map(lv => (
           <button key={lv} onClick={() => { setLevel(lv); reset(lv); }}
-            className={`px-3 py-1.5 rounded-lg font-black text-[11px] uppercase tracking-widest transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
               level === lv ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>{lv}</button>
         ))}
-        <span className="text-[11px] font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
-        <span className="text-[11px] font-black text-muted-foreground">⏱ {time}s</span>
+        <span className="text-xs font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
+        <span className="text-xs font-black text-muted-foreground">⏱ {time}s</span>
         <Button variant="outline" size="sm" className="font-black text-xs uppercase" onClick={() => reset()}>Reset</Button>
       </div>
 

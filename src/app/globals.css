@@ -5,6 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* 글자 크기 체계: 본문이 너무 작게 읽히던 문제를 풀기 위해 가장 작은 두 단계를 한 칸씩 올렸다. 12px 미만은 쓰지 않는다. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.5rem;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--cb-font-sans);
