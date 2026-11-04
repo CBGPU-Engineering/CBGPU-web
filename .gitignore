@@ -51,3 +51,15 @@ next-env.d.ts
 
 # Binary releases are distributed through GitHub Releases.
 /public/downloads/*.apk
+
+# Local runtime state and credentials.
+.env
+.env.local
+*.jks
+*.keystore
+key.properties
+__pycache__/
+*.pyc
+.venv/
+/dist/
+/release-artifacts/

@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "prebuild": "node scripts/check-docs-coverage.cjs",
-    "test": "node --test tests/*.test.mjs && node ../../backend/scripts/verify-study-student.cjs && node --test ../../tests/*.test.mjs",
-    "demo": "node ../../scripts/demo.mjs",
-    "build:demo": "node scripts/check-docs-coverage.cjs && node ../../scripts/demo.mjs --build",
-    "start:demo": "node ../../scripts/demo.mjs --built"
+    "test": "node --test tests/*.test.mjs tests/contests/helpers.test.mjs && node scripts/verify-study-student.cjs",
+    "demo": "node scripts/demo.mjs",
+    "build:demo": "node scripts/check-docs-coverage.cjs && node scripts/demo.mjs --build",
+    "start:demo": "node scripts/demo.mjs --built"
   },
   "dependencies": {
     "@sparticuz/chromium": "^149.0.0",

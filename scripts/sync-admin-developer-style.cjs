@@ -1,6 +1,8 @@
 // The admin shell uses the developer portal's canonical CSS, with scope-only changes.
 const fs=require('fs'),path=require('path'),postcss=require('postcss'),selectors=require('postcss-selector-parser');
-const from=path.resolve(__dirname,'../../../backend/developer/static/style.css'),to=path.resolve(__dirname,'../src/components/admin/developer-shell.css');
+const integrated=path.resolve(__dirname,'../../../backend'),sibling=path.resolve(__dirname,'../../CBGPU-backend');
+const backend=process.env.CBGPU_BACKEND_DIR||(fs.existsSync(path.join(integrated,'developer/static/style.css'))?integrated:sibling);
+const from=path.join(backend,'developer/static/style.css'),to=path.resolve(__dirname,'../src/components/admin/developer-shell.css');
 const root=postcss.parse(fs.readFileSync(from,'utf8'));
 root.walkDecls(d=>{if(d.prop.startsWith('--'))d.prop=d.prop.replace(/^--/,'--dev-');d.value=d.value.replace(/var\(--([a-z-]+)/g,'var(--dev-$1')});
 root.walkRules(rule=>{if(rule.parent.type==='atrule'&&/keyframes$/.test(rule.parent.name))return;rule.selector=selectors(list=>{list.each(selector=>{let rooted=false;selector.walkPseudos(n=>{if(n.value===':root'){n.replaceWith(selectors.className({value:'admin-developer-shell'}));rooted=true}});selector.walkTags(n=>{if(n.value==='body'||n.value==='html'){n.replaceWith(selectors.className({value:'admin-developer-shell'}));rooted=true}});const first=selector.nodes[0];if(first?.type==='attribute'&&first.attribute==='data-theme'){selector.prepend(selectors.className({value:'admin-developer-shell'}));rooted=true}if(!rooted){selector.prepend(selectors.combinator({value:' '}));selector.prepend(selectors.className({value:'admin-developer-shell'}))}})}).processSync(rule.selector)});
