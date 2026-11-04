@@ -158,7 +158,7 @@ export default function MealPage() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-1">
-        <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">충북과학고 학교급식</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">충북과학고 학교급식</p>
         <h1 className="text-3xl font-black tracking-tight">오늘 뭐 나와요?</h1>
       </div>
 
@@ -175,7 +175,7 @@ export default function MealPage() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold">매일 급식 알림</p>
-            <p className="text-[11px] text-muted-foreground">{alarmOn ? `매일 ${alarmTime}에 알려드려요` : '꺼져 있어요'}</p>
+            <p className="text-xs text-muted-foreground">{alarmOn ? `매일 ${alarmTime}에 알려드려요` : '꺼져 있어요'}</p>
           </div>
           <TimePicker value={alarmTime} disabled={!alarmOn} onChange={changeMealAlarmTime} />
         </div>
@@ -192,7 +192,7 @@ export default function MealPage() {
 
         <div key={date} className={`flex-1 text-center overflow-hidden ${slideDir === 'left' ? 'animate-in slide-in-from-right-8' : 'animate-in slide-in-from-left-8'} fade-in duration-300 ease-[var(--ease-spring)]`}>
           <p className="text-2xl font-black tracking-tight">{full} <span className="text-muted-foreground font-bold">{dow}</span></p>
-          <p className="text-[11px] font-bold text-muted-foreground/70">{year}</p>
+          <p className="text-xs font-bold text-muted-foreground/70">{year}</p>
         </div>
 
         <button
@@ -206,7 +206,7 @@ export default function MealPage() {
       {date !== today && (
         <button
           onClick={() => { setSlideDir(date > today ? 'right' : 'left'); setDate(today); }}
-          className="block mx-auto text-[11px] font-black uppercase tracking-widest text-primary active:scale-95 transition-transform"
+          className="block mx-auto text-xs font-black uppercase tracking-widest text-primary active:scale-95 transition-transform"
         >
           ← 오늘로 돌아가기
         </button>
@@ -243,7 +243,7 @@ export default function MealPage() {
                     <p className="font-black text-lg tracking-tight">{meal.type}</p>
                   </div>
                   {meal.calories && (
-                    <span className="text-[11px] font-bold text-muted-foreground">{meal.calories}</span>
+                    <span className="text-xs font-bold text-muted-foreground">{meal.calories}</span>
                   )}
                 </div>
                 <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">

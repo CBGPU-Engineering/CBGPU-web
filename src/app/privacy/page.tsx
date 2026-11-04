@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-6 py-16 space-y-10">
       <div className="space-y-2">
-        <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">CBGPU</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">CBGPU</p>
         <h1 className="text-3xl font-black tracking-tight">개인정보처리방침</h1>
         <p className="text-sm text-muted-foreground">시행일: 2026년 9월 10일</p>
       </div>

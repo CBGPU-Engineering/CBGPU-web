@@ -15,7 +15,7 @@ import {
   ArrowLeft, Download, CheckCircle2, Clock, XCircle, Boxes, Scissors, Trash2, PackageCheck,
 } from 'lucide-react';
 
-const labelCls = 'text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1 block';
+const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block';
 
 const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: string }> = {
   pending:     { icon: <Clock className="size-4" />,        variant: 'warning', label: "Pending approval" },
@@ -92,7 +92,7 @@ export default function LaserJobDetailPage() {
       <div>
         <button
           onClick={() => router.push(managementBase)}
-          className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="size-3" /> Back
         </button>
@@ -110,14 +110,14 @@ export default function LaserJobDetailPage() {
           </div>
 
           {isOwner && job.status === 'pending' && (
-            <Button variant="destructive" className="font-black text-[10px] uppercase gap-1.5 h-9" onClick={() => setCancelOpen(true)}>
+            <Button variant="destructive" className="font-black text-xs uppercase gap-1.5 h-9" onClick={() => setCancelOpen(true)}>
               <Trash2 className="size-3.5" />  Cancel request
             </Button>
           )}
           {!isOwner && job.status === 'done' && !job.delivered_at && (
             <div className="flex items-center gap-2">
               <LocateStudentButton studentId={requester?.student_id} studentName={requester?.full_name} />
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase gap-1.5 h-9" onClick={handleMarkDelivered}>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase gap-1.5 h-9" onClick={handleMarkDelivered}>
                 <PackageCheck className="size-3.5" />  Hand delivered
               </Button>
             </div>

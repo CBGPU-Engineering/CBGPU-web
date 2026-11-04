@@ -50,7 +50,7 @@
 .cb-audience-design .cb-status[data-state=queued],.cb-audience-design .cb-status[data-state=building]{color:var(--muted-foreground)}
 .cb-refreshed-home.cb-audience-design .cb-empty{font-size:14px;line-height:1.8;min-height:110px;padding:24px 0;text-align:left;justify-content:flex-start}
 .cb-audience-design .cb-work-guide{align-self:stretch}
-.cb-audience-design .cb-work-guide .cb-kicker{font-size:11px;letter-spacing:.06em;margin-bottom:15px;color:var(--muted-foreground)}
+.cb-audience-design .cb-work-guide .cb-kicker{font-size:12px;letter-spacing:.06em;margin-bottom:15px;color:var(--muted-foreground)}
 .cb-audience-design .cb-work-guide h2{font-size:24px;line-height:1.45;font-weight:700;letter-spacing:-.035em}
 .cb-audience-design .cb-work-guide>p:not(.cb-kicker){font-size:14px;line-height:1.85}
 .cb-audience-design .cb-work-guide>a{min-height:44px;font-size:14px;line-height:1.5;margin-top:20px}
@@ -58,7 +58,7 @@
 .cb-audience-design .cb-home-discover{margin-top:36px;border-top:1px solid var(--audience-line);padding-top:28px}
 .cb-audience-design .cb-discover-all{padding:0;border:0;border-radius:0;background:none;gap:18px;box-shadow:none}
 .cb-audience-design .cb-discover-icon{width:44px;height:44px;border-radius:12px;background:var(--muted);color:var(--muted-foreground)}
-.cb-audience-design .cb-discover-all small{font-size:11px;letter-spacing:.06em}
+.cb-audience-design .cb-discover-all small{font-size:12px;letter-spacing:.06em}
 .cb-audience-design .cb-discover-all h2{font-size:22px;line-height:1.4;letter-spacing:-.03em}
 .cb-audience-design .cb-discover-all p{font-size:14px;line-height:1.7;margin-top:7px}
 .cb-audience-design .cb-home-reading{gap:24px;margin-top:24px}
@@ -115,7 +115,7 @@
 .cb-workspace .cb-services-help strong{font-size:16px;line-height:1.6}
 .cb-workspace .cb-services-help p{font-size:14px;line-height:1.7}
 .cb-workspace .cb-services-help>a{font-size:14px;min-height:44px}
-.cb-app .cb-bottom-nav a{font-size:11px;line-height:1.45;min-height:52px;padding-inline:3px;gap:5px;text-align:center}
+.cb-app .cb-bottom-nav a{font-size:12px;line-height:1.45;min-height:52px;padding-inline:3px;gap:5px;text-align:center}
 @media(max-width:640px){.cb-workspace .cb-service-tile{padding:20px 0;min-height:110px}.cb-workspace .cb-services-page{gap:24px}.cb-workspace .cb-services-grid{gap:0}.cb-workspace .cb-services-group-heading h2{font-size:18px}}
 .cb-audience-design .cb-home-hero .cb-overview-heading h1{word-break:keep-all;overflow-wrap:anywhere}
 .cb-audience-design .cb-home-account .cb-account-entry{flex:1;min-width:0}

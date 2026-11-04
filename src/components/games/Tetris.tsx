@@ -192,8 +192,8 @@ export default function Tetris() {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="flex items-center gap-6">
-        <div className="text-center"><p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
-        <div className="text-center"><p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Lines</p><p className="text-xl font-black">{lines}</p></div>
+        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
+        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Lines</p><p className="text-xl font-black">{lines}</p></div>
         {started && !gameOver && <Button variant="outline" size="sm" onClick={togglePause} className="font-black text-xs uppercase">{paused ? 'Resume' : 'Pause'}</Button>}
       </div>
       <div className="relative">

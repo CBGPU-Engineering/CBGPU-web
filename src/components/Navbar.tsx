@@ -148,7 +148,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
         >
           <Search className="size-4" aria-hidden="true" />
           <span className="hidden sm:inline">기능 찾기</span>
-          <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-[10px]">⌘ K</span>
+          <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
         <div className="hidden xl:flex items-center gap-2">
           <Link href="/contact" className={`text-xs transition-colors font-black px-3 py-1.5 rounded-lg uppercase tracking-widest ${pathname === '/contact' ? 'bg-primary text-primary-foreground shadow-lg' : 'hover:bg-muted text-muted-foreground'}`}>
@@ -179,7 +179,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                   >
                     <div className="px-3 py-2 mb-1 border-b border-border/40">
                       <p className="text-sm font-semibold text-foreground truncate max-w-[180px]">{profile?.full_name || 'My Profile'}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium opacity-70 truncate max-w-[180px]">{user.email}</p>
+                      <p className="text-xs text-muted-foreground font-medium opacity-70 truncate max-w-[180px]">{user.email}</p>
                     </div>
                     <DropdownMenuPrimitive.Item asChild>
                       <Link href="/profile" className="block px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors outline-none">
@@ -230,7 +230,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                     <span className="text-sm font-black uppercase text-primary leading-none">
                       {profile?.full_name || 'My Profile'}
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-medium opacity-70">
+                    <span className="text-xs text-muted-foreground font-medium opacity-70">
                       {user.email}
                     </span>
                   </div>

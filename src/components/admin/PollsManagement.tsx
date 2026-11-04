@@ -80,7 +80,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
               <label key={o.id} onClick={() => onChange(chk ? sel.filter(v => v !== o.id) : [...sel, o.id])}
                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${chk ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${chk ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
-                  {chk && <span className="text-white text-[10px] font-black">✓</span>}
+                  {chk && <span className="text-white text-xs font-black">✓</span>}
                 </div>
                 <span className="text-sm font-medium">{o.text}</span>
               </label>
@@ -104,7 +104,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
             ))}
           </div>
           {(minLabel || maxLabel) && (
-            <div className="flex justify-between text-[10px] text-muted-foreground font-medium px-1">
+            <div className="flex justify-between text-xs text-muted-foreground font-medium px-1">
               <span>{minLabel}</span><span>{maxLabel}</span>
             </div>
           )}
@@ -124,7 +124,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const texts = qAnswers.filter(Boolean).map(v => typeof v === 'string' ? v : JSON.stringify(v));
     return (
       <div className="space-y-1.5">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
         {texts.slice(0, 20).map((t, i) => (
           <p key={i} className="text-sm bg-muted/30 border border-border/30 rounded-xl px-3 py-2 font-medium">{t}</p>
         ))}
@@ -139,7 +139,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const { min = 1, max = 5 } = q.config;
     return (
       <div className="space-y-2">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{total} responses · Average <span className="text-primary">{avg}</span></p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses · Average <span className="text-primary">{avg}</span></p>
         <div className="flex gap-2">
           {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => {
             const cnt = nums.filter(v => v === n).length;
@@ -149,8 +149,8 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
                 <div className="w-full bg-muted rounded-full h-20 flex items-end overflow-hidden">
                   <div className="w-full bg-primary rounded-full transition-all duration-700" style={{ height: `${pct}%` }} />
                 </div>
-                <span className="text-[10px] font-black text-muted-foreground">{n}</span>
-                <span className="text-[9px] text-muted-foreground/60">{pct}%</span>
+                <span className="text-xs font-black text-muted-foreground">{n}</span>
+                <span className="text-xs text-muted-foreground/60">{pct}%</span>
               </div>
             );
           })}
@@ -167,13 +167,13 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
   });
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
       {q.options.map(o => {
         const cnt = countMap[o.id] ?? 0;
         const pct = total ? Math.round(cnt / total * 100) : 0;
         return (
           <div key={o.id} className="space-y-1">
-            <div className="flex justify-between text-[11px] font-bold">
+            <div className="flex justify-between text-xs font-bold">
               <span>{o.text}</span>
               <span className="text-muted-foreground">{cnt} responses ({pct}%)</span>
             </div>
@@ -209,9 +209,9 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           <button onClick={e => { e.stopPropagation(); onMove(1); }} disabled={idx === total - 1} className="text-muted-foreground/40 hover:text-muted-foreground disabled:opacity-20"><ChevronDown className="size-3" /></button>
         </div>
         <Icon className="size-3.5 text-muted-foreground shrink-0" />
-        <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest shrink-0">{idx + 1}.</span>
+        <span className="text-xs text-muted-foreground font-black uppercase tracking-widest shrink-0">{idx + 1}.</span>
         <span className="text-sm font-bold flex-1 truncate">{q.title || "(Untitled)"}</span>
-        {q.required && <span className="text-[9px] text-destructive font-black">Required</span>}
+        {q.required && <span className="text-xs text-destructive font-black">Required</span>}
         <button onClick={e => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground/40 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
       </div>
 
@@ -221,7 +221,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           <div className="flex gap-1 flex-wrap">
             {Q_TYPES.map(t => (
               <button key={t.id} onClick={() => onChange({ ...q, type: t.id, config: t.id === 'scale' ? { min: 1, max: 5, minLabel: "Very low", maxLabel: "Very high" } : {} })}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1 ${q.type === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 ${q.type === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
                 <t.icon className="size-2.5" />{t.label}
               </button>
             ))}
@@ -233,7 +233,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           {/* options */}
           {hasOptions && (
             <div className="space-y-1.5">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Option</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Option</p>
               {q.options.map((o, i) => (
                 <div key={o.id} className="flex gap-2">
                   <Input value={o.text} onChange={e => setOptText(o.id, e.target.value)} placeholder={`Option ${i + 1}`} className="md:text-sm" />
@@ -247,10 +247,10 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           {/* scale config */}
           {isScale && (
             <div className="grid grid-cols-2 gap-2">
-              <div><p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Minimum</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Maximum</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Minimum label</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Maximum label</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Minimum</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Maximum</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Minimum label</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Maximum label</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
             </div>
           )}
 
@@ -258,8 +258,8 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
             {/* conditional show */}
             {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type) && p.options.length).length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Show when:</span>
-                <select className="text-[10px] bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
+                <span className="text-xs text-muted-foreground font-black uppercase tracking-widest">Show when:</span>
+                <select className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                   value={q.config.showIf?.questionId ?? ''}
                   onChange={e => onChange({ ...q, config: { ...q.config, showIf: e.target.value ? { questionId: e.target.value, value: '' } : undefined } })}>
                   <option value="">Always visible</option>
@@ -268,7 +268,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                   ))}
                 </select>
                 {q.config.showIf?.questionId && (
-                  <select className="text-[10px] bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
+                  <select className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                     value={q.config.showIf.value}
                     onChange={e => onChange({ ...q, config: { ...q.config, showIf: { ...q.config.showIf!, value: e.target.value } } })}>
                     <option value="">Select an option</option>
@@ -284,7 +284,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                 className={`w-8 h-4 rounded-full relative transition-all ${q.required ? 'bg-primary' : 'bg-muted'}`}>
                 <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${q.required ? 'left-4' : 'left-0.5'}`} />
               </div>
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Required</span>
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Required</span>
             </label>
           </div>
         </div>
@@ -359,12 +359,12 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Poll title *" className="text-lg font-black" />
         <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Description (optional)" className="font-medium text-muted-foreground" />
         <div className="flex gap-3 flex-wrap">
-          <div><p className="text-[9px] font-black text-muted-foreground uppercase mb-1">Closing date</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
+          <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Closing date</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
           <label className="flex items-center gap-2 mt-5 cursor-pointer">
             <div onClick={() => setShowRes(v => !v)} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
               <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
             </div>
-            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Show results</span>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Show results</span>
           </label>
         </div>
       </div>
@@ -380,11 +380,11 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       </div>
 
       <div className="p-4 border-2 border-dashed border-border/40 rounded-2xl">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 text-center">Add question</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 text-center">Add question</p>
         <div className="flex gap-1.5 flex-wrap justify-center">
           {Q_TYPES.map(t => (
             <button key={t.id} onClick={() => addQ(t.id)}
-              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-[10px] font-black uppercase tracking-widest text-muted-foreground transition-all flex items-center gap-1.5">
+              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-xs font-black uppercase tracking-widest text-muted-foreground transition-all flex items-center gap-1.5">
               <t.icon className="size-3" />{t.label}
             </button>
           ))}
@@ -436,7 +436,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
         <div>
           <h2 className="font-black text-xl tracking-tighter">{poll.title}</h2>
           {poll.description && <p className="text-sm text-muted-foreground mt-0.5">{poll.description}</p>}
-          {poll.ends_at && <p className="text-[10px] text-muted-foreground font-medium mt-0.5">Closes: {fmtDate(poll.ends_at)}</p>}
+          {poll.ends_at && <p className="text-xs text-muted-foreground font-medium mt-0.5">Closes: {fmtDate(poll.ends_at)}</p>}
         </div>
       </div>
 
@@ -669,7 +669,7 @@ export default function PollsPage() {
                       {closed && <Badge variant="muted" icon={<Lock className="size-2.5" />}>Closed</Badge>}
                     </div>
                     {poll.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{poll.description}</p>}
-                    {poll.ends_at && <p className="text-[10px] text-muted-foreground mt-1">~{fmtDate(poll.ends_at)}</p>}
+                    {poll.ends_at && <p className="text-xs text-muted-foreground mt-1">~{fmtDate(poll.ends_at)}</p>}
                   </div>
                   <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                     {(voted || closed) && poll.show_results && (

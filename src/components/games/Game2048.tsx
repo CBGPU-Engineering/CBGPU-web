@@ -126,8 +126,8 @@ export default function Game2048() {
   return (
     <div className="flex flex-col items-center gap-5">
       <div className="flex items-center gap-6">
-        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
-        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Best</p><p className="text-xl font-black">{best}</p></div>
+        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
+        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Best</p><p className="text-xl font-black">{best}</p></div>
         <Button onClick={reset} variant="outline" size="sm" className="font-black text-xs uppercase tracking-widest">New Game</Button>
       </div>
 

@@ -30,7 +30,7 @@ export default function MainSiteFrame({children}:{children:React.ReactNode}){con
                       <span className="opacity-30" aria-hidden="true">·</span>
                       <Link href="/contact" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">문의하기</Link>
                     </p>
-                    <p className="text-[10px] uppercase tracking-widest opacity-60">
+                    <p className="text-xs uppercase tracking-widest opacity-60">
                     © {currentYear} <a href="https://github.com/lmwmason" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline-offset-4 hover:underline">CBGPU</a>. All rights reserved.
                   </p>
                   </div>

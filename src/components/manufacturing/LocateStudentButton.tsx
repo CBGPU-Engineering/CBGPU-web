@@ -32,7 +32,7 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
 
   return (
     <>
-      <Button size="sm" variant="outline" className="font-black text-[10px] uppercase gap-1.5" onClick={handleOpen}>
+      <Button size="sm" variant="outline" className="font-black text-xs uppercase gap-1.5" onClick={handleOpen}>
         <MapPin className="size-3.5" /> 지금 위치 확인
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -54,7 +54,7 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
                   {result.period ? `일과시간 · ${result.period}교시${result.subject ? ` (${result.subject})` : ''}` : '자습 시간 외'}
                 </p>
                 <p className="text-2xl font-black">{result.identity.grade}학년 {result.identity.classNo}반 교실</p>
-                <p className="text-[10px] text-muted-foreground opacity-60">이동수업이 아니라면 이 교실에 있을 가능성이 높습니다.</p>
+                <p className="text-xs text-muted-foreground opacity-60">이동수업이 아니라면 이 교실에 있을 가능성이 높습니다.</p>
               </div>
             ) : result.kind === 'selfstudy' ? (
               <div className="space-y-2 text-center">

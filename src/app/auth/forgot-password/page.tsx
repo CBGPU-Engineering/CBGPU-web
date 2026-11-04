@@ -52,7 +52,7 @@ export default function ForgotPassword() {
       <p className="text-sm text-muted-foreground text-center font-medium mb-6">가입한 이메일로 재설정 링크를 보내드립니다.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Email</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">Email</label>
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"

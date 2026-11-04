@@ -197,7 +197,7 @@ export default function TimetablePage() {
           value={String(cls)}
           onChange={(v) => switchTo(grade, Number(v))}
         />
-        {editing && <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />  Editing</span>}
+        {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />  Editing</span>}
       </div>
 
       {error && source === 'manual' && (
@@ -224,8 +224,8 @@ export default function TimetablePage() {
               <tr>
                 <th className="w-10 p-1" />
                 {DAYS.map((day, i) => (
-                  <th key={day} className={`p-2 text-[11px] font-black uppercase tracking-widest text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
-                    {day}{todayWd===i&&<span className="block text-[8px] text-primary/70">Today</span>}
+                  <th key={day} className={`p-2 text-xs font-black uppercase tracking-widest text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
+                    {day}{todayWd===i&&<span className="block text-xs text-primary/70">Today</span>}
                   </th>
                 ))}
               </tr>
@@ -233,7 +233,7 @@ export default function TimetablePage() {
             <tbody>
               {PERIODS.map(p => (
                 <tr key={p}>
-                  <td className="p-1 text-center"><span className="text-[10px] font-black text-muted-foreground">{p}</span></td>
+                  <td className="p-1 text-center"><span className="text-xs font-black text-muted-foreground">{p}</span></td>
                   {DAYS.map((_, di) => {
                     const cell    = editing ? undefined : grid[di]?.[p];
                     const subject = editing ? (draft[di]?.[p] ?? '') : (cell?.subject ?? '');
@@ -246,15 +246,15 @@ export default function TimetablePage() {
                           <input value={subject}
                             onChange={e => setDraft(prev => ({ ...prev, [di]: { ...prev[di], [p]: e.target.value } }))}
                             placeholder="Subject"
-                            className="w-full h-14 px-1.5 text-center text-[11px] font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
+                            className="w-full h-14 px-1.5 text-center text-xs font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
                           />
                         ) : subject ? (
                           <div title={changed ? "Live Comcigan update" : undefined}
                             className={`relative h-14 pl-2.5 pr-1.5 rounded-lg border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden tilt-3d transition-all ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
                             <span className={`absolute inset-y-0 left-0 w-1 ${subjectColor(subject).bar}`} />
                             {changed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-amber-500" />}
-                            <span className={`text-[11px] font-black leading-tight line-clamp-1 ${subjectColor(subject).text}`}>{subject}</span>
-                            {teacher && <span className="text-[9px] text-muted-foreground leading-tight">{teacher}</span>}
+                            <span className={`text-xs font-black leading-tight line-clamp-1 ${subjectColor(subject).text}`}>{subject}</span>
+                            {teacher && <span className="text-xs text-muted-foreground leading-tight">{teacher}</span>}
                           </div>
                         ) : (
                           <div className="h-14 rounded-lg bg-muted/10 border border-transparent" />
@@ -269,7 +269,7 @@ export default function TimetablePage() {
         </div>
       )}
 
-      <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
+      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
         <span>Synced with Comcigan · manual fallback when unavailable{isAdmin && " · Editing enabled"}</span>
         {source === 'comcigan' && (
           <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" />Live class changes</span>

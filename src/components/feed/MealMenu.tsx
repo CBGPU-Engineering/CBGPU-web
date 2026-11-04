@@ -56,7 +56,7 @@ export default function MealMenu() {
         <Button variant="ghost" size="icon" className="size-8" onClick={() => move(-1)}><ChevronLeft className="size-4" /></Button>
         <div className="text-center">
           <p className="font-black text-sm">{display(date)}</p>
-          {fmt(date) === fmt(new Date()) && <p className="text-[10px] text-primary font-bold">오늘</p>}
+          {fmt(date) === fmt(new Date()) && <p className="text-xs text-primary font-bold">오늘</p>}
         </div>
         <div className="flex gap-1">
           <Button variant="ghost" size="icon" className="size-8" onClick={() => move(1)}><ChevronRight className="size-4" /></Button>
@@ -91,7 +91,7 @@ export default function MealMenu() {
             <div className="flex items-center gap-2">
               <Badge className={MEAL_COLOR[meal.type] ?? 'bg-muted text-muted-foreground'}>{meal.type}</Badge>
               {meal.calories && (
-                <span className="text-[10px] text-muted-foreground font-medium">{meal.calories}</span>
+                <span className="text-xs text-muted-foreground font-medium">{meal.calories}</span>
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
@@ -106,7 +106,7 @@ export default function MealMenu() {
       </div>
 
       {meals.length > 0 && (
-        <p className="text-[10px] text-muted-foreground text-center">출처: 나이스 교육정보 개방 포털</p>
+        <p className="text-xs text-muted-foreground text-center">출처: 나이스 교육정보 개방 포털</p>
       )}
     </div>
   );

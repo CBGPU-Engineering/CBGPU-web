@@ -162,7 +162,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
             <Button 
                 variant="secondary" 
                 size="xs" 
-                className="text-[10px] font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
+                className="text-xs font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
                 onClick={() => setShowSchedule(!showSchedule)}
             >
                 {showSchedule ? "CLOSE SCHEDULE" : "VIEW CALENDAR"}
@@ -174,7 +174,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold italic tracking-tighter">GPU #{id}</h3>
-            <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">RTX5000</p>
+            <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">RTX5000</p>
           </div>
           <div className="flex flex-col items-end">
             <Badge variant="success">Ready</Badge>
@@ -189,13 +189,13 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                 return (
                   <div key={idx} className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                      <span className="text-xs font-black uppercase text-primary bg-primary/10 px-1.5 py-0.5 rounded">
                         {format(day, 'MMM d (eee)', { locale: ko })}
                       </span>
                       <div className="h-[1px] flex-grow bg-border/50"></div>
                     </div>
                     {dayReservations.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground/50 italic pl-2">No reservations</p>
+                      <p className="text-xs text-muted-foreground/50 italic pl-2">No reservations</p>
                     ) : (
                       dayReservations.map((res, i) => {
                         const s = parseISO(res.start_time);
@@ -204,13 +204,13 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                         const isEnd = isSameDay(e, day);
                         
                         return (
-                          <div key={i} className="text-[10px] p-2 bg-muted/30 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors">
+                          <div key={i} className="text-xs p-2 bg-muted/30 rounded-lg border border-border/30 hover:bg-muted/50 transition-colors">
                             <div className="flex justify-between font-bold text-foreground">
                               <span>
                                 {isStart ? format(s, 'HH:mm') : '00:00'} - {isEnd ? format(e, 'HH:mm') : '23:59'}
                               </span>
-                              {!isStart && !isEnd && <span className="text-[8px] bg-primary/20 text-primary px-1 rounded">ALL DAY</span>}
-                              <span className="text-[9px] text-muted-foreground uppercase opacity-70">Reserved</span>
+                              {!isStart && !isEnd && <span className="text-xs bg-primary/20 text-primary px-1 rounded">ALL DAY</span>}
+                              <span className="text-xs text-muted-foreground uppercase opacity-70">Reserved</span>
                             </div>
                           </div>
                         );
@@ -224,7 +224,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">사용 시작일</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground ml-1">사용 시작일</label>
               <div className="flex gap-1.5 overflow-x-auto py-1.5 -mx-1 px-1">
                 {NEXT_14_DAYS.map((day, i) => {
                   const isSelected = isSameDay(day, selectedDate);
@@ -242,7 +242,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                         isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                       }`}
                     >
-                      <span className="text-[9px] font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
+                      <span className="text-xs font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
                       <span className="text-xs font-black">{format(day, 'M/d')}</span>
                       <span className={`size-1 rounded-full ${dayHasReservation ? (isSelected ? 'bg-primary-foreground' : 'bg-primary') : 'bg-transparent'}`} />
                     </button>
@@ -252,7 +252,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">시작 시각</label>
+              <label className="text-xs font-bold uppercase text-muted-foreground ml-1">시작 시각</label>
               <div className="flex items-center gap-2 mt-1.5">
                 <button
                   type="button"
@@ -266,14 +266,14 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
             </div>
 
             <div>
-              <label className="text-[10px] font-bold uppercase text-muted-foreground ml-1">사용 시간 <span className="text-primary/60 normal-case">(최대 7일)</span></label>
+              <label className="text-xs font-bold uppercase text-muted-foreground ml-1">사용 시간 <span className="text-primary/60 normal-case">(최대 7일)</span></label>
               <div className="grid grid-cols-4 gap-1.5 mt-1.5">
                 {DURATION_PRESETS.map((p) => (
                   <button
                     key={p.hours}
                     type="button"
                     onClick={() => setDurationHours(p.hours)}
-                    className={`px-2 py-1.5 rounded-xl border text-[11px] font-black transition-all active:scale-95 ${
+                    className={`px-2 py-1.5 rounded-xl border text-xs font-black transition-all active:scale-95 ${
                       durationHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                     }`}
                   >
@@ -283,7 +283,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-[11px] font-bold text-muted-foreground bg-muted/30 rounded-xl py-2 px-3">
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground bg-muted/30 rounded-xl py-2 px-3">
               <span>{format(start, 'M/d(eee) HH:mm', { locale: ko })}</span>
               <span className="opacity-40">→</span>
               <span>{format(end, 'M/d(eee) HH:mm', { locale: ko })}</span>

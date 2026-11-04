@@ -58,7 +58,7 @@ export default function SchoolNews() {
           onChange={(v) => setTab(v as TabId)}
         />
         <div className="flex items-center gap-2">
-          {updated && <span className="text-[10px] text-muted-foreground">{updated.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })}</span>}
+          {updated && <span className="text-xs text-muted-foreground">{updated.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })}</span>}
           <Button variant="ghost" size="icon" className="size-7" onClick={() => load(tab)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
@@ -82,10 +82,10 @@ export default function SchoolNews() {
         {items.map((item, i) => (
           <a key={i} href={item.link} target="_blank" rel="noopener noreferrer"
             className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group">
-            <span className="text-[10px] font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
+            <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
-              <div className="flex items-center gap-2.5 mt-1 text-[10px] text-muted-foreground flex-wrap">
+              <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
+              <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
                 {item.author && <span className="font-medium opacity-70">{item.author}</span>}
                 {item.pubDate && <span className="opacity-40">{fmtDate(item.pubDate)}</span>}
               </div>
@@ -96,7 +96,7 @@ export default function SchoolNews() {
       </div>
 
       {items.length > 0 && (
-        <p className="text-center text-[10px] text-muted-foreground pt-1">
+        <p className="text-center text-xs text-muted-foreground pt-1">
           출처:{' '}
           <a href="https://school.cbe.go.kr/cbs-h" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">
             충북과학고등학교 홈페이지

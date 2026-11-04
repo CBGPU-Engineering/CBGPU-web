@@ -112,7 +112,7 @@ export function Model3MFViewer({ src, english=false }: { src: string; english?:b
       )}
       <div ref={containerRef} className="w-full h-full" />
       {!loading && !error && (
-        <p className="absolute bottom-2 right-3 text-[9px] font-black uppercase tracking-widest text-muted-foreground/60">{english?"Drag to rotate · Scroll to zoom":"드래그: 회전 · 스크롤: 확대"}</p>
+        <p className="absolute bottom-2 right-3 text-xs font-black uppercase tracking-widest text-muted-foreground/60">{english?"Drag to rotate · Scroll to zoom":"드래그: 회전 · 스크롤: 확대"}</p>
       )}
     </div>
   );

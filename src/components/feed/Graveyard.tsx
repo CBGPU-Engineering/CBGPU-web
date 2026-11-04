@@ -407,10 +407,10 @@ function TombstoneCard({ s }: { s: DeadService }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <h3 className="font-black text-sm leading-tight">{s.name}</h3>
-            <span className="text-[9px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">{s.category}</span>
+            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">{s.category}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{s.desc}</p>
-          <p className="text-[10px] font-black text-muted-foreground/35 mt-1.5 uppercase tracking-widest">
+          <p className="text-xs font-black text-muted-foreground/35 mt-1.5 uppercase tracking-widest">
             RIP {s.year} {s.born ? `· 향년 ${s.year - s.born}세` : ''}
           </p>
         </div>
@@ -420,7 +420,7 @@ function TombstoneCard({ s }: { s: DeadService }) {
       {open && (
         <div className="border-t border-border/20 px-4 py-6 flex flex-col items-center gap-4">
           <MemorialPortrait s={s} />
-          <p className="text-[11px] italic text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
+          <p className="text-xs italic text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
         </div>
       )}
     </div>
@@ -496,7 +496,7 @@ export default function Graveyard() {
             className="h-7 px-3 text-xs bg-muted border border-border/50 rounded-lg outline-none focus:border-primary w-28 font-medium"
           />
         </div>
-        <p className="text-[10px] text-muted-foreground/40 font-medium">▼ 클릭하면 영정사진을 볼 수 있습니다</p>
+        <p className="text-xs text-muted-foreground/40 font-medium">▼ 클릭하면 영정사진을 볼 수 있습니다</p>
         <div className="space-y-2">
           {filtered.map(s => <TombstoneCard key={s.name + s.year} s={s} />)}
         </div>

@@ -207,7 +207,7 @@ export default function WakeupSongPage() {
         <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-black">{dorm}에 신청하기</h2></div>
 
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">틀어줄 날짜</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">틀어줄 날짜</label>
           <div className="flex gap-1.5 overflow-x-auto py-1 -mx-1 px-1">
             {NEXT_14_DAYS.map((day, i) => {
               const isSelected = isSameDay(day, selectedDate);
@@ -220,7 +220,7 @@ export default function WakeupSongPage() {
                     isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                   }`}
                 >
-                  <span className="text-[9px] font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
+                  <span className="text-xs font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
                   <span className="text-xs font-black">{format(day, 'M/d')}</span>
                 </button>
               );
@@ -239,7 +239,7 @@ export default function WakeupSongPage() {
           </div>
         ) : (
           <div className="space-y-1.5 relative">
-            <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Spotify에서 노래 검색</label>
+            <label className="text-xs font-black uppercase text-muted-foreground ml-1">Spotify에서 노래 검색</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -274,7 +274,7 @@ export default function WakeupSongPage() {
         )}
 
         <div className="space-y-1.5">
-          <label className="text-[10px] font-black uppercase text-muted-foreground ml-1">한마디 (선택)</label>
+          <label className="text-xs font-black uppercase text-muted-foreground ml-1">한마디 (선택)</label>
           <Input placeholder="누구에게, 어떤 마음으로 신청하는지 적어보세요" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={80} />
         </div>
         <Button type="submit" disabled={!preview || submitting} className="w-full py-5 font-black">

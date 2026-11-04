@@ -52,7 +52,7 @@ function PostCard({
             {post.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{post.description}</p>}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center gap-1 text-[11px] font-black text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs font-black text-muted-foreground">
               <Users className="size-3" />{cnt}/{post.max_members}
             </div>
             {isOwner && (
@@ -72,19 +72,19 @@ function PostCard({
         <div className="border-t border-border/20 p-4 space-y-3">
           {post.description && <p className="text-sm text-muted-foreground">{post.description}</p>}
           <div className="space-y-1.5">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">참여 멤버 ({cnt}/{post.max_members})</p>
+            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">참여 멤버 ({cnt}/{post.max_members})</p>
             <div className="flex flex-wrap gap-1.5">
               {allMemberIds.map(id => {
                 const avatar = profileMap.get(id)?.avatar_url;
                 return (
-                  <span key={id} className="flex items-center gap-1.5 text-[11px] font-bold bg-muted pl-1 pr-2 py-1 rounded-lg">
+                  <span key={id} className="flex items-center gap-1.5 text-xs font-bold bg-muted pl-1 pr-2 py-1 rounded-lg">
                     {avatar ? (
                       <img src={avatar} alt="" className="size-5 rounded-full object-cover shrink-0" />
                     ) : (
                       <span className="size-5 rounded-full bg-muted-foreground/20 shrink-0" />
                     )}
                     {profileMap.get(id)?.full_name || '익명'}
-                    {id === post.user_id && <span className="text-[9px] text-primary font-black uppercase">장</span>}
+                    {id === post.user_id && <span className="text-xs text-primary font-black uppercase">장</span>}
                   </span>
                 );
               })}
@@ -155,7 +155,7 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
         <div className="flex gap-1.5 flex-wrap">
           {SUBJECTS.map(s => (
             <button key={s} onClick={() => setSubject(s)}
-              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${subject===s?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground'}`}>{s}</button>
+              className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${subject===s?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>
         <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="스터디 제목 *" className="font-bold" />
@@ -163,11 +163,11 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
           className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-xl outline-none focus:border-primary resize-none font-medium" />
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">최대 인원</p>
+            <p className="text-xs font-black text-muted-foreground uppercase mb-1">최대 인원</p>
             <Input type="number" min={2} max={20} value={max} onChange={e => setMax(+e.target.value)} className="md:text-sm" />
           </div>
           <div className="flex-1">
-            <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">태그 (최대 5개)</p>
+            <p className="text-xs font-black text-muted-foreground uppercase mb-1">태그 (최대 5개)</p>
             <div className="flex gap-1">
               <Input value={tagInput} onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => (e.key==='Enter'||e.key===',') && (e.preventDefault(),addTag())}
@@ -177,13 +177,13 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
         </div>
         {tags.length > 0 && (
           <div className="flex gap-1 flex-wrap">
-            {tags.map(t => <span key={t} className="flex items-center gap-1 text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+            {tags.map(t => <span key={t} className="flex items-center gap-1 text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
               {t}<button onClick={() => setTags(tg => tg.filter(x=>x!==t))}><X className="size-2.5" /></button>
             </span>)}
           </div>
         )}
-        {(suggestingTags || suggestedTags.some(tag => !tags.includes(tag))) && <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground" aria-live="polite"><Sparkles className="size-3 text-primary" /><span>{suggestingTags ? '태그 추천 중…' : '추천 태그'}</span>{suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => setTags(current => current.length < 5 && !current.includes(tag) ? [...current, tag] : current)} disabled={tags.length >= 5} className="rounded-full border border-primary/30 px-2 py-1 font-bold text-primary disabled:opacity-50">+ {tag}</button>)}</div>}
-        <p className="text-[10px] text-muted-foreground">설명을 마치면 태그 추천을 위해 제목과 설명이 NVIDIA AI로 전송됩니다.</p>
+        {(suggestingTags || suggestedTags.some(tag => !tags.includes(tag))) && <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite"><Sparkles className="size-3 text-primary" /><span>{suggestingTags ? '태그 추천 중…' : '추천 태그'}</span>{suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => setTags(current => current.length < 5 && !current.includes(tag) ? [...current, tag] : current)} disabled={tags.length >= 5} className="rounded-full border border-primary/30 px-2 py-1 font-bold text-primary disabled:opacity-50">+ {tag}</button>)}</div>}
+        <p className="text-xs text-muted-foreground">설명을 마치면 태그 추천을 위해 제목과 설명이 NVIDIA AI로 전송됩니다.</p>
         <Button onClick={submit} disabled={saving} className="w-full font-black uppercase tracking-widest">
           {saving ? '만드는 중...' : '스터디 만들기'}
         </Button>
@@ -295,10 +295,10 @@ export default function MatchPage() {
         />
         <div className="flex gap-1 flex-wrap">
           <button onClick={() => setFilter('')}
-            className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${!filter?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>전체</button>
+            className={`px-2 py-1 rounded-lg text-xs font-black transition-all ${!filter?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>전체</button>
           {SUBJECTS.map(s => (
             <button key={s} onClick={() => setFilter(f => f===s?'':s)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all ${filter===s?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{s}</button>
+              className={`px-2 py-1 rounded-lg text-xs font-black transition-all ${filter===s?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>
       </div>

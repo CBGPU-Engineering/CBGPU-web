@@ -513,7 +513,7 @@ export default function ManufacturingPage() {
                 <Badge variant="warning" icon={<Clock className="size-3" />}>Queued {printQueueLength} items</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-[10px] uppercase gap-1.5 h-9">
+            <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" />  New request
             </Button>
           </div>
@@ -533,11 +533,11 @@ export default function ManufacturingPage() {
                         : <Badge variant="muted">Available</Badge>}
                 </div>
                 {p.status === 'printing' && p.estimated_end_at && (
-                  <p className="text-[11px] text-muted-foreground font-bold">
+                  <p className="text-xs text-muted-foreground font-bold">
                     {formatDistanceToNow(new Date(p.estimated_end_at), { locale: enUS, addSuffix: true })}  Estimated finish
                   </p>
                 )}
-                <p className="text-[10px] text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
+                <p className="text-xs text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
               </Card>
             ))}
           </div>
@@ -548,10 +548,10 @@ export default function ManufacturingPage() {
               <Table className="data-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">File</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Mode</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">Requested</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">File</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Mode</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requested</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -567,8 +567,8 @@ export default function ManufacturingPage() {
                           <TableCell className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
                               <span className="font-bold text-sm">{j.file_name || '—'}</span>
-                              {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-[10px] text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
+                              {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
                           <TableCell className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? "Beginner" : "Advanced"}</span></TableCell>
@@ -595,7 +595,7 @@ export default function ManufacturingPage() {
                 <Badge variant="warning" icon={<Clock className="size-3" />}>Queued {laserQueueLength} items</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-[10px] uppercase gap-1.5 h-9">
+            <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" />  New request
             </Button>
           </div>
@@ -604,10 +604,10 @@ export default function ManufacturingPage() {
               <Table className="data-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">File</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Material</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">Requested</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">File</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Material</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requested</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -623,8 +623,8 @@ export default function ManufacturingPage() {
                           <TableCell className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
                               <span className="font-bold text-sm">{j.file_name || '—'}</span>
-                              {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-[10px] text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
+                              {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
                           <TableCell className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : "Acrylic"}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
@@ -648,7 +648,7 @@ export default function ManufacturingPage() {
         <div className="space-y-8">
           {show('filament')&&<Card className="p-6 rounded-2xl space-y-3">
             <h2 id="filament-stock" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />  Filament catalog</h2>
-            <p className="text-[11px] text-muted-foreground font-bold opacity-70">
+            <p className="text-xs text-muted-foreground font-bold opacity-70">
 
               List only available filament. Requesters can select a listed combination or choose any available material.
             </p>
@@ -677,7 +677,7 @@ export default function ManufacturingPage() {
               <Input value={newFilamentMaterial} onChange={e => setNewFilamentMaterial(e.target.value)} className="h-9 w-28 text-xs" placeholder="Material (e.g. PLA Basic)" />
               <Input value={newFilamentColor} onChange={e => setNewFilamentColor(e.target.value)} className="h-9 w-28 text-xs" placeholder="Color (e.g. black)" />
               <Input type="number" min="0" value={newFilamentStock} onChange={e => setNewFilamentStock(e.target.value)} className="h-9 w-16 text-xs" placeholder="Stock" />
-              <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={addFilamentEntry}>
+              <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addFilamentEntry}>
                 <Plus className="size-3.5" />  Add
               </Button>
             </div>
@@ -701,28 +701,28 @@ export default function ManufacturingPage() {
                             ? <Badge variant="danger">Faulty</Badge>
                             : <Badge variant="muted">Available</Badge>}
                     </div>
-                    <p className="text-[10px] text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
+                    <p className="text-xs text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
 
                     {!isMine ? (
-                      <p className="text-[10px] text-muted-foreground font-bold opacity-50 text-center py-1">You do not manage this printer</p>
+                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">You do not manage this printer</p>
                     ) : p.status === 'maintenance' ? (
-                      <Button size="sm" variant="outline" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => repairPrinter(p)}>
+                      <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => repairPrinter(p)}>
                         <Undo2 className="size-3" />  Restore service
                       </Button>
                     ) : p.status === 'done' ? (
                       <>
-                        <p className="text-[11px] text-muted-foreground font-bold">Printing finished. Collect the item.</p>
-                        <Button size="sm" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => collectPrint(p)}>
+                        <p className="text-xs text-muted-foreground font-bold">Printing finished. Collect the item.</p>
+                        <Button size="sm" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => collectPrint(p)}>
                           <CheckCircle2 className="size-3" />  Collected
                         </Button>
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" />  Report fault
                         </Button>
                       </>
                     ) : p.status === 'printing' ? (
                       <>
                         {p.estimated_end_at && (
-                          <p className="text-[11px] text-muted-foreground font-bold">
+                          <p className="text-xs text-muted-foreground font-bold">
                             {formatDistanceToNow(new Date(p.estimated_end_at), { locale: enUS, addSuffix: true })}  Estimated finish
                           </p>
                         )}
@@ -732,7 +732,7 @@ export default function ManufacturingPage() {
                           if (job.plate_count > 1) {
                             return (
                               <div className="space-y-1">
-                                <p className="text-[10px] text-muted-foreground font-bold text-center">Plate {job.plates_completed}/{job.plate_count}  Completed</p>
+                                <p className="text-xs text-muted-foreground font-bold text-center">Plate {job.plates_completed}/{job.plate_count}  Completed</p>
                                 <div className="grid grid-cols-4 gap-1">
                                   {Array.from({ length: job.plate_count }, (_, idx) => {
                                     const plateNum = idx + 1;
@@ -744,7 +744,7 @@ export default function ManufacturingPage() {
                                         size="sm"
                                         variant={done ? 'outline' : 'default'}
                                         disabled={!isNext}
-                                        className="text-[10px] font-black px-0"
+                                        className="text-xs font-black px-0"
                                         onClick={() => openPlateComplete(p, job)}
                                       >
                                         {done ? <CheckCircle2 className="size-3" /> : plateNum}
@@ -756,12 +756,12 @@ export default function ManufacturingPage() {
                             );
                           }
                           return (
-                            <Button size="sm" variant="outline" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => openPlateComplete(p, job)}>
+                            <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => openPlateComplete(p, job)}>
                               <Square className="size-3" />  Complete print
                             </Button>
                           );
                         })()}
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" />  Report fault
                         </Button>
                       </>
@@ -769,13 +769,13 @@ export default function ManufacturingPage() {
                       <>
                         <Button
                           size="sm"
-                          className="w-full font-black text-[10px] uppercase gap-1.5"
+                          className="w-full font-black text-xs uppercase gap-1.5"
                           disabled={queuedPrintJobsForPrinter(allPrintJobs,p.id).length === 0}
                           onClick={() => openQueueDialog(p)}
                         >
                           <Play className="size-3" />  Start print
                         </Button>
-                        <Button size="sm" variant="destructive" className="w-full font-black text-[10px] uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
+                        <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
                           <Wrench className="size-3" />  Report fault
                         </Button>
                       </>
@@ -793,10 +793,10 @@ export default function ManufacturingPage() {
                 <Table className="data-table">
                   <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent border-b-2">
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">Requester</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Mode / file</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Status</TableHead>
-                      <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6 text-right">Actions</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requester</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">Mode / file</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -813,9 +813,9 @@ export default function ManufacturingPage() {
                             <TableCell className="py-4">
                               <div className="flex flex-col gap-1.5">
                                 <span className="text-xs font-black uppercase">{j.mode === 'beginner' ? "Beginner" : "Advanced"} · {j.quantity} items · Plate {j.plate_count} files{j.material ? ` · ${j.material}` : ''}{j.color ? ` · ${j.color}` : ''}</span>
-                                {j.preferred_printer_id && <span className="text-[10px] text-muted-foreground">Preferred printer: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
+                                {j.preferred_printer_id && <span className="text-xs text-muted-foreground">Preferred printer: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
                                 {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                                {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
+                                {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
                                 <Link href={`${managementBase}/print/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
 
                                   View details <ExternalLink className="size-3" />
@@ -837,14 +837,14 @@ export default function ManufacturingPage() {
                               <div className="flex justify-end gap-2 flex-wrap">
                                 {j.status === 'pending' && (
                                   <>
-                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>Accept</Button>
-                                    <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>Reject</Button>
+                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>Accept</Button>
+                                    <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>Reject</Button>
                                   </>
                                 )}
                                 {j.status === 'done' && !j.delivered_at && (
                                   <>
                                     <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
-                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
+                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
                                       <PackageCheck className="size-3.5" />  Hand delivered
                                     </Button>
                                   </>
@@ -868,7 +868,7 @@ export default function ManufacturingPage() {
         <div className="space-y-8">
           {show('materials')&&<Card className="p-6 rounded-2xl space-y-3">
             <h2 id="laser-materials" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />  Material catalog</h2>
-            <p className="text-[11px] text-muted-foreground font-bold opacity-70">
+            <p className="text-xs text-muted-foreground font-bold opacity-70">
 
               List supported materials and thicknesses. Requesters can select only listed combinations; stock counts are not tracked.
             </p>
@@ -895,7 +895,7 @@ export default function ManufacturingPage() {
                 </SelectContent>
               </Select>
               <Input type="number" step="0.5" min="0" value={newCatalogThickness} onChange={e => setNewCatalogThickness(e.target.value)} className="h-9 w-28 text-xs" placeholder="Thickness (mm)" />
-              <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={addLaserCatalogEntry}>
+              <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addLaserCatalogEntry}>
                 <Plus className="size-3.5" />  Add
               </Button>
             </div>
@@ -906,10 +906,10 @@ export default function ManufacturingPage() {
             <Table className="data-table">
               <TableHeader className="bg-muted/30">
                 <TableRow className="hover:bg-transparent border-b-2">
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6">Requester</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Material / file</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4">Status</TableHead>
-                  <TableHead className="font-black uppercase text-[10px] tracking-widest py-4 px-6 text-right">Actions</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requester</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">Material / file</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -927,7 +927,7 @@ export default function ManufacturingPage() {
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : "Acrylic"}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''} × {j.quantity}</span>
                             {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                            {j.manager?.full_name && <span className="text-[10px] text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
+                            {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
                             <Link href={`${managementBase}/laser/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
                               {j.file_name || "View file"} <ExternalLink className="size-3" />
                             </Link>
@@ -943,20 +943,20 @@ export default function ManufacturingPage() {
                           <div className="flex justify-end gap-2 flex-wrap">
                             {j.status === 'pending' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>Accept</Button>
-                                <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>Reject</Button>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>Accept</Button>
+                                <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>Reject</Button>
                               </>
                             )}
                             {j.status === 'accepted' && (
-                              <Button size="sm" variant="outline" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>Start job</Button>
+                              <Button size="sm" variant="outline" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>Start job</Button>
                             )}
                             {j.status === 'in_progress' && (
-                              <Button size="sm" className="font-black text-[10px] uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>Completed</Button>
+                              <Button size="sm" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>Completed</Button>
                             )}
                             {j.status === 'done' && !j.delivered_at && (
                               <>
                                 <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
                                   <PackageCheck className="size-3.5" />  Hand delivered
                                 </Button>
                               </>
@@ -999,8 +999,8 @@ export default function ManufacturingPage() {
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setPlateCompleteTarget(null)}>Cancel</Button>
-            <Button className="font-black uppercase text-[10px]" onClick={confirmPlateComplete}>Complete job</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setPlateCompleteTarget(null)}>Cancel</Button>
+            <Button className="font-black uppercase text-xs" onClick={confirmPlateComplete}>Complete job</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1014,7 +1014,7 @@ export default function ManufacturingPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Select job</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Select job</label>
               <Select value={queueJobId} onValueChange={setQueueJobId}>
                 <SelectTrigger aria-label="Queued print job" className="h-10 w-full text-sm"><SelectValue placeholder="— Select —" /></SelectTrigger>
                 <SelectContent>
@@ -1025,14 +1025,14 @@ export default function ManufacturingPage() {
               </Select>
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Estimated duration</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Estimated duration</label>
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {DURATION_PRESETS.map(p => (
                   <button
                     key={p.hours}
                     type="button"
                     onClick={() => setQueueHours(p.hours)}
-                    className={`px-2 py-2 rounded-xl border text-[11px] font-black transition-all active:scale-95 ${
+                    className={`px-2 py-2 rounded-xl border text-xs font-black transition-all active:scale-95 ${
                       queueHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                     }`}
                   >
@@ -1050,13 +1050,13 @@ export default function ManufacturingPage() {
                   className="h-10 pr-14 font-bold"
                   placeholder="Custom"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase text-muted-foreground">hours</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black uppercase text-muted-foreground">hours</span>
               </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setQueueDialogPrinter(null)}>Cancel</Button>
-            <Button className="font-black uppercase text-[10px]" onClick={startPrint} disabled={startingPrint||!queueJobId}>Start</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setQueueDialogPrinter(null)}>Cancel</Button>
+            <Button className="font-black uppercase text-xs" onClick={startPrint} disabled={startingPrint||!queueJobId}>Start</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1076,8 +1076,8 @@ export default function ManufacturingPage() {
             className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-[10px]" onClick={() => setRejectTarget(null)}>Cancel</Button>
-            <Button variant="destructive" className="font-black uppercase text-[10px]" onClick={confirmReject}>Reject</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRejectTarget(null)}>Cancel</Button>
+            <Button variant="destructive" className="font-black uppercase text-xs" onClick={confirmReject}>Reject</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

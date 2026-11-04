@@ -44,7 +44,7 @@ export default function Login() {
       <h2 className="text-3xl font-black mb-6 text-center text-foreground italic uppercase tracking-tighter">로그인</h2>
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="login-email" className="text-[10px] font-black uppercase text-muted-foreground ml-1">이메일</label>
+          <label htmlFor="login-email" className="text-xs font-black uppercase text-muted-foreground ml-1">이메일</label>
           <Input
             id="login-email" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} inputMode="email" type="email"
             placeholder="이메일 주소를 입력하세요"
@@ -55,8 +55,8 @@ export default function Login() {
         </div>
         <div className="space-y-1">
           <div className="flex items-center justify-between ml-1">
-            <label htmlFor="login-password" className="text-[10px] font-black uppercase text-muted-foreground">비밀번호</label>
-            <Link href="/auth/forgot-password" className="text-[10px] font-black uppercase text-primary hover:underline">비밀번호 찾기</Link>
+            <label htmlFor="login-password" className="text-xs font-black uppercase text-muted-foreground">비밀번호</label>
+            <Link href="/auth/forgot-password" className="text-xs font-black uppercase text-primary hover:underline">비밀번호 찾기</Link>
           </div>
           <div className="relative"><Input
             id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'}

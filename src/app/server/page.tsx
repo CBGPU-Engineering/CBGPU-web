@@ -92,7 +92,7 @@ export default function ServerPage() {
             <RefreshCw className="size-3.5" />
           </Button>
           <Button
-            className="font-black text-[10px] uppercase tracking-widest gap-1.5 h-9"
+            className="font-black text-xs uppercase tracking-widest gap-1.5 h-9"
             onClick={() => router.push('/server/new')}
           >
             <Plus className="size-3.5" /> 새 프로젝트
@@ -133,13 +133,13 @@ export default function ServerPage() {
                       {isRunning && <span className="size-2 rounded-full bg-emerald-500 animate-pulse inline-block" />}
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="text-[10px] font-bold text-muted-foreground opacity-70">
+                      <span className="text-xs font-bold text-muted-foreground opacity-70">
                         {proj.deploy_type === 'docker' ? proj.docker_image : proj.git_url?.replace('https://', '')}
                       </span>
-                      <span className="text-[10px] font-bold text-muted-foreground opacity-50">
+                      <span className="text-xs font-bold text-muted-foreground opacity-50">
                         :{proj.host_port}
                       </span>
-                      <span className="flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground opacity-50">
+                      <span className="flex items-center gap-0.5 text-xs font-bold text-muted-foreground opacity-50">
                         {SCOPE_ICON[proj.access_scope as AccessScope]}
                         {proj.access_scope}
                       </span>

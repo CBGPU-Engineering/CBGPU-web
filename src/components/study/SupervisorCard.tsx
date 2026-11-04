@@ -36,12 +36,12 @@ export default function SupervisorCard() {
     <section aria-label="오늘의 자습 감독" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
       <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserCheck className="size-5" aria-hidden /></div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">오늘의 자습 감독{data.date ? ` · ${data.date}` : ''}</p>
+        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">오늘의 자습 감독{data.date ? ` · ${data.date}` : ''}</p>
         {data.duties.length ? (
           <ul className="mt-1.5 space-y-1">
             {data.duties.map((duty, index) => (
               <li key={`${duty.type}-${index}`} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                {duty.type && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black text-primary">{duty.type}</span>}
+                {duty.type && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-black text-primary">{duty.type}</span>}
                 <span className="font-black">{duty.teacher} 선생님</span>
               </li>
             ))}

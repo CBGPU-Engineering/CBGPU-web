@@ -311,7 +311,7 @@ export default function Profile() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
               <UserCircle2 className="size-3" /> 이름 (Name)
             </label>
             <Input
@@ -324,7 +324,7 @@ export default function Profile() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
               <Hash className="size-3" /> 학번 (Student ID)
             </label>
             <Input
@@ -337,7 +337,7 @@ export default function Profile() {
               className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
               placeholder="2309"
             />
-            <p className="text-[10px] text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
+            <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
           </div>
         </div>
 
@@ -360,7 +360,7 @@ export default function Profile() {
         </h2>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
               <Lock className="size-3" /> 현재 비밀번호
             </label>
             <Input
@@ -375,7 +375,7 @@ export default function Profile() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호
               </label>
               <Input
@@ -389,7 +389,7 @@ export default function Profile() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호 확인
               </label>
               <Input
@@ -453,7 +453,7 @@ export default function Profile() {
             <div key={key} className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
               <div className="min-w-0">
                 <p className="text-sm font-bold">{label}</p>
-                <p className="text-[11px] text-muted-foreground font-medium">{hint}</p>
+                <p className="text-xs text-muted-foreground font-medium">{hint}</p>
               </div>
               <button
                 type="button"
