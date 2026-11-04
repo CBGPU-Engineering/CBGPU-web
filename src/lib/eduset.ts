@@ -257,7 +257,7 @@ export function getSeatOccupations(roomId: number | string, dateStr: string): Pr
 export function searchSelfStudy(params: { date: string }, options?: { fresh?: boolean }): Promise<SelfStudyEntry[]> {
   return apiFetch('/selfstudy/search', {
     method: 'POST',
-    body: JSON.stringify(params),
+    body: JSON.stringify({ ...params, date: /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date + 'T00:00:00.000Z' : params.date }),
     // 프록시는 신청 현황을 몇 초간 공유 캐시한다. 사용자가 직접 새로고침했을 땐 건너뛴다.
     headers: options?.fresh ? { 'x-cbgpu-fresh': '1' } : undefined,
   });

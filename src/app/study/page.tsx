@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Search, ExternalLink, RefreshCw, AlertTriangle, ChevronRight, User, Puzzle, X } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import SelfStudyReminderSettings from '@/components/study/SelfStudyReminderSetti
 import SupervisorCard from '@/components/study/SupervisorCard';
 import StudyRequestPanel,{type StudyPrefill} from '@/components/study/StudyRequestPanel';
 import {
-  getRooms, getRoomComposition, getSeatOccupations, getStudent, getStudents,
+  getRooms, getRoomComposition, getStudents,
   getSelfStudyPolicy, getPeriodCountForDate, localDateStr, searchSelfStudy,
   type Room, type Seat, type Obstacle, type Student, type SelfStudyStatus,
 } from '@/lib/eduset';
@@ -26,20 +26,6 @@ function formatStudentLabel(student: Student): string {
   }
   const studentNumber = student.grade * 1000 + student.classNo * 100 + student.number;
   return `${studentNumber} ${student.name}`;
-}
-
-/** 일시적인 네트워크/서버 오류에 대비해 짧은 간격으로 재시도한다 */
-async function withRetry<T>(fn: () => Promise<T>, attempts = 3, delayMs = 400): Promise<T> {
-  let lastErr: unknown;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fn();
-    } catch (err) {
-      lastErr = err;
-      if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
-    }
-  }
-  throw lastErr;
 }
 
 interface Occupant {
@@ -101,7 +87,19 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
   const [seatQuery, setSeatQuery] = useState('');
   const columns = Math.max(1, room.width, ...seats.map(s => s.x + 1), ...obstacles.map(o => o.x + o.w));
   const rowCount = Math.max(1, room.height, ...seats.map(s => s.y + 1), ...obstacles.map(o => o.y + o.h));
-  const cellSize = 104;
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [cellSize, setCellSize] = useState(104);
+  useEffect(() => {
+    const element = mapRef.current;
+    if (!element) return;
+    const resize = () => setCellSize(window.matchMedia('(max-width: 640px)').matches
+      ? Math.max(52, Math.min(72, Math.floor((element.clientWidth - 16) / columns))) : 104);
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    window.addEventListener('resize', resize);
+    return () => { observer.disconnect(); window.removeEventListener('resize', resize); };
+  }, [view, failed, columns]);
   const rows = seats.map(seat => {
     const occupants = occupantsBySeat.get(seat.id)?.filter(o => o.period === selectedPeriod) ?? [];
     const pending = occupants.length > 0 && occupants.every(o => o.status === 'PENDING');
@@ -141,7 +139,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
                   : '이 교시에 조회된 신청자가 없습니다.'}</p><Button type="button" variant="outline" size="sm" className="mt-2 min-h-11" disabled={selected.occupants.length>0} onClick={()=>onChoose(selected.seat)}>이 자리 신청하기</Button></>
             ) : <p className="text-muted-foreground">확인할 좌석을 선택하세요.</p>}
           </div>
-          <div role="region" aria-label={`${selectedPeriod}교시 좌석 배치도, 스크롤 가능`} tabIndex={0}
+          <div ref={mapRef} role="region" aria-label={`${selectedPeriod}교시 좌석 배치도, 스크롤 가능`} tabIndex={0}
             className="h-[min(38dvh,360px)] min-w-0 w-full overflow-auto rounded-xl border border-border bg-muted p-2 focus-visible:outline-2 focus-visible:outline-ring">
             <div className="relative" data-seat-canvas style={{ width: columns * cellSize, height: rowCount * cellSize, margin: '0' }}>
               {obstacles.map(ob => (
@@ -160,7 +158,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
                   style={{ left: seat.x * cellSize, top: seat.y * cellSize, width: cellSize - 8, height: cellSize - 8 }}>
                   <span className="text-base font-semibold leading-tight">{seat.name}</span>
                   <span className="text-xs font-medium">{status}</span>
-                  {occupants.length > 0 && <span className="line-clamp-2 w-full break-words text-sm leading-tight">
+                  {occupants.length > 0 && <span className={cellSize < 80 ? "sr-only" : "line-clamp-2 w-full break-words text-sm leading-tight"}>
                     {occupants.length === 1 ? occupants[0].label : `${occupants[0].label} 외 ${occupants.length - 1}명`}
                   </span>}
                 </button>
@@ -274,10 +272,10 @@ export default function StudyPage() {
       const policyPromise = getSelfStudyPolicy().catch(() => null);
       void getStudents().catch(() => []).then(setAllStudents);
 
-      // /selfstudy/search는 승인 대기중인 신청까지 한 번에 보여준다. 정원제 방은 이 호출이
-      // 유일한 데이터 소스라 좌석형보다 훨씬 더 중요하다 — 일시적 오류에 대비해 재시도한다.
-      const selfStudyPromise = withRetry(() => searchSelfStudy({ date: dateStr }, { fresh }), 3, 400).catch(() => null);
-      const rooms = await getRooms();
+      // 전체 신청을 한 번 조회한다. 실패하면 오류를 표시하고 개별 조회로 확장하지 않는다.
+      const [rooms, selfStudyEntries] = await Promise.all([
+        getRooms(), searchSelfStudy({ date: dateStr }, { fresh }),
+      ]);
 
       const data = await Promise.all(
         rooms.map(async (room): Promise<RoomData> => {
@@ -285,17 +283,13 @@ export default function StudyPage() {
             // 정원제 자습실은 좌석이 없어서 SeatMap은 못 그리지만, 신청자 명단 자체는
             // /selfstudy/search 응답에 seat: null로 같이 들어있으니 그대로 모아서 보여준다.
             // type 값이 좌석형과 다를 수 있어 room.id만으로 매칭한다 (좌석 없는 실이라 e.seat은 항상 비어있음).
-            // /selfstudy/search가 이 계정 권한으로 아예 안 되는 경우, 좌석형 방과 동일하게
-            // 방별 occupations 엔드포인트로 폴백한다 — 좌석이 없어도 room+period+student 단위
-            // occupation 레코드 자체는 동일한 엔드포인트로 조회되는 경우가 많다.
             try {
               const occupancy: OccupancyEntry[] = [];
-              const selfStudyEntries = await selfStudyPromise;
-              const roomEntries = selfStudyEntries?.filter(
+              const roomEntries = selfStudyEntries.filter(
                 (e) => e.room.id === room.id && e.status !== 'REJECTED'
               );
 
-              if (selfStudyEntries && roomEntries) {
+
                 roomEntries.forEach((e) => {
                   occupancy.push({
                     roomId: room.id, roomName: room.name, seatName: '',
@@ -303,29 +297,7 @@ export default function StudyPage() {
                     studentId: e.student.id, status: e.status,
                   });
                 });
-              } else {
-                const occupations = await getSeatOccupations(room.id, dateStr);
-                const studentIds = [...new Set(occupations.map((o) => o.studentId))];
-                const labelById = new Map<number, string>();
-                await Promise.all(
-                  studentIds.map(async (studentId) => {
-                    try {
-                      const student = await getStudent(studentId);
-                      labelById.set(studentId, formatStudentLabel(student));
-                    } catch {
-                      // 정보를 못 가져오면 그 신청자는 비식별로 둔다
-                    }
-                  })
-                );
-                occupations.forEach((o) => {
-                  const label = labelById.get(o.studentId);
-                  if (!label) return;
-                  occupancy.push({
-                    roomId: room.id, roomName: room.name, seatName: '',
-                    period: o.period, label, studentId: o.studentId, status: 'APPROVED',
-                  });
-                });
-              }
+
 
               return { room, seats: [], obstacles: [], occupantsBySeat: new Map(), occupancy };
             } catch {
@@ -333,9 +305,8 @@ export default function StudyPage() {
             }
           }
           try {
-            // 방 구성 요청은 신청 현황 응답을 기다리지 않고 바로 시작한다 (selfStudyPromise는 아래에서 await).
+            // 좌석 배치는 신청 내역과 별도인 교실 구성 정보다.
             const composition = await getRoomComposition(room.id);
-            const selfStudyEntries = await selfStudyPromise;
             const seatNameById = new Map(composition.seats.map((s) => [s.id, s.name]));
             const occupantsBySeat = new Map<number, Occupant[]>();
             const occupancy: OccupancyEntry[] = [];
@@ -350,35 +321,16 @@ export default function StudyPage() {
               occupancy.push({ roomId: room.id, roomName: room.name, seatName, period, label, studentId, status });
             };
 
-            const roomEntries = selfStudyEntries?.filter(
+            const roomEntries = selfStudyEntries.filter(
               (e) => e.room.id === room.id && e.type === 'selfstudy' && e.status !== 'REJECTED' && e.seat
             );
 
-            if (selfStudyEntries && roomEntries) {
+
               roomEntries.forEach((e) => {
                 if (!e.seat) return;
                 addEntry(e.seat.id, e.seat.name, e.period, e.student.id, formatStudentLabel(e.student), e.status);
               });
-            } else {
-              const occupations = await getSeatOccupations(room.id, dateStr);
-              const studentIds = [...new Set(occupations.map((o) => o.studentId))];
-              const labelById = new Map<number, string>();
-              await Promise.all(
-                studentIds.map(async (studentId) => {
-                  try {
-                    const student = await getStudent(studentId);
-                    labelById.set(studentId, formatStudentLabel(student));
-                  } catch {
-                    // 정보를 못 가져오면 그 좌석은 비식별로 둔다
-                  }
-                })
-              );
-              occupations.forEach((o) => {
-                const label = labelById.get(o.studentId);
-                if (!label) return;
-                addEntry(o.seatId, seatNameById.get(o.seatId) ?? '', o.period, o.studentId, label, 'APPROVED');
-              });
-            }
+
 
             return { room, seats: composition.seats, obstacles: composition.obstacles, occupantsBySeat, occupancy };
           } catch {
