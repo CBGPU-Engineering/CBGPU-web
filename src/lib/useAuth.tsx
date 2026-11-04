@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import { createNativeSessionCoordinator } from '@/lib/nativeSessionCoordinator';
 import { getNativeBridge, onNativeBridgeReady, isNativeAppHint } from '@/lib/nativeBridge';
 
 type AuthContextType = {
@@ -142,26 +143,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // genuinely session-less install should still land on the login screen
     // rather than spin indefinitely.
     const fallbackTimeout = nativeHint ? setTimeout(resolveLoading, 8000) : null;
-    let restoringFromNative = false;
-    const failedNativeRefreshTokens = new Set<string>();
-
+    let explicitSignOut = false;
+    const coordinator = createNativeSessionCoordinator({
+      webSession: async () => (await supabase.auth.getSession()).data.session,
+      saveWeb: async tokens => { const result = await supabase.auth.setSession(tokens); if (result.error) throw result.error; },
+      fork: async tokens => {
+        const response = await fetch('/api/native-session', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokens.access_token}` }, body: JSON.stringify({ refresh_token: tokens.refresh_token }), signal: AbortSignal.timeout(20_000) });
+        const result = await response.json();
+        if (!result.source_session) throw new Error(result.error || 'Session connection unavailable');
+        return { ...result, session: result.session || null };
+      },
+    });
+    const onExplicitSignOut = () => { explicitSignOut = true; coordinator.cancel(); };
+    window.addEventListener('cbgpu:explicit-signout', onExplicitSignOut);
     const restoreFromNative = async (bridge: NonNullable<ReturnType<typeof getNativeBridge>>) => {
-      if (restoringFromNative) return;
-      restoringFromNative = true;
-      try {
-        const { session: persisted } = await bridge.getPersistedSession();
-        if (!persisted || failedNativeRefreshTokens.has(persisted.refreshToken)) return;
-        const { error } = await supabase.auth.setSession({
-          access_token: persisted.accessToken,
-          refresh_token: persisted.refreshToken,
-        });
-        if (error) failedNativeRefreshTokens.add(persisted.refreshToken);
-      } catch {
-        // An older app build may not implement session restore.
-      } finally {
-        restoringFromNative = false;
-        resolveLoading();
-      }
+      try { if (!explicitSignOut) await coordinator.restore(bridge); }
+      catch { /* Keep native persistence intact on temporary network failures. */ }
+      finally { resolveLoading(); }
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -181,17 +179,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setManagedPrinterIds([]);
       }
 
-      // Keep the native app's own Supabase client (used for its home-screen
-      // widgets, which this site's session can't reach on its own) in sync.
+      // Never await Supabase calls inside its auth callback (the SDK holds
+      // its auth lock). Synchronize independent native credentials afterward.
+      if (event === 'SIGNED_IN') explicitSignOut = false;
       const bridge = getNativeBridge();
-      if (bridge) {
-        if (session) {
-          bridge.syncSession({ accessToken: session.access_token, refreshToken: session.refresh_token });
-        } else if (event === 'SIGNED_OUT' && nativeHint) {
-          // A web refresh can fail after the native client has rotated its
-          // refresh token. Give the app's persisted session a chance to win.
-          setTimeout(() => { void restoreFromNative(bridge); }, 0);
-        }
+      if (bridge && session && !explicitSignOut) {
+        setTimeout(() => { void coordinator.syncWeb(session, bridge).catch(() => {}); }, 0);
+      } else if (bridge && event === 'SIGNED_OUT' && nativeHint && !explicitSignOut) {
+        coordinator.cancel();
+        setTimeout(() => { void restoreFromNative(bridge); }, 0);
       }
     });
 
@@ -202,7 +198,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          bridge.syncSession({ accessToken: session.access_token, refreshToken: session.refresh_token });
+          await coordinator.syncWeb(session, bridge);
           return;
         }
         // This WebView's own localStorage session didn't survive (app
@@ -219,6 +215,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => {
+      coordinator.cancel();
+      window.removeEventListener('cbgpu:explicit-signout', onExplicitSignOut);
       subscription.unsubscribe();
       unsubscribeBridge();
       if (fallbackTimeout) clearTimeout(fallbackTimeout);

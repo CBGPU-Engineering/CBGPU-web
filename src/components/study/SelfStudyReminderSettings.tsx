@@ -80,7 +80,8 @@ export default function SelfStudyReminderSettings() {
           void bridge.requestNotificationPermission().then(async ({ granted }) => {
             if (!granted) return;
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) await bridge.syncSession({ accessToken: session.access_token, refreshToken: session.refresh_token });
+            // AuthProvider maintains an independent native session.
+            // Re-copying the web refresh token here would break that separation.
           }).catch(() => {});
         }
       }
