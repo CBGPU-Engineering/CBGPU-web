@@ -47,9 +47,9 @@ export default function DownloadPage() {
       <div className="text-center space-y-6">
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
         <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
+          <p className="text-sm font-semibold text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic">CBGPU 앱</h1>
-          <p className="text-muted-foreground font-medium max-w-md mx-auto">
+          <p className="text-base text-muted-foreground font-medium max-w-md mx-auto">
             시간표, 급식부터 GPU 예약, 제작 신청까지 — 학교생활을 앱 하나로.
           </p>
         </div>
@@ -58,25 +58,25 @@ export default function DownloadPage() {
           <a
             href={release.downloadUrl}
             download
-            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-base px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 hover:scale-[1.02]"
           >
             APK 다운로드 · v{release.version}
           </a>
-          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold">
-            <Smartphone className="size-3" /> 안드로이드 전용 · iOS는 아직 준비 중이에요
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
+            <Smartphone className="size-4" /> 안드로이드 전용 · iOS는 아직 준비 중이에요
           </p>
         </div>
       </div>
 
-      <div className="flex gap-3 p-4 rounded-2xl bg-muted/40 ring-1 ring-foreground/5 text-left">
-        <ShieldCheck className="size-5 text-primary shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <p className="text-xs font-black">Play 스토어 출시 전이라 APK로 직접 설치해요</p>
-          <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+      <div className="flex gap-4 p-5 sm:p-6 rounded-2xl bg-muted/40 ring-1 ring-foreground/5 text-left">
+        <ShieldCheck className="size-6 text-primary shrink-0 mt-0.5" />
+        <div className="space-y-2">
+          <p className="text-base font-bold">Play 스토어 출시 전이라 APK로 직접 설치해요</p>
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             다운로드한 APK를 열면 &quot;출처를 알 수 없는 앱&quot; 설치를 허용해달라는 안내가 떠요.
             이 사이트에서 내려받은 APK인지 확인한 후 설치해 주세요.
           </p>
-          <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+          <p className="text-sm text-muted-foreground font-medium leading-relaxed">
             기존 앱과 서명이 달라 업데이트 설치가 되지 않는 경우, 기존 앱을 삭제한 뒤 설치해 주세요.
             앱 삭제 시 기기에 저장된 로그인 정보와 알람 설정이 지워질 수 있어요.
           </p>
@@ -89,29 +89,29 @@ export default function DownloadPage() {
             <span className="flex items-center justify-center size-10 rounded-xl bg-primary/10 text-primary">
               <Icon className="size-5" strokeWidth={2} />
             </span>
-            <p className="font-black text-sm">{label}</p>
-            <p className="text-[11px] text-muted-foreground font-medium leading-snug">{desc}</p>
+            <p className="font-bold text-base">{label}</p>
+            <p className="text-sm text-muted-foreground font-medium leading-snug">{desc}</p>
           </div>
         ))}
       </div>
 
       {/* 컴퓨터로 보고 있는 경우를 위한 QR — 모바일에선 굳이 필요 없어서 숨김 */}
-      <div className="hidden md:flex flex-col items-center gap-3 py-8 border-y border-border/50">
+      <div className="hidden md:flex flex-col items-center gap-4 py-10 border-y border-border/50">
         <QRCodeSVG
           value={"https://app.cbgpu.com"+release.downloadUrl}
           title="CBGPU 앱 다운로드"
-          size={140}
+          size={208}
           marginSize={2}
           className="rounded-xl bg-white ring-1 ring-foreground/10"
         />
-        <p className="text-xs text-muted-foreground font-bold">휴대폰으로 QR코드를 스캔해서 설치하세요</p>
+        <p className="text-sm text-muted-foreground font-medium">휴대폰으로 QR코드를 스캔해서 설치하세요</p>
       </div>
 
       <div className="text-center space-y-3">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           충북과학고등학교 학생 전용 서비스입니다.
         </p>
-        <div className="flex items-center justify-center gap-4 text-[11px] font-bold text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 text-sm font-medium text-muted-foreground">
           <Link href="/" className="hover:text-foreground transition-colors underline underline-offset-2">
             설치 없이 웹으로 계속하기
           </Link>
