@@ -22,6 +22,7 @@ export function proxy(request: NextRequest) {
   const internalHost=rawHost==='localhost'||rawHost==='127.0.0.1';
   const host=internalHost&&(workspaceForHost(forwardedHost)||['cbgpu.com','app.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(forwardedHost))?forwardedHost:rawHost;
   const manufacturingHost=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host);
+  if(host==='admin.cbgpu.com'&&path==='/'&&['GET','HEAD'].includes(request.method)){const target=request.nextUrl.clone();target.pathname='/admin/gpu';target.search='';return NextResponse.redirect(target,307);}
   if(/^\/manage\/manufacturing(?:\/|$)/.test(path)&&!manufacturingHost&&host!=='admin.cbgpu.com'){
     const userHost=['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host);
     if(userHost&&['GET','HEAD'].includes(request.method)){

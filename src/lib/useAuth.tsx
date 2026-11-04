@@ -35,7 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshProfile: async () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode; siteHost?: string }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [managedPrinterIds, setManagedPrinterIds] = useState<number[]>([]);
@@ -224,7 +224,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Management controls belong exclusively to the separately authenticated admin host.
-  const managementWorkspace = typeof window !== 'undefined' && ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname);
+  const managementWorkspace = ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(siteHost || (typeof window !== 'undefined' ? window.location.hostname : ''));
   const value = {
     user,
     profile,
