@@ -43,3 +43,6 @@
 .admin-developer-shell input,.admin-developer-shell select,.admin-developer-shell textarea,.admin-developer-shell .field select,.admin-developer-shell .sql-editor,.admin-developer-shell .editor-value textarea,.admin-developer-shell .button,.admin-developer-shell .terminal-mobile-keys button{border-radius:var(--dev-radius-control)}
 .admin-developer-shell .nav-item,.admin-developer-shell .subnav-item,.admin-developer-shell .job-button{border-radius:var(--dev-radius-control)}
 .admin-developer-shell .table-scroll,.admin-developer-shell .table-wrap,.admin-developer-shell .table-container{border-radius:var(--dev-radius-surface);overflow:auto}
+
+/* The operator portals use the same Korean/Latin stack as the main website. */
+.admin-developer-shell{--dev-font-sans:"Pretendard Variable",Pretendard,"Noto Sans KR","Apple SD Gothic Neo",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-family:var(--dev-font-sans);font-synthesis:weight}
