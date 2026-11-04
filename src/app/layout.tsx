@@ -1,8 +1,13 @@
 import AppUpdateNotice from '@/components/AppUpdateNotice';
 import DemoBanner from '@/components/DemoBanner';
 import { headers } from 'next/headers';
+import localFont from 'next/font/local';
 import SiteTraffic from '@/components/SiteTraffic';
 import './globals.css';
+
+// Pretendard를 직접 싣는다. 폰트 스택에 이름만 있고 로드하는 곳이 없으면 기기에 설치된 글꼴로 제각각 그려지고,
+// system-ui가 고정폭 글꼴인 환경에서는 사이트 전체가 고정폭으로 보인다. (SIL OFL 1.1 — fonts/PRETENDARD-OFL.txt)
+const pretendard = localFont({ src: './fonts/PretendardVariable.woff2', variable: '--font-pretendard', weight: '45 920', display: 'swap', fallback: ['Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', 'Roboto', 'sans-serif'] });
 import AdminShell from '@/components/AdminShell';
 import ManufacturingShell from '@/components/manufacturing/ManufacturingShell';
 import MainSiteFrame from '@/components/workspaces/MainSiteFrame';
@@ -89,7 +94,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publicSite = section === 'docs' || section === 'arxiv' || host === 'docs.cbgpu.com' || host === 'arxiv.cbgpu.com';
 
   return (
-    <html lang={adminSite||manufacturingSite ? "en" : "ko"} suppressHydrationWarning>
+    <html lang={adminSite||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
       <head>
         {process.env.CBGPU_DEMO!=='1'&&<link rel="preconnect" href="https://cdn.jsdelivr.net" />}
         {process.env.CBGPU_DEMO!=='1'&&<DeferredStylesheet href="https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface.css" />}
