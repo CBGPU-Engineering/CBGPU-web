@@ -2,7 +2,9 @@ import {NextRequest,NextResponse} from 'next/server';
 import {createClient} from '@supabase/supabase-js';
 import {readJsonBody,WindowRateLimiter} from '@/lib/requestSecurity';
 export const runtime='nodejs';
-const limits=new WindowRateLimiter(60,60_000);
+// A school network may put hundreds of students behind one public IP.
+const limits=new WindowRateLimiter(300,60_000);
+const userLimits=new WindowRateLimiter(6,60_000);
 const reply=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex, nofollow'}});
 export async function POST(req:NextRequest){
  if(req.headers.get('origin')!=='https://app.cbgpu.com')return reply({error:'Invalid origin.'},403);
@@ -24,6 +26,7 @@ export async function POST(req:NextRequest){
   source_session={access_token:refreshed.data.session.access_token,refresh_token:refreshed.data.session.refresh_token};
   const verified=await client.auth.getUser(source_session.access_token),user=verified.data.user;
   if(verified.error||!user?.email||user.id!==refreshed.data.user.id)return reply({error:'Please sign in again.'},401);
+  if(!userLimits.allow(user.id))return reply({error:'Please retry shortly.',source_session},429);
   const admin=createClient(url,service,options);
   // Generate a separate session without sending email or exposing the link hash.
   const generated=await admin.auth.admin.generateLink({type:'magiclink',email:user.email});
