@@ -480,3 +480,8 @@ input[data-no-focus-ring]:focus-visible {
   }
   }
 }
+
+/* Rounded fallbacks for enclosed components that omitted a radius class. */
+:root{--cb-surface-radius:14px;--cb-control-radius:8px}
+:where(div,section,article,aside,form,fieldset,details,pre):is([class~="border"],[class~="border-2"],[class~="border-4"]):not([class*="rounded"]){border-radius:var(--cb-surface-radius)}
+:where(input,select,textarea,button):is([class~="border"],[class~="border-2"]):not([class*="rounded"]){border-radius:var(--cb-control-radius)}

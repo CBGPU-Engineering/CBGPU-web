@@ -16,3 +16,8 @@
 .portal-content .portal-guide-card h3{font-size:16px}
 .portal-content .portal-guide-card p{font-size:13px}
 .portal-content .portal-guide-card:hover{border-color:var(--dev-blue)}
+
+/* Match publication tools and reading boxes to the shared surface scale. */
+.portal-content :is(.surface,.notice,.portal-guide-card,.portal-reading-surface,.portal-discovery,.portal-doc-toc){border-radius:var(--dev-radius-surface,14px)}
+.portal-content :is(input,select,textarea,.portal-paper-tools select,.docs-action,.docs-code){border-radius:var(--dev-radius-control,8px)}
+.docs-start-links>a,.docs-related a{border-radius:var(--dev-radius-surface,14px)}
