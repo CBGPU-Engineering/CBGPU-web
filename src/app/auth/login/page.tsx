@@ -68,7 +68,7 @@ export default function Login() {
         </div>
         <Button
           type="submit" disabled={isSubmitting}
-          className="w-full bg-primary py-6 text-lg font-black uppercase tracking-widest transition-all active:scale-95"
+          className="w-full h-11 bg-primary px-4 py-2 text-base font-semibold transition-all active:scale-95"
         >
           {isSubmitting ? "로그인 중…" : "로그인"}
         </Button>
