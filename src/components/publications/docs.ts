@@ -1280,6 +1280,7 @@ export const guides:Guide[] = [
       "/admin/gpu",
       "/admin/server",
       "/admin/accounts",
+      "/admin/careers",
       "/admin/manufacture",
       "/admin/materials",
       "/admin/study",
@@ -1289,6 +1290,10 @@ export const guides:Guide[] = [
       "/admin/manufacturing"
     ],
     "sections": [
+      {
+        "title": "Careers 지원서",
+        "body": "Careers 메뉴에서 접수된 지원자를 검색하고 항목을 펼쳐 이메일, 지원 동기, 경험, 포트폴리오를 확인합니다. 관리자만 조회할 수 있으며 지원서 수정·상태 변경 기능은 제공하지 않습니다."
+      },
       {
         "title": "대상과 로그인",
         "body": "admin.cbgpu.com은 학교 관리자 권한이 있는 계정용 독립 패널입니다. CBGPU 이메일과 비밀번호로 로그인합니다. 별도 공용 시스템 비밀번호를 추가로 입력하는 단계는 현재 사용하지 않습니다. 일반 학생 계정으로 접속할 수 있는 화면이 아닙니다.",

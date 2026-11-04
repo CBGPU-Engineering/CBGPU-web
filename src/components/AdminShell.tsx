@@ -13,6 +13,7 @@ const links=[
  {href:'/admin/gpu',key:'gpu',label:'GPU reservations',Icon:Cpu},
  {href:'/admin/server',key:'server',label:'Server deployments',Icon:Server},
  {href:'/admin/accounts',key:'accounts',label:'Accounts',Icon:Users},
+ {href:'/admin/careers',key:'careers',label:'Careers',Icon:Users},
  {href:'/admin/manufacture',key:'manufacture',label:'Equipment managers',Icon:Printer},
  {href:'/admin/materials',key:'materials',label:'File storage',Icon:Files},
  {href:'/admin/study',key:'study',label:'Study settings',Icon:KeyRound},
