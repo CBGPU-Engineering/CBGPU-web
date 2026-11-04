@@ -35,3 +35,11 @@
 .admin-developer-shell .recovery-kit-heading{display:flex;align-items:center;justify-content:space-between;gap:18px}.admin-developer-shell .developer-account-list{padding:8px 20px 16px}.admin-developer-shell .developer-account-list>p{padding:8px 0;font-size:12px;overflow-wrap:anywhere}.admin-developer-shell .developer-account-list>p+p{border-top:1px solid var(--dev-border)}.admin-developer-shell .account-developers{margin-top:20px}.admin-developer-shell #recovery-kit-message{margin-top:12px}@media(max-width:720px){.admin-developer-shell .recovery-kit-heading{align-items:start;flex-direction:column;gap:12px}.admin-developer-shell .developer-account-list{padding-inline:16px}.admin-developer-shell .recovery-kit-heading>.button{font-size:11px}}
 
 .admin-developer-shell .system-account{font-size:12px;font-weight:600;overflow-wrap:anywhere;margin-bottom:20px;color:var(--dev-ink)}.admin-developer-shell #system-password-back{margin-top:12px}
+
+/* Shared enclosed surfaces and controls across all operator portals. */
+.admin-developer-shell{--dev-radius-surface:14px;--dev-radius-control:8px}
+.admin-developer-shell .surface,.admin-developer-shell .health-card,.admin-developer-shell .login-card,.admin-developer-shell .email-summary>div,.admin-developer-shell dialog{border-radius:var(--dev-radius-surface)}
+.admin-developer-shell .surface{overflow:hidden}
+.admin-developer-shell input,.admin-developer-shell select,.admin-developer-shell textarea,.admin-developer-shell .field select,.admin-developer-shell .sql-editor,.admin-developer-shell .editor-value textarea,.admin-developer-shell .button,.admin-developer-shell .terminal-mobile-keys button{border-radius:var(--dev-radius-control)}
+.admin-developer-shell .nav-item,.admin-developer-shell .subnav-item,.admin-developer-shell .job-button{border-radius:var(--dev-radius-control)}
+.admin-developer-shell .table-scroll,.admin-developer-shell .table-wrap,.admin-developer-shell .table-container{border-radius:var(--dev-radius-surface);overflow:auto}
