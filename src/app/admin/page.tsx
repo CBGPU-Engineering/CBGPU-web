@@ -413,7 +413,6 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         <div className="page-heading">
           <div className="space-y-1">
             <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Administration</h1>
-            <p className="page-description">{tab === 'gpu' ? 'Review GPU requests, check conflicts and manage access.' : tab === 'server' ? 'Review deployments and inspect project configuration.' : tab === 'accounts' ? 'Find accounts, review access and manage permissions.' : tab === 'materials' ? 'Inspect storage usage and manage shared files.' : 'Assign equipment managers and maintain service access.'}</p>
           </div>
 
         </div>
@@ -434,13 +433,11 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
 
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
-          <div><h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Account access"}</h2><p className="text-xs text-muted-foreground leading-6 mt-1">{tab === 'gpu' ? "Review upcoming requests first. Conflicting reservations cannot be approved." : tab === 'server' ? "Review deployment settings and visibility before approval. Open project details to inspect its status." : "Verify names and student IDs, then approve or mark accounts for review. Deleting an account requires separate confirmation."}</p></div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 sm:max-w-md" />
+          <h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Account access"}</h2>
+          <div className="flex flex-wrap items-end gap-3">
+            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
             <Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>
             {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>Clear filters</Button>}
-          </div>
-          <div className="flex flex-wrap gap-3 items-end">
             <label className="text-xs font-semibold space-y-2"><span className="block">Status</span><select aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option>{tab === 'gpu' && <option value="ended">Ended</option>}</>}</select></label>
             {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><select aria-label="Filter by GPU" value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All GPUs</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>GPU #{id}</option>)}</select></label>}
             {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><select aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="admin">Administration</option><option value="manager">Laser and music managers</option></select></label>}
@@ -450,7 +447,6 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             <label>Sort<select aria-label="Sort records" value={sortOrder} onChange={e => setSortOrder(e.target.value)}><option value="default">Original order</option><option value="review">Needs review first</option><option value="name">Name A–Z</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
             <label>Rows per page<select aria-label="Rows per page" value={visibleLimit} onChange={e => setVisibleLimit(Number(e.target.value))}>{[15,30,60,100].map(n => <option key={n} value={n}>{n}</option>)}</select></label>
             <label>Density<select aria-label="Table density" value={density} onChange={e => setDensity(e.target.value)}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select></label>
-            <span className="meta">{lastRefreshed ? `Refresh completed at ${lastRefreshed.toLocaleTimeString('en-US')}` : 'Use / to search this list'}</span>
           </div>
           {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{listError}</p><p className="mt-2 text-muted-foreground">Previously loaded records remain below. Refresh to try again.</p></div>}
           {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">Saving changes and refreshing the list…</p>}
