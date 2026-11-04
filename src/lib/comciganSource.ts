@@ -32,3 +32,21 @@ export function extractComciganMetadata(html: string) {
   if (!search || !data) throw new Error('시간표 제공처의 조회 정보를 찾지 못했습니다');
   return { extractCode: search[1], scPrefix: data[1], scSuffix: data[2] };
 }
+
+/** The provider rotates data field numbers too; derive their meaning from its renderer. */
+export function extractComciganFields(html: string) {
+  const source=decodeComciganSource(html);
+  const patterns={
+    base:/원자료\s*=\s*Q자료\(자료\.(자료\d+)\[/,
+    daily:/일일자료\s*=\s*Q자료\(자료\.(자료\d+)\[/,
+    teachers:/성명\s*=\s*Q성명\(자료\.(자료\d+)\[/,
+    subjects:/과목명\s*=\s*Q과목명\(자료\.(자료\d+)\[/,
+  };
+  const fields={} as Record<keyof typeof patterns,string>;
+  for(const [name,pattern] of Object.entries(patterns)){
+    const match=source.match(pattern);
+    if(!match)throw new Error('시간표 제공처의 데이터 구조를 확인하지 못했습니다');
+    fields[name as keyof typeof patterns]=match[1];
+  }
+  return fields;
+}

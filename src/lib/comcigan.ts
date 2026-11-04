@@ -7,7 +7,7 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields } from './comciganSource';
 
 const ENTRY_URL = 'http://컴시간학생.kr';
 const SCHOOL_KEYWORD = '충북과학고';
@@ -23,6 +23,7 @@ interface SiteMeta {
   extractCode: string; // e.g. "/36179?17384l"
   scPrefix: string;    // e.g. "73629_"
   scSuffix: string;    // e.g. "1"
+  fields: ReturnType<typeof extractComciganFields>;
 }
 
 export interface TimetableCell {
@@ -76,7 +77,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource) };
+  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -111,7 +112,12 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const url = meta.baseUrl + path + '?' + b64;
   const body = await fetchUtf8(url);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
-  return JSON.parse(jsonStr);
+  const raw = JSON.parse(jsonStr);
+  for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {
+    if (!Array.isArray(raw[field])) throw new Error('시간표 제공처의 데이터가 올바르지 않습니다');
+    raw[alias] = raw[field];
+  }
+  return raw;
 }
 
 async function loadRawData(forceRefresh = false): Promise<RawData> {
@@ -221,8 +227,10 @@ export async function getTimetable(grade: number, cls: number, opts?: { forceRef
   const classCount = classCounts[grade] ?? 0;
   const classes = Array.from({ length: classCount }, (_, i) => i + 1);
 
+  const grid = decodeGrid(raw, grade, cls);
+  if (!Object.keys(grid).length) throw new Error('해당 학년·반의 시간표가 제공되지 않습니다');
   return {
-    grid: decodeGrid(raw, grade, cls),
+    grid,
     classTimes: raw?.['일과시간'] ?? [],
     grades,
     classes,
