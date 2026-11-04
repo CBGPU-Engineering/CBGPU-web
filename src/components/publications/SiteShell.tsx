@@ -1,3 +1,4 @@
+import {siteHref} from '@/lib/siteHref';
 import Link from 'next/link';
 import Image from 'next/image';
 import { headers } from 'next/headers';
@@ -26,12 +27,12 @@ export default async function SiteShell({ site, children }: { site: 'docs' | 'ar
       <Link href={home} className="brand"><Image src="/img/cbgpu-logo.png" width={30} height={30} alt="" /><span className="brand-word">CBGPU<small>{title}</small></span></Link>
       <p className="nav-caption">Workspace</p>
       <PublicationNav items={items} />
-      <div className="sidebar-bottom"><a href={site === 'docs' ? 'https://arxiv.cbgpu.com' : 'https://docs.cbgpu.com'}>{site === 'docs' ? '연구 프리프린트' : '사용 문서'}<ArrowUpRight aria-hidden="true" /></a><a href="https://cbgpu.com">CBGPU 열기<ArrowUpRight aria-hidden="true" /></a></div>
+      <div className="sidebar-bottom"><a href={siteHref(site === 'docs' ? 'https://arxiv.cbgpu.com' : 'https://docs.cbgpu.com')}>{site === 'docs' ? '연구 프리프린트' : '사용 문서'}<ArrowUpRight aria-hidden="true" /></a><a href={siteHref('https://cbgpu.com')}>CBGPU 열기<ArrowUpRight aria-hidden="true" /></a></div>
     </aside>
     <div className="workspace">
       <header className="workspace-header"><div className="breadcrumbs"><Link href={home}>{title}</Link><ChevronRight aria-hidden="true" /><span>{site === 'docs' ? '사용 문서' : '학교 연구 저장소'}</span></div><div className="header-actions"><span className="environment-badge">공개 열람</span><WorkspaceThemeControl /></div></header>
       <main id="main-content" tabIndex={-1} className="portal-content">{children}</main>
-      <footer className="workspace-footer"><p>{site === 'docs' ? 'CBGPU Docs' : 'CBGPU arXiv'}</p><nav aria-label="관련 서비스" className="portal-footer-links"><a href="https://docs.cbgpu.com">문서</a><a href="https://arxiv.cbgpu.com">연구</a><a href="https://cbgpu.com">CBGPU</a><a href="https://cbgpu.com/download">Android 앱 <ArrowUpRight aria-hidden="true" /></a></nav></footer>
+      <footer className="workspace-footer"><p>{site === 'docs' ? 'CBGPU Docs' : 'CBGPU arXiv'}</p><nav aria-label="관련 서비스" className="portal-footer-links"><a href={siteHref('https://docs.cbgpu.com')}>문서</a><a href={siteHref('https://arxiv.cbgpu.com')}>연구</a><a href={siteHref('https://cbgpu.com')}>CBGPU</a><a href={siteHref('https://cbgpu.com/download')}>Android 앱 <ArrowUpRight aria-hidden="true" /></a></nav></footer>
     </div>
   </div></WorkspaceTheme>;
 }

@@ -1,3 +1,4 @@
+import {siteHref} from './siteHref';
 export type WorkspaceId='student'|'researcher';
 export const workspaces:Record<WorkspaceId,{name:string;label:string;eyebrow:string;description:string;host:string;accent:string;primary:string[]}>={
  student:{name:'for Students',label:'학교생활',eyebrow:'오늘 필요한 학교생활, 한곳에서.',description:'자습 신청, 시간표, 급식과 자료 공유를 바로 이용하세요.',host:'student.cbgpu.com',accent:'#4678ed',primary:['/study','/timetable','/meal','/wakeup','/materials']},
@@ -15,4 +16,4 @@ export const workspaceServicePaths:Record<WorkspaceId,string[]>={
  student:['/download','/study','/timetable','/meal','/wakeup','/materials','/contests','/match','/polls','/feed','/tools','/games','https://docs.cbgpu.com'],
  researcher:['/download','/dashboard','/dashboard/ssh-guide','/deploy','/server','/latex','/notes','/materials','/manufacturing','/manufacturing/print','/manufacturing/laser','/contests','/tools','https://docs.cbgpu.com','https://arxiv.cbgpu.com'],
 };
-export function appWorkspaceHome(mode:WorkspaceId){return (process.env.NEXT_PUBLIC_CBGPU_DEMO==='1'?'/?mode=':'https://app.cbgpu.com/?mode=')+mode}
+export function appWorkspaceHome(mode:WorkspaceId){return siteHref((process.env.NEXT_PUBLIC_CBGPU_DEMO==='1'?'/?mode=':'https://app.cbgpu.com/?mode=')+mode)}
