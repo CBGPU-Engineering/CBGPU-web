@@ -70,3 +70,5 @@
 .admin-developer-shell .workspace-header .breadcrumbs,.admin-developer-shell .workspace-header .breadcrumbs strong,.admin-developer-shell .workspace-header .account-button,.admin-developer-shell .workspace-header select{font-size:15px}
 .admin-developer-shell .workspace-header .environment-badge{font-size:14px;padding:5px 12px}
 
+
+.admin-developer-shell .theme-control{width:36px;min-width:36px;height:36px;padding:0;justify-content:center;border:1px solid var(--dev-border,var(--border));border-radius:10px;background:transparent;cursor:pointer}.admin-developer-shell .theme-control:hover{background:var(--dev-hover)}.admin-developer-shell .theme-control>.icon,.admin-developer-shell .header-actions .theme-control>.icon{display:block;width:17px;height:17px}
