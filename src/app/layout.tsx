@@ -20,6 +20,7 @@ import { Metadata,Viewport } from 'next';
 import { AlertProvider } from '@/lib/alert';
 import DeferredStylesheet from '@/components/DeferredStylesheet';
 import ApprovalNotice from '@/components/ApprovalNotice';
+import ReturnToApp from '@/components/ReturnToApp';
 import SiteBanner from '@/components/SiteBanner';
 
 export const viewport:Viewport={width:'device-width',initialScale:1,viewportFit:'cover',interactiveWidget:'resizes-content'};
@@ -117,6 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <AlertProvider english={adminSite||manufacturingSite}>
               {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'}>{children}</ManufacturingShell> : adminSite ? <AdminShell><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
+              {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}
             </AlertProvider>
           </AuthProvider>
