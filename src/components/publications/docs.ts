@@ -1291,9 +1291,14 @@ export const guides:Guide[] = [
       "/admin/wakeup",
       "/admin/timetable",
       "/admin/polls",
-      "/admin/manufacturing"
+      "/admin/manufacturing",
+      "/admin/m"
     ],
     "sections": [
+      {
+        "title": "앱에서 쓰는 모바일 관리",
+        "body": "CBGPU 앱의 공간 메뉴에서 담당 업무의 관리자 페이지를 열면 폰 전용 화면(/admin/m)이 열립니다. 요약, 가입 승인, GPU 예약, 더보기 탭에서 대기 중인 계정과 예약을 카드로 확인하고 승인하거나 거절할 수 있습니다. 같은 관리자 계정과 권한을 쓰며, 왼쪽 위 로고나 더보기의 돌아가기로 앱에 돌아갑니다."
+      },
       {
         "title": "Careers 지원서",
         "body": "Careers 메뉴에서 접수된 지원자를 검색하고 항목을 펼쳐 이메일, 지원 동기, 경험, 포트폴리오를 확인합니다. 관리자만 조회할 수 있으며 지원서 수정·상태 변경 기능은 제공하지 않습니다."
