@@ -18,6 +18,8 @@ type AuthContextType = {
   isWakeupManager: boolean;
   /** null(기본값)/true = 정상 이용 가능, false = 관리자가 학번/이름 확인이 필요하다고 표시한 상태 */
   isApproved: boolean;
+  /** 계정 역할로 갈 수 있는 담당 사이트(호스트와 무관). 앱·메인에서 바로가기를 보여주는 용도이며 권한 검사는 각 사이트가 다시 한다. */
+  roleSites: { id: 'admin' | 'print' | 'laser'; label: string; host: string }[];
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
 };
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextType>({
   isLaserCutManager: false,
   isWakeupManager: false,
   isApproved: true,
+  roleSites: [],
   isLoading: true,
   refreshProfile: async () => {},
 });
@@ -234,6 +237,11 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
     isLaserCutManager: managementWorkspace && (profile?.is_laser_cut_manager || false),
     isWakeupManager: managementWorkspace && (profile?.is_wakeup_manager || false),
     isApproved: profile?.is_approved !== false,
+    roleSites: [
+      ...(profile?.is_admin ? [{ id: 'admin' as const, label: '관리자 페이지', host: 'admin.cbgpu.com' }] : []),
+      ...(managedPrinterIds.length > 0 ? [{ id: 'print' as const, label: '3D 프린터 관리', host: 'print.cbgpu.com' }] : []),
+      ...(profile?.is_laser_cut_manager ? [{ id: 'laser' as const, label: '레이저 커팅 관리', host: 'laser.cbgpu.com' }] : []),
+    ],
     isLoading,
     refreshProfile,
   };

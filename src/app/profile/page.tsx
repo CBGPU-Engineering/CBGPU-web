@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import Image from 'next/image';
-import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing, ShieldCheck, ArrowUpRight } from 'lucide-react';
-import { siteHref } from '@/lib/siteHref';
+import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
@@ -305,20 +304,6 @@ export default function Profile() {
           </p>
         </div>
       </div>
-
-      {profile?.is_admin && (
-        /* 관리자 페이지는 admin.cbgpu.com에 따로 있고 다른 도메인에서 /admin은 404라서, 여기 말고는 가는 길이 없었다.
-           useAuth의 isAdmin은 관리 호스트에서만 true(관리 기능은 그 호스트에서 따로 인증해야 함)라 쓸 수 없어서
-           프로필의 is_admin으로 링크만 보여준다. 링크는 권한을 주지 않고, admin.cbgpu.com이 로그인과 권한을 다시 확인한다. */
-        <a href={siteHref('https://admin.cbgpu.com/')} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-muted/50">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ShieldCheck className="size-5" /></span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-base font-semibold">관리자 페이지</span>
-            <span className="block text-sm text-muted-foreground">계정, GPU 예약, 서버 배포 등을 관리합니다</span>
-          </span>
-          <ArrowUpRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </a>
-      )}
 
       <form
         onSubmit={(e) => { e.preventDefault(); updateProfile(); }}
