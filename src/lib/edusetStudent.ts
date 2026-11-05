@@ -7,10 +7,11 @@ export type StudyTeacher = {id:StudyId;name:string};
 export type OwnStudy = {id:StudyId;period:number;status:string;room:{id:StudyId;name:string};seat?:{id:StudyId;name:string}|null;teacher?:StudyTeacher;reason?:string};
 export type StudyStudent = {id:StudyId;name:string;grade:number;classNo:number;number:number};
 export type StudyContext = {student:StudyStudent;date:string;open:boolean;opensAt:string;closesAt:string;periods:number[];entries:OwnStudy[];rooms:StudyRoom[];teachers:StudyTeacher[]};
+export type SubmissionLease={mark:(state:'submitting'|'confirmed'|'released'|'rejected'|'uncertain')=>Promise<void>};
 export class StudyFailure extends Error {constructor(message:string,public status=400,public code?:string){super(message)}}
 const validId=(id:unknown):id is StudyId=>typeof id==='string'?/^[A-Za-z0-9_-]{1,100}$/.test(id):typeof id==='number'&&Number.isSafeInteger(id)&&id>0;
 type Send = (path:string,token:string,method?:string,body?:unknown)=>Promise<any>;
-type Dependencies = {authorize:(request:Request)=>Promise<string|null>;send:Send;now?:()=>Date;limit:(key:string)=>boolean;getConnection?:(owner:string)=>Promise<string|null>;remember?:(owner:string,token:string,student:StudyStudent)=>Promise<void>;disconnect?:(owner:string)=>Promise<void>};
+type Dependencies = {authorize:(request:Request)=>Promise<string|null>;send:Send;now?:()=>Date;limit:(key:string)=>boolean;getConnection?:(owner:string)=>Promise<string|null>;remember?:(owner:string,token:string,student:StudyStudent)=>Promise<void>;disconnect?:(owner:string)=>Promise<void>;reserveWrite?:(owner:string,student:StudyId,date:string,period:number)=>Promise<SubmissionLease|null>;releasePeriod?:(student:StudyId,date:string,period:number)=>Promise<void>};
 const positive=(n:unknown):n is number=>typeof n==='number'&&Number.isSafeInteger(n)&&n>0;
 export const koreaDate=(now:Date)=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
 export function studyWindow(policy:any,now:Date){
@@ -34,12 +35,12 @@ export async function verifyStudyStudent(send:Send,token:string){
 async function ownEntries(send:Send,token:string,id:StudyId,date:string):Promise<OwnStudy[]>{
  const result=await send('/selfstudy/search',token,'POST',{studentId:id,date:date+'T00:00:00.000Z'});
  if(!Array.isArray(result))throw new StudyFailure('공식 신청 내역을 확인하지 못했습니다.',502);
- return result.filter(e=>e.type==='selfstudy'&&e.student?.id===id&&typeof e.date==='string'&&e.date.slice(0,10)===date&&validId(e.id)&&positive(e.period)&&validId(e.room?.id)).map(e=>({id:e.id,period:e.period,status:e.status,room:{id:e.room.id,name:e.room.name},seat:e.seat?{id:e.seat.id,name:e.seat.name}:null,teacher:e.teacher?{id:e.teacher.id,name:e.teacher.name}:undefined,reason:e.reason}));
+ return result.filter(e=>e.type==='selfstudy'&&e.student?.id===id&&typeof e.date==='string'&&e.date.slice(0,10)===date&&validId(e.id)&&positive(e.period)&&validId(e.room?.id)).map(e=>({id:e.id,period:e.period,status:e.status,room:{id:e.room.id,name:e.room.name},seat:e.seat?{id:e.seat.id,name:e.seat.name}:null,teacher:e.teacher?{id:e.teacher.id,name:e.teacher.name}:undefined,reason:e.reason})).sort((a,b)=>a.period-b.period||a.room.name.localeCompare(b.room.name,'ko',{numeric:true}));
 }
 const activeWrites=new Set<StudyId>();
 const safeHosts=new Set(['cbgpu.com','www.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com','app.cbgpu.com']);
 export async function handleStudentStudy(request:Request,deps:Dependencies){
- let writeOwner:StudyId|undefined;let schoolOwner:string|undefined;
+ let writeOwner:StudyId|undefined;let schoolOwner:string|undefined;let lease:SubmissionLease|null=null;let submitted=false;
  const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
  try{
   const raw=request.headers.get('host')?.split(':')[0]||new URL(request.url).hostname,host=['127.0.0.1','localhost'].includes(raw)?request.headers.get('x-cbgpu-public-host')||raw:raw;
@@ -89,6 +90,7 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
    await deps.send('/selfstudy/'+body.id,token,'DELETE');
    const after=await ownEntries(deps.send,token,identity.id,window.date);
    if(after.some(e=>e.id===body.id))throw new StudyFailure('취소 결과를 확인하지 못했습니다. 내 신청을 새로고침해 주세요.',502);
+   const cancelled=entries.find(e=>e.id===body.id);if(cancelled&&deps.releasePeriod)await deps.releasePeriod(identity.id,window.date,cancelled.period);
    return reply({ok:true,entries:after});
   }
   if(!validId(body.roomId)||!validId(body.teacherId)||!positive(body.period)||!window.periods.includes(body.period)||typeof body.reason!=='string'||!body.reason.trim()||body.reason.length>1000)throw new StudyFailure('교실·선생님·교시·사유를 확인해 주세요.');
@@ -107,11 +109,21 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
    seatId=seat.id;
   }else if(body.seatId!=null)throw new StudyFailure('이 교실은 좌석을 지정하지 않습니다.');
   if(!studyWindow(policy,deps.now?.()||new Date()).open)throw new StudyFailure('신청 시간이 종료됐습니다.',409);
+  if(deps.reserveWrite){
+   lease=await deps.reserveWrite(user,identity.id,window.date,body.period);
+   if(!lease)throw new StudyFailure('이 교시는 처리 중이거나 신청 결과 확인이 필요해요. 내 신청을 새로고침해 주세요.',409,'submission_in_progress');
+   const fresh=await ownEntries(deps.send,token,identity.id,window.date);
+   if(fresh.some(e=>e.period===body.period))throw new StudyFailure('이미 신청한 교시입니다.',409,'already_registered');
+   await lease.mark('submitting');
+  }
+  submitted=true;
   await deps.send('/selfstudy',token,'POST',{studentId:identity.id,date:window.date+'T00:00:00.000Z',roomId:room.id,teacherId:teacher.id,period:body.period,reason:body.reason.trim(),...(seatId===undefined?{}:{seatId})});
   const after=await ownEntries(deps.send,token,identity.id,window.date);
   if(!after.some(e=>e.period===body.period&&e.room.id===room.id&&(!room.hasSeats||e.seat?.id===seatId)))throw new StudyFailure('공식 등록 결과를 확인하지 못했습니다. 다시 신청하기 전에 내 신청을 새로고침해 주세요.',502);
+  if(lease){await lease.mark('confirmed');lease=null}
   return reply({ok:true,entries:after});
  }catch(e){
+  if(lease){const state=!submitted?'released':e instanceof StudyFailure&&e.status>=400&&e.status<500?'rejected':'uncertain';await lease.mark(state).catch(()=>{});lease=null}
   if(e instanceof StudyFailure){
    if(e.status===401&&schoolOwner&&deps.disconnect){await deps.disconnect(schoolOwner).catch(()=>{});return reply({message:'EduSet 연결이 만료됐습니다. 다시 로그인해 주세요.',code:'school_connection_required'},401)}
    return reply({message:e.message,...(e.code?{code:e.code}:{})},e.status);

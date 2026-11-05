@@ -3,9 +3,10 @@ const fixtures=require('./fixtures.cjs');
 // Transpile only the existing pure contract modules, never production API clients.
 const ts=require('../node_modules/typescript');
 require.extensions['.ts']=(m,file)=>m._compile(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,file);
+const {validateAutomation,nextAutomaticStudyDate}=require('../src/lib/studyAutomation.ts');
 const {handleStudentStudy,StudyFailure}=require('../src/lib/edusetStudent.ts');
 function createDemoServer(){
- const data=fixtures.tables(),sessions=new Map(),connections=new Map();let records=[],sequence=1;
+ const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map();let records=[],sequence=1;
  function userFor(req){return sessions.get((req.headers['x-cbgpu-auth']||req.headers.authorization||'').replace(/^Bearer /,''))||null}
  const student={id:'demo-school-student',name:'Demo Student',grade:2,classNo:3,number:1};
  const rooms=[{id:1,name:'Demo study room',hasSeats:true,width:2,height:1}],teachers=[{id:'demo-teacher',name:'Demo Teacher'}];
@@ -38,6 +39,14 @@ function createDemoServer(){
    if(p==='/auth/v1/user')return user?reply(200,fixtures.session(user).user):reply(401,{message:'Demo login required'});
    if(p==='/auth/v1/logout'){sessions.delete((req.headers.authorization||'').replace(/^Bearer /,''));return reply(200,{})}
    if(p.startsWith('/auth/'))return reply(501,{message:'OAuth, email and account creation are disabled in the local demo.'});
+   if(p==='/api/study/automation'){
+    if(!user)return reply(401,{message:'Demo login required'});
+    if(req.method==='POST'){
+     if(body.action==='disable'){const old=automation.get(user.id);if(old)automation.set(user.id,{...old,enabled:false})}
+     else{try{const settings=validateAutomation(body);automation.set(user.id,{...settings,starts_on:nextAutomaticStudyDate(settings.run_time,new Date('2026-11-03T07:00:00Z'))})}catch(e){return reply(400,{message:e.message})}}
+    }
+    return reply(200,{settings:automation.get(user.id)||null,runs:[]});
+   }
    if(p==='/api/study/student'){
     const headers={...req.headers,host:'student.cbgpu.com',origin:'https://student.cbgpu.com'};
     const request=new Request('https://student.cbgpu.com/api/study/student',{method:req.method,headers,body:['GET','HEAD'].includes(req.method)?undefined:raw});

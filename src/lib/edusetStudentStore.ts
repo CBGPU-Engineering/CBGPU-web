@@ -5,6 +5,8 @@ import {StudyFailure,type StudyStudent} from './edusetStudent';
 export async function forgetSchoolConnection(owner:string){
  const {error}=await preprintsClient().from('eduset_student_connections').delete().eq('user_id',owner);
  if(error)throw new StudyFailure('학교 계정 연결을 해제하지 못했습니다.',503);
+ const {error:disabled}=await preprintsClient().from('study_auto_settings').update({enabled:false,updated_at:new Date().toISOString()}).eq('user_id',owner);
+ if(disabled)throw new StudyFailure('학교 연결은 해제됐지만 자동신청 상태를 확인하지 못했습니다.',503);
 }
 export async function savedSchoolToken(owner:string):Promise<string|null>{
  const {data,error}=await preprintsClient().from('eduset_student_connections').select('student_id,token_enc,expires_at').eq('user_id',owner).maybeSingle();
