@@ -459,8 +459,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">Login Required</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-70">
+          <h1 className="cb-page-title">Login Required</h1>
+          <p className="cb-page-sub mt-1">
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
