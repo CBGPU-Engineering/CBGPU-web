@@ -101,7 +101,7 @@ export default function PrintJobDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h1 className="text-3xl font-black tracking-tighter italic uppercase">3D print request</h1>
+              <h1 className="cb-page-title">3D print request</h1>
               <Badge variant={statusInfo.variant} icon={statusInfo.icon}>{statusInfo.label}</Badge>
               {job.status === 'done' && job.delivered_at && (
                 <Badge variant="success" icon={<PackageCheck className="size-3" />}>Delivered</Badge>

@@ -282,7 +282,7 @@ export default function Dashboard() {
       <section>
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="text-3xl md:text-4xl font-black tracking-tighter italic uppercase">GPU</h1>
+            <h1 className="cb-page-title">GPU</h1>
             <div className="h-1 w-20 bg-primary rounded-full"></div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

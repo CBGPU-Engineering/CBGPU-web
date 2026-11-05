@@ -163,8 +163,8 @@ export default function NewMaterialPage() {
         <ArrowLeft className="size-4" />
       </button>
       <div>
-        <h1 className="text-3xl font-black uppercase italic tracking-tighter">자료 올리기</h1>
-        <p className="mt-1 text-xs font-black uppercase tracking-widest text-muted-foreground">파일 · 제목 · 태그</p>
+        <h1 className="cb-page-title">자료 올리기</h1>
+        <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
       </div>
     </div>
 

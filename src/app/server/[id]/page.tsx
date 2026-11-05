@@ -227,7 +227,7 @@ export default function ServerDetailPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h1 className="text-3xl font-black tracking-tighter italic uppercase">{project.name}</h1>
+              <h1 className="cb-page-title">{project.name}</h1>
               <Badge variant={statusInfo.variant as any} icon={statusInfo.icon}>{statusInfo.label}</Badge>
               {isRunning && <span className="size-2 rounded-full bg-emerald-500 animate-pulse inline-block" />}
             </div>

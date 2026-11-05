@@ -159,7 +159,7 @@ export default function MealPage() {
     <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-1">
         <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">충북과학고 학교급식</p>
-        <h1 className="text-3xl font-black tracking-tight">오늘 뭐 나와요?</h1>
+        <h1 className="cb-page-title">오늘 뭐 나와요?</h1>
       </div>
 
       {nativeReady && (

@@ -105,7 +105,7 @@ export default function AdminStudyPage() {
           <ShieldAlert className="w-16 h-16 text-destructive" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic uppercase">Access Denied</h1>
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">Access Denied</h1>
           <p className="text-muted-foreground text-lg max-w-md font-bold uppercase opacity-70">
             Administrator privileges required.
           </p>
@@ -120,8 +120,8 @@ export default function AdminStudyPage() {
   return (
     <div className="max-w-md mx-auto space-y-6 py-10">
       <div>
-        <h1 className="text-3xl font-black tracking-tighter italic uppercase">Study access token</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-70">
+        <h1 className="cb-page-title">Study access token</h1>
+        <p className="cb-page-sub mt-1">
           This shared token is used to load study-room availability for all users.
         </p>
       </div>

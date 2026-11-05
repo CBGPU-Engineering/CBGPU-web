@@ -26,8 +26,8 @@ export default function GamesPage() {
   return (
     <section className="cb-page-content min-h-screen max-w-full overflow-x-hidden px-4 py-10 flex flex-col items-center gap-6">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-black uppercase tracking-tighter italic">Arcade</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">AI 학습 대기 중 한 판 하세요</p>
+        <h1 className="cb-page-title">Arcade</h1>
+        <p className="cb-page-sub mt-1">AI 학습 대기 중 한 판 하세요</p>
       </div>
 
       <SegmentedTabs

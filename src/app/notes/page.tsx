@@ -385,8 +385,8 @@ export default function NotesPage() {
   return (
     <section className="cb-page-content px-4 py-8 max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-black uppercase tracking-tighter italic">연구노트</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">마크다운 지원 · 자동 저장 · 공유 가능</p>
+        <h1 className="cb-page-title">연구노트</h1>
+        <p className="cb-page-sub mt-1">마크다운 지원 · 자동 저장 · 공유 가능</p>
       </div>
       <NoteList onOpen={(n) => setEditing(n ?? 'new')} />
     </section>

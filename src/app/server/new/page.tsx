@@ -168,8 +168,8 @@ export default function NewServerPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">Login Required</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-70">
+          <h1 className="cb-page-title">Login Required</h1>
+          <p className="cb-page-sub mt-1">
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
@@ -192,8 +192,8 @@ export default function NewServerPage() {
             <ArrowLeft className="size-4" />
           </button>
           <div>
-            <h1 className="text-3xl font-black tracking-tighter italic uppercase leading-none">New Server Project</h1>
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-0.5">
+            <h1 className="cb-page-title">New Server Project</h1>
+            <p className="cb-page-sub mt-1">
               저장하면 승인 없이 자동 배포를 시작합니다
             </p>
           </div>

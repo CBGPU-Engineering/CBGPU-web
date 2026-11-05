@@ -125,7 +125,7 @@ export default function StudyContributorPage() {
   return (
     <section className="cb-page-content mx-auto max-w-xl space-y-6 px-4 py-10">
       <div className="space-y-2">
-        <div className="flex items-center gap-2"><Puzzle className="size-6 text-primary" /><h1 className="text-3xl font-black tracking-tight">자습 조회 기여자</h1></div>
+        <div className="flex items-center gap-2"><Puzzle className="size-6 text-primary" /><h1 className="cb-page-title">자습 조회 기여자</h1></div>
         <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm font-bold text-amber-800 dark:text-amber-300">
           이 설정은 데스크톱 환경에서만 가능합니다. 휴대폰에서는 진행하지 마세요.
         </div>

@@ -190,8 +190,8 @@ export default function ToolsPage() {
   return (
     <section className="cb-page-content min-h-screen px-4 py-10 flex flex-col items-center gap-8">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-black uppercase tracking-tighter italic">도구</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">공부 도우미</p>
+        <h1 className="cb-page-title">도구</h1>
+        <p className="cb-page-sub mt-1">공부 도우미</p>
       </div>
       <SegmentedTabs
         items={TABS.map(t => ({

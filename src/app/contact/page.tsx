@@ -50,10 +50,10 @@ export default function ContactPage() {
   return (
     <div className="max-w-xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="space-y-1">
-        <h1 className="text-4xl font-black tracking-tighter italic uppercase flex items-center gap-3">
+        <h1 className="cb-page-title flex items-center gap-3">
           <MessageSquare className="size-8" /> Contact
         </h1>
-        <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-60">
+        <p className="cb-page-sub mt-1">
           문의사항을 남겨주시면 담당자가 이메일로 답변 드립니다
         </p>
       </div>

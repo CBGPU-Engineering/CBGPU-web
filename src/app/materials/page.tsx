@@ -121,8 +121,8 @@ export default function MaterialsPage() {
   return <section className="cb-page-content mx-auto max-w-3xl space-y-5 px-4 py-8">
     <div className="flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="text-3xl font-black uppercase tracking-tighter italic">자료 공유</h1>
-        <p className="mt-1 text-xs font-bold uppercase tracking-widest text-muted-foreground">파일 · 제목 · 태그</p>
+        <h1 className="cb-page-title">자료 공유</h1>
+        <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
       </div>
       <Button asChild size="sm" className="shrink-0 gap-1.5 font-black text-xs active:scale-95">
         <Link href="/materials/new"><Plus className="size-3.5" />새 자료</Link>

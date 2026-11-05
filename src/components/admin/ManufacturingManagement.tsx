@@ -474,8 +474,8 @@ export default function ManufacturingPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">Login Required</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-70">
+          <h1 className="cb-page-title">Login Required</h1>
+          <p className="cb-page-sub mt-1">
 
             Sign in to continue.
           </p>
@@ -496,8 +496,8 @@ export default function ManufacturingPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">{equipmentKind==='print'?'3D printing':equipmentKind==='laser'?'Laser cutting':'Manufacturing'}</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-60">3D Printing · Laser Cutting</p>
+          <h1 className="cb-page-title">{equipmentKind==='print'?'3D printing':equipmentKind==='laser'?'Laser cutting':'Manufacturing'}</h1>
+          <p className="cb-page-sub mt-1">3D Printing · Laser Cutting</p>
         </div>
       </div>
 

@@ -339,7 +339,7 @@ export default function AdminWakeupPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-10">
       <div className="space-y-3">
-        <h1 className="text-3xl font-black italic tracking-tighter">Wake-up music</h1>
+        <h1 className="cb-page-title">Wake-up music</h1>
         <SegmentedTabs label="Dormitory" items={DORMS.map(d => ({ value: d, label: DORM_LABELS[d] }))} value={dorm} onChange={changeDorm} />
       </div>
 
