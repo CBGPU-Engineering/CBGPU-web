@@ -28,5 +28,6 @@ jobs:
           demo_pid=$!
           trap 'kill "$demo_pid" || true; cat /tmp/demo.log' EXIT
           node scripts/demo-smoke.mjs
+          node scripts/app-update-smoke.mjs
       - run: node scripts/check-publication.mjs
       - run: npm sbom --sbom-format cyclonedx --omit=dev > /tmp/web-sbom.cdx.json
