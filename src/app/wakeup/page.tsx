@@ -170,7 +170,7 @@ export default function WakeupSongPage() {
     <div className="cb-page-content max-w-2xl mx-auto space-y-8 pb-10">
       <div className="space-y-3">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black italic tracking-tighter">기상송 신청</h1>
+          <h1 className="cb-page-title">기상송 신청</h1>
           <p className="text-sm text-muted-foreground font-medium">듣고 싶은 노래를 신청하면 바로 그날 아침 대기열에 올라가요.</p>
         </div>
         <SegmentedTabs items={DORMS.map(d => ({ value: d, label: d }))} value={dorm} onChange={changeDorm} />

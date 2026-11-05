@@ -281,8 +281,8 @@ export default function MatchPage() {
 
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">스터디 매칭</h1>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">같이 공부할 사람 구하기</p>
+          <h1 className="cb-page-title">스터디 매칭</h1>
+          <p className="cb-page-sub mt-1">같이 공부할 사람 구하기</p>
         </div>
         {user && <Button onClick={() => setCreating(true)} className="font-black uppercase gap-2"><Plus className="size-4" />만들기</Button>}
       </div>

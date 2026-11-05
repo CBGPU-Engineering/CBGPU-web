@@ -65,8 +65,8 @@ export default function ServerPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">Login Required</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-70">
+          <h1 className="cb-page-title">Login Required</h1>
+          <p className="cb-page-sub mt-1">
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
@@ -82,8 +82,8 @@ export default function ServerPage() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tighter italic uppercase">Server Deploy</h1>
-          <p className="text-muted-foreground font-bold uppercase text-xs tracking-widest opacity-60">
+          <h1 className="cb-page-title">Server Deploy</h1>
+          <p className="cb-page-sub mt-1">
             남는 CPU 자원으로 가벼운 서버를 배포하세요
           </p>
         </div>

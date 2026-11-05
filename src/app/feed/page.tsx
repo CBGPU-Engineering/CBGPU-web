@@ -20,8 +20,8 @@ export default function FeedPage() {
   return (
     <section className="cb-page-content min-h-screen px-4 py-10 flex flex-col items-center gap-8">
       <div className="text-center space-y-1">
-        <h1 className="text-3xl font-black uppercase tracking-tighter italic">Feed</h1>
-        <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">AI 학습 대기 중 읽을거리</p>
+        <h1 className="cb-page-title">Feed</h1>
+        <p className="cb-page-sub mt-1">AI 학습 대기 중 읽을거리</p>
       </div>
 
       <SegmentedTabs

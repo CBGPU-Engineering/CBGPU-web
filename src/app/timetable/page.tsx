@@ -151,8 +151,8 @@ export default function TimetablePage() {
     <section className="cb-page-content px-4 py-8 space-y-5 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">시간표</h1>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">
+          <h1 className="cb-page-title">시간표</h1>
+          <p className="cb-page-sub mt-1">
             충북과학고등학교 ·{' '}
             <span className={source === 'comcigan' ? 'text-green-500' : 'text-amber-500'}>
               {source === 'comcigan' ? '컴시간 알리미' : '수동 데이터'}

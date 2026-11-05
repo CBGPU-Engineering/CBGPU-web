@@ -48,7 +48,7 @@ export default function DownloadPage() {
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
         <div className="space-y-2">
           <p className="text-sm font-semibold text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic">CBGPU 앱</h1>
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">CBGPU 앱</h1>
           <p className="text-base text-muted-foreground font-medium max-w-md mx-auto">
             시간표, 급식부터 GPU 예약, 제작 신청까지 — 학교생활을 앱 하나로.
           </p>

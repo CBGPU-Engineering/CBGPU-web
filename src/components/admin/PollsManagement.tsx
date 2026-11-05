@@ -629,8 +629,8 @@ export default function PollsPage() {
       />
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">Polls</h1>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">School events, competitions and surveys</p>
+          <h1 className="cb-page-title">Polls</h1>
+          <p className="cb-page-sub mt-1">School events, competitions and surveys</p>
         </div>
         {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-black uppercase tracking-widest gap-2"><Plus className="size-4" />Create poll</Button>}
       </div>

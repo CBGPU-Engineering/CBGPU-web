@@ -629,8 +629,8 @@ export default function PollsPage() {
       />
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tighter italic">투표</h1>
-          <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-1">학교 행사 · 대회 · 설문</p>
+          <h1 className="cb-page-title">투표</h1>
+          <p className="cb-page-sub mt-1">학교 행사 · 대회 · 설문</p>
         </div>
         {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-black uppercase tracking-widest gap-2"><Plus className="size-4" />투표 만들기</Button>}
       </div>

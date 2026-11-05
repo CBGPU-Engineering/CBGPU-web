@@ -102,7 +102,7 @@ export default function GpuSshGuidePage() {
           <Terminal className="size-6" />
           <span className="text-xs font-black uppercase tracking-widest">GPU SSH</span>
         </div>
-        <h1 className="text-3xl font-black italic tracking-tight sm:text-4xl">SSH 접속 방법</h1>
+        <h1 className="cb-page-title">SSH 접속 방법</h1>
         <p className="text-sm text-muted-foreground">키와 접속 설정을 한 번 등록하면 예약한 GPU 컨테이너에 서버 비밀번호 없이 접속할 수 있습니다.</p>
       </header>
 
