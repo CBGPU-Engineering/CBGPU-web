@@ -238,7 +238,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
     isWakeupManager: managementWorkspace && (profile?.is_wakeup_manager || false),
     isApproved: profile?.is_approved !== false,
     roleSites: [
-      ...(profile?.is_admin ? [{ id: 'admin' as const, label: '관리자 페이지', host: 'admin.cbgpu.com', path: '/admin/gpu' }] : []),
+      ...(profile?.is_admin ? [{ id: 'admin' as const, label: '관리자 페이지', host: 'admin.cbgpu.com', path: '/admin/m' }] : []),
       ...(managedPrinterIds.length > 0 ? [{ id: 'print' as const, label: '3D 프린터 관리', host: 'print.cbgpu.com', path: '/manage/manufacturing' }] : []),
       ...(profile?.is_laser_cut_manager ? [{ id: 'laser' as const, label: '레이저 커팅 관리', host: 'laser.cbgpu.com', path: '/manage/manufacturing' }] : []),
     ],
