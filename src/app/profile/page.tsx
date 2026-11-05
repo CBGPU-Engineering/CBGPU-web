@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import Image from 'next/image';
-import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing } from 'lucide-react';
+import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { siteHref } from '@/lib/siteHref';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
@@ -271,14 +272,14 @@ export default function Profile() {
 
   if (!user) return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
-      <h2 className="text-2xl font-black uppercase italic">Access Denied</h2>
+      <h2 className="text-2xl font-semibold">Access Denied</h2>
       <p className="text-muted-foreground">Please sign in to view your profile.</p>
     </div>
   );
 
   return (
     <div className="cb-page-content max-w-2xl mx-auto mt-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="tilt-3d flex flex-col md:flex-row items-center gap-6 bg-card ring-1 ring-foreground/5 p-8 rounded-[2.5rem] shadow-lg">
+      <div className="flex flex-col md:flex-row items-center gap-6 bg-card ring-1 ring-foreground/5 p-8 rounded-2xl shadow-sm">
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         <button
           type="button"
@@ -305,13 +306,27 @@ export default function Profile() {
         </div>
       </div>
 
+      {profile?.is_admin && (
+        /* 관리자 페이지는 admin.cbgpu.com에 따로 있고 다른 도메인에서 /admin은 404라서, 여기 말고는 가는 길이 없었다.
+           useAuth의 isAdmin은 관리 호스트에서만 true(관리 기능은 그 호스트에서 따로 인증해야 함)라 쓸 수 없어서
+           프로필의 is_admin으로 링크만 보여준다. 링크는 권한을 주지 않고, admin.cbgpu.com이 로그인과 권한을 다시 확인한다. */
+        <a href={siteHref('https://admin.cbgpu.com/')} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-muted/50">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ShieldCheck className="size-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-semibold">관리자 페이지</span>
+            <span className="block text-sm text-muted-foreground">계정, GPU 예약, 서버 배포 등을 관리합니다</span>
+          </span>
+          <ArrowUpRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </a>
+      )}
+
       <form
         onSubmit={(e) => { e.preventDefault(); updateProfile(); }}
-        className="tilt-3d bg-card ring-1 ring-foreground/5 p-10 rounded-[2.5rem] shadow-lg space-y-8"
+        className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
               <UserCircle2 className="size-3" /> 이름 (Name)
             </label>
             <Input
@@ -319,12 +334,12 @@ export default function Profile() {
               autoComplete="name"
               value={fullName}
               onChange={(e: any) => setFullName(e.target.value)}
-              className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
               placeholder="Your Name"
             />
           </div>
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
               <Hash className="size-3" /> 학번 (Student ID)
             </label>
             <Input
@@ -334,7 +349,7 @@ export default function Profile() {
               maxLength={4}
               value={studentId}
               onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
               placeholder="2309"
             />
             <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
@@ -344,7 +359,7 @@ export default function Profile() {
         <Button
           type="submit"
           disabled={isUpdating}
-          className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98] gap-3"
+          className="w-full h-16 rounded-2xl font-semibold text-xl shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-3"
         >
           {isUpdating ? <Loader2 className="size-6 animate-spin" /> : <Save className="size-6" />}
           {isUpdating ? "Saving Changes..." : "Save Profile"}
@@ -353,14 +368,14 @@ export default function Profile() {
 
       <form
         onSubmit={(e) => { e.preventDefault(); changePassword(); }}
-        className="tilt-3d bg-card ring-1 ring-foreground/5 p-10 rounded-[2.5rem] shadow-lg space-y-8"
+        className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-8"
       >
-        <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-2">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
           <KeyRound className="size-5 text-primary" /> 비밀번호 변경
         </h2>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
               <Lock className="size-3" /> 현재 비밀번호
             </label>
             <Input
@@ -369,13 +384,13 @@ export default function Profile() {
               autoComplete="current-password"
               value={currentPassword}
               onChange={(e: any) => setCurrentPassword(e.target.value)}
-              className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
               placeholder="••••••••"
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호
               </label>
               <Input
@@ -384,12 +399,12 @@ export default function Profile() {
                 autoComplete="new-password"
                 value={newPassword}
                 onChange={(e: any) => setNewPassword(e.target.value)}
-                className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+                className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
                 placeholder="••••••••"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase text-primary ml-1 tracking-widest flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호 확인
               </label>
               <Input
@@ -398,7 +413,7 @@ export default function Profile() {
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e: any) => setConfirmPassword(e.target.value)}
-                className="bg-background border-2 h-14 px-5 rounded-2xl font-black text-lg focus:ring-primary transition-all"
+                className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -408,16 +423,16 @@ export default function Profile() {
         <Button
           type="submit"
           disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-          className="w-full h-16 rounded-2xl font-black text-xl uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-[0.98] gap-3"
+          className="w-full h-16 rounded-2xl font-semibold text-xl shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-3"
         >
           {isChangingPassword ? <Loader2 className="size-6 animate-spin" /> : <KeyRound className="size-6" />}
           {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
         </Button>
       </form>
 
-      <div id="gpu-ssh-key" className="scroll-mt-24 tilt-3d bg-card ring-1 ring-foreground/5 p-10 rounded-[2.5rem] shadow-lg space-y-6">
+      <div id="gpu-ssh-key" className="scroll-mt-24 bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-2">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
             <KeyRound className="size-5 text-primary" /> GPU SSH 공개키
           </h2>
           <Button asChild variant="outline" size="sm"><a href="/dashboard/ssh-guide">SSH 사용법</a></Button>
@@ -437,8 +452,8 @@ export default function Profile() {
         </Button>
       </div>
 
-      <div className="tilt-3d bg-card ring-1 ring-foreground/5 p-10 rounded-[2.5rem] shadow-lg space-y-6">
-        <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-2">
+      <div className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-6">
+        <h2 className="text-xl font-semibold flex items-center gap-2">
           <BellRing className="size-5 text-primary" /> 알림 설정
         </h2>
         <p className="text-xs text-muted-foreground font-medium -mt-2">
@@ -476,8 +491,8 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="tilt-3d bg-card ring-1 ring-destructive/20 p-10 rounded-[2.5rem] shadow-lg space-y-6">
-        <h2 className="text-xl font-black italic uppercase tracking-tighter flex items-center gap-2 text-destructive">
+      <div className="bg-card ring-1 ring-destructive/20 p-6 rounded-2xl shadow-sm space-y-6">
+        <h2 className="text-xl font-semibold flex items-center gap-2 text-destructive">
           <ShieldAlert className="size-5" /> 위험 구역
         </h2>
         <p className="text-sm text-muted-foreground font-bold">
@@ -487,7 +502,7 @@ export default function Profile() {
           type="button"
           variant="destructive"
           onClick={() => setDeleteOpen(true)}
-          className="h-14 rounded-2xl font-black text-base uppercase tracking-widest gap-3"
+          className="h-14 rounded-2xl font-semibold text-base gap-3"
         >
           <Trash2 className="size-5" /> 계정 삭제
         </Button>
