@@ -160,8 +160,8 @@ export default function NewLaserJobPage() {
           <ArrowLeft className="size-4" />
         </button>
         <div>
-          <h1 className="text-3xl font-black tracking-tighter italic uppercase leading-none">레이저 커팅 신청</h1>
-          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-0.5">MDF · 아크릴</p>
+          <h1 className="cb-page-title">레이저 커팅 신청</h1>
+          <p className="cb-page-sub mt-1">MDF · 아크릴</p>
         </div>
       </div>
 

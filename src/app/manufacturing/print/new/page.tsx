@@ -194,8 +194,8 @@ export default function NewPrintJobPage() {
           <ArrowLeft className="size-4" />
         </button>
         <div>
-          <h1 className="text-3xl font-black tracking-tighter italic uppercase leading-none">3D 프린팅 신청</h1>
-          <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-50 mt-0.5">Bambu Lab X1C</p>
+          <h1 className="cb-page-title">3D 프린팅 신청</h1>
+          <p className="cb-page-sub mt-1">Bambu Lab X1C</p>
         </div>
       </div>
 
