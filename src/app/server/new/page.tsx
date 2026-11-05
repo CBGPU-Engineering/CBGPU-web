@@ -72,7 +72,7 @@ const DEFAULT_FORM: FormState = {
   envVars: [],
 };
 
-const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block';
+const labelCls = 'text-sm font-semibold text-muted-foreground mb-1.5 block';
 const inputCls = 'h-10 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
@@ -173,7 +173,7 @@ export default function NewServerPage() {
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">
+        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">
           Login
         </Button>
       </div>
@@ -181,7 +181,7 @@ export default function NewServerPage() {
   }
 
   return (
-    <div className="cb-page-content animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8">
+    <div className="cb-page-content animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
       {/* 상단 헤더 */}
       <div className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
@@ -201,14 +201,14 @@ export default function NewServerPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="font-black text-xs uppercase tracking-widest h-9"
+            className="font-semibold text-xs h-9"
             onClick={() => router.back()}
             disabled={submitting}
           >
             취소
           </Button>
           <Button
-            className="font-black text-xs uppercase tracking-widest h-9 px-6"
+            className="font-semibold text-xs h-9 px-6"
             onClick={handleSubmit}
             disabled={submitting}
           >
@@ -226,7 +226,7 @@ export default function NewServerPage() {
 
           {/* 기본 정보 */}
           <section className={cardCls}>
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">프로젝트 기본 정보</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground">프로젝트 기본 정보</h2>
             <div className="space-y-4">
               <div>
                 <label className={labelCls}>Project Name *</label>
@@ -253,7 +253,7 @@ export default function NewServerPage() {
 
           {/* 배포 방식 */}
           <section className={cardCls}>
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">배포 방식</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground">배포 방식</h2>
 
             {/* Deploy type 선택 카드 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -265,15 +265,11 @@ export default function NewServerPage() {
                 <button
                   key={opt.value}
                   onClick={()=>setForm(current=>({...current,deployType:opt.value,...(opt.value==='compose'?{containerPort:'8000',cpuLimit:'3',memoryLimit:'4g',accessScope:'public'}:{})}))}
-                  className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-                    form.deployType === opt.value
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
-                  }`}
+                  className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all ${ form.deployType === opt.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border' }`}
                 >
                   <span className={`mt-0.5 ${form.deployType === opt.value ? 'text-primary' : ''}`}>{opt.icon}</span>
                   <div>
-                    <p className="font-black text-sm uppercase tracking-tight">{opt.label}</p>
+                    <p className="font-semibold text-sm tracking-tight">{opt.label}</p>
                     <p className="text-xs opacity-60 mt-0.5">{opt.desc}</p>
                   </div>
                 </button>
@@ -346,8 +342,8 @@ export default function NewServerPage() {
           {/* 환경변수 */}
           <section className={cardCls}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Environment Variables</h2>
-              <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-7 px-2 text-xs font-black uppercase gap-1">
+              <h2 className="text-xs font-semibold text-muted-foreground">Environment Variables</h2>
+              <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-7 px-2 text-xs font-semibold gap-1">
                 <Plus className="size-3" /> Add
               </Button>
             </div>
@@ -355,16 +351,16 @@ export default function NewServerPage() {
             {form.envVars.length === 0 ? (
               <div
                 onClick={addEnvVar}
-                className="border-2 border-dashed border-border/40 rounded-xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
+                className="border border-dashed border-border/40 rounded-xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
               >
                 <Plus className="size-5 mx-auto mb-2 opacity-30" />
-                <p className="text-xs font-black uppercase tracking-widest opacity-40">클릭하여 환경변수 추가</p>
+                <p className="text-xs font-semibold opacity-70">클릭하여 환경변수 추가</p>
               </div>
             ) : (
               <div className="space-y-2.5">
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
-                  <p className="text-xs font-black uppercase tracking-widest opacity-40">Key</p>
-                  <p className="text-xs font-black uppercase tracking-widest opacity-40">Value</p>
+                  <p className="text-xs font-semibold opacity-70">Key</p>
+                  <p className="text-xs font-semibold opacity-70">Value</p>
                   <span />
                 </div>
                 {form.envVars.map((e, i) => (
@@ -399,7 +395,7 @@ export default function NewServerPage() {
 
           {/* 포트 설정 */}
           <section className={cardCls}>
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Port Mapping</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground">Port Mapping</h2>
             <div className="flex items-end gap-3">
               <div className="flex-1">
                 <label className={labelCls}>Host Port (자동 할당 가능)</label>
@@ -411,7 +407,7 @@ export default function NewServerPage() {
                   className="h-10"
                 />
               </div>
-              <div className="pb-1 text-muted-foreground font-black text-lg">:</div>
+              <div className="pb-1 text-muted-foreground font-bold text-lg">:</div>
               <div className="flex-1">
                 <label className={labelCls}>Container Port</label>
                 <Input
@@ -431,30 +427,24 @@ export default function NewServerPage() {
 
           {/* 접근 범위 */}
           <section className={cardCls}>
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Access Scope</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground">Access Scope</h2>
             <div className="space-y-2">
               {SCOPE_OPTS.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => set('accessScope', opt.value)}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
-                    form.accessScope === opt.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border/60 bg-muted/20 hover:border-border'
-                  }`}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-border' }`}
                 >
                   <span className={`${form.accessScope === opt.value ? 'text-primary' : 'text-muted-foreground'}`}>
                     {opt.icon}
                   </span>
                   <div className="min-w-0">
-                    <p className={`font-black text-xs uppercase tracking-tight ${form.accessScope === opt.value ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <p className={`font-semibold text-xs tracking-tight ${form.accessScope === opt.value ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {opt.label}
                     </p>
                     <p className="text-xs opacity-50 mt-0.5">{opt.desc}</p>
                   </div>
-                  <div className={`ml-auto size-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                    form.accessScope === opt.value ? 'border-primary bg-primary' : 'border-border'
-                  }`}>
+                  <div className={`ml-auto size-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary' : 'border-border' }`}>
                     {form.accessScope === opt.value && <div className="size-1.5 rounded-full bg-white" />}
                   </div>
                 </button>
@@ -464,7 +454,7 @@ export default function NewServerPage() {
 
           {/* 리소스 제한 */}
           <section className={cardCls}>
-            <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">Resource Limits</h2>
+            <h2 className="text-xs font-semibold text-muted-foreground">Resource Limits</h2>
             <div className="space-y-4">
               <div>
                 <label className={labelCls}>CPU Cores</label>
@@ -496,10 +486,10 @@ export default function NewServerPage() {
 
           {/* 하단 신청 버튼 (모바일용 - lg 이상에서는 top bar 사용) */}
           <div className="lg:hidden flex gap-3">
-            <Button variant="outline" className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={() => router.back()} disabled={submitting}>
+            <Button variant="outline" className="flex-1 font-semibold text-xs h-11" onClick={() => router.back()} disabled={submitting}>
               취소
             </Button>
-            <Button className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={handleSubmit} disabled={submitting}>
+            <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting}>
               {submitting ? '생성 중…' : '배포 시작'}
             </Button>
           </div>

@@ -24,7 +24,7 @@ import {
   CheckCircle2, Clock, XCircle,
 } from 'lucide-react';
 
-const labelCls = "text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block";
+const labelCls = "text-sm font-semibold text-muted-foreground mb-1.5 block";
 const inputCls = "h-9 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
 
 type Runtime = ServerRuntime;
@@ -214,12 +214,12 @@ export default function ServerDetailPage() {
   const envEntries = Object.entries(project.env_vars || {}).filter(([key])=>!['CBGPU_RUNTIME_PRESET','CBGPU_ROOT_DIRECTORY','CBGPU_DEPLOY_ENGINE','CBGPU_COMPOSE_FILE','CBGPU_GATEWAY_SERVICE','CBGPU_STORAGE_GB'].includes(key)) as [string,string][];
 
   return (
-    <div className="cb-page-content space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-2xl">
+    <div className="cb-page-content space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-2xl">
       {/* 헤더 */}
       <div>
         <button
           onClick={() => router.push('/server')}
-          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="size-3" /> Back to Projects
         </button>
@@ -241,7 +241,7 @@ export default function ServerDetailPage() {
               {project.status !== 'deleted' && (
                 <Button
                   variant="outline"
-                  className="font-black text-xs uppercase gap-1.5 h-9"
+                  className="font-semibold text-xs gap-1.5 h-9"
                   onClick={openRedeploy}
                 >
                   <RotateCcw className="size-3.5" /> 설정 수정
@@ -249,7 +249,7 @@ export default function ServerDetailPage() {
               )}
               {isOwner&&(<Button
                 variant="destructive"
-                className="font-black text-xs uppercase gap-1.5 h-9"
+                className="font-semibold text-xs gap-1.5 h-9"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="size-3.5" /> 삭제
@@ -264,10 +264,10 @@ export default function ServerDetailPage() {
       <ProjectTeam kind="server" id={project.id}/><ProjectDomains kind="server" id={project.id}/>
       {/* 접근 정보 — 실행 중일 때만 */}
       {isRunning && (
-        <div className="p-5 rounded-2xl bg-emerald-500/5 border-2 border-emerald-500/20">
-          <p className="text-xs font-black uppercase tracking-widest text-emerald-600 mb-3">Access</p>
+        <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+          <p className="text-xs font-semibold text-emerald-600 mb-3">Access</p>
           <div className="flex flex-wrap items-center gap-2">
-            <code className="min-w-0 break-all text-sm font-black text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+            <code className="min-w-0 break-all text-sm font-semibold text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
               {serverUrl ?? (isPublic ? '공개 주소 발급 중… 잠시 후 새로고침해 주세요' : `포트 ${project.host_port}`)}
             </code>
             {serverUrl && <Button
@@ -288,9 +288,9 @@ export default function ServerDetailPage() {
       )}
 
       {/* 설정 정보 */}
-      <div className="border-2 rounded-3xl overflow-hidden bg-card">
-        <div className="px-6 py-4 border-b-2 bg-muted/20">
-          <p className="font-black uppercase tracking-widest text-xs">Configuration</p>
+      <div className="border rounded-2xl overflow-hidden bg-card">
+        <div className="px-6 py-4 border-b bg-muted/20">
+          <p className="font-semibold text-xs">Configuration</p>
         </div>
         <div className="p-6 grid gap-5">
           {/* 배포 방식 */}
@@ -300,7 +300,7 @@ export default function ServerDetailPage() {
               {project.deploy_type === 'docker'
                 ? <Container className="size-4 text-muted-foreground" />
                 : <GitBranch className="size-4 text-muted-foreground" />}
-              <span className="font-bold text-sm uppercase">{project.deploy_type}</span>
+              <span className="font-bold text-sm">{project.deploy_type}</span>
             </div>
           </div>
 
@@ -382,7 +382,7 @@ export default function ServerDetailPage() {
               <div className="space-y-1.5">
                 {envEntries.map(([k, v]) => (
                   <div key={k} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-1.5 font-mono text-xs">
-                    <span className="font-black text-primary">{k}</span>
+                    <span className="font-bold text-primary">{k}</span>
                     <span className="text-muted-foreground">=</span>
                     <span className="opacity-70">{v}</span>
                   </div>
@@ -413,9 +413,9 @@ export default function ServerDetailPage() {
 
       {/* 재배포 다이얼로그 */}
       <Dialog open={redeployOpen} onOpenChange={setRedeployOpen}>
-        <DialogContent className="max-w-lg rounded-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">서버 설정 수정</DialogTitle>
+            <DialogTitle className="font-semibold text-xl">서버 설정 수정</DialogTitle>
             <DialogDescription className="text-xs font-bold opacity-60">
               설정만 저장하거나, 변경사항을 저장하고 바로 재배포할 수 있습니다. 재배포 중에는 잠시 연결이 끊길 수 있습니다.
             </DialogDescription>
@@ -473,12 +473,12 @@ export default function ServerDetailPage() {
                 <label className={labelCls}>Port Mapping</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <p className="text-xs font-black opacity-40 uppercase tracking-widest mb-1">Host Port</p>
+                    <p className="text-xs font-semibold opacity-70 mb-1">Host Port</p>
                     <Input type="number" value={form.hostPort} onChange={e => set('hostPort', e.target.value)} />
                   </div>
-                  <span className="text-muted-foreground font-black mt-5">:</span>
+                  <span className="text-muted-foreground font-bold mt-5">:</span>
                   <div className="flex-1">
-                    <p className="text-xs font-black opacity-40 uppercase tracking-widest mb-1">Container Port</p>
+                    <p className="text-xs font-semibold opacity-70 mb-1">Container Port</p>
                     <Input type="number" value={form.containerPort} onChange={e => set('containerPort', e.target.value)} />
                   </div>
                 </div>
@@ -524,7 +524,7 @@ export default function ServerDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className={labelCls}>Environment Variables</label>
-                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-xs font-black uppercase gap-1">
+                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-xs font-semibold gap-1">
                     <Plus className="size-3" /> Add
                   </Button>
                 </div>
@@ -546,9 +546,9 @@ export default function ServerDetailPage() {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
-            <Button variant="outline" className="font-black text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
-            <Button className="font-black uppercase text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting}>
+            <Button variant="outline" className="font-semibold text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
+            <Button variant="outline" className="font-semibold text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
+            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting}>
               {submitting ? '요청 중...' : '저장 후 재배포'}
             </Button>
           </DialogFooter>
@@ -559,7 +559,7 @@ export default function ServerDetailPage() {
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-black uppercase tracking-tighter italic">
+            <DialogTitle className="flex items-center gap-2 font-semibold">
               <Trash2 className="size-5 text-destructive" /> 프로젝트 삭제
             </DialogTitle>
             <DialogDescription className="text-sm font-bold pt-1">
@@ -567,8 +567,8 @@ export default function ServerDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setDeleteOpen(false)}>취소</Button>
-            <Button variant="destructive" className="font-black uppercase text-xs" onClick={handleDelete}>삭제하기</Button>
+            <Button variant="outline" className="font-semibold text-xs" onClick={() => setDeleteOpen(false)}>취소</Button>
+            <Button variant="destructive" className="font-semibold text-xs" onClick={handleDelete}>삭제하기</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

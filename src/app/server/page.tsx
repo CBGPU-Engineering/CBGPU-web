@@ -70,7 +70,7 @@ export default function ServerPage() {
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">
+        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">
           Login
         </Button>
       </div>
@@ -78,7 +78,7 @@ export default function ServerPage() {
   }
 
   return (
-    <div className="cb-page-content space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="cb-page-content space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
@@ -92,7 +92,7 @@ export default function ServerPage() {
             <RefreshCw className="size-3.5" />
           </Button>
           <Button
-            className="font-black text-xs uppercase tracking-widest gap-1.5 h-9"
+            className="font-semibold text-xs gap-1.5 h-9"
             onClick={() => router.push('/server/new')}
           >
             <Plus className="size-3.5" /> 새 프로젝트
@@ -106,9 +106,9 @@ export default function ServerPage() {
           <LoadingSpinner size={48} label="프로젝트 불러오는 중" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="text-center py-24 border-2 border-dashed rounded-3xl text-muted-foreground bg-muted/10 pop-in-3d">
+        <div className="text-center py-24 border border-dashed rounded-2xl text-muted-foreground bg-muted/10 pop-in-3d">
           <Server className="size-12 mx-auto mb-4 opacity-20" />
-          <p className="font-black uppercase tracking-widest text-sm opacity-50">배포된 프로젝트가 없습니다</p>
+          <p className="font-semibold text-sm opacity-70">배포된 프로젝트가 없습니다</p>
           <p className="text-xs mt-2 opacity-40">상단 버튼으로 새 프로젝트를 신청하세요</p>
         </div>
       ) : (
@@ -120,7 +120,7 @@ export default function ServerPage() {
               <Link
                 key={proj.id}
                 href={`/server/${proj.id}`}
-                className="tilt-3d group flex items-center justify-between p-5 border-2 rounded-2xl bg-card hover:border-primary/50 transition-all duration-300"
+                className="tilt-3d group flex items-center justify-between p-5 border rounded-2xl bg-card hover:border-primary/50 transition-all duration-300"
               >
                 <div className="flex items-start gap-4 min-w-0">
                   <div className={`p-2.5 rounded-xl border ${isRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-muted border-border/40 text-muted-foreground'}`}>
@@ -128,7 +128,7 @@ export default function ServerPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-black text-sm uppercase tracking-tight">{proj.name}</span>
+                      <span className="font-semibold text-sm tracking-tight">{proj.name}</span>
                       <Badge variant={badge.variant as any}>{badge.label}</Badge>
                       {isRunning && <span className="size-2 rounded-full bg-emerald-500 animate-pulse inline-block" />}
                     </div>

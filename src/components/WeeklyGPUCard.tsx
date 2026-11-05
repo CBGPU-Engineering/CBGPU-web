@@ -176,7 +176,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
   };
 
   return (
-    <Card className="tilt-3d overflow-hidden border-border bg-card hover:border-primary group shadow-lg flex flex-col h-full rounded-[28px]">
+    <Card className="tilt-3d overflow-hidden border-border bg-card hover:border-primary group shadow-lg flex flex-col h-full rounded-2xl">
       <CardHeader className="p-0 overflow-hidden relative">
         <div className="relative w-full h-32">
           <Image
@@ -191,14 +191,14 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
           <Button
             variant="secondary"
             size="xs"
-            className="text-xs font-black h-6 bg-background/80 backdrop-blur-sm shadow-sm"
+            className="text-xs font-semibold h-6 bg-background/80 backdrop-blur-sm shadow-sm"
             onClick={() => setShowSchedule(!showSchedule)}
           >
             {showSchedule ? 'CLOSE SCHEDULE' : 'VIEW CALENDAR'}
           </Button>
         </div>
         <div className="absolute top-2 left-2">
-          <span className="text-xs font-black px-2 py-0.5 rounded bg-violet-500/80 text-white backdrop-blur-sm">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-500/80 text-white backdrop-blur-sm">
             WEEKLY
           </span>
         </div>
@@ -207,27 +207,27 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
       <CardContent className="p-4 space-y-4 flex-grow">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xl font-bold italic tracking-tighter">GPU #{id}</h3>
-            <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">RTX5000</p>
+            <h3 className="text-xl font-bold">GPU #{id}</h3>
+            <p className="text-xs text-muted-foreground font-semibold">RTX5000</p>
           </div>
           <div className="flex flex-col items-end gap-1">
             <Badge variant="success">Ready</Badge>
-            <span className="text-xs font-black px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 border border-violet-500/20">주 단위 예약</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 border border-violet-500/20">주 단위 예약</span>
           </div>
         </div>
 
         {showSchedule ? (
           <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-300">
-            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest flex items-center gap-1">
+            <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
               <CalendarDays className="size-3" /> 신청된 예약
             </p>
             <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
               {approvedReservations.length === 0 ? (
-                <p className="text-xs text-muted-foreground/50 italic pl-1">No approved reservations</p>
+                <p className="text-xs text-muted-foreground/50 pl-1">No approved reservations</p>
               ) : (
                 approvedReservations.map((res, i) => (
                   <div key={i} className="text-xs p-2.5 bg-muted/30 rounded-xl border border-border/30">
-                    <div className="flex justify-between font-black">
+                    <div className="flex justify-between font-bold">
                       <span>
                         {format(parseISO(res.start_time), 'M/d (eee)', { locale: ko })}
                         <span className="mx-1 opacity-40">–</span>
@@ -242,7 +242,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
           </div>
         ) : (
           <div className="space-y-2 animate-in fade-in duration-300">
-            <p className="text-xs font-black uppercase text-muted-foreground tracking-widest">예약할 주차 선택</p>
+            <p className="text-xs font-semibold text-muted-foreground">예약할 주차 선택</p>
             <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1">
               {weeks.map(({ mon, sun }, i) => {
                 const { taken, availableFrom } = getWeekAvailability(mon, sun);
@@ -264,7 +264,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                     )}
                   >
                     <div>
-                      <p className="text-xs font-black">
+                      <p className="text-xs font-semibold">
                         {format(mon, 'M월 d일', { locale: ko })}
                         <span className="mx-1 opacity-40">–</span>
                         {format(sun, 'M월 d일 (eee)', { locale: ko })}

@@ -42,7 +42,7 @@ export function LoadingSpinner({ done = false, size = 64, label }: {
           {current.emoji}
         </span>
       </div>
-      {label && <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{label}</p>}
+      {label && <p className="text-sm font-medium text-muted-foreground">{label}</p>}
     </div>
   );
 }
