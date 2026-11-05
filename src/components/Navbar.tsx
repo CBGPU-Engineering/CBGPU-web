@@ -101,11 +101,13 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
       <div className="flex items-center gap-4 md:gap-8">
         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
           <img
-            src="https://i.namu.wiki/i/qMgg10XRSaTorhAnQaV-bKbUWK_xIlq2socc7pVyw1SJmovke8gEWfeofFitiIJ1VBMngGy4o1NuAnjrOA0m1w.webp"
-            alt="충북과학고등학교 로고"
-            className="w-8 h-8 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 group-hover:rotate-12 transition-all duration-500"
+            src="/img/cbgpu-logo.png"
+            alt=""
+            width={30}
+            height={30}
+            className="size-[30px] object-contain"
           />
-          <span className="text-xl md:text-2xl font-black text-foreground/70 group-hover:text-primary tracking-tighter italic transition-colors duration-500">
+          <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
             CBGPU
           </span>
         </Link>

@@ -15,13 +15,13 @@ export default function MainSiteFrame({children}:{children:React.ReactNode}){con
               </main>
               <footer className="hidden xl:block border-t py-12 bg-muted/20 text-center text-sm text-muted-foreground transition-all">
                 <div className="flex flex-col items-center gap-4">
-                  <div className="flex items-center gap-2 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                  <div className="flex items-center gap-2">
                     <Image width={24} height={24}
                       src="/img/cbgpu-logo.png"
-                      alt="School Logo"
+                      alt=""
                       className="w-6 h-6 object-contain"
                     />
-                    <span className="font-black tracking-tighter italic">CBGPU</span>
+                    <span className="font-bold tracking-tight">CBGPU</span>
                   </div>
                   <div className="space-y-1">
                     <p className="font-bold text-foreground/80 px-4">Chungbuk Science High School Computing Service</p>
