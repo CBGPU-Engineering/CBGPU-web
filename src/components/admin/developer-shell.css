@@ -49,3 +49,21 @@
 /* 본문이 왼쪽에 붙어 오른쪽에만 여백이 몰리던 문제: 가운데 정렬하고, 헤더·푸터도 같은 열(본문 폭 1588px)에 맞춘다. */
 .admin-developer-shell main{margin-inline:auto}
 @media(min-width:1001px){.admin-developer-shell .workspace-header,.admin-developer-shell .workspace-footer{padding-inline:max(36px,calc((100% - 1588px)/2))}}
+/* 사이드바 글씨가 12px로 작던 문제(admin·docs·arxiv·제작 셸이 공유): 항목 14px, 캡션 13px, 아이콘 18px로 올린다.
+   반응형 규칙(가로 탭처럼 바뀌는 구간)에도 같은 크기가 적용되도록 파일 맨 끝에 둔다. */
+.admin-developer-shell .nav-item{font-size:14px;gap:12px;min-height:44px}
+.admin-developer-shell .nav-item .icon{width:18px;height:18px}
+.admin-developer-shell .nav-caption{font-size:13px;font-weight:600}
+.admin-developer-shell .sidebar-bottom a{font-size:14px}
+.admin-developer-shell .brand small,.admin-developer-shell .brand span{font-size:13px}
+.admin-developer-shell .subnav-item{font-size:14px}
+/* 선택되지 않은 항목은 hover해도 바뀌는 게 거의 없었다. 그룹 제목(summary)에는 hover 규칙 자체가 없었다. */
+.admin-developer-shell .nav-item,.admin-developer-shell .docs-nav-group>summary{transition:background-color .15s ease,color .15s ease}
+/* hover 색은 토큰 하나로 통일한다: 다크 #2c2c35(표 행·보조 버튼·하위 항목이 이미 쓰던 색), 라이트 #f3f3f3.
+   상위(그룹 제목)와 하위(항목)가 같은 색이 되도록 둘 다 이 토큰을 쓴다. */
+.admin-developer-shell{--dev-hover:#f3f3f3}
+:is(.dark .admin-developer-shell,.admin-developer-shell[data-theme="dark"]){--dev-hover:#2c2c35}
+.admin-developer-shell .nav-item:not(.active):hover,.admin-developer-shell .docs-nav-group>summary:hover{background:var(--dev-hover);color:var(--dev-ink)}
+.admin-developer-shell .nav-item:not(.active):active{background:color-mix(in srgb,var(--dev-hover) 82%,var(--dev-ink))}
+.admin-developer-shell .subnav-item:not(.active):hover{color:var(--dev-ink)}
+
