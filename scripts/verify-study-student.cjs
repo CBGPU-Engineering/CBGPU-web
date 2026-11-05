@@ -81,5 +81,11 @@ const apply={action:'apply',date:'2026-11-03',roomId:31,seatId:41,teacherId:'tea
  const expired=(await handoff({action:'start'})).body.id;clock+=300001;assert.equal((await handoff({action:'receive',id:expired,accessToken:'fixture-school-token'})).status,404);
  const cancelled=(await handoff({action:'start'})).body.id;assert.equal((await handoff({action:'cancel',id:cancelled})).status,200);assert.equal((await handoff({action:'poll',id:cancelled})).status,404);
  console.log('PASS school handoff: owner binding, origin, verified student session, no-token polling, explicit identity confirmation, single use, expiry and cancellation');
+ const leaseStates=[];f=fixture();
+ f.deps.reserveWrite=async()=>({mark:async state=>leaseStates.push(state)});
+ assert.equal((await f.call(apply)).status,200);assert.deepEqual(leaseStates,['submitting','confirmed']);
+ f=fixture();f.deps.reserveWrite=async()=>null;assert.equal((await f.call(apply)).status,409);assert.equal(f.calls.filter(c=>c.path==='/selfstudy').length,0);
+ f=fixture();f.uncertain=true;const uncertainStates=[];f.deps.reserveWrite=async()=>({mark:async state=>uncertainStates.push(state)});assert.equal((await f.call(apply)).status,503);assert.deepEqual(uncertainStates,['submitting','uncertain']);
+ console.log('PASS durable submission lease: confirmed writes, blocked parallel workers and uncertain-response hold');
  console.log('All student-study contract checks passed. No real school API calls or records changed.');
 })().catch(e=>{console.error(e);process.exitCode=1});
