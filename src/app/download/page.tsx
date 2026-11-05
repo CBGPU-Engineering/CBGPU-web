@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {androidRelease} from '@/lib/appUpdates';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
@@ -30,6 +31,8 @@ const FEATURES = [
  */
 export default function DownloadPage() {
   const router = useRouter();
+  const [release,setRelease]=useState({version:"1.0.7",downloadUrl:APK_URL});
+  useEffect(()=>{let disposed=false;fetch("/api/app-release",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(value=>{const next=androidRelease(value);if(next&&!disposed)setRelease(next)}).catch(()=>{});return()=>{disposed=true}},[]);
 
   useEffect(() => {
     if (isNativeApp()) {
@@ -53,11 +56,11 @@ export default function DownloadPage() {
 
         <div className="flex flex-col items-center gap-3">
           <a
-            href={APK_URL}
+            href={release.downloadUrl}
             download
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 hover:scale-[1.02]"
           >
-            APK 다운로드 · v1.0.7
+            APK 다운로드 · v{release.version}
           </a>
           <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold">
             <Smartphone className="size-3" /> 안드로이드 전용 · iOS는 아직 준비 중이에요
@@ -95,7 +98,7 @@ export default function DownloadPage() {
       {/* 컴퓨터로 보고 있는 경우를 위한 QR — 모바일에선 굳이 필요 없어서 숨김 */}
       <div className="hidden md:flex flex-col items-center gap-3 py-8 border-y border-border/50">
         <QRCodeSVG
-          value="https://app.cbgpu.com/downloads/cbgpu.apk?v=1.0.7"
+          value={"https://app.cbgpu.com"+release.downloadUrl}
           title="CBGPU 앱 다운로드"
           size={140}
           marginSize={2}

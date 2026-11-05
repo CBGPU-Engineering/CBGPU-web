@@ -1,3 +1,4 @@
+import AppUpdateNotice from '@/components/AppUpdateNotice';
 import DemoBanner from '@/components/DemoBanner';
 import { headers } from 'next/headers';
 import SiteTraffic from '@/components/SiteTraffic';
@@ -110,6 +111,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <AuthProvider>
             <AlertProvider english={adminSite||manufacturingSite}>
               {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'}>{children}</ManufacturingShell> : adminSite ? <AdminShell><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
+              {appSite&&<AppUpdateNotice/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}
             </AlertProvider>
           </AuthProvider>
