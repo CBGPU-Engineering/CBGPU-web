@@ -16,7 +16,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     {href:'/dashboard/ssh-guide',label:'GPU 접속 안내',description:'Jupyter·SSH 접속 방법',icon:TerminalSquare,keywords:'ssh 원격 터미널 vscode 주피터 jupyter 연결'},
   ]},
   {id:'deploy',title:'웹사이트·서버 배포',services:[
-    {href:'/deploy',label:'프론트엔드 배포',description:'Git 저장소로 웹사이트 올리기',icon:Globe,keywords:'프론트 frontend deploy vercel git github 홈페이지 호스팅'},
+    {href:'/deploy',label:'배포',description:'Git 저장소로 웹사이트 올리기',icon:Globe,keywords:'프론트 frontend deploy vercel git github 홈페이지 호스팅'},
     {href:'/server',label:'서버 배포',description:'백엔드·Docker 서비스 실행하기',icon:Server,keywords:'백엔드 backend server deploy docker compose spring python node 프로젝트 호스팅'},
   ]},
   {id:'research',title:'자료·논문·기록',services:[
