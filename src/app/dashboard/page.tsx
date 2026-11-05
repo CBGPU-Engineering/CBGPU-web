@@ -296,7 +296,7 @@ export default function Dashboard() {
                     ? <Wifi className="size-3 text-green-500" />
                     : <WifiOff className="size-3 text-destructive" />
                   }
-                  <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  <span className="text-xs font-semibold text-muted-foreground">
                     GPU{id} {st === 'checking' ? '...' : st === 'online' ? 'ON' : 'OFF'}
                   </span>
                 </div>
@@ -315,12 +315,12 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-4 items-start">
-            <div className="w-full md:flex-1 md:min-w-0 border-2 rounded-3xl overflow-hidden bg-card shadow-xl">
-              <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b-2">
+            <div className="w-full md:flex-1 md:min-w-0 border rounded-2xl overflow-hidden bg-card shadow-sm">
+              <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b">
                 <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
                   <ChevronLeft className="size-4" />
                 </Button>
-                <h2 className="text-lg font-black uppercase tracking-tighter flex items-center gap-2">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
                   <CalendarDays className="size-4 opacity-50" />
                   {format(currentMonth, 'yyyy년 M월', { locale: ko })}
                 </h2>
@@ -334,7 +334,7 @@ export default function Dashboard() {
                   <button
                     key={id}
                     onClick={() => setSelectedGpuId(id)}
-                    className={cn('flex items-center gap-1.5 text-xs font-black px-2 py-0.5 rounded-full border transition-all',
+                    className={cn('flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-all',
                       GPU_COLORS[id].bg, GPU_COLORS[id].text, GPU_COLORS[id].border,
                       selectedGpuId === id && 'ring-2 ring-offset-1 ring-primary/40')}
                   >
@@ -346,7 +346,7 @@ export default function Dashboard() {
 
               <div className="grid grid-cols-7 border-b">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="py-2 text-center text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  <div key={d} className="py-2 text-center text-xs font-semibold text-muted-foreground">
                     {d}
                   </div>
                 ))}
@@ -372,7 +372,7 @@ export default function Dashboard() {
                       )}
                     >
                       <span className={cn(
-                        'text-xs md:text-xs font-black inline-flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-full mb-1',
+                        'text-xs font-semibold inline-flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-full mb-1',
                         isTodayDate && 'bg-primary text-primary-foreground',
                         !isTodayDate && isCurrentMonth && 'text-foreground',
                       )}>
@@ -384,7 +384,7 @@ export default function Dashboard() {
                           return (
                             <Fragment key={j}>
                               <span className={cn('md:hidden size-1.5 rounded-full mt-0.5', c.dot)} />
-                              <span className={cn('hidden md:inline text-xs font-black px-1.5 py-0.5 rounded-md border', c.bg, c.text, c.border)}>
+                              <span className={cn('hidden md:inline text-xs font-semibold px-1.5 py-0.5 rounded-md border', c.bg, c.text, c.border)}>
                                 #{res.gpu_id}
                               </span>
                             </Fragment>
@@ -403,11 +403,11 @@ export default function Dashboard() {
             )}>
               {selectedDay && (
                 <>
-                  <div className="px-5 py-4 border-b-2">
-                    <p className="font-black uppercase tracking-tighter text-sm">
+                  <div className="px-5 py-4 border-b">
+                    <p className="font-semibold text-sm">
                       {format(selectedDay, 'M월 d일 (eee)', { locale: ko })}
                     </p>
-                    <p className="text-xs text-muted-foreground font-bold opacity-60 uppercase tracking-widest">예약 현황</p>
+                    <p className="text-xs text-muted-foreground font-bold opacity-70">예약 현황</p>
                   </div>
                   <div className="p-4 space-y-3">
                     {selectedDayReservations.length === 0 ? (
@@ -418,7 +418,7 @@ export default function Dashboard() {
                         return (
                           <div key={res.id} className="relative pl-4 pr-3 py-3 rounded-2xl border border-border/40 bg-card overflow-hidden tilt-3d transition-all">
                             <span className={cn('absolute inset-y-0 left-0 w-1', c.dot)} />
-                            <div className={cn('text-xs font-black mb-1.5', c.text)}>GPU #{res.gpu_id}</div>
+                            <div className={cn('text-xs font-semibold mb-1.5', c.text)}>GPU #{res.gpu_id}</div>
                             <div className="text-xs font-bold space-y-0.5 text-foreground">
                               <p>예약됨</p>
                               <p className="opacity-40 text-xs">
@@ -444,8 +444,8 @@ export default function Dashboard() {
       <section className="lg:flex lg:gap-10 lg:items-start pb-20">
         <div className="lg:w-[420px] lg:shrink-0 space-y-6 mb-10 lg:mb-0">
           <div className="flex flex-col gap-2">
-            <h2 className="text-xl md:text-2xl font-black tracking-tight uppercase italic">예약하기</h2>
-            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">GPU를 선택하고 예약을 신청하세요</p>
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">예약하기</h2>
+            <p className="text-xs text-muted-foreground font-bold">GPU를 선택하고 예약을 신청하세요</p>
           </div>
           <SegmentedTabs
             items={[1,2,3,4].map(id => ({ value: String(id), label: `GPU #${id}` }))}
@@ -461,29 +461,29 @@ export default function Dashboard() {
 
       {!user ? (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[30vh] text-center space-y-4">
-          <h2 className="text-2xl font-black uppercase italic">Authentication Required</h2>
+          <h2 className="text-2xl font-semibold">Authentication Required</h2>
           <p className="text-muted-foreground">Please sign in to view your reservations.</p>
         </div>
       ) : (
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex flex-col">
-            <h2 className="text-xl md:text-2xl font-black tracking-tight uppercase italic">My Reservations</h2>
-            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Manage your active sessions</p>
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">My Reservations</h2>
+            <p className="text-xs text-muted-foreground font-bold">Manage your active sessions</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={exportIcal} className="font-black text-xs uppercase gap-1.5 h-8">
+            <Button variant="outline" size="sm" onClick={exportIcal} className="font-semibold text-xs gap-1.5 h-8">
               <Download className="size-3" /> iCal
             </Button>
             <Button
               variant="outline" size="sm"
               onClick={notifPerm === 'granted' ? undefined : requestNotif}
-              className={`font-black text-xs uppercase gap-1.5 h-8 ${notifPerm === 'granted' ? 'text-green-500 border-green-500/30' : ''}`}
+              className={`font-semibold text-xs gap-1.5 h-8 ${notifPerm === 'granted' ? 'text-green-500 border-green-500/30' : ''}`}
             >
               {notifPerm === 'granted' ? <Bell className="size-3" /> : <BellOff className="size-3" />}
               {notifPerm === 'granted' ? '알림 ON' : '알림 설정'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10 font-bold uppercase text-xs gap-2 h-8">
+            <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10 font-bold text-xs gap-2 h-8">
               <RefreshCw className="size-3" />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
@@ -494,7 +494,7 @@ export default function Dashboard() {
         {statsData.length > 0 && (
           <div className="mb-8 p-4 bg-muted/20 border border-border/40 rounded-2xl">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">GPU 점유율 (최근 30일)</p>
+              <p className="text-xs font-semibold text-muted-foreground">GPU 점유율 (최근 30일)</p>
               <Button variant="ghost" size="icon" className="size-6" onClick={fetchStats}><RefreshCw className="size-2.5" /></Button>
             </div>
             <div className="space-y-2">
@@ -503,14 +503,14 @@ export default function Dashboard() {
                 const pct = max > 0 ? (s.hours / max) * 100 : 0;
                 return (
                   <div key={s.gpu_id} className="flex items-center gap-3">
-                    <span className="text-xs font-black text-muted-foreground w-10 shrink-0">GPU {s.gpu_id}</span>
+                    <span className="text-xs font-semibold text-muted-foreground w-10 shrink-0">GPU {s.gpu_id}</span>
                     <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary rounded-full transition-all duration-700"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs font-black text-muted-foreground w-12 text-right shrink-0">{s.hours}h</span>
+                    <span className="text-xs font-semibold text-muted-foreground w-12 text-right shrink-0">{s.hours}h</span>
                   </div>
                 );
               })}
@@ -523,7 +523,7 @@ export default function Dashboard() {
             <LoadingSpinner done={justFinished} size={56} label="예약 내역 불러오는 중" />
           </div>
         ) : myReservations.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed rounded-3xl text-muted-foreground transition-colors duration-500 font-medium bg-muted/10 pop-in-3d">
+          <div className="text-center py-20 border border-dashed rounded-2xl text-muted-foreground transition-colors duration-500 font-medium bg-muted/10 pop-in-3d">
             <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">💻</p>
             No active reservations found.
           </div>
@@ -547,7 +547,7 @@ export default function Dashboard() {
                   <div className="flex flex-col md:flex-row items-start md:items-center justify-between w-full">
                     <div className="space-y-2 mb-4 md:mb-0 w-full md:w-auto">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-lg md:text-xl font-black text-primary italic tracking-tighter">GPU #{res.gpu_id}</span>
+                        <span className="text-lg md:text-xl font-bold text-primary">GPU #{res.gpu_id}</span>
                         {isPending && <Badge variant="warning">Pending</Badge>}
                         {isRejected && <Badge variant="danger">Rejected</Badge>}
                         {isApproved && !isStarted && <Badge variant="default">Upcoming</Badge>}
@@ -573,7 +573,7 @@ export default function Dashboard() {
                         </Button>
                       )}
                       <Button
-                        className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-black px-8 transition-all duration-300 uppercase italic text-xs h-11 gap-2"
+                        className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-semibold px-8 transition-all duration-300 text-xs h-11 gap-2"
                         variant={canStart ? "default" : "secondary"}
                         disabled={!canStart}
                         onClick={() => setSelectedRes(selectedRes?.id === res.id ? null : res)}
@@ -585,17 +585,17 @@ export default function Dashboard() {
 
                   {/* Credentials & Guide Panel */}
                   {selectedRes?.id === res.id && canStart && (
-                    <div className="mt-6 p-6 bg-muted/30 border-2 border-dashed border-primary/20 rounded-2xl animate-in slide-in-from-top-4 duration-500">
+                    <div className="mt-6 p-6 bg-muted/30 border border-dashed border-primary/20 rounded-2xl animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-4">
-                        <h3 className="flex items-center gap-2 font-black uppercase tracking-tighter italic text-primary">
+                        <h3 className="flex items-center gap-2 font-semibold text-primary">
                           <Key className="size-4" /> Access Credentials
                         </h3>
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="flex flex-col gap-4 rounded-xl border bg-background p-4">
                             <div>
-                              <span className="text-xs font-black uppercase opacity-50 tracking-wide">Password</span>
+                              <span className="text-xs font-semibold opacity-70">Password</span>
                               <div className="flex items-center justify-between gap-2 mt-1">
-                                <code className={password ? "min-w-0 truncate text-lg font-black text-blue-500 tracking-wider" : "text-sm font-bold text-muted-foreground animate-pulse"}>
+                                <code className={password ? "min-w-0 truncate text-lg font-bold text-blue-500" : "text-sm font-bold text-muted-foreground animate-pulse"}>
                                   {password || "비밀번호 준비 중..."}
                                 </code>
                                 {password && (
@@ -611,7 +611,7 @@ export default function Dashboard() {
                             {gpuInfo?.jupyterhubUrl && (
                               <Button
                                 asChild
-                                className="mt-auto w-full font-black text-xs uppercase tracking-wide h-11 border-2 hover:bg-foreground hover:text-background transition-all"
+                                className="mt-auto w-full font-semibold text-xs h-11 border hover:bg-foreground hover:text-background transition-all"
                                 variant="outline"
                               >
                                 <a href={gpuInfo.jupyterhubUrl} target="_blank" rel="noopener noreferrer">
@@ -622,7 +622,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex flex-col gap-4 rounded-xl border bg-background p-4">
                             <div>
-                              <span className="text-xs font-black uppercase opacity-50 tracking-wide">SSH</span>
+                              <span className="text-xs font-semibold opacity-70">SSH</span>
                               <div className="flex items-center gap-2 mt-1 rounded-lg border bg-muted/30 pl-3 pr-1 min-h-11">
                                 <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm font-bold" title={`ssh cbgpu-gpu${res.gpu_id}`}>
                                   ssh cbgpu-gpu{res.gpu_id}
@@ -635,13 +635,13 @@ export default function Dashboard() {
                             <p className="text-xs text-muted-foreground font-medium">
                               최초 1회 SSH 설정 · 예약 시간에 이용 · <a href="/dashboard/ssh-guide" className="text-primary underline underline-offset-2">사용법</a>
                             </p>
-                            <Button asChild variant="outline" className="mt-auto w-full h-11 border-2 text-xs font-black uppercase tracking-wide">
+                            <Button asChild variant="outline" className="mt-auto w-full h-11 border text-xs font-semibold">
                               <a href="/profile#gpu-ssh-key">SSH 공개키 등록</a>
                             </Button>
                           </div>
                         </div>
                         <Button
-                          className="w-full font-black text-xs uppercase tracking-wide h-11 gap-2"
+                          className="w-full font-semibold text-xs h-11 gap-2"
                           variant="destructive"
                           onClick={() => setEndTarget(res.id)}
                         >
@@ -662,7 +662,7 @@ export default function Dashboard() {
       <Dialog open={!!endTarget} onOpenChange={(open) => { if (!open) setEndTarget(null); }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-black uppercase tracking-tighter italic">
+            <DialogTitle className="flex items-center gap-2 font-semibold">
               <StopCircle className="size-5 text-destructive" />
               사용 중단
             </DialogTitle>
@@ -671,10 +671,10 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setEndTarget(null)}>
+            <Button variant="outline" className="font-semibold text-xs" onClick={() => setEndTarget(null)}>
               돌아가기
             </Button>
-            <Button variant="destructive" className="font-black uppercase text-xs" onClick={handleEndSession}>
+            <Button variant="destructive" className="font-semibold text-xs" onClick={handleEndSession}>
               종료하기
             </Button>
           </DialogFooter>
@@ -684,7 +684,7 @@ export default function Dashboard() {
       <Dialog open={!!cancelTarget} onOpenChange={(open) => { if (!open) setCancelTarget(null); }}>
         <DialogContent className="max-w-sm rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 font-black uppercase tracking-tighter italic">
+            <DialogTitle className="flex items-center gap-2 font-semibold">
               <AlertTriangle className="size-5 text-destructive" />
               Cancel Reservation
             </DialogTitle>
@@ -695,10 +695,10 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setCancelTarget(null)}>
+            <Button variant="outline" className="font-semibold text-xs" onClick={() => setCancelTarget(null)}>
               돌아가기
             </Button>
-            <Button variant="destructive" className="font-black uppercase text-xs" onClick={handleCancel}>
+            <Button variant="destructive" className="font-semibold text-xs" onClick={handleCancel}>
               취소하기
             </Button>
           </DialogFooter>

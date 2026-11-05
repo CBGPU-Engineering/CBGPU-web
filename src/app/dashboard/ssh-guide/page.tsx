@@ -92,7 +92,7 @@ export default function GpuSshGuidePage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> GPU 예약으로 돌아가기
       </Link>
@@ -100,7 +100,7 @@ export default function GpuSshGuidePage() {
       <header className="space-y-3">
         <div className="flex items-center gap-2 text-primary">
           <Terminal className="size-6" />
-          <span className="text-xs font-black uppercase tracking-widest">GPU SSH</span>
+          <span className="text-xs font-semibold">GPU SSH</span>
         </div>
         <h1 className="cb-page-title">SSH 접속 방법</h1>
         <p className="text-sm text-muted-foreground">키와 접속 설정을 한 번 등록하면 예약한 GPU 컨테이너에 서버 비밀번호 없이 접속할 수 있습니다.</p>
@@ -109,7 +109,7 @@ export default function GpuSshGuidePage() {
       {STEPS.map((step) => (
         <section key={step.title} className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
           <div className="space-y-1">
-            <h2 className="text-lg font-black">{step.title}</h2>
+            <h2 className="text-lg font-bold">{step.title}</h2>
             <p className="text-sm text-muted-foreground">{step.body}</p>
           </div>
           <div className="space-y-3">
@@ -127,7 +127,7 @@ export default function GpuSshGuidePage() {
       ))}
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-black">3. 사이트에 공개키 등록하기</h2>
+        <h2 className="text-lg font-bold">3. 사이트에 공개키 등록하기</h2>
         <p className="text-sm text-muted-foreground">프로필의 ‘GPU SSH 공개키’ 입력란에 복사한 내용을 붙여 넣고 저장하세요.</p>
         <Button asChild className="gap-2">
           <Link href="/profile#gpu-ssh-key"><KeyRound className="size-4" /> 공개키 등록 <ArrowRight className="size-4" /></Link>
@@ -135,7 +135,7 @@ export default function GpuSshGuidePage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-black">4. SSH 접속 설정하기</h2>
+        <h2 className="text-lg font-bold">4. SSH 접속 설정하기</h2>
         <p className="text-sm text-muted-foreground">OpenSSL을 사용할 수 있는 터미널에서 아래 내용을 <code>~/.ssh/config</code>에 추가하세요. Windows에서는 Git Bash의 <code>~/.ssh/config</code>를 사용합니다. 기존 설정이 있다면 끝에 추가하고 덮어쓰지 마세요.</p>
         <div className="overflow-hidden rounded-xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
@@ -147,7 +147,7 @@ export default function GpuSshGuidePage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-black">교내망에서 접속할 때</h2>
+        <h2 className="text-lg font-bold">교내망에서 접속할 때</h2>
         <p className="text-sm text-muted-foreground">학교 Wi-Fi·유선망에서 공개 주소가 연결되지 않으면 아래 설정을 추가하세요. 이 경로는 Tailscale 설정을 요구하지 않습니다. 교내 방화벽이 포트를 막으면 학교 네트워크 담당자의 확인이 필요합니다.</p>
         <div className="overflow-hidden rounded-xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
@@ -159,7 +159,7 @@ export default function GpuSshGuidePage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-black">5. 예약한 GPU에 접속하기</h2>
+        <h2 className="text-lg font-bold">5. 예약한 GPU에 접속하기</h2>
         <p className="text-sm text-muted-foreground">승인된 예약 시간에 해당 GPU의 명령어를 실행하세요. Tailscale 초대는 필요하지 않습니다.</p>
         <div className="space-y-3">
           {[1, 2, 3, 4].map((gpu) => (
@@ -180,7 +180,7 @@ export default function GpuSshGuidePage() {
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <div className="flex items-center gap-2">
           <FileText className="size-5 text-primary" />
-          <h2 className="text-lg font-black">AI Agent용 스킬</h2>
+          <h2 className="text-lg font-bold">AI Agent용 스킬</h2>
         </div>
         <p className="text-sm text-muted-foreground">에이전트가 키 생성과 GPU 접속을 도울 때 사용할 <code>SKILL.md</code>입니다. 내용을 복사해 전달하거나 파일로 받으세요.</p>
         <div className="flex flex-wrap gap-2">
