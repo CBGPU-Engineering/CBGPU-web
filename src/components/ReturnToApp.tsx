@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import {usePathname} from 'next/navigation';
 import {ArrowLeft} from 'lucide-react';
 import {siteHref} from '@/lib/siteHref';
 const KEY='cbgpu-return-to-app';
@@ -8,7 +9,7 @@ const KEY='cbgpu-return-to-app';
  * 이 호스트들에는 네이티브 브리지가 주입되지 않아 앱 여부를 알 수 없으므로, 앱 메뉴가 붙인 ?from=app 을 sessionStorage에 기억한다.
  */
 export default function ReturnToApp(){
- const [show,setShow]=useState(false);
+ const [show,setShow]=useState(false),pathname=usePathname();
  useEffect(()=>{
   try{
    const url=new URL(location.href);
@@ -16,6 +17,7 @@ export default function ReturnToApp(){
    setShow(sessionStorage.getItem(KEY)==='1');
   }catch{}
  },[]);
- if(!show)return null;
+ // 폰 전용 관리 화면(/admin/m)은 상단 공간 메뉴에서 앱으로 돌아가므로 이 버튼을 쓰지 않는다.
+ if(!show||pathname==='/admin/m'||pathname.startsWith('/admin/m/'))return null;
  return <a href={siteHref('https://app.cbgpu.com/')} onClick={()=>{try{sessionStorage.removeItem(KEY)}catch{}}} className="fixed left-3 z-[90] inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-sm font-semibold text-foreground shadow-lg" style={{bottom:'calc(12px + env(safe-area-inset-bottom))'}}><ArrowLeft size={16}/>CBGPU 앱으로</a>;
 }
