@@ -42,7 +42,7 @@ export default function CareersPage(){
    {loading?<div className="flex justify-center py-16"><LoadingSpinner label="지원서 불러오는 중"/></div>
    :error?<div role="alert" className="px-[22px] py-6 text-sm text-destructive">{error}</div>
    :!filtered.length?<div className="px-[22px] py-14 text-center text-sm text-muted-foreground"><Inbox className="mx-auto mb-4 size-8"/>{query?'검색 결과가 없습니다.':'접수된 지원서가 없습니다.'}</div>
-   :<div className="divide-y divide-border">{filtered.map(a=><details key={a.id} className="group">
+   :<div className="divide-y divide-border">{filtered.map(a=><details key={a.id} className="group careers-row">
      <summary className={`cursor-pointer list-none transition-colors hover:bg-muted/40 [&::-webkit-details-marker]:hidden ${rowGrid}`}>
       <strong className="truncate text-[15px] font-semibold">{a.name}</strong>
       <span className="truncate text-sm text-muted-foreground">{a.affiliation}</span>

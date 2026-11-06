@@ -25,3 +25,10 @@
 .admin-developer-shell .admin-management .data-table :is(td,th):last-child{padding-right:28px}
 .admin-developer-shell .admin-management .data-table :is(td,th){font-size:13px}
 
+
+/* Careers 지원서 행: 펼칠 때 높이와 내용이 짧게 부드럽게 열린다. ::details-content를 지원하지 않는 브라우저는 예전처럼 바로 열린다. */
+@media (prefers-reduced-motion:no-preference){
+.admin-developer-shell .careers-row{interpolate-size:allow-keywords}
+.admin-developer-shell .careers-row::details-content{block-size:0;overflow:clip;opacity:0;transition:block-size .24s cubic-bezier(.2,.7,.2,1),opacity .2s ease,content-visibility .24s allow-discrete}
+.admin-developer-shell .careers-row[open]::details-content{block-size:auto;opacity:1}
+}
