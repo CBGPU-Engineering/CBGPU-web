@@ -12,5 +12,5 @@ export async function GET(request:NextRequest){
   const print=!!printers.data.length,laser=profile.data.is_laser_cut_manager===true;
   if(!print&&!laser||host==='print.cbgpu.com'&&!print||host==='laser.cbgpu.com'&&!laser)return NextResponse.json({error:'This workspace is restricted to assigned equipment managers.'},{status:403});
   return NextResponse.json({print:host==='laser.cbgpu.com'?false:print,laser:host==='print.cbgpu.com'?false:laser,printer_ids:printers.data.map(p=>p.printer_id)},{headers:{'Cache-Control':'no-store'}});
- }catch{return NextResponse.json({error:'Could not verify equipment permissions. Please try again.'},{status:503})}
+ }catch(error){console.error('[manufacturing/access] permission lookup failed:',error instanceof Error?error.message:error);return NextResponse.json({error:'Could not verify equipment permissions. Please try again.'},{status:503})}
 }
