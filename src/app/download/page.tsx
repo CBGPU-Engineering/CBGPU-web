@@ -13,7 +13,8 @@ import { isNativeApp, onNativeBridgeReady } from '@/lib/nativeBridge';
 
 // 아직 Play Store 심사 전이라 APK를 직접 배포한다. 스토어에 올라가면 이 링크만
 // Play Store URL로 바꿔주면 됨 — 나머지 UI/문구는 그대로 재사용 가능하게 짜둠.
-const APK_URL = '/downloads/cbgpu.apk?v=1.0.7';
+// 서버의 cbgpu.apk는 항상 최신 빌드다. 버전 번호는 /api/app-release에서 읽은 값만 보여 준다(옛 버전을 하드코딩하지 않는다).
+const APK_URL = '/downloads/cbgpu.apk';
 
 const FEATURES = [
   { Icon: CalendarDays, label: '시간표', desc: '대강까지 반영되는 실시간 시간표' },
@@ -31,7 +32,7 @@ const FEATURES = [
  */
 export default function DownloadPage() {
   const router = useRouter();
-  const [release,setRelease]=useState({version:"1.0.7",downloadUrl:APK_URL});
+  const [release,setRelease]=useState({version:"",downloadUrl:APK_URL});
   useEffect(()=>{let disposed=false;fetch("/api/app-release",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(value=>{const next=androidRelease(value);if(next&&!disposed)setRelease(next)}).catch(()=>{});return()=>{disposed=true}},[]);
 
   useEffect(() => {
@@ -60,7 +61,7 @@ export default function DownloadPage() {
             download
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold text-base px-8 py-4 rounded-2xl shadow-xl shadow-primary/20 transition-transform active:scale-95 hover:scale-[1.02]"
           >
-            APK 다운로드 · v{release.version}
+            APK 다운로드{release.version?` · v${release.version}`:''}
           </a>
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground font-medium">
             <Smartphone className="size-4" /> 안드로이드 전용 · iOS는 아직 준비 중이에요
