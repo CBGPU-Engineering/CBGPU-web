@@ -138,7 +138,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
       </div>
 
       <div className="flex gap-2 md:gap-4 items-center">
-        <Link href="/download" aria-label="앱 다운로드" className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+        <Link href="/download" aria-label="앱 다운로드" className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <Smartphone className="size-4" aria-hidden="true" />
           <span className="hidden sm:inline">앱 다운로드</span>
         </Link>
@@ -146,7 +146,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           type="button"
           onClick={() => { setIsMenuOpen(false); setSearchOpen(true); }}
           aria-label="기능 찾기"
-          className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
+          className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
           <Search className="size-4" aria-hidden="true" />
           <span className="hidden sm:inline">기능 찾기</span>
@@ -177,7 +177,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                   <DropdownMenuPrimitive.Content
                     align="end"
                     sideOffset={10}
-                    className="z-50 min-w-48 rounded-xl glass-strong p-1.5 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
+                    className="z-50 min-w-48 rounded-lg glass-strong p-1.5 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
                   >
                     <div className="px-3 py-2 mb-1 border-b border-border/40">
                       <p className="text-sm font-semibold text-foreground truncate max-w-[180px]">{profile?.full_name || 'My Profile'}</p>
@@ -199,10 +199,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
             ) : (
               <div className="flex gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm" className="font-semibold text-sm">로그인</Button>
+                  <Button variant="ghost" size="sm" className="font-semibold text-sm">Log in</Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm" className="font-semibold text-sm shadow-md">회원가입</Button>
+                  <Button size="sm" className="font-semibold text-sm shadow-md">Sign up</Button>
                 </Link>
               </div>
             )
@@ -272,10 +272,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                 Contact
               </Link>
               <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full font-semibold">로그인</Button>
+                <Button variant="outline" className="w-full font-semibold">Log in</Button>
               </Link>
               <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full font-semibold shadow-md">회원가입</Button>
+                <Button className="w-full font-semibold shadow-md">Sign up</Button>
               </Link>
             </div>
           )}
