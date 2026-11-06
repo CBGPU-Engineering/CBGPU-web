@@ -58,7 +58,7 @@ export default function ContactPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="tilt-3d space-y-5 ring-1 ring-foreground/5 rounded-[28px] p-6 md:p-8 bg-card shadow-lg">
+      <form onSubmit={handleSubmit} className="tilt-3d space-y-5 ring-1 ring-foreground/5 rounded-2xl p-6 md:p-8 bg-card shadow-lg">
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-muted-foreground">이름 *</label>
@@ -112,7 +112,7 @@ export default function ContactPage() {
             onChange={handleChange}
             placeholder="문의 내용을 자세히 작성해 주세요."
             rows={6}
-            className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm font-bold resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-all"
+            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm font-bold resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-all"
           />
         </div>
 

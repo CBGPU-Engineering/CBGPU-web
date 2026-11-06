@@ -226,7 +226,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                 <p className="text-xs text-muted-foreground/50 pl-1">No approved reservations</p>
               ) : (
                 approvedReservations.map((res, i) => (
-                  <div key={i} className="text-xs p-2.5 bg-muted/30 rounded-xl border border-border/30">
+                  <div key={i} className="text-xs p-2.5 bg-muted/30 rounded-2xl border border-border/30">
                     <div className="flex justify-between font-bold">
                       <span>
                         {format(parseISO(res.start_time), 'M/d (eee)', { locale: ko })}
@@ -255,7 +255,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                     disabled={taken}
                     onClick={() => !taken && toggleWeek(mon)}
                     className={cn(
-                      'w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left transition-all duration-200',
+                      'w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-left transition-all duration-200',
                       taken
                         ? 'opacity-40 cursor-not-allowed bg-muted/20 border-border/30'
                         : isSelected

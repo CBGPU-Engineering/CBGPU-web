@@ -160,7 +160,7 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
         </div>
         <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="스터디 제목 *" className="font-bold" />
         <textarea value={desc} onChange={e => setDesc(e.target.value)} onBlur={suggestTags} placeholder="설명 (선택)" rows={3}
-          className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-xl outline-none focus:border-primary resize-none font-medium" />
+          className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-lg outline-none focus:border-primary resize-none font-medium" />
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <p className="text-xs font-semibold text-muted-foreground mb-1">최대 인원</p>
@@ -305,7 +305,7 @@ export default function MatchPage() {
 
       {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="모집글 불러오는 중" /></div>
       : shown.length === 0 ? (
-        <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground font-medium">스터디 그룹이 없습니다.</div>
+        <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground font-medium">스터디 그룹이 없습니다.</div>
       ) : (
         <div className="space-y-3">
           {shown.map((post, i) => (

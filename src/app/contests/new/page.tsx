@@ -17,7 +17,7 @@ import { cleanupContestLogo, uploadContestLogo } from '@/lib/contestLogos';
 const newField = (type: ContestFieldType): ContestField => ({ id: crypto.randomUUID(), type, label: '', description: '', required: true, extensions: '', max_size_mb: 10 });
 const questionLabels: Record<RegistrationQuestionType, string> = { text: '한 줄 답변', paragraph: '긴 답변', choice: '하나 선택', checkbox: '여러 개 선택', terms: '동의 확인' };
 const newQuestion = (type: RegistrationQuestionType): RegistrationQuestion => ({ id: crypto.randomUUID(), type, label: '', required: true, options: type === 'choice' || type === 'checkbox' ? [''] : [] });
-const textareaClass = 'w-full rounded-xl border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring';
+const textareaClass = 'w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export default function NewContestPage() {
   const { user } = useAuth();

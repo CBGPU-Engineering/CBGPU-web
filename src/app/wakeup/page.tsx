@@ -180,7 +180,7 @@ export default function WakeupSongPage() {
           오늘 나올 8곡 전체를 재생 여부와 상관없이 보여준다 — 신청곡이
           모자란 자리는 자동 채움 곡으로 채워서, 실제로 그날 나갈 순서
           그대로 미리 볼 수 있게. */}
-      <div className="rounded-[28px] border border-primary/15 bg-card p-5 space-y-3">
+      <div className="rounded-2xl border border-primary/15 bg-card p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Music className="size-5 text-primary" />
           <h2 className="text-lg font-semibold">{dorm} · {format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열</h2>
@@ -203,7 +203,7 @@ export default function WakeupSongPage() {
       </div>
 
       {/* ── 신청 폼 ──────────────────────────────────────────────────── */}
-      <form onSubmit={handleSubmit} className="rounded-[28px] border border-border/60 bg-card p-5 space-y-4">
+      <form onSubmit={handleSubmit} className="rounded-2xl border border-border/60 bg-card p-5 space-y-4">
         <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-semibold">{dorm}에 신청하기</h2></div>
 
         <div className="space-y-1.5">
@@ -216,7 +216,7 @@ export default function WakeupSongPage() {
                   key={i}
                   type="button"
                   onClick={() => setSelectedDate(day)}
-                  className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition-all active:scale-95 ${
+                  className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-lg border text-center transition-all active:scale-95 ${
  isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
  }`}
                 >

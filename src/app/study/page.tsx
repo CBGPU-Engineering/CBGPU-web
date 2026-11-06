@@ -80,7 +80,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
     .sort((a, b) => a.seat.name.localeCompare(b.seat.name, 'ko', { numeric: true }));
 
   if (failed) {
-    return <div role="alert" className="space-y-3 rounded-xl border p-4">
+    return <div role="alert" className="space-y-3 rounded-2xl border p-4">
       <p className="text-sm">좌석 현황을 불러오지 못했습니다. 빈자리 여부를 확인할 수 없습니다.</p>
       <Button variant="outline" className="min-h-11" onClick={onRetry}>다시 불러오기</Button>
     </div>;
@@ -108,7 +108,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
             ) : <p className="text-muted-foreground">확인할 좌석을 선택하세요.</p>}
           </div>
           <div ref={mapRef} role="region" aria-label={`${selectedPeriod}교시 좌석 배치도, 스크롤 가능`} tabIndex={0}
-            className="h-[min(38dvh,360px)] min-w-0 w-full overflow-auto rounded-xl border border-border bg-muted p-2 focus-visible:outline-2 focus-visible:outline-ring">
+            className="h-[min(38dvh,360px)] min-w-0 w-full overflow-auto rounded-2xl border border-border bg-muted p-2 focus-visible:outline-2 focus-visible:outline-ring">
             <div className="relative" data-seat-canvas style={{ width: columns * cellSize, height: rowCount * cellSize, margin: '0' }}>
               {obstacles.map(ob => (
                 <div key={`ob-${ob.id}`} className="absolute flex items-center justify-center overflow-hidden rounded border border-border bg-card px-1 text-center text-sm font-medium text-muted-foreground"
@@ -138,7 +138,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
         <>
           <Input type="search" aria-label="좌석 번호 또는 신청자 검색" placeholder="좌석 번호, 이름, 학번 또는 빈자리 검색"
             className="min-h-11" value={seatQuery} onChange={event => setSeatQuery(event.target.value)} />
-          <div className="divide-y divide-border rounded-xl border border-border">
+          <div className="divide-y divide-border rounded-2xl border border-border">
             {filtered.map(({ seat, occupants, status }) => <div key={seat.id} className="flex items-start gap-4 px-4 py-3">
               <span className="min-w-12 shrink-0 text-base font-semibold">{seat.name}번</span>
               <div className="min-w-0 flex-1">
@@ -181,7 +181,7 @@ function CapacityList({ occupancy, selectedPeriod, failed, onRetry }: {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card divide-y divide-border">
+    <div className="rounded-2xl border border-border bg-card divide-y divide-border">
       {entries.map((e, i) => (
         <div key={i} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
           <span className="text-base font-medium break-words">{e.label}</span>
@@ -352,7 +352,7 @@ export default function StudyPage() {
             onClick={() => loadData(true)}
             aria-label="자습 현황 새로고침"
             disabled={loading}
-            className="flex items-center justify-center size-11 rounded-xl border bg-card transition-colors disabled:opacity-50"
+            className="flex items-center justify-center size-11 rounded-lg border bg-card transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -402,7 +402,7 @@ export default function StudyPage() {
                 다른 학생 검색
               </Button>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-muted/10 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-muted/10 p-3">
               <p className="text-sm">
                 {selectedStudentEntry
                   ? `${selectedPeriod}교시: ${selectedStudentEntry.roomName}${

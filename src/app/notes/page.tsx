@@ -24,7 +24,7 @@ function renderMd(raw: string): string {
   let html = ''; let inCode = false; let inList = false;
   for (let i = 0; i < lines.length; i++) {
     const l = lines[i];
-    if (l.startsWith('```')) { inCode = !inCode; html += inCode ? '<pre class="bg-muted rounded-xl p-4 my-3 overflow-x-auto text-sm font-mono"><code>' : '</code></pre>'; continue; }
+    if (l.startsWith('```')) { inCode = !inCode; html += inCode ? '<pre class="bg-muted rounded-lg p-4 my-3 overflow-x-auto text-sm font-mono"><code>' : '</code></pre>'; continue; }
     if (inCode) { html += escHtml(l) + '\n'; continue; }
     if (inList && !l.startsWith('- ') && !l.match(/^\d+\. /)) { html += '</ul>'; inList = false; }
     if (l.startsWith('### ')) { html += `<h3 class="text-lg font-semibold mt-5 mb-1">${inlineMd(l.slice(4))}</h3>`; }
@@ -323,7 +323,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
 
       {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="노트 불러오는 중" /></div>
       : shown.length === 0 ? (
-        <div className="py-16 text-center text-muted-foreground border-2 border-dashed rounded-3xl animate-in fade-in duration-300 pop-in-3d">
+        <div className="py-16 text-center text-muted-foreground border-2 border-dashed rounded-2xl animate-in fade-in duration-300 pop-in-3d">
           <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">📓</p>
           <p className="font-medium">{tab==='mine'?'노트를 만들어 보세요.':'공유된 노트가 없습니다.'}</p>
         </div>

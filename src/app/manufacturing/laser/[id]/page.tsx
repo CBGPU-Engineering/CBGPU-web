@@ -128,7 +128,7 @@ export default function LaserJobDetailPage() {
         <DxfPreview src={downloadUrl} />
       )}
 
-      <div className="border-2 rounded-3xl overflow-hidden bg-card">
+      <div className="border-2 rounded-2xl overflow-hidden bg-card">
         <div className="px-6 py-4 border-b-2 bg-muted/20">
           <p className="font-semibold text-xs">Details</p>
         </div>

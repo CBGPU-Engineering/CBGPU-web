@@ -34,7 +34,7 @@ export default function SupervisorCard() {
 
   return (
     <section aria-label="오늘의 자습 감독" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserCheck className="size-5" aria-hidden /></div>
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><UserCheck className="size-5" aria-hidden /></div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-semibold text-muted-foreground">오늘의 자습 감독{data.date ? ` · ${data.date}` : ''}</p>
         {data.duties.length ? (

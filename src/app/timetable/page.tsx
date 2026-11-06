@@ -211,7 +211,7 @@ export default function TimetablePage() {
       {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 확인이 지연되어 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
 
       {error && source === 'manual' && (
-        <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+        <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
           <AlertTriangle className="size-3.5 text-amber-500 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
             컴시간 연결 실패 — 수동 데이터를 표시합니다.
@@ -220,7 +220,7 @@ export default function TimetablePage() {
         </div>
       )}
 
-      {prepTip && !editing && <p className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
+      {prepTip && !editing && <p className="flex items-start gap-2 rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
 
       {loading || justFinished ? (
         <div className="py-16 flex items-center justify-center">

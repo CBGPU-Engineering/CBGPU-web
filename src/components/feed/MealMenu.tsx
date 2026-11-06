@@ -52,7 +52,7 @@ export default function MealMenu() {
   return (
     <div className="w-full space-y-4">
       {/* date nav */}
-      <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-2">
+      <div className="flex items-center justify-between bg-muted/30 rounded-2xl px-4 py-2">
         <Button variant="ghost" size="icon" className="size-8" onClick={() => move(-1)}><ChevronLeft className="size-4" /></Button>
         <div className="text-center">
           <p className="font-semibold text-sm">{display(date)}</p>
@@ -66,7 +66,7 @@ export default function MealMenu() {
         </div>
       </div>
 
-      {error && <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl font-medium">{error}</p>}
+      {error && <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg font-medium">{error}</p>}
 
       {(loading || justFinished) && (
         <div className="py-10 flex items-center justify-center">

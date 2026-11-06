@@ -126,7 +126,7 @@ export default function StudyContributorPage() {
     <section className="cb-page-content mx-auto max-w-xl space-y-6 px-4 py-10">
       <div className="space-y-2">
         <div className="flex items-center gap-2"><Puzzle className="size-6 text-primary" /><h1 className="cb-page-title">자습 조회 기여자</h1></div>
-        <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm font-bold text-amber-800 dark:text-amber-300">
+        <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm font-bold text-amber-800 dark:text-amber-300">
           이 설정은 데스크톱 환경에서만 가능합니다. 휴대폰에서는 진행하지 마세요.
         </div>
         <p className="text-sm text-muted-foreground">한 번 연결하면 데스크톱 브라우저에서 자습신청 사이트에 로그인할 때 자동으로 CBGPU가 갱신됩니다. 비밀번호는 가져오지 않습니다.</p>
@@ -146,7 +146,7 @@ export default function StudyContributorPage() {
       {guideVisible && (
       <div className="rounded-2xl border bg-card p-5 space-y-3">
         <div className="flex items-center gap-2"><ShieldCheck className="size-5 text-emerald-500" /><h2 className="font-semibold">처음 한 번, 세 단계만 하면 됩니다</h2></div>
-        <div className="rounded-xl bg-muted/30 p-3 space-y-2">
+        <div className="rounded-2xl bg-muted/30 p-3 space-y-2">
           <p className="text-sm font-semibold">1. Violentmonkey 설치하고 허용하기</p>
           <p className="text-xs text-muted-foreground">아래 버튼을 누른 뒤 새 화면에서 <b>Chrome에 추가</b> 또는 <b>Brave에 추가</b>를 누르세요. 확인창이 뜨면 <b>확장 프로그램 추가</b>를 누르세요.</p>
           <Button asChild variant="outline" className="w-full gap-2">
@@ -171,14 +171,14 @@ export default function StudyContributorPage() {
             <p className="mt-2">브라우저를 최신 버전으로 업데이트해 주세요. 오래된 버전에서는 확장 프로그램 화면 오른쪽 위의 <b>개발자 모드</b>를 켜야 할 수 있습니다.</p>
           </details>
         </div>
-        <div className="rounded-xl bg-muted/30 p-3 space-y-2">
+        <div className="rounded-2xl bg-muted/30 p-3 space-y-2">
           <p className="text-sm font-semibold">2. CBGPU 스크립트 설치</p>
           <p className="text-xs text-muted-foreground">새 탭이 열리면 그 화면에서 <b>설치</b>를 누르세요.</p>
           <Button asChild variant="outline" className="w-full gap-2">
             <a href="/downloads/cbgpu-eduset-contributor.user.js" target="_blank" rel="noopener noreferrer"><Puzzle className="size-4" /> CBGPU 스크립트 설치</a>
           </Button>
         </div>
-        <div className="rounded-xl bg-muted/30 p-3 space-y-2">
+        <div className="rounded-2xl bg-muted/30 p-3 space-y-2">
           <p className="text-sm font-semibold">3. 연결하고 자습신청 로그인</p>
           <p className="text-xs text-muted-foreground">버튼을 누르면 CBGPU가 자동으로 연결되고 자습신청 사이트가 새 탭에 열립니다. 평소처럼 로그인하세요. 키를 복사하거나 입력할 필요가 없습니다.</p>
           <Button type="button" onClick={connectAndOpen} disabled={creating || !isApproved || (!!pendingDeviceId && !waitingTooLong)} className="w-full gap-2">
@@ -186,7 +186,7 @@ export default function StudyContributorPage() {
           </Button>
           {pendingDeviceId && !waitingTooLong && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><RefreshCw className="size-3 animate-spin" /> 자습신청 로그인을 기다리는 중입니다. 성공하면 이 화면이 자동으로 바뀝니다.</p>}
           {pendingDeviceId && waitingTooLong && (
-            <div role="alert" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-2 text-xs">
+            <div role="alert" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 space-y-2 text-xs">
               <p className="flex items-center gap-2 font-bold"><AlertTriangle className="size-4" /> 아직 동기화를 확인하지 못했습니다.</p>
               <p>자습신청 사이트에서 로그인을 마쳤는지 확인해 주세요. Violentmonkey의 CBGPU 스크립트 이름에 취소선이 있으면 1단계의 사용자 스크립트 허용 스위치를 다시 확인하세요.</p>
               <p>문제를 고친 뒤 자습신청 탭을 새로고침하면 다시 확인합니다.</p>
@@ -197,11 +197,11 @@ export default function StudyContributorPage() {
       )}
 
       {devices.length > 0 && (
-        <details className="space-y-2 rounded-xl border border-border/60 p-4">
+        <details className="space-y-2 rounded-2xl border border-border/60 p-4">
           <summary className="cursor-pointer text-sm font-bold">연결 관리 · {devices.length}개</summary>
           <div className="mt-3 space-y-2">
           {devices.map((device) => (
-            <div key={device.id} className="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm">
+            <div key={device.id} className="flex items-center justify-between gap-3 rounded-2xl border p-3 text-sm">
               <div><p className="font-bold">{device.name}</p><p className="text-xs text-muted-foreground">마지막 동기화: {device.last_used_at ? new Date(device.last_used_at).toLocaleString('ko-KR') : '아직 없음'}</p></div>
               <Button variant="ghost" size="sm" onClick={() => revoke(device.id)}>연결 해제</Button>
             </div>

@@ -238,7 +238,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                       key={i}
                       type="button"
                       onClick={() => setSelectedDate(day)}
-                      className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition-all active:scale-95 ${
+                      className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-lg border text-center transition-all active:scale-95 ${
                         isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                       }`}
                     >
@@ -257,7 +257,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                 <button
                   type="button"
                   onClick={startNow}
-                  className="flex items-center gap-1 shrink-0 px-3 py-1.5 rounded-xl border border-primary/50 bg-primary/10 text-primary text-xs font-semibold transition-all active:scale-95 hover:bg-primary/20"
+                  className="flex items-center gap-1 shrink-0 px-3 py-1.5 rounded-lg border border-primary/50 bg-primary/10 text-primary text-xs font-semibold transition-all active:scale-95 hover:bg-primary/20"
                 >
                   <Zap className="size-3.5" /> 지금 바로 시작
                 </button>
@@ -273,7 +273,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                     key={p.hours}
                     type="button"
                     onClick={() => setDurationHours(p.hours)}
-                    className={`px-2 py-1.5 rounded-xl border text-xs font-semibold transition-all active:scale-95 ${ durationHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30' }`}
+                    className={`px-2 py-1.5 rounded-lg border text-xs font-semibold transition-all active:scale-95 ${ durationHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30' }`}
                   >
                     {p.label}
                   </button>
@@ -281,7 +281,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground bg-muted/30 rounded-xl py-2 px-3">
+            <div className="flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground bg-muted/30 rounded-2xl py-2 px-3">
               <span>{format(start, 'M/d(eee) HH:mm', { locale: ko })}</span>
               <span className="opacity-40">→</span>
               <span>{format(end, 'M/d(eee) HH:mm', { locale: ko })}</span>

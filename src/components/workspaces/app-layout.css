@@ -5,7 +5,7 @@
 .cb-app .cb-page-content{max-width:none;min-height:0;margin:0;padding:0}
 .cb-app .cb-audience-design .cb-home-hero{padding:0;margin:0 0 18px;border:0}
 .cb-app .cb-audience-design .cb-home-hero .cb-overview-heading{display:flex;flex-direction:column;align-items:stretch;gap:12px;margin:0}
-.cb-app .cb-audience-design .cb-home-hero .cb-overview-heading h1{font-size:24px;font-weight:700;line-height:1.4;letter-spacing:-.035em;word-break:keep-all;text-wrap:pretty}
+.cb-app .cb-audience-design .cb-home-hero .cb-overview-heading h1{font-size:24px;font-weight:600;line-height:1.4;letter-spacing:-.035em;word-break:keep-all;text-wrap:pretty}
 .cb-app .cb-audience-design .cb-home-hero .cb-primary-action{min-height:44px;justify-content:space-between;font-size:14px;padding:10px 15px;width:100%;border-radius:12px}
 .cb-app .cb-audience-design .cb-section-heading{margin-bottom:10px}
 .cb-app .cb-audience-design .cb-section-heading h2{font-size:18px}

@@ -158,7 +158,7 @@ export default function MaterialsPage() {
           const busy = busyId === material.id;
           return <article key={material.id} className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-4 transition-colors hover:border-border">
             <div className="flex min-w-0 items-start gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></div>
+              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-semibold leading-tight" title={material.title}>{material.title}</h2>
                 <p className="mt-1 truncate text-xs text-muted-foreground" title={material.file_name}>{material.file_name}</p>
@@ -180,7 +180,7 @@ export default function MaterialsPage() {
             </div>
           </article>;
         })}
-      </div> : <div className="rounded-3xl border-2 border-dashed bg-muted/10 px-4 py-16 text-center text-muted-foreground">
+      </div> : <div className="rounded-2xl border-2 border-dashed bg-muted/10 px-4 py-16 text-center text-muted-foreground">
         <FolderOpen className="mx-auto mb-4 size-12 opacity-20" />
         <p className="text-sm font-semibold">{filtering ? '조건에 맞는 자료가 없어요' : '아직 공유된 자료가 없어요'}</p>
         {filtering

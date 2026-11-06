@@ -48,7 +48,7 @@ export default function DownloadPage() {
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
         <div className="space-y-2">
           <p className="text-sm font-semibold text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight">CBGPU 앱</h1>
+          <h1 className="cb-page-title">CBGPU 앱</h1>
           <p className="text-base text-muted-foreground font-medium max-w-md mx-auto">
             시간표, 급식부터 GPU 예약, 제작 신청까지 — 학교생활을 앱 하나로.
           </p>
@@ -86,7 +86,7 @@ export default function DownloadPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {FEATURES.map(({ Icon, label, desc }) => (
           <div key={label} className="tilt-3d p-5 rounded-2xl bg-card ring-1 ring-foreground/5 shadow-sm space-y-2">
-            <span className="flex items-center justify-center size-10 rounded-xl bg-primary/10 text-primary">
+            <span className="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary">
               <Icon className="size-5" strokeWidth={2} />
             </span>
             <p className="font-bold text-base">{label}</p>
@@ -102,7 +102,7 @@ export default function DownloadPage() {
           title="CBGPU 앱 다운로드"
           size={208}
           marginSize={2}
-          className="rounded-xl bg-white ring-1 ring-foreground/10"
+          className="rounded-lg bg-white ring-1 ring-foreground/10"
         />
         <p className="text-sm text-muted-foreground font-medium">휴대폰으로 QR코드를 스캔해서 설치하세요</p>
       </div>

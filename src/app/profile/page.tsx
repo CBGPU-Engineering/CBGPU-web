@@ -430,7 +430,7 @@ export default function Profile() {
           onChange={(event) => setSshPublicKey(event.target.value)}
           placeholder="ssh-ed25519 AAAA..."
           rows={3}
-          className="w-full rounded-xl border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="w-full rounded-lg border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         <Button type="button" onClick={saveSshKey} disabled={savingSshKey || sshPublicKey.trim() === savedSshKey}>
           {savingSshKey ? '저장 중...' : sshPublicKey.trim() ? '공개키 저장' : '등록된 키 삭제'}

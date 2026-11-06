@@ -398,7 +398,7 @@ export default function Dashboard() {
             </div>
 
             <div className={cn(
-              'w-full md:w-64 md:shrink-0 border-2 rounded-3xl bg-card shadow-xl transition-all duration-300 overflow-hidden',
+              'w-full md:w-64 md:shrink-0 border-2 rounded-2xl bg-card shadow-xl transition-all duration-300 overflow-hidden',
               selectedDay ? 'opacity-100' : 'opacity-0 pointer-events-none'
             )}>
               {selectedDay && (
@@ -591,7 +591,7 @@ export default function Dashboard() {
                           <Key className="size-4" /> Access Credentials
                         </h3>
                         <div className="grid gap-4 md:grid-cols-2">
-                          <div className="flex flex-col gap-4 rounded-xl border bg-background p-4">
+                          <div className="flex flex-col gap-4 rounded-2xl border bg-background p-4">
                             <div>
                               <span className="text-xs font-semibold opacity-70">Password</span>
                               <div className="flex items-center justify-between gap-2 mt-1">
@@ -620,7 +620,7 @@ export default function Dashboard() {
                               </Button>
                             )}
                           </div>
-                          <div className="flex flex-col gap-4 rounded-xl border bg-background p-4">
+                          <div className="flex flex-col gap-4 rounded-2xl border bg-background p-4">
                             <div>
                               <span className="text-xs font-semibold opacity-70">SSH</span>
                               <div className="flex items-center gap-2 mt-1 rounded-lg border bg-muted/30 pl-3 pr-1 min-h-11">

@@ -9,8 +9,8 @@ export default function NotFound() {
         <p className="text-sm text-muted-foreground">주소가 바뀌었거나 삭제된 페이지일 수 있어요.</p>
       </div>
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
-        <Link href="/" className="rounded-xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">홈으로 가기</Link>
-        <Link href="/contact" className="rounded-xl border border-border px-5 py-3 text-sm font-bold">문의하기</Link>
+        <Link href="/" className="rounded-lg bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">홈으로 가기</Link>
+        <Link href="/contact" className="rounded-lg border border-border px-5 py-3 text-sm font-bold">문의하기</Link>
       </div>
     </div>
   );

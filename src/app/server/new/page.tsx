@@ -73,7 +73,7 @@ const DEFAULT_FORM: FormState = {
 };
 
 const labelCls = 'text-sm font-semibold text-muted-foreground mb-1.5 block';
-const inputCls = 'h-10 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors';
+const inputCls = 'h-10 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 const SCOPE_OPTS: { value: AccessScope; label: string; icon: React.ReactNode; desc: string }[] = [
@@ -187,7 +187,7 @@ export default function NewServerPage() {
         <div className="flex items-center gap-4 min-w-0">
           <button
             onClick={() => router.back()}
-            className="flex items-center justify-center size-9 rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+            className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -265,7 +265,7 @@ export default function NewServerPage() {
                 <button
                   key={opt.value}
                   onClick={()=>setForm(current=>({...current,deployType:opt.value,...(opt.value==='compose'?{containerPort:'8000',cpuLimit:'3',memoryLimit:'4g',accessScope:'public'}:{})}))}
-                  className={`flex items-start gap-3 p-4 rounded-xl border text-left transition-all ${ form.deployType === opt.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border' }`}
+                  className={`flex items-start gap-3 p-4 rounded-lg border text-left transition-all ${ form.deployType === opt.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border' }`}
                 >
                   <span className={`mt-0.5 ${form.deployType === opt.value ? 'text-primary' : ''}`}>{opt.icon}</span>
                   <div>
@@ -347,11 +347,11 @@ export default function NewServerPage() {
                 <Plus className="size-3" /> Add
               </Button>
             </div>
-            <details className="border rounded-xl p-4"><summary className="text-xs cursor-pointer">.env 여러 항목 한 번에 붙여넣기</summary><label className="sr-only" htmlFor="server-env-bulk">서버 환경변수 .env</label><textarea id="server-env-bulk" className="mt-3 w-full min-h-40 rounded-xl border bg-background p-3 font-mono text-sm" value={bulkEnv} onChange={e=>setBulkEnv(e.target.value)} placeholder={'POSTGRES_PASSWORD=...\nJWT_SECRET=...\nSUPABASE_PUBLIC_URL=https://my-api.server.cbgpu.com'}/><p className="mt-2 text-xs text-muted-foreground">저장소의 .env.example과 README에 필요한 항목을 확인하세요. 비밀 값은 프로젝트 소유자·편집자만 관리할 수 있습니다.</p></details>
+            <details className="border rounded-2xl p-4"><summary className="text-xs cursor-pointer">.env 여러 항목 한 번에 붙여넣기</summary><label className="sr-only" htmlFor="server-env-bulk">서버 환경변수 .env</label><textarea id="server-env-bulk" className="mt-3 w-full min-h-40 rounded-lg border bg-background p-3 font-mono text-sm" value={bulkEnv} onChange={e=>setBulkEnv(e.target.value)} placeholder={'POSTGRES_PASSWORD=...\nJWT_SECRET=...\nSUPABASE_PUBLIC_URL=https://my-api.server.cbgpu.com'}/><p className="mt-2 text-xs text-muted-foreground">저장소의 .env.example과 README에 필요한 항목을 확인하세요. 비밀 값은 프로젝트 소유자·편집자만 관리할 수 있습니다.</p></details>
             {form.envVars.length === 0 ? (
               <div
                 onClick={addEnvVar}
-                className="border border-dashed border-border/40 rounded-xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
+                className="border border-dashed border-border/40 rounded-2xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
               >
                 <Plus className="size-5 mx-auto mb-2 opacity-30" />
                 <p className="text-xs font-semibold opacity-70">클릭하여 환경변수 추가</p>
@@ -433,7 +433,7 @@ export default function NewServerPage() {
                 <button
                   key={opt.value}
                   onClick={() => set('accessScope', opt.value)}
-                  className={`w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-border' }`}
+                  className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-border' }`}
                 >
                   <span className={`${form.accessScope === opt.value ? 'text-primary' : 'text-muted-foreground'}`}>
                     {opt.icon}

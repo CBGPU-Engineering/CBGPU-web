@@ -155,7 +155,7 @@ export default function NewLaserJobPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="flex items-center justify-center size-9 rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+          className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -179,12 +179,12 @@ export default function NewLaserJobPage() {
         <h2 className="text-xs font-semibold text-muted-foreground">설계 파일 * — 여러 개 선택 가능</h2>
 
         {catalog.length === 0 ? (
-          <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-xl py-6 text-center">
+          <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-lg py-6 text-center">
             현재 담당자가 등록해둔 재질/두께가 없습니다. 담당자에게 문의해주세요.
           </p>
         ) : (
           <>
-            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-xl py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
+            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
               {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
                 <>
                   <UploadCloud className="size-6 opacity-40" />
@@ -199,7 +199,7 @@ export default function NewLaserJobPage() {
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 각각 별도의 신청 건(대기열 항목)으로 접수됩니다.</p>
                 {fileEntries.map((entry, i) => (
-                  <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
+                  <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
                       <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
@@ -245,7 +245,7 @@ export default function NewLaserJobPage() {
             placeholder="원하는 완성 규격 등 요청사항... (모든 파일에 공통 적용)"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
+            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
           />
         </div>
       </section>

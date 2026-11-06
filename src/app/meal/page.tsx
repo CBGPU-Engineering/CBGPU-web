@@ -166,7 +166,7 @@ export default function MealPage() {
         <div className="flex items-center gap-3 p-4 rounded-2xl bg-card ring-1 ring-foreground/5">
           <button
             onClick={toggleMealAlarm}
-            className={`flex items-center justify-center size-10 rounded-xl shrink-0 transition-colors ${
+            className={`flex items-center justify-center size-10 rounded-lg shrink-0 transition-colors ${
  alarmOn ? 'bg-primary/15 text-primary' : 'bg-foreground/5 text-muted-foreground'
  }`}
             aria-pressed={alarmOn}
@@ -233,7 +233,7 @@ export default function MealPage() {
               <div
                 key={meal.type}
                 style={{ animationDelay: `${i * 70}ms` }}
-                className="tilt-3d flex flex-col gap-4 p-6 rounded-[28px] bg-card ring-1 ring-foreground/5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-400 fill-mode-backwards"
+                className="tilt-3d flex flex-col gap-4 p-6 rounded-2xl bg-card ring-1 ring-foreground/5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-400 fill-mode-backwards"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default function MealPage() {
 
 function Empty({ icon, title, sub }: { icon: React.ReactNode; title: string; sub?: string }) {
   return (
-    <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground">
+    <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground">
       {icon}
       <p className="font-semibold text-base">{title}</p>
       {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}

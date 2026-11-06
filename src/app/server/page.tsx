@@ -123,7 +123,7 @@ export default function ServerPage() {
                 className="tilt-3d group flex items-center justify-between p-5 border rounded-2xl bg-card hover:border-primary/50 transition-all duration-300"
               >
                 <div className="flex items-start gap-4 min-w-0">
-                  <div className={`p-2.5 rounded-xl border ${isRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-muted border-border/40 text-muted-foreground'}`}>
+                  <div className={`p-2.5 rounded-lg border ${isRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-muted border-border/40 text-muted-foreground'}`}>
                     {proj.deploy_type === 'docker' ? <Container className="size-4" /> : <GitBranch className="size-4" />}
                   </div>
                   <div className="min-w-0">

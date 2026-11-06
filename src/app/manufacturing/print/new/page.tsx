@@ -189,7 +189,7 @@ export default function NewPrintJobPage() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="flex items-center justify-center size-9 rounded-xl border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+          className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -206,7 +206,7 @@ export default function NewPrintJobPage() {
             <button
               key={p.id}
               onClick={() => setPrinterId(p.id)}
-              className={`flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 text-center transition-all ${
+              className={`flex flex-col items-center gap-1.5 p-4 rounded-lg border-2 text-center transition-all ${
  printerId === p.id ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
  }`}
             >
@@ -226,7 +226,7 @@ export default function NewPrintJobPage() {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setMode('beginner')}
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
+            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all ${
  mode === 'beginner' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
  }`}
           >
@@ -238,7 +238,7 @@ export default function NewPrintJobPage() {
           </button>
           <button
             onClick={() => setMode('advanced')}
-            className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
+            className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all ${
  mode === 'advanced' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
  }`}
           >
@@ -265,7 +265,7 @@ export default function NewPrintJobPage() {
         <h2 className="text-xs font-semibold text-muted-foreground">
           {mode === 'beginner' ? '모델 파일 *' : '슬라이싱 완료 파일 *'}
         </h2>
-        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-xl py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
+        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
           {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
             <>
               <UploadCloud className="size-6 opacity-40" />
@@ -280,7 +280,7 @@ export default function NewPrintJobPage() {
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground opacity-60">파일마다 수량/재질/색상을 각각 정하고, 각각 별도의 신청 건(대기열 항목)으로 접수됩니다.</p>
             {fileEntries.map((entry, i) => (
-              <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
+              <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
                   <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
@@ -326,7 +326,7 @@ export default function NewPrintJobPage() {
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground">담당자 지정</h2>
         {printerId == null ? (
-          <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-xl py-4 text-center">
+          <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-lg py-4 text-center">
             프린터를 먼저 선택하면 그 프린터의 담당자를 고를 수 있습니다.
           </p>
         ) : (
@@ -345,7 +345,7 @@ export default function NewPrintJobPage() {
             placeholder="서포트 여부 등 요청사항... (모든 파일에 공통 적용)"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
+            className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
           />
         </div>
       </section>

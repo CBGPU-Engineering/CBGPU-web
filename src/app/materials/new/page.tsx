@@ -159,7 +159,7 @@ export default function NewMaterialPage() {
 
   return <section className="cb-page-content mx-auto max-w-2xl space-y-8 px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
     <div className="flex items-center gap-4">
-      <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
+      <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
         <ArrowLeft className="size-4" />
       </button>
       <div>
@@ -188,11 +188,11 @@ export default function NewMaterialPage() {
       <section className={cardClass}>
         <div>
           <h2 className={labelClass}>파일 *</h2>
-          {file ? <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><FileText className="size-5" /></div>
+          {file ? <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><FileText className="size-5" /></div>
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{file.name}</p><p className="text-xs text-muted-foreground">{fileSize(file.size)}{file.size > MAX_BYTES ? ' · 1GB를 넘어요' : ''}</p></div>
             <button type="button" disabled={uploading} onClick={() => setFile(null)} aria-label="선택한 파일 제거" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><X className="size-4" /></button>
-          </div> : <label className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-9 text-center transition-colors ${dragging ? 'border-primary bg-primary/5' : 'border-border/40 hover:border-border/80 hover:bg-muted/10'}`}
+          </div> : <label className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-9 text-center transition-colors ${dragging ? 'border-primary bg-primary/5' : 'border-border/40 hover:border-border/80 hover:bg-muted/10'}`}
             onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); setFile(event.dataTransfer.files[0] ?? null); }}>
             <UploadCloud className={`size-7 ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
             <span className="text-sm font-bold">클릭해서 파일 선택하거나 여기에 놓으세요</span>

@@ -33,7 +33,7 @@ export default function HomeServiceGrid() {
           key={service.href}
           href={service.href}
           style={{ animationDelay: `${80 + index * 50}ms` }}
-          className="tilt-3d flex flex-col items-start gap-3 p-5 rounded-[28px] bg-card ring-1 ring-foreground/5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-[var(--ease-spring)] fill-mode-backwards focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
+          className="tilt-3d flex flex-col items-start gap-3 p-5 rounded-2xl bg-card ring-1 ring-foreground/5 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ease-[var(--ease-spring)] fill-mode-backwards focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2"
         >
           <span className={`flex items-center justify-center size-11 rounded-2xl ${SERVICE_COLORS[service.href] ?? FALLBACK_COLOR}`}>
             <service.icon className="size-5" strokeWidth={2} />

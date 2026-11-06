@@ -138,7 +138,7 @@ export default function DailyBriefing() {
   if (!loaded || !input) return null;
 
   return (
-    <section className="rounded-[28px] border border-primary/15 bg-card p-5 shadow-sm sm:p-6" aria-label="오늘 한눈에">
+    <section className="rounded-2xl border border-primary/15 bg-card p-5 shadow-sm sm:p-6" aria-label="오늘 한눈에">
       <div className="mb-3 flex items-center gap-2"><Sparkles className="size-5 text-primary" /><h2 className="text-lg font-semibold">오늘 한눈에</h2></div>
       {insight ? (
         <p className="text-sm leading-relaxed">{insight}</p>

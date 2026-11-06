@@ -18,7 +18,7 @@ function Command({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
+    <div className="flex items-center gap-2 rounded-2xl border bg-muted/30 px-3 py-2">
       <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm">{value}</code>
       <Button type="button" size="sm" variant="ghost" onClick={copy} className="shrink-0 gap-1.5 text-xs">
         <Copy className="size-3.5" /> 복사
@@ -137,7 +137,7 @@ export default function GpuSshGuidePage() {
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-bold">4. SSH 접속 설정하기</h2>
         <p className="text-sm text-muted-foreground">OpenSSL을 사용할 수 있는 터미널에서 아래 내용을 <code>~/.ssh/config</code>에 추가하세요. Windows에서는 Git Bash의 <code>~/.ssh/config</code>를 사용합니다. 기존 설정이 있다면 끝에 추가하고 덮어쓰지 마세요.</p>
-        <div className="overflow-hidden rounded-xl border bg-muted/30">
+        <div className="overflow-hidden rounded-2xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 설정 복사</Button>
           </div>
@@ -149,7 +149,7 @@ export default function GpuSshGuidePage() {
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-bold">교내망에서 접속할 때</h2>
         <p className="text-sm text-muted-foreground">학교 Wi-Fi·유선망에서 공개 주소가 연결되지 않으면 아래 설정을 추가하세요. 이 경로는 Tailscale 설정을 요구하지 않습니다. 교내 방화벽이 포트를 막으면 학교 네트워크 담당자의 확인이 필요합니다.</p>
-        <div className="overflow-hidden rounded-xl border bg-muted/30">
+        <div className="overflow-hidden rounded-2xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SCHOOL_SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 교내망 설정 복사</Button>
           </div>

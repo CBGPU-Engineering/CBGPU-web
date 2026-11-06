@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 const labelCls = "text-sm font-semibold text-muted-foreground mb-1.5 block";
-const inputCls = "h-9 w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
+const inputCls = "h-9 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
 
 type Runtime = ServerRuntime;
 type AccessScope = 'private' | 'school' | 'public';

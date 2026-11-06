@@ -67,7 +67,7 @@ export default function InstallAppNudge() {
           <X className="size-4" />
         </button>
         <div className="flex items-start gap-3">
-          <span className="flex items-center justify-center size-9 rounded-xl bg-primary/10 text-primary shrink-0">
+          <span className="flex items-center justify-center size-9 rounded-lg bg-primary/10 text-primary shrink-0">
             <Smartphone className="size-4.5" />
           </span>
           <div className="min-w-0">

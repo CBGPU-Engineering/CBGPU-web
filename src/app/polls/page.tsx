@@ -62,7 +62,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
         <div className="space-y-2">
           {q.options.map(o => (
             <label key={o.id} onClick={() => onChange(o.id)}
-              className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${value === o.id ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
+              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${value === o.id ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${value === o.id ? 'border-primary' : 'border-muted-foreground/30'}`}>
                 {value === o.id && <div className="w-2 h-2 rounded-full bg-primary" />}
               </div>
@@ -78,7 +78,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
             const chk = sel.includes(o.id);
             return (
               <label key={o.id} onClick={() => onChange(chk ? sel.filter(v => v !== o.id) : [...sel, o.id])}
-                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${chk ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
+                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${chk ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${chk ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
                   {chk && <span className="text-white text-xs font-semibold">✓</span>}
                 </div>
@@ -92,7 +92,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
       return <Input value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} placeholder="답변을 입력하세요" className="font-medium" />;
     case 'paragraph':
       return <textarea value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} rows={4} placeholder="답변을 입력하세요"
-        className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-xl outline-none focus:border-primary resize-none font-medium" />;
+        className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-lg outline-none focus:border-primary resize-none font-medium" />;
     case 'scale': {
       const { min = 1, max = 5, minLabel, maxLabel } = q.config;
       return (
@@ -100,7 +100,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => (
               <button key={n} onClick={() => onChange(n)}
-                className={`w-10 h-10 rounded-xl border font-semibold text-sm transition-all ${value === n ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>
+                className={`w-10 h-10 rounded-lg border font-semibold text-sm transition-all ${value === n ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>
             ))}
           </div>
           {(minLabel || maxLabel) && (
@@ -126,7 +126,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
       <div className="space-y-1.5">
         <p className="text-xs font-semibold text-muted-foreground">{total}개 응답</p>
         {texts.slice(0, 20).map((t, i) => (
-          <p key={i} className="text-sm bg-muted/30 border border-border/30 rounded-xl px-3 py-2 font-medium">{t}</p>
+          <p key={i} className="text-sm bg-muted/30 border border-border/30 rounded-lg px-3 py-2 font-medium">{t}</p>
         ))}
         {texts.length > 20 && <p className="text-xs text-muted-foreground">+{texts.length - 20}개 더...</p>}
       </div>
@@ -384,7 +384,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         <div className="flex gap-1.5 flex-wrap justify-center">
           {Q_TYPES.map(t => (
             <button key={t.id} onClick={() => addQ(t.id)}
-              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-xs font-semibold text-muted-foreground transition-all flex items-center gap-1.5">
+              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-lg text-xs font-semibold text-muted-foreground transition-all flex items-center gap-1.5">
               <t.icon className="size-3" />{t.label}
             </button>
           ))}
@@ -646,7 +646,7 @@ export default function PollsPage() {
 
       {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="투표 불러오는 중" /></div>
       : shown.length === 0 ? (
-        <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground font-medium">
+        <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground font-medium">
           {tab === 'active' ? '진행 중인 투표가 없습니다.' : '마감된 투표가 없습니다.'}
         </div>
       ) : (

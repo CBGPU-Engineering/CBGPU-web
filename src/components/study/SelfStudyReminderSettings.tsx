@@ -114,7 +114,7 @@ export default function SelfStudyReminderSettings() {
         </DialogHeader>
         <div className="min-w-0 space-y-4 py-2 sm:space-y-5">
           {!user || !profile?.student_id ? <p className="text-sm text-amber-600">로그인하고 학번을 등록하면 사용할 수 있습니다.</p> : null}
-          <label className="flex items-center justify-between gap-4 rounded-xl border p-4 cursor-pointer">
+          <label className="flex items-center justify-between gap-4 rounded-lg border p-4 cursor-pointer">
             <span><strong className="block text-sm">신청 알림 받기</strong><span className="text-xs text-muted-foreground">동의한 경우에만 발송합니다.</span></span>
             <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} className="peer sr-only" />
             <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-checked:[&>span]:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 peer-focus-visible:ring-offset-2">
