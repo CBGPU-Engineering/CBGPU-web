@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {ArrowUpRight,ListChecks,Printer as PrinterIcon} from 'lucide-react';
 import {useEquipmentKind} from '@/components/manufacturing/ManufacturingShell';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -641,7 +642,15 @@ export default function ManufacturingPage() {
         </div>
       )}
 
-      {equipmentKind==='print'&&panel==='overview'&&<section aria-label="Printing overview" className="grid gap-4 sm:grid-cols-3">{[{href:'requests',label:'Print requests',value:allPrintJobs.filter(j=>j.status==='pending').length+' pending'},{href:'queues',label:'Printer queues',value:printers.length+' printers'},{href:'filament',label:'Filament stock',value:filamentCatalog.length+' combinations'}].map(item=><Link key={item.href} href={'/manage/manufacturing/'+item.href} className="rounded-xl border bg-card p-5 space-y-2"><h2 className="font-semibold">{item.label}</h2><p>{item.value}</p></Link>)}</section>}
+      {equipmentKind==='print'&&panel==='overview'&&<section aria-label="Printing overview" className="grid gap-4 sm:grid-cols-3">{[
+        {href:'requests',label:'Print requests',count:allPrintJobs.filter(j=>j.status==='pending').length,unit:'pending',hint:'Review and approve requests',Icon:ListChecks,alert:true},
+        {href:'queues',label:'Printer queues',count:printers.length,unit:'printers',hint:'Status and queue per printer',Icon:PrinterIcon,alert:false},
+        {href:'filament',label:'Filament stock',count:filamentCatalog.length,unit:'combinations',hint:'Materials and colors in stock',Icon:Layers,alert:false},
+      ].map(({href,label,count,unit,hint,Icon,alert})=><Link key={href} href={'/manage/manufacturing/'+href} className="group flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
+        <div className="flex items-center justify-between"><span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" strokeWidth={1.7}/></span><ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true"/></div>
+        <div className="space-y-1"><h2 className="text-sm font-medium text-muted-foreground">{label}</h2><p className={'text-3xl font-semibold tabular-nums tracking-tight '+(alert&&count>0?'text-primary':'text-foreground')}>{count}<span className="ml-2 text-sm font-medium text-muted-foreground">{unit}</span></p></div>
+        <p className="text-sm text-muted-foreground">{hint}</p>
+      </Link>)}</section>}
 
       {/* ── 3D manager ── */}
       {tab === 'print_manager' && canManagePrint && (
