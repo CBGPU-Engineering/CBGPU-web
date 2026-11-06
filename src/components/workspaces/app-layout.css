@@ -13,3 +13,10 @@
 .cb-app .cb-deploy-header{padding-top:0;margin-top:0}
 .cb-app .cb-services-page header{padding-top:0}
 @media(min-width:761px){.cb-app .cb-workspace-content{padding-top:18px}}
+
+/* 관리 화면(앱): 하단 탭에 모든 메뉴를 넣고 가로로 스크롤한다. */
+.cb-bottom-nav.cb-admin-nav{display:flex;gap:2px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding-inline:8px}
+.cb-admin-nav::-webkit-scrollbar{display:none}
+.cb-admin-nav a{flex:0 0 auto;min-width:80px;padding-inline:10px;white-space:nowrap}
+.cb-app .cb-admin-app-body{background:var(--background)}
+.cb-app .cb-admin-app-body .portal{display:block}

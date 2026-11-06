@@ -6,6 +6,7 @@ import {usePathname,useRouter,useSearchParams} from 'next/navigation';
 import {useEffect,useState} from 'react';
 import {useTheme} from 'next-themes';
 import {Cpu,Server,Users,Printer,Files,KeyRound,Music,CalendarDays,Vote,ArrowUpRight,UserCircle,RefreshCw} from 'lucide-react';
+import AppAdminFrame from '@/components/admin/AppAdminFrame';
 import {useAuth} from '@/lib/useAuth';
 import {supabase} from '@/lib/supabase';
 import './admin/developer-shell.css';
@@ -23,11 +24,12 @@ const links=[
  {href:'/admin/polls',key:'polls',label:'Polls',Icon:Vote},
  {href:'/admin/manufacturing',key:'manufacturing',label:'Manufacturing',Icon:Printer},
 ];
-export default function AdminShell({children}:{children:React.ReactNode}){
+export default function AdminShell({children,appWebView=false}:{children:React.ReactNode;appWebView?:boolean}){
  const pathname=usePathname(),params=useSearchParams(),router=useRouter(),section=pathname==='/admin'?(params.get('section')||'gpu'):pathname.split('/')[2],current=links.find(x=>x.key===section);const {user,profile}=useAuth();const {theme,resolvedTheme,setTheme}=useTheme();const [mounted,setMounted]=useState(false);useEffect(()=>setMounted(true),[]);const [busy,setBusy]=useState(false),[error,setError]=useState('');
  useEffect(()=>{const onKey=(event:KeyboardEvent)=>{const el=event.target as HTMLElement;if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&!el.isContentEditable&&!['INPUT','TEXTAREA','SELECT'].includes(el.tagName)){event.preventDefault();window.dispatchEvent(new Event('admin:search-list'));}};window.addEventListener('keydown',onKey);return()=>window.removeEventListener('keydown',onKey)},[]);
  async function logout(){if(busy)return;setBusy(true);setError('');try{const r=await fetch('/portal/session',{cache:'no-store'});if(r.ok){const session=await r.json();const out=await fetch('/portal/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':session.csrf_token},body:'{}'});if(!out.ok)throw Error('Sign-out failed.')}await supabase.auth.signOut({scope:'local'});window.location.replace('/')}catch{setError('Could not sign out. Please try again.');setBusy(false)}}
- if(pathname==='/admin/m'||pathname.startsWith('/admin/m/'))return <>{children}</>; // 앱 전용 모바일 화면은 자체 하단 네비게이션을 쓰므로 사이드바 셸을 건너뛴다.
+ // 앱 웹뷰(서버가 UA의 '; wv)'로 판별)와 폰 전용 화면(/admin/m)은 사이드바 대신 앱 상단바·하단 탭 틀을 쓴다.
+ if(appWebView||pathname==='/admin/m'||pathname.startsWith('/admin/m/'))return <AppAdminFrame>{children}</AppAdminFrame>;
  return <div className="admin-developer-shell" data-theme={mounted?resolvedTheme:undefined}>
   <div className="portal">
    <aside className="sidebar" aria-label="Admin sidebar"><Link href="/admin" className="brand" aria-label="CBGPU Admin overview"><Image src="/img/cbgpu-logo.png" alt="" width={30} height={30}/><span className="brand-word">CBGPU<small>Admin</small></span></Link>
