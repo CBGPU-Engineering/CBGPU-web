@@ -287,10 +287,10 @@ export default function Profile() {
           className="relative shrink-0 group active:scale-95 transition-transform"
         >
           {profile?.avatar_url ? (
-            <Image src={profile.avatar_url} alt="프로필 사진" width={112} height={112} className="w-28 h-28 rounded-full object-cover ring-8 ring-primary/5" />
+            <Image src={profile.avatar_url} alt="프로필 사진" width={96} height={96} className="w-24 h-24 rounded-full object-cover ring-8 ring-primary/5" />
           ) : (
-            <div className="bg-primary/10 p-6 rounded-full ring-8 ring-primary/5">
-              <UserCircle2 className="w-16 h-16 text-primary" />
+            <div className="bg-primary/10 p-5 rounded-full ring-8 ring-primary/5">
+              <UserCircle2 className="w-14 h-14 text-primary" />
             </div>
           )}
           <span className="absolute bottom-0 right-0 flex items-center justify-center size-9 rounded-full bg-primary text-primary-foreground ring-4 ring-card shadow-md group-hover:scale-110 transition-transform">
@@ -307,7 +307,7 @@ export default function Profile() {
 
       <form
         onSubmit={(e) => { e.preventDefault(); updateProfile(); }}
-        className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-8"
+        className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm space-y-8"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
@@ -319,7 +319,7 @@ export default function Profile() {
               autoComplete="name"
               value={fullName}
               onChange={(e: any) => setFullName(e.target.value)}
-              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
+              className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
               placeholder="Your Name"
             />
           </div>
@@ -334,7 +334,7 @@ export default function Profile() {
               maxLength={4}
               value={studentId}
               onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
+              className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
               placeholder="2309"
             />
             <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
@@ -344,18 +344,18 @@ export default function Profile() {
         <Button
           type="submit"
           disabled={isUpdating}
-          className="w-full h-16 rounded-2xl font-semibold text-xl shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-3"
+          className="w-full h-12 rounded-lg font-semibold text-sm shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-2"
         >
-          {isUpdating ? <Loader2 className="size-6 animate-spin" /> : <Save className="size-6" />}
+          {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
           {isUpdating ? "Saving Changes..." : "Save Profile"}
         </Button>
       </form>
 
       <form
         onSubmit={(e) => { e.preventDefault(); changePassword(); }}
-        className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-8"
+        className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm space-y-8"
       >
-        <h2 className="text-xl font-semibold flex items-center gap-2">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
           <KeyRound className="size-5 text-primary" /> 비밀번호 변경
         </h2>
         <div className="space-y-6">
@@ -369,7 +369,7 @@ export default function Profile() {
               autoComplete="current-password"
               value={currentPassword}
               onChange={(e: any) => setCurrentPassword(e.target.value)}
-              className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
+              className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -384,7 +384,7 @@ export default function Profile() {
                 autoComplete="new-password"
                 value={newPassword}
                 onChange={(e: any) => setNewPassword(e.target.value)}
-                className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
+                className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -398,7 +398,7 @@ export default function Profile() {
                 autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e: any) => setConfirmPassword(e.target.value)}
-                className="bg-background border h-14 px-5 rounded-2xl font-bold text-lg focus:ring-primary transition-all"
+                className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
                 placeholder="••••••••"
               />
             </div>
@@ -408,16 +408,16 @@ export default function Profile() {
         <Button
           type="submit"
           disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
-          className="w-full h-16 rounded-2xl font-semibold text-xl shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-3"
+          className="w-full h-12 rounded-lg font-semibold text-sm shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-2"
         >
           {isChangingPassword ? <Loader2 className="size-6 animate-spin" /> : <KeyRound className="size-6" />}
           {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
         </Button>
       </form>
 
-      <div id="gpu-ssh-key" className="scroll-mt-24 bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-6">
+      <div id="gpu-ssh-key" className="scroll-mt-24 bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
             <KeyRound className="size-5 text-primary" /> GPU SSH 공개키
           </h2>
           <Button asChild variant="outline" size="sm"><a href="/dashboard/ssh-guide">SSH 사용법</a></Button>
@@ -437,8 +437,8 @@ export default function Profile() {
         </Button>
       </div>
 
-      <div className="bg-card ring-1 ring-foreground/5 p-6 rounded-2xl shadow-sm space-y-6">
-        <h2 className="text-xl font-semibold flex items-center gap-2">
+      <div className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm space-y-6">
+        <h2 className="text-lg font-semibold flex items-center gap-2">
           <BellRing className="size-5 text-primary" /> 알림 설정
         </h2>
         <p className="text-xs text-muted-foreground font-medium -mt-2">
@@ -476,18 +476,18 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="bg-card ring-1 ring-destructive/20 p-6 rounded-2xl shadow-sm space-y-6">
-        <h2 className="text-xl font-semibold flex items-center gap-2 text-destructive">
+      <div className="bg-card ring-1 ring-destructive/20 p-5 rounded-2xl shadow-sm space-y-6">
+        <h2 className="text-lg font-semibold flex items-center gap-2 text-destructive">
           <ShieldAlert className="size-5" /> 위험 구역
         </h2>
-        <p className="text-sm text-muted-foreground font-bold">
+        <p className="text-sm text-muted-foreground font-medium">
           계정을 삭제하면 로그인할 수 없게 되고 이름, 학번, 프로필 사진이 모두 삭제됩니다. 되돌릴 수 없습니다.
         </p>
         <Button
           type="button"
           variant="destructive"
           onClick={() => setDeleteOpen(true)}
-          className="h-14 rounded-2xl font-semibold text-base gap-3"
+          className="h-12 rounded-lg font-semibold text-sm gap-2"
         >
           <Trash2 className="size-5" /> 계정 삭제
         </Button>
