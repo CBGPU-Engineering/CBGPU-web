@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
 import Image from 'next/image';
+import {WorkspaceThemeControl} from '@/components/publications/WorkspaceTheme';
 import {usePathname,useRouter,useSearchParams} from 'next/navigation';
 import {useEffect,useState} from 'react';
 import {useTheme} from 'next-themes';
-import {Cpu,Server,Users,Printer,Files,KeyRound,Music,CalendarDays,Vote,ArrowUpRight,UserCircle,Moon,RefreshCw} from 'lucide-react';
+import {Cpu,Server,Users,Printer,Files,KeyRound,Music,CalendarDays,Vote,ArrowUpRight,UserCircle,RefreshCw} from 'lucide-react';
 import {useAuth} from '@/lib/useAuth';
 import {supabase} from '@/lib/supabase';
 import './admin/developer-shell.css';
@@ -33,7 +34,7 @@ export default function AdminShell({children}:{children:React.ReactNode}){
     <p className="nav-caption">Workspace</p><nav className="navigation" aria-label="Admin tools">{links.map(({href,key,label,Icon})=><Link key={key} href={href} aria-current={section===key?'page':undefined} className={'nav-item'+(section===key?' active':'')}><Icon className="icon" strokeWidth={1.6}/>{label}</Link>)}</nav>
     <div className="sidebar-bottom"><div className="account-summary"><p>{profile?.full_name||user?.email||'Administrator'}</p><p className="meta">{user?.email}</p></div><a href="https://cbgpu.com" target="_blank" rel="noopener noreferrer">Open cbgpu.com<ArrowUpRight className="icon"/></a><button type="button" className="button ghost" onClick={logout} disabled={busy}>{busy?'Signing out…':'Sign out'}</button></div>
    </aside>
-   <div className="workspace"><header className="workspace-header"><div className="breadcrumbs"><span>CBGPU</span><span className="breadcrumb-divider">/</span><strong>{current?.label||'Administration'}</strong><span className="environment-badge"><span className="status-dot healthy" aria-hidden="true"/>Production</span></div><div className="header-actions"><button type="button" className="account-button" aria-label="Account management" onClick={()=>router.push('/admin/accounts')}><UserCircle className="icon" strokeWidth={1.6}/><span>{profile?.full_name||'Account'}</span></button><label className="theme-control"><span className="sr-only">Color theme</span><Moon className="icon" strokeWidth={1.6}/><select aria-label="Color theme" value={mounted?theme||'system':'system'} onChange={e=>setTheme(e.target.value)}><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label><button type="button" className="button secondary" onClick={()=>window.location.reload()}><RefreshCw className="icon" strokeWidth={1.5}/>Refresh</button></div></header>
+   <div className="workspace"><header className="workspace-header"><div className="breadcrumbs"><span>CBGPU</span><span className="breadcrumb-divider">/</span><strong>{current?.label||'Administration'}</strong><span className="environment-badge"><span className="status-dot healthy" aria-hidden="true"/>Production</span></div><div className="header-actions"><button type="button" className="account-button" aria-label="Account management" onClick={()=>router.push('/admin/accounts')}><UserCircle className="icon" strokeWidth={1.6}/><span>{profile?.full_name||'Account'}</span></button><WorkspaceThemeControl/><button type="button" className="button secondary" onClick={()=>window.location.reload()}><RefreshCw className="icon" strokeWidth={1.5}/>Refresh</button></div></header>
     <main id="main-content" tabIndex={-1}>{error&&<p role="alert" className="notice error">{error}</p>}{children}</main><footer className="workspace-footer"><span>CBGPU Admin</span><span>admin.cbgpu.com</span></footer>
    </div>
   </div>
