@@ -1,8 +1,14 @@
 'use client';
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import {DropdownMenu as ModeMenu} from 'radix-ui';
+import {useTheme} from 'next-themes';
+import '@/components/workspaces/workspaces.css';
+import '@/components/workspaces/audience-design.css';
+import '@/components/workspaces/app-layout.css';
 import {useRouter,useSearchParams} from 'next/navigation';
-import {Check,Clock,Cpu,ExternalLink,Home,LayoutDashboard,MoreHorizontal,RefreshCw,UserPlus,X,ArrowLeft,Loader2} from 'lucide-react';
+import {Check,Clock,Cpu,ExternalLink,LayoutDashboard,MoreHorizontal,RefreshCw,UserPlus,X,ArrowLeft,Loader2,ChevronDown,GraduationCap,FlaskConical,ShieldCheck,Moon,Sun} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth} from '@/lib/useAuth';
 import {siteHref} from '@/lib/siteHref';
@@ -13,11 +19,11 @@ import {Button} from '@/components/ui/button';
  * admin.cbgpu.com 안에 있으므로 별도 인증 경계는 그대로이고, 표 대신 카드 + 하단 네비게이션으로 보여 준다.
  */
 type Tab='home'|'signups'|'gpu'|'more';
-const tabs:{id:Tab;label:string;Icon:typeof Home}[]=[{id:'home',label:'요약',Icon:LayoutDashboard},{id:'signups',label:'가입 승인',Icon:UserPlus},{id:'gpu',label:'GPU 예약',Icon:Cpu},{id:'more',label:'더보기',Icon:MoreHorizontal}];
+const tabs:{id:Tab;label:string;Icon:typeof LayoutDashboard}[]=[{id:'home',label:'요약',Icon:LayoutDashboard},{id:'signups',label:'가입 승인',Icon:UserPlus},{id:'gpu',label:'GPU 예약',Icon:Cpu},{id:'more',label:'더보기',Icon:MoreHorizontal}];
 const fmt=(v:string)=>new Date(v).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 export default function MobileAdminPage(){
  const {isLoading:authLoading,isAdmin}=useAuth();
- const router=useRouter(),params=useSearchParams();
+ const router=useRouter(),params=useSearchParams(),{resolvedTheme,setTheme}=useTheme();
  const param=params.get('tab') as Tab|null;
  const tab:Tab=param&&tabs.some(t=>t.id===param)?param:'home';
  const [profiles,setProfiles]=useState<any[]>([]),[reservations,setReservations]=useState<any[]>([]);
@@ -49,14 +55,28 @@ export default function MobileAdminPage(){
  if(authLoading)return <div className="flex min-h-dvh items-center justify-center"><LoadingSpinner label="권한 확인 중"/></div>;
  if(!isAdmin)return <div className="p-8 text-center text-sm text-muted-foreground">관리자만 볼 수 있습니다.</div>;
  const Count=({n}:{n:number})=>n>0?<span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">{n}</span>:null;
- return <div className="mx-auto flex min-h-dvh w-full max-w-xl flex-col bg-background text-foreground">
-  {/* 앱 상단바(.cb-app-header)와 같은 구성: 왼쪽 로고, 가운데 CBGPU/현재 공간 이름, 오른쪽 아이콘 버튼. 높이·여백·배경도 같다. */}
-  <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background" style={{minHeight:'calc(56px + env(safe-area-inset-top,0px))',padding:'calc(6px + env(safe-area-inset-top,0px)) 12px 6px'}}>
-   <a href={siteHref('https://app.cbgpu.com/')} aria-label="CBGPU 앱으로 돌아가기" className="grid h-11 w-[42px] shrink-0 place-items-center"><Image src="/img/cbgpu-logo.png" width={34} height={34} alt="CBGPU" className="object-contain"/></a>
-   <div className="pointer-events-none absolute left-1/2 grid -translate-x-1/2 gap-1 text-center"><small className="text-xs font-medium tracking-wide text-muted-foreground">CBGPU</small><strong className="text-sm font-semibold leading-tight">관리</strong></div>
-   <button type="button" aria-label="새로고침" disabled={loading} onClick={()=>void load()} className="grid h-11 w-[42px] shrink-0 place-items-center rounded-lg text-foreground hover:bg-muted"><RefreshCw className={`size-5 ${loading?'animate-spin':''}`}/></button>
-  </header>
-  <main id="main-content" className="flex-1 space-y-3 px-4 py-5" style={{paddingBottom:'calc(96px + env(safe-area-inset-bottom))'}}>
+ const appHome=(id:string)=>siteHref(`https://app.cbgpu.com/?mode=${id}`);
+ const spaceRows=[{id:'student',label:'학교생활',sub:'자습 · 시간표 · 급식 · 자료 공유',Icon:GraduationCap},{id:'researcher',label:'연구·개발',sub:'GPU · 웹사이트 배포 · 논문 · 제작',Icon:FlaskConical}];
+ // 학교생활·연구개발 화면과 같은 틀(.cb-workspace.cb-app)을 그대로 써서 상단바·하단 탭이 완전히 같게 보인다. "관리"는 같은 공간 전환 메뉴의 한 항목이다.
+ return <div className="cb-workspace cb-app" style={{'--workspace-accent':'var(--primary)'} as React.CSSProperties}>
+  <div className="cb-workspace-body">
+   <header className="cb-workspace-header cb-app-header">
+    <a href={appHome('student')} className="cb-app-brand" aria-label="CBGPU 앱 홈"><Image src="/img/cbgpu-logo.png" width={34} height={34} alt="CBGPU"/></a>
+    <ModeMenu.Root>
+     <ModeMenu.Trigger asChild><button className="cb-app-mode-trigger" aria-label="CBGPU 공간 선택" data-current-mode="admin"><span><small>CBGPU</small><strong>관리</strong></span><ChevronDown size={14}/></button></ModeMenu.Trigger>
+     <ModeMenu.Portal><ModeMenu.Content className="cb-app-mode-menu" align="center" sideOffset={12} collisionPadding={12}>
+      <div className="cb-mode-menu-heading"><strong>어떤 공간에서 시작할까요?</strong><span>같은 계정으로 자유롭게 바꿀 수 있어요.</span></div>
+      <ModeMenu.RadioGroup value="admin">
+       {spaceRows.map(({id,label,sub,Icon})=><ModeMenu.RadioItem key={id} value={id} onSelect={()=>window.location.assign(appHome(id))} className="cb-app-mode-option"><span className="cb-mode-option-icon"><Icon size={21}/></span><span><strong>{label}</strong><small>{sub}</small></span></ModeMenu.RadioItem>)}
+       <ModeMenu.RadioItem value="admin" className="cb-app-mode-option"><span className="cb-mode-option-icon" style={{color:'var(--primary)'}}><ShieldCheck size={21}/></span><span><strong>관리</strong><small>가입 승인 · GPU 예약</small></span><ModeMenu.ItemIndicator><Check size={17}/></ModeMenu.ItemIndicator></ModeMenu.RadioItem>
+      </ModeMenu.RadioGroup>
+      <ModeMenu.Separator className="cb-mode-menu-divider"/>
+      <ModeMenu.Item aria-label="화면 테마 전환" className="cb-mode-menu-theme" onSelect={()=>setTheme(resolvedTheme==='dark'?'light':'dark')}>{resolvedTheme==='dark'?<Sun size={17}/>:<Moon size={17}/>}<span>{resolvedTheme==='dark'?'라이트 모드로 전환':'다크 모드로 전환'}</span></ModeMenu.Item>
+     </ModeMenu.Content></ModeMenu.Portal>
+    </ModeMenu.Root>
+    <div className="cb-header-actions"><button aria-label="새로고침" disabled={loading} onClick={()=>void load()}><RefreshCw size={19} className={loading?'animate-spin':''}/></button></div>
+   </header>
+   <main id="main-content" className="cb-workspace-content" tabIndex={-1} style={{paddingBottom:'calc(110px + env(safe-area-inset-bottom))'}}>
    <h1 className="cb-page-title">{tabs.find(t=>t.id===tab)?.label}</h1>
    {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
    {loading&&!profiles.length&&!reservations.length?<div className="flex justify-center py-16"><LoadingSpinner label="불러오는 중"/></div>:<>
@@ -80,10 +100,8 @@ export default function MobileAdminPage(){
      <a href={siteHref('https://app.cbgpu.com/')} className="flex min-h-14 items-center justify-between rounded-2xl border border-border bg-card px-5 text-base font-semibold">CBGPU 앱으로 돌아가기 <ArrowLeft className="size-4 text-muted-foreground"/></a>
     </div>}
    </>}
-  </main>
-  {/* 앱 하단 탭(.cb-bottom-nav)과 같은 높이·여백·활성 표시 */}
-  <nav aria-label="관리 메뉴" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card" style={{padding:'8px 8px max(10px,env(safe-area-inset-bottom))'}}>
-   <div className="mx-auto grid max-w-xl grid-cols-4">{tabs.map(({id,label,Icon})=><button key={id} onClick={()=>go(id)} aria-current={tab===id?'page':undefined} className={`relative flex min-h-[52px] flex-col items-center justify-center gap-[5px] rounded-[17px] text-xs ${tab===id?'bg-primary/10 font-semibold text-primary':'text-muted-foreground'}`}><Icon className="size-5"/><span className="inline-flex items-center">{label}{id==='signups'&&<Count n={pendingProfiles.length}/>}{id==='gpu'&&<Count n={pendingReservations.length}/>}</span></button>)}</div>
-  </nav>
+   </main>
+  </div>
+  <nav className="cb-bottom-nav" aria-label="관리 메뉴" style={{gridTemplateColumns:'repeat(4,minmax(0,1fr))'}}>{tabs.map(({id,label,Icon})=><Link key={id} href={id==='home'?'/admin/m':`/admin/m?tab=${id}`} replace className={tab===id?'active':''} aria-current={tab===id?'page':undefined}><Icon size={20}/><span className="inline-flex items-center">{label}{id==='signups'&&<Count n={pendingProfiles.length}/>}{id==='gpu'&&<Count n={pendingReservations.length}/>}</span></Link>)}</nav>
  </div>;
 }
