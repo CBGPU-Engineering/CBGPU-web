@@ -7,7 +7,8 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata, extractComciganFields } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools } from './comciganSource';
+import {decodeComciganPayload} from './comciganPayload';
 
 const ENTRY_URL = 'http://컴시간학생.kr';
 const SCHOOL_KEYWORD = '충북과학고';
@@ -20,6 +21,7 @@ const DATA_TTL = 5 * 60 * 1000; // 실시간 변경 반영을 위해 짧게 유�
 
 interface SiteMeta {
   baseUrl: string;
+  transport: ReturnType<typeof extractComciganTransport>;
   extractCode: string; // e.g. "/36179?17384l"
   scPrefix: string;    // e.g. "73629_"
   scSuffix: string;    // e.g. "1"
@@ -77,7 +79,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource) };
+  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -88,12 +90,12 @@ async function getMeta(forceRefresh = false): Promise<SiteMeta> {
 }
 
 async function searchSchool(meta: SiteMeta, keyword: string) {
-  const url = meta.baseUrl + meta.extractCode + hexEncodeEucKr(keyword);
-  const body = await fetchUtf8(url);
+  const url = meta.baseUrl + meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix;
+  const body = decodeComciganPayload(await fetchUtf8(url),meta.transport.key);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
-  const list = JSON.parse(jsonStr)?.['학교검색'] as [number, string, string, number][] | undefined;
+  const list = JSON.parse(jsonStr)?.['학교검색'];
   if (!list?.length) throw new Error('검색된 학교가 없습니다');
-  return list.map(([, region, name, code]) => ({ region, name, code }));
+  return extractComciganSchools(list,meta.transport.schoolCodeDivisor);
 }
 
 async function resolveSchoolCode(meta: SiteMeta): Promise<number> {
@@ -107,10 +109,10 @@ async function resolveSchoolCode(meta: SiteMeta): Promise<number> {
 
 async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData> {
   const path = meta.extractCode.split('?')[0];
-  const payload = `${meta.scPrefix}${schoolCode}_0_${meta.scSuffix}`;
+  const payload = `${meta.scPrefix}${schoolCode}_0_${meta.scSuffix}${meta.transport.suffix}`;
   const b64 = Buffer.from(payload).toString('base64');
   const url = meta.baseUrl + path + '?' + b64;
-  const body = await fetchUtf8(url);
+  const body = decodeComciganPayload(await fetchUtf8(url),meta.transport.key);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {

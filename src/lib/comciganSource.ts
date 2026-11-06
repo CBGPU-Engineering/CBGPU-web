@@ -50,3 +50,24 @@ export function extractComciganFields(html: string) {
   }
   return fields;
 }
+
+/** Read public transport constants from the viewer without executing its code. */
+export function extractComciganTransport(html:string){
+ const source=decodeComciganSource(html);
+ const encrypted=/btoa\([^;]{0,300}['_"]_enc2['"]\)/.test(source);
+ const key=source.match(/CryptoJS\.enc\.Hex\.parse\(['"]([\da-f]{64})['"]\)/i)?.[1];
+ const divisor=source.match(/Math\.floor\(학교명단\[i\]\[0\]\/(\d+)\)\+2/)?.[1];
+ if(encrypted&&!key)throw new Error('시간표 제공처의 응답 해석 정보를 찾지 못했습니다');
+ return {suffix:encrypted?'_enc2':'',key:key||null,schoolCodeDivisor:divisor?Number(divisor):null};
+}
+
+export function extractComciganSchools(value:unknown,divisor:number|null){
+ if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
+ return value.map(row=>{
+  if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
+  const index=divisor?Math.floor(Number(row[0])/divisor)+2:3;
+  const code=row[index];
+  if(!Number.isInteger(index)||index<3||!Number.isSafeInteger(code)||code<=0)throw new Error('시간표 제공처의 학교 코드가 올바르지 않습니다');
+  return {region:row[1],name:row[2],code:code as number};
+ });
+}
