@@ -40,11 +40,11 @@ export default function Login() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-[28px] shadow-lg">
-      <h2 className="text-3xl font-black mb-6 text-center text-foreground italic uppercase tracking-tighter">로그인</h2>
+    <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg">
+      <h1 className="cb-page-title mb-6 text-center">로그인</h1>
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="login-email" className="text-xs font-black uppercase text-muted-foreground ml-1">이메일</label>
+          <label htmlFor="login-email" className="text-xs font-semibold text-muted-foreground ml-1">이메일</label>
           <Input
             id="login-email" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} inputMode="email" type="email"
             placeholder="이메일 주소를 입력하세요"
@@ -55,8 +55,8 @@ export default function Login() {
         </div>
         <div className="space-y-1">
           <div className="flex items-center justify-between ml-1">
-            <label htmlFor="login-password" className="text-xs font-black uppercase text-muted-foreground">비밀번호</label>
-            <Link href="/auth/forgot-password" className="text-xs font-black uppercase text-primary hover:underline">비밀번호 찾기</Link>
+            <label htmlFor="login-password" className="text-xs font-semibold text-muted-foreground">비밀번호</label>
+            <Link href="/auth/forgot-password" className="text-xs font-semibold text-primary hover:underline">비밀번호 찾기</Link>
           </div>
           <div className="relative"><Input
             id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'}
@@ -68,7 +68,7 @@ export default function Login() {
         </div>
         <Button
           type="submit" disabled={isSubmitting}
-          className="w-full h-11 bg-primary px-4 py-2 text-base font-semibold transition-all active:scale-95"
+          className="w-full h-12 bg-primary px-4 text-sm font-semibold transition-all active:scale-95"
         >
           {isSubmitting ? "로그인 중…" : "로그인"}
         </Button>

@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-6 py-16 space-y-10">
       <div className="space-y-2">
-        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">CBGPU</p>
+        <p className="text-xs font-semibold text-muted-foreground">CBGPU</p>
         <h1 className="cb-page-title">개인정보처리방침</h1>
         <p className="text-sm text-muted-foreground">시행일: 2026년 9월 10일</p>
       </div>
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <h2 className="text-lg font-black tracking-tight">{title}</h2>
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
       <div className="text-sm leading-relaxed text-foreground/80 space-y-2">{children}</div>
     </div>
   );

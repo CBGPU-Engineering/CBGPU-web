@@ -17,7 +17,7 @@ type Mode = 'beginner' | 'advanced';
 type FilamentEntry = { id: string; material: string; color: string; stock_count: number };
 type FileEntry = { file: File; quantity: string; plateCount: string; filamentId: string; convertedFrom?: string };
 
-const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block';
+const labelCls = 'text-xs font-semibold   text-muted-foreground mb-1 block';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 export default function NewPrintJobPage() {
@@ -179,7 +179,7 @@ export default function NewPrintJobPage() {
         <div className="bg-muted p-8 rounded-full">
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">Login</Button>
+        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">Login</Button>
       </div>
     );
   }
@@ -200,17 +200,17 @@ export default function NewPrintJobPage() {
       </div>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><Printer className="size-3.5" /> 사용할 프린터 선택 *</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Printer className="size-3.5" /> 사용할 프린터 선택 *</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {printers.map(p => (
             <button
               key={p.id}
               onClick={() => setPrinterId(p.id)}
               className={`flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 text-center transition-all ${
-                printerId === p.id ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
-              }`}
+ printerId === p.id ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
+ }`}
             >
-              <span className="font-black text-sm">{p.name}</span>
+              <span className="font-semibold text-sm">{p.name}</span>
               <Badge variant={p.status === 'printing' ? 'success' : p.status === 'maintenance' ? 'danger' : p.status === 'done' ? 'warning' : 'muted'}>
                 {p.status === 'printing' ? '사용중' : p.status === 'maintenance' ? '고장' : p.status === 'done' ? '회수대기' : '대기'}
               </Badge>
@@ -222,29 +222,29 @@ export default function NewPrintJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">모드 선택</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground">모드 선택</h2>
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setMode('beginner')}
             className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-              mode === 'beginner' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
-            }`}
+ mode === 'beginner' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
+ }`}
           >
             <GraduationCap className={`size-5 mt-0.5 ${mode === 'beginner' ? 'text-primary' : ''}`} />
             <div>
-              <p className="font-black text-sm uppercase tracking-tight">초보자</p>
+              <p className="font-semibold text-sm tracking-tight">초보자</p>
               <p className="text-xs opacity-60 mt-0.5">슬라이싱 전 원본 3mf만 올리면 담당자가 슬라이싱까지 진행</p>
             </div>
           </button>
           <button
             onClick={() => setMode('advanced')}
             className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-              mode === 'advanced' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
-            }`}
+ mode === 'advanced' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
+ }`}
           >
             <Wrench className={`size-5 mt-0.5 ${mode === 'advanced' ? 'text-primary' : ''}`} />
             <div>
-              <p className="font-black text-sm uppercase tracking-tight">고급자</p>
+              <p className="font-semibold text-sm tracking-tight">고급자</p>
               <p className="text-xs opacity-60 mt-0.5">본인 컴퓨터의 밤부스튜디오로 직접 슬라이싱한 완료 파일을 올려서 출력만 요청</p>
             </div>
           </button>
@@ -252,7 +252,7 @@ export default function NewPrintJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
         <Input
           placeholder="예: 동아리 전시용 모형, 개인 프로젝트 부품 등"
           value={purpose}
@@ -262,7 +262,7 @@ export default function NewPrintJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+        <h2 className="text-xs font-semibold text-muted-foreground">
           {mode === 'beginner' ? '모델 파일 *' : '슬라이싱 완료 파일 *'}
         </h2>
         <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-xl py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
@@ -282,7 +282,7 @@ export default function NewPrintJobPage() {
             {fileEntries.map((entry, i) => (
               <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1.5 text-xs font-black truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
                   <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
                 </div>
                 {entry.convertedFrom && (
@@ -324,7 +324,7 @@ export default function NewPrintJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">담당자 지정</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground">담당자 지정</h2>
         {printerId == null ? (
           <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-xl py-4 text-center">
             프린터를 먼저 선택하면 그 프린터의 담당자를 고를 수 있습니다.
@@ -351,8 +351,8 @@ export default function NewPrintJobPage() {
       </section>
 
       <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
-        <Button className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={handleSubmit} disabled={submitting}>
+        <Button variant="outline" className="flex-1 font-semibold text-xs h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
+        <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting}>
           {submitting ? '신청 중…' : fileEntries.length > 1 ? `${fileEntries.length}건 신청하기` : '신청하기'}
         </Button>
       </div>

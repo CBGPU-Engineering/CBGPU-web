@@ -158,7 +158,7 @@ export default function MealPage() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-1">
-        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">충북과학고 학교급식</p>
+        <p className="text-xs font-semibold text-muted-foreground">충북과학고 학교급식</p>
         <h1 className="cb-page-title">오늘 뭐 나와요?</h1>
       </div>
 
@@ -167,8 +167,8 @@ export default function MealPage() {
           <button
             onClick={toggleMealAlarm}
             className={`flex items-center justify-center size-10 rounded-xl shrink-0 transition-colors ${
-              alarmOn ? 'bg-primary/15 text-primary' : 'bg-foreground/5 text-muted-foreground'
-            }`}
+ alarmOn ? 'bg-primary/15 text-primary' : 'bg-foreground/5 text-muted-foreground'
+ }`}
             aria-pressed={alarmOn}
           >
             {alarmOn ? <Bell className="size-5" /> : <BellOff className="size-5" />}
@@ -191,7 +191,7 @@ export default function MealPage() {
         </button>
 
         <div key={date} className={`flex-1 text-center overflow-hidden ${slideDir === 'left' ? 'animate-in slide-in-from-right-8' : 'animate-in slide-in-from-left-8'} fade-in duration-300 ease-[var(--ease-spring)]`}>
-          <p className="text-2xl font-black tracking-tight">{full} <span className="text-muted-foreground font-bold">{dow}</span></p>
+          <p className="text-2xl font-semibold tracking-tight">{full} <span className="text-muted-foreground font-bold">{dow}</span></p>
           <p className="text-xs font-bold text-muted-foreground/70">{year}</p>
         </div>
 
@@ -206,7 +206,7 @@ export default function MealPage() {
       {date !== today && (
         <button
           onClick={() => { setSlideDir(date > today ? 'right' : 'left'); setDate(today); }}
-          className="block mx-auto text-xs font-black uppercase tracking-widest text-primary active:scale-95 transition-transform"
+          className="block mx-auto text-xs font-semibold text-primary active:scale-95 transition-transform"
         >
           ← 오늘로 돌아가기
         </button>
@@ -240,7 +240,7 @@ export default function MealPage() {
                     <span className={`flex items-center justify-center size-11 rounded-2xl ${TYPE_COLOR[meal.type] ?? 'bg-primary/10 text-primary'}`}>
                       <Icon className="size-5" strokeWidth={2} />
                     </span>
-                    <p className="font-black text-lg tracking-tight">{meal.type}</p>
+                    <p className="font-semibold text-lg tracking-tight">{meal.type}</p>
                   </div>
                   {meal.calories && (
                     <span className="text-xs font-bold text-muted-foreground">{meal.calories}</span>
@@ -267,7 +267,7 @@ function Empty({ icon, title, sub }: { icon: React.ReactNode; title: string; sub
   return (
     <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground">
       {icon}
-      <p className="font-black text-base">{title}</p>
+      <p className="font-semibold text-base">{title}</p>
       {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
     </div>
   );

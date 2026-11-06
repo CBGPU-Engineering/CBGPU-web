@@ -124,7 +124,7 @@ export default function MaterialsPage() {
         <h1 className="cb-page-title">자료 공유</h1>
         <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
       </div>
-      <Button asChild size="sm" className="shrink-0 gap-1.5 font-black text-xs active:scale-95">
+      <Button asChild size="sm" className="shrink-0 gap-1.5 font-semibold text-xs active:scale-95">
         <Link href="/materials/new"><Plus className="size-3.5" />새 자료</Link>
       </Button>
     </div>
@@ -142,7 +142,7 @@ export default function MaterialsPage() {
       {[null, ...availableTags].map(tag => {
         const active = selectedTag === tag;
         return <button key={tag ?? '__all'} type="button" aria-pressed={active} onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-black transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
+          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
           {tag ? `#${tag}` : '전체'}
         </button>;
       })}
@@ -160,7 +160,7 @@ export default function MaterialsPage() {
             <div className="flex min-w-0 items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-black leading-tight" title={material.title}>{material.title}</h2>
+                <h2 className="truncate text-sm font-semibold leading-tight" title={material.title}>{material.title}</h2>
                 <p className="mt-1 truncate text-xs text-muted-foreground" title={material.file_name}>{material.file_name}</p>
               </div>
               {mine && <button type="button" disabled={busy} aria-label={`${material.title} 삭제`} onClick={() => setDeleteTarget(material)}
@@ -174,7 +174,7 @@ export default function MaterialsPage() {
             </div>
             <div className="mt-auto flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
-              <Button variant="outline" size="sm" className="gap-1.5 font-black text-xs" disabled={busy} onClick={() => void download(material)}>
+              <Button variant="outline" size="sm" className="gap-1.5 font-semibold text-xs" disabled={busy} onClick={() => void download(material)}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}받기
               </Button>
             </div>
@@ -182,10 +182,10 @@ export default function MaterialsPage() {
         })}
       </div> : <div className="rounded-3xl border-2 border-dashed bg-muted/10 px-4 py-16 text-center text-muted-foreground">
         <FolderOpen className="mx-auto mb-4 size-12 opacity-20" />
-        <p className="text-sm font-black">{filtering ? '조건에 맞는 자료가 없어요' : '아직 공유된 자료가 없어요'}</p>
+        <p className="text-sm font-semibold">{filtering ? '조건에 맞는 자료가 없어요' : '아직 공유된 자료가 없어요'}</p>
         {filtering
           ? <Button variant="ghost" size="sm" className="mt-3 text-xs font-bold" onClick={() => { setQuery(''); setSelectedTag(null); setTab('all'); }}>필터 초기화</Button>
-          : <Button asChild size="sm" className="mt-4 gap-1.5 font-black text-xs"><Link href="/materials/new"><Plus className="size-3.5" />첫 자료 올리기</Link></Button>}
+          : <Button asChild size="sm" className="mt-4 gap-1.5 font-semibold text-xs"><Link href="/materials/new"><Plus className="size-3.5" />첫 자료 올리기</Link></Button>}
       </div>}
 
     {hasMore && <div className="text-center"><Button variant="outline" disabled={loading} onClick={() => void load(materials.length)}>{loading && <Loader2 className="size-4 animate-spin" />}자료 더 보기</Button></div>}

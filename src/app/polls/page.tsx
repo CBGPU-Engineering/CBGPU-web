@@ -80,7 +80,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
               <label key={o.id} onClick={() => onChange(chk ? sel.filter(v => v !== o.id) : [...sel, o.id])}
                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${chk ? 'border-primary bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}>
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all ${chk ? 'border-primary bg-primary' : 'border-muted-foreground/30'}`}>
-                  {chk && <span className="text-white text-xs font-black">✓</span>}
+                  {chk && <span className="text-white text-xs font-semibold">✓</span>}
                 </div>
                 <span className="text-sm font-medium">{o.text}</span>
               </label>
@@ -100,7 +100,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => (
               <button key={n} onClick={() => onChange(n)}
-                className={`w-10 h-10 rounded-xl border font-black text-sm transition-all ${value === n ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>
+                className={`w-10 h-10 rounded-xl border font-semibold text-sm transition-all ${value === n ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>
             ))}
           </div>
           {(minLabel || maxLabel) && (
@@ -124,7 +124,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const texts = qAnswers.filter(Boolean).map(v => typeof v === 'string' ? v : JSON.stringify(v));
     return (
       <div className="space-y-1.5">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}개 응답</p>
+        <p className="text-xs font-semibold text-muted-foreground">{total}개 응답</p>
         {texts.slice(0, 20).map((t, i) => (
           <p key={i} className="text-sm bg-muted/30 border border-border/30 rounded-xl px-3 py-2 font-medium">{t}</p>
         ))}
@@ -139,7 +139,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const { min = 1, max = 5 } = q.config;
     return (
       <div className="space-y-2">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}개 응답 · 평균 <span className="text-primary">{avg}</span></p>
+        <p className="text-xs font-semibold text-muted-foreground">{total}개 응답 · 평균 <span className="text-primary">{avg}</span></p>
         <div className="flex gap-2">
           {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => {
             const cnt = nums.filter(v => v === n).length;
@@ -149,7 +149,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
                 <div className="w-full bg-muted rounded-full h-20 flex items-end overflow-hidden">
                   <div className="w-full bg-primary rounded-full transition-all duration-700" style={{ height: `${pct}%` }} />
                 </div>
-                <span className="text-xs font-black text-muted-foreground">{n}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{n}</span>
                 <span className="text-xs text-muted-foreground/60">{pct}%</span>
               </div>
             );
@@ -167,7 +167,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
   });
   return (
     <div className="space-y-2">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}개 응답</p>
+      <p className="text-xs font-semibold text-muted-foreground">{total}개 응답</p>
       {q.options.map(o => {
         const cnt = countMap[o.id] ?? 0;
         const pct = total ? Math.round(cnt / total * 100) : 0;
@@ -209,9 +209,9 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           <button onClick={e => { e.stopPropagation(); onMove(1); }} disabled={idx === total - 1} className="text-muted-foreground/40 hover:text-muted-foreground disabled:opacity-20"><ChevronDown className="size-3" /></button>
         </div>
         <Icon className="size-3.5 text-muted-foreground shrink-0" />
-        <span className="text-xs text-muted-foreground font-black uppercase tracking-widest shrink-0">{idx + 1}.</span>
+        <span className="text-xs text-muted-foreground font-semibold shrink-0">{idx + 1}.</span>
         <span className="text-sm font-bold flex-1 truncate">{q.title || '(제목 없음)'}</span>
-        {q.required && <span className="text-xs text-destructive font-black">필수</span>}
+        {q.required && <span className="text-xs text-destructive font-semibold">필수</span>}
         <button onClick={e => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground/40 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
       </div>
 
@@ -221,7 +221,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           <div className="flex gap-1 flex-wrap">
             {Q_TYPES.map(t => (
               <button key={t.id} onClick={() => onChange({ ...q, type: t.id, config: t.id === 'scale' ? { min: 1, max: 5, minLabel: '매우 낮음', maxLabel: '매우 높음' } : {} })}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 ${q.type === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1 ${q.type === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
                 <t.icon className="size-2.5" />{t.label}
               </button>
             ))}
@@ -233,24 +233,24 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           {/* options */}
           {hasOptions && (
             <div className="space-y-1.5">
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">선택지</p>
+              <p className="text-xs font-semibold text-muted-foreground">선택지</p>
               {q.options.map((o, i) => (
                 <div key={o.id} className="flex gap-2">
                   <Input value={o.text} onChange={e => setOptText(o.id, e.target.value)} placeholder={`선택지 ${i + 1}`} className="md:text-sm" />
                   {q.options.length > 1 && <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={() => delOption(o.id)}><X className="size-3" /></Button>}
                 </div>
               ))}
-              <Button variant="outline" size="sm" onClick={addOption} className="w-full font-black text-xs gap-1.5"><Plus className="size-3" />선택지 추가</Button>
+              <Button variant="outline" size="sm" onClick={addOption} className="w-full font-semibold text-xs gap-1.5"><Plus className="size-3" />선택지 추가</Button>
             </div>
           )}
 
           {/* scale config */}
           {isScale && (
             <div className="grid grid-cols-2 gap-2">
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">최솟값</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">최댓값</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">최솟값 라벨</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">최댓값 라벨</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-semibold text-muted-foreground mb-1">최솟값</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-semibold text-muted-foreground mb-1">최댓값</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-semibold text-muted-foreground mb-1">최솟값 라벨</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-semibold text-muted-foreground mb-1">최댓값 라벨</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
             </div>
           )}
 
@@ -258,7 +258,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
             {/* conditional show */}
             {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type) && p.options.length).length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground font-black uppercase tracking-widest">표시 조건:</span>
+                <span className="text-xs text-muted-foreground font-semibold">표시 조건:</span>
                 <select className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                   value={q.config.showIf?.questionId ?? ''}
                   onChange={e => onChange({ ...q, config: { ...q.config, showIf: e.target.value ? { questionId: e.target.value, value: '' } : undefined } })}>
@@ -284,7 +284,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                 className={`w-8 h-4 rounded-full relative transition-all ${q.required ? 'bg-primary' : 'bg-muted'}`}>
                 <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${q.required ? 'left-4' : 'left-0.5'}`} />
               </div>
-              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">필수</span>
+              <span className="text-xs font-semibold text-muted-foreground">필수</span>
             </label>
           </div>
         </div>
@@ -353,18 +353,18 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
-        <h2 className="font-black text-xl uppercase tracking-tighter">{poll ? '투표 편집' : '새 투표 만들기'}</h2>
+        <h2 className="font-semibold text-xl tracking-tight">{poll ? '투표 편집' : '새 투표 만들기'}</h2>
       </div>
       <div className="space-y-3 p-5 border border-border/50 rounded-2xl bg-card">
-        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="투표 제목 *" className="text-lg font-black" />
+        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="투표 제목 *" className="text-lg font-semibold" />
         <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder="설명 (선택)" className="font-medium text-muted-foreground" />
         <div className="flex gap-3 flex-wrap">
-          <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">마감일</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
+          <div><p className="text-xs font-semibold text-muted-foreground mb-1">마감일</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
           <label className="flex items-center gap-2 mt-5 cursor-pointer">
             <div onClick={() => setShowRes(v => !v)} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
               <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
             </div>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">결과 공개</span>
+            <span className="text-xs font-semibold text-muted-foreground">결과 공개</span>
           </label>
         </div>
       </div>
@@ -380,11 +380,11 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       </div>
 
       <div className="p-4 border-2 border-dashed border-border/40 rounded-2xl">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 text-center">질문 추가</p>
+        <p className="text-xs font-semibold text-muted-foreground mb-3 text-center">질문 추가</p>
         <div className="flex gap-1.5 flex-wrap justify-center">
           {Q_TYPES.map(t => (
             <button key={t.id} onClick={() => addQ(t.id)}
-              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-xs font-black uppercase tracking-widest text-muted-foreground transition-all flex items-center gap-1.5">
+              className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-xs font-semibold text-muted-foreground transition-all flex items-center gap-1.5">
               <t.icon className="size-3" />{t.label}
             </button>
           ))}
@@ -392,8 +392,8 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       </div>
 
       <div className="flex gap-2 justify-end">
-        <Button variant="outline" onClick={onBack} className="font-black uppercase text-xs">취소</Button>
-        <Button onClick={save} disabled={saving} className="font-black uppercase text-xs">{saving ? '저장 중...' : '저장하기'}</Button>
+        <Button variant="outline" onClick={onBack} className="font-semibold text-xs">취소</Button>
+        <Button onClick={save} disabled={saving} className="font-semibold text-xs">{saving ? '저장 중...' : '저장하기'}</Button>
       </div>
     </div>
   );
@@ -434,7 +434,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
-          <h2 className="font-black text-xl tracking-tighter">{poll.title}</h2>
+          <h2 className="font-semibold text-xl tracking-tight">{poll.title}</h2>
           {poll.description && <p className="text-sm text-muted-foreground mt-0.5">{poll.description}</p>}
           {poll.ends_at && <p className="text-xs text-muted-foreground font-medium mt-0.5">마감: {fmtDate(poll.ends_at)}</p>}
         </div>
@@ -444,20 +444,20 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
         {visibleQs.map((q, i) => (
           <div key={q.id} className="p-5 border border-border/50 rounded-2xl bg-card space-y-3">
             <div>
-              <p className="font-black text-sm leading-snug">
+              <p className="font-semibold text-sm leading-snug">
                 {i + 1}. {q.title}
                 {q.required && <span className="text-destructive ml-1">*</span>}
               </p>
               {q.description && <p className="text-xs text-muted-foreground mt-0.5">{q.description}</p>}
             </div>
             {!closed && <QuestionInput q={q} value={answers[q.id] ?? null} onChange={v => setAnswers(a => ({ ...a, [q.id]: v }))} />}
-            {closed && <p className="text-sm text-muted-foreground italic">마감된 투표입니다.</p>}
+            {closed && <p className="text-sm text-muted-foreground">마감된 투표입니다.</p>}
           </div>
         ))}
       </div>
 
       {!closed && (
-        <Button onClick={submit} disabled={submitting} className="w-full font-black uppercase tracking-widest h-12">
+        <Button onClick={submit} disabled={submitting} className="w-full font-semibold h-12">
           {submitting ? '제출 중...' : '제출하기'}
         </Button>
       )}
@@ -518,7 +518,7 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
-          <h2 className="font-black text-xl tracking-tighter">{poll.title} — 결과</h2>
+          <h2 className="font-semibold text-xl tracking-tight">{poll.title} — 결과</h2>
           <p className="text-xs text-muted-foreground font-medium mt-0.5">총 {resCount}명 응답</p>
         </div>
       </div>
@@ -526,7 +526,7 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
       <div className="space-y-4">
         {questions.map((q, i) => (
           <div key={q.id} className="p-5 border border-border/50 rounded-2xl bg-card space-y-3">
-            <p className="font-black text-sm">{i + 1}. {q.title}</p>
+            <p className="font-semibold text-sm">{i + 1}. {q.title}</p>
             <ResultChart q={q} allAnswers={allAnswers} />
           </div>
         ))}
@@ -588,7 +588,7 @@ export default function PollsPage() {
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">DB 설정 필요</h2>
+      <h2 className="font-semibold text-xl tracking-tight">DB 설정 필요</h2>
       <p className="text-sm text-muted-foreground">
         <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_polls_migration.sql</code>을
         Supabase SQL Editor에서 실행해 주세요.
@@ -632,7 +632,7 @@ export default function PollsPage() {
           <h1 className="cb-page-title">투표</h1>
           <p className="cb-page-sub mt-1">학교 행사 · 대회 · 설문</p>
         </div>
-        {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-black uppercase tracking-widest gap-2"><Plus className="size-4" />투표 만들기</Button>}
+        {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-semibold gap-2"><Plus className="size-4" />투표 만들기</Button>}
       </div>
 
       <SegmentedTabs
@@ -664,7 +664,7 @@ export default function PollsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-black text-sm leading-tight">{poll.title}</h3>
+                      <h3 className="font-semibold text-sm leading-tight">{poll.title}</h3>
                       {voted  && <Badge variant="success" icon={<CheckCircle2 className="size-2.5" />}>참여완료</Badge>}
                       {closed && <Badge variant="muted" icon={<Lock className="size-2.5" />}>마감</Badge>}
                     </div>

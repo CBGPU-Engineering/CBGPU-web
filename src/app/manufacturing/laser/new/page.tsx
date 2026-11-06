@@ -15,7 +15,7 @@ import { ArrowLeft, ShieldAlert, UploadCloud, Target, X, FileBox, RefreshCw } fr
 type CatalogEntry = { id: string; material: 'mdf' | 'acrylic'; thickness_mm: number };
 type FileEntry = { file: File; quantity: string; catalogId: string; convertedFrom?: string };
 
-const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block';
+const labelCls = 'text-xs font-semibold   text-muted-foreground mb-1 block';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 export default function NewLaserJobPage() {
@@ -145,7 +145,7 @@ export default function NewLaserJobPage() {
         <div className="bg-muted p-8 rounded-full">
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">Login</Button>
+        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">Login</Button>
       </div>
     );
   }
@@ -166,7 +166,7 @@ export default function NewLaserJobPage() {
       </div>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
         <Input
           placeholder="예: 동아리 전시용 케이스, 개인 프로젝트 부품 등"
           value={purpose}
@@ -176,7 +176,7 @@ export default function NewLaserJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">설계 파일 * — 여러 개 선택 가능</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground">설계 파일 * — 여러 개 선택 가능</h2>
 
         {catalog.length === 0 ? (
           <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-xl py-6 text-center">
@@ -201,7 +201,7 @@ export default function NewLaserJobPage() {
                 {fileEntries.map((entry, i) => (
                   <div key={i} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="flex items-center gap-1.5 text-xs font-black truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
+                      <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
                       <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
                     </div>
                     {entry.convertedFrom && (
@@ -233,7 +233,7 @@ export default function NewLaserJobPage() {
       </section>
 
       <section className={cardCls}>
-        <h2 className="text-xs font-black uppercase tracking-widest text-muted-foreground">담당자 지정</h2>
+        <h2 className="text-xs font-semibold text-muted-foreground">담당자 지정</h2>
         <div className="flex items-center gap-2">
           <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="아무나 (자동 배정) — 이름/학번 검색" />
         </div>
@@ -251,8 +251,8 @@ export default function NewLaserJobPage() {
       </section>
 
       <div className="flex gap-3">
-        <Button variant="outline" className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
-        <Button className="flex-1 font-black text-xs uppercase tracking-widest h-11" onClick={handleSubmit} disabled={submitting || catalog.length === 0}>
+        <Button variant="outline" className="flex-1 font-semibold text-xs h-11" onClick={() => router.back()} disabled={submitting}>취소</Button>
+        <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting || catalog.length === 0}>
           {submitting ? '신청 중…' : fileEntries.length > 1 ? `${fileEntries.length}건 신청하기` : '신청하기'}
         </Button>
       </div>

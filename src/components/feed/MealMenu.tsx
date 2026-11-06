@@ -55,7 +55,7 @@ export default function MealMenu() {
       <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-2">
         <Button variant="ghost" size="icon" className="size-8" onClick={() => move(-1)}><ChevronLeft className="size-4" /></Button>
         <div className="text-center">
-          <p className="font-black text-sm">{display(date)}</p>
+          <p className="font-semibold text-sm">{display(date)}</p>
           {fmt(date) === fmt(new Date()) && <p className="text-xs text-primary font-bold">오늘</p>}
         </div>
         <div className="flex gap-1">

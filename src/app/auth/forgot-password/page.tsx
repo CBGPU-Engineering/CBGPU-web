@@ -35,9 +35,9 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-[28px] shadow-lg text-center space-y-4">
+      <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg text-center space-y-4">
         <MailCheck className="size-12 mx-auto text-primary" />
-        <h2 className="text-2xl font-black text-foreground italic uppercase tracking-tighter">이메일을 확인해주세요</h2>
+        <h1 className="cb-page-title">이메일을 확인해주세요</h1>
         <p className="text-sm text-muted-foreground font-medium">
           <span className="font-bold text-foreground">{email}</span>로 비밀번호 재설정 링크를 보냈습니다.
         </p>
@@ -47,12 +47,12 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-[28px] shadow-lg">
-      <h2 className="text-3xl font-black mb-2 text-center text-foreground italic uppercase tracking-tighter">비밀번호 찾기</h2>
+    <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg">
+      <h1 className="cb-page-title mb-2 text-center">비밀번호 찾기</h1>
       <p className="text-sm text-muted-foreground text-center font-medium mb-6">가입한 이메일로 재설정 링크를 보내드립니다.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-xs font-black uppercase text-muted-foreground ml-1">Email</label>
+          <label className="text-xs font-semibold text-muted-foreground ml-1">Email</label>
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
         </div>
         <Button
           disabled={isSubmitting}
-          className="w-full bg-primary py-6 text-lg font-black uppercase tracking-widest transition-all active:scale-95"
+          className="w-full bg-primary h-12 text-sm font-semibold transition-all active:scale-95"
         >
           {isSubmitting ? "전송 중..." : "재설정 링크 받기"}
         </Button>

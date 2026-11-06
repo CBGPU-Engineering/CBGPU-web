@@ -27,14 +27,14 @@ export default function ConfirmDialog({
     <Dialog open={open} onOpenChange={o => !o && onCancel()}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-black uppercase tracking-tight">{title ?? (english ? 'Delete this item?' : '삭제하시겠습니까?')}</DialogTitle>
+          <DialogTitle className="font-semibold tracking-tight">{title ?? (english ? 'Delete this item?' : '삭제하시겠습니까?')}</DialogTitle>
           <DialogDescription className="text-sm">{description ?? (english ? 'This action cannot be undone.' : '이 작업은 되돌릴 수 없습니다.')}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 flex-row justify-end">
-          <Button variant="outline" onClick={onCancel} className="font-black text-xs uppercase tracking-widest">
+          <Button variant="outline" onClick={onCancel} className="font-semibold text-xs">
             {english ? 'Cancel' : '취소'}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} className="font-black text-xs uppercase tracking-widest">
+          <Button variant="destructive" onClick={onConfirm} className="font-semibold text-xs">
             {confirmLabel ?? (english ? 'Delete' : '삭제')}
           </Button>
         </DialogFooter>

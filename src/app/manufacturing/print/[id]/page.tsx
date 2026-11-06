@@ -15,7 +15,7 @@ import {
   ArrowLeft, Download, CheckCircle2, Clock, XCircle, Boxes, Printer, Trash2, PackageCheck,
 } from 'lucide-react';
 
-const labelCls = 'text-xs font-black uppercase tracking-widest text-muted-foreground mb-1 block';
+const labelCls = 'text-xs font-semibold   text-muted-foreground mb-1 block';
 
 const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: string }> = {
   pending:  { icon: <Clock className="size-4" />,        variant: 'warning', label: '승인 대기' },
@@ -92,7 +92,7 @@ export default function PrintJobDetailPage() {
       <div>
         <button
           onClick={() => router.push('/manufacturing/print')}
-          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
           <ArrowLeft className="size-3" /> Back
         </button>
@@ -110,14 +110,14 @@ export default function PrintJobDetailPage() {
           </div>
 
           {isOwner && job.status === 'pending' && (
-            <Button variant="destructive" className="font-black text-xs uppercase gap-1.5 h-9" onClick={() => setCancelOpen(true)}>
+            <Button variant="destructive" className="font-semibold text-xs gap-1.5 h-9" onClick={() => setCancelOpen(true)}>
               <Trash2 className="size-3.5" /> 신청 취소
             </Button>
           )}
           {!isOwner && job.status === 'done' && !job.delivered_at && (
             <div className="flex items-center gap-2">
               <LocateStudentButton studentId={requester?.student_id} studentName={requester?.full_name} />
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase gap-1.5 h-9" onClick={handleMarkDelivered}>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 h-9" onClick={handleMarkDelivered}>
                 <PackageCheck className="size-3.5" /> 가져다 줌
               </Button>
             </div>
@@ -131,7 +131,7 @@ export default function PrintJobDetailPage() {
 
       <div className="border-2 rounded-3xl overflow-hidden bg-card">
         <div className="px-6 py-4 border-b-2 bg-muted/20">
-          <p className="font-black uppercase tracking-widest text-xs">Details</p>
+          <p className="font-semibold text-xs">Details</p>
         </div>
         <div className="p-6 grid gap-5">
           {requester && (

@@ -9,7 +9,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <div className="mx-auto flex min-h-[55vh] max-w-md flex-col items-center justify-center gap-5 text-center" role="alert">
       <div className="space-y-2">
-        <h1 className="text-2xl font-black">화면을 불러오지 못했어요</h1>
+        <h1 className="text-2xl font-semibold">화면을 불러오지 못했어요</h1>
         <p className="text-sm text-muted-foreground">일시적인 문제일 수 있어요. 다시 시도해 주세요.</p>
       </div>
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">

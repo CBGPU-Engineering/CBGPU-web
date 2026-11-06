@@ -291,7 +291,7 @@ function MemorialPortrait({ s, large = false }: { s: DeadService; large?: boolea
         textAlign: 'center',
         boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
       }}>
-        <p style={{ color: 'rgba(220,185,100,0.9)', fontSize: 11, fontWeight: 900, fontFamily: 'serif', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        <p style={{ color: 'rgba(220,185,100,0.9)', fontSize: 11, fontWeight: 900, fontFamily: 'serif', letterSpacing: '0.08em', textTransform: '' }}>
           {s.name}
         </p>
         <p style={{ color: 'rgba(150,120,60,0.65)', fontSize: 9, marginTop: 2, letterSpacing: '0.05em' }}>
@@ -318,7 +318,7 @@ function FuneralAltar({ services, label }: { services: DeadService[]; label: str
         </div>
         <h3 style={{
           color: 'rgba(220,185,100,0.85)',          fontSize: 13, fontWeight: 900, letterSpacing: '0.2em',
-          textTransform: 'uppercase',
+          textTransform: '',
         }}>
           {label}
         </h3>
@@ -373,17 +373,17 @@ function FuneralAltar({ services, label }: { services: DeadService[]; label: str
             <span style={{
               fontSize: 9, fontWeight: 700, color: 'rgba(150,120,60,0.7)',
               background: 'rgba(180,150,60,0.08)', border: '1px solid rgba(180,150,60,0.15)',
-              padding: '2px 8px', borderRadius: 20, textTransform: 'uppercase', letterSpacing: '0.05em',
+              padding: '2px 8px', borderRadius: 20, textTransform: '', letterSpacing: '0.05em',
             }}>{s.category}</span>
           </div>
           <p style={{ color: 'rgba(180,170,150,0.75)', fontSize: 12, lineHeight: 1.6 }}>{s.desc}</p>
           <p style={{
             color: 'rgba(160,140,100,0.5)', fontSize: 11,
-            fontStyle: 'italic', marginTop: 10,
+            fontStyle: '', marginTop: 10,
             borderTop: '1px solid rgba(180,150,60,0.08)', paddingTop: 10,
           }}>"{s.epitaph}"</p>
           {s.born && (
-            <p style={{ color: 'rgba(130,110,70,0.4)', fontSize: 9, marginTop: 6, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 700 }}>
+            <p style={{ color: 'rgba(130,110,70,0.4)', fontSize: 9, marginTop: 6, textTransform: '', letterSpacing: '0.12em', fontWeight: 700 }}>
               {s.born} — {s.year} · 향년 {s.year - s.born}세
             </p>
           )}
@@ -406,11 +406,11 @@ function TombstoneCard({ s }: { s: DeadService }) {
         <span className="text-xl mt-0.5 select-none shrink-0">{s.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
-            <h3 className="font-black text-sm leading-tight">{s.name}</h3>
-            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">{s.category}</span>
+            <h3 className="font-semibold text-sm leading-tight">{s.name}</h3>
+            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 tracking-wide">{s.category}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{s.desc}</p>
-          <p className="text-xs font-black text-muted-foreground/35 mt-1.5 uppercase tracking-widest">
+          <p className="text-xs font-semibold text-muted-foreground/35 mt-1.5">
             RIP {s.year} {s.born ? `· 향년 ${s.year - s.born}세` : ''}
           </p>
         </div>
@@ -420,7 +420,7 @@ function TombstoneCard({ s }: { s: DeadService }) {
       {open && (
         <div className="border-t border-border/20 px-4 py-6 flex flex-col items-center gap-4">
           <MemorialPortrait s={s} />
-          <p className="text-xs italic text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
+          <p className="text-xs text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
         </div>
       )}
     </div>
@@ -475,7 +475,7 @@ export default function Graveyard() {
       {/* header */}
       <div className="text-center space-y-1.5 py-2">
         <p className="text-4xl select-none">🪦</p>
-        <h2 className="font-black uppercase tracking-tighter text-xl">Digital Cemetery</h2>
+        <h2 className="font-semibold tracking-tight text-xl">Digital Cemetery</h2>
         <p className="text-xs text-muted-foreground font-medium">우리가 사랑했던 서비스들의 안식처 · {GRAVEYARD.length}위 안장</p>
       </div>
 
@@ -485,7 +485,7 @@ export default function Graveyard() {
       {/* in memoriam list */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-black uppercase tracking-widest text-xs text-muted-foreground flex items-center gap-1.5">
+          <h3 className="font-semibold text-xs text-muted-foreground flex items-center gap-1.5">
             In Memoriam
             <span className="font-medium opacity-50">({filtered.length})</span>
           </h3>

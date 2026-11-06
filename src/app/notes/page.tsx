@@ -27,10 +27,10 @@ function renderMd(raw: string): string {
     if (l.startsWith('```')) { inCode = !inCode; html += inCode ? '<pre class="bg-muted rounded-xl p-4 my-3 overflow-x-auto text-sm font-mono"><code>' : '</code></pre>'; continue; }
     if (inCode) { html += escHtml(l) + '\n'; continue; }
     if (inList && !l.startsWith('- ') && !l.match(/^\d+\. /)) { html += '</ul>'; inList = false; }
-    if (l.startsWith('### ')) { html += `<h3 class="text-lg font-black mt-5 mb-1">${inlineMd(l.slice(4))}</h3>`; }
-    else if (l.startsWith('## '))  { html += `<h2 class="text-xl font-black mt-6 mb-2">${inlineMd(l.slice(3))}</h2>`; }
-    else if (l.startsWith('# '))   { html += `<h1 class="text-2xl font-black mt-8 mb-3">${inlineMd(l.slice(2))}</h1>`; }
-    else if (l.startsWith('> '))   { html += `<blockquote class="border-l-4 border-primary/40 pl-4 my-2 text-muted-foreground italic">${inlineMd(l.slice(2))}</blockquote>`; }
+    if (l.startsWith('### ')) { html += `<h3 class="text-lg font-semibold mt-5 mb-1">${inlineMd(l.slice(4))}</h3>`; }
+    else if (l.startsWith('## '))  { html += `<h2 class="text-xl font-semibold mt-6 mb-2">${inlineMd(l.slice(3))}</h2>`; }
+    else if (l.startsWith('# '))   { html += `<h1 class="text-2xl font-semibold mt-8 mb-3">${inlineMd(l.slice(2))}</h1>`; }
+    else if (l.startsWith('> '))   { html += `<blockquote class="border-l-4 border-primary/40 pl-4 my-2 text-muted-foreground ">${inlineMd(l.slice(2))}</blockquote>`; }
     else if (l.startsWith('---'))  { html += '<hr class="border-border/40 my-4" />'; }
     else if (l.startsWith('- '))   { if (!inList) { html += '<ul class="list-disc ml-5 my-2 space-y-0.5">'; inList = true; } html += `<li class="text-sm leading-relaxed">${inlineMd(l.slice(2))}</li>`; }
     else if (l.match(/^\d+\. /))   { if (!inList) { html += '<ol class="list-decimal ml-5 my-2 space-y-0.5">'; inList = true; } html += `<li class="text-sm leading-relaxed">${inlineMd(l.replace(/^\d+\. /, ''))}</li>`; }
@@ -147,8 +147,8 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
       <div className="flex flex-col h-screen max-h-screen">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
           <Button variant="ghost" size="icon" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
-          <h1 className="flex-1 font-black text-base truncate px-2">{title || '제목 없음'}</h1>
-          <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest text-muted-foreground bg-muted shrink-0">
+          <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
+          <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-muted shrink-0">
             <Share2 className="size-3" />공개 노트
           </span>
         </div>
@@ -170,17 +170,17 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0 flex-wrap gap-y-2">
         <Button variant="ghost" size="icon" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
         <Input value={title} onChange={e => { setTitle(e.target.value); scheduleAutoSave(); }}
-          placeholder="제목 없음" className="flex-1 min-w-32 font-black text-base border-none shadow-none focus-visible:ring-0 px-2" />
+          placeholder="제목 없음" className="flex-1 min-w-32 font-semibold text-base border-none shadow-none focus-visible:ring-0 px-2" />
         <div className="flex gap-1 items-center ml-auto flex-wrap">
           <button onClick={() => { const n = !shared; setShared(n); saveNow(title, content, tags, n); }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all active:scale-95 ${shared?'text-primary bg-primary/10':'text-muted-foreground bg-muted'}`}>
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${shared?'text-primary bg-primary/10':'text-muted-foreground bg-muted'}`}>
             {shared ? <Share2 className="size-3" /> : <Lock className="size-3" />}
             {shared ? '공개' : '비공개'}
           </button>
           <div className="flex gap-1 bg-muted rounded-lg p-0.5">
             {(['edit','preview'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                className={`px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-widest transition-all active:scale-95 ${view===v?'bg-background shadow text-foreground':'text-muted-foreground'}`}>
+                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 ${view===v?'bg-background shadow text-foreground':'text-muted-foreground'}`}>
                 {v === 'edit' ? '편집' : '미리보기'}
               </button>
             ))}
@@ -189,7 +189,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
             size="sm"
             onClick={() => saveNow()}
             disabled={saveState === 'saving'}
-            className={`font-black text-xs gap-1.5 transition-all active:scale-95 ${saveState === 'saved' ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : ''}`}
+            className={`font-semibold text-xs gap-1.5 transition-all active:scale-95 ${saveState === 'saved' ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : ''}`}
           >
             {saveState === 'saving' ? (
               <>저장 중...</>
@@ -211,7 +211,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
         <div className="flex gap-1 px-4 py-1.5 border-b border-border/20 overflow-x-auto flex-shrink-0">
           {TOOLBAR.map(t => (
             <button key={t.label} onClick={t.action}
-              className="px-2 py-1 rounded text-xs font-black text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{t.label}</button>
+              className="px-2 py-1 rounded text-xs font-semibold text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{t.label}</button>
           ))}
         </div>
       )}
@@ -291,7 +291,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
   if (dbMissing) return (
     <div className="py-16 flex flex-col items-center gap-4 text-center">
       <p className="text-4xl">⚠️</p>
-      <p className="font-black text-lg uppercase tracking-tight">DB 설정 필요</p>
+      <p className="font-semibold text-lg tracking-tight">DB 설정 필요</p>
       <p className="text-sm text-muted-foreground"><code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_notes_study_migration.sql</code>을 실행해 주세요.</p>
     </div>
   );
@@ -317,7 +317,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
         />
         <div className="flex gap-2">
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="검색..." className="h-8 w-32 md:text-xs" />
-          {tab === 'mine' && <Button onClick={() => onOpen(null)} size="sm" className="font-black text-xs gap-1.5 h-8 active:scale-95 transition-transform"><Plus className="size-3" />새 노트</Button>}
+          {tab === 'mine' && <Button onClick={() => onOpen(null)} size="sm" className="font-semibold text-xs gap-1.5 h-8 active:scale-95 transition-transform"><Plus className="size-3" />새 노트</Button>}
         </div>
       </div>
 
@@ -334,7 +334,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
               style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
               className="p-4 border border-border/50 rounded-2xl bg-card hover:bg-muted/20 tilt-3d cursor-pointer transition-all group space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-black text-sm leading-tight line-clamp-1">{n.title}</h3>
+                <h3 className="font-semibold text-sm leading-tight line-clamp-1">{n.title}</h3>
                 {tab==='mine' && (
                   <button onClick={e=>{e.stopPropagation();setConfirmDeleteId(n.id);}} className="opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-destructive active:scale-90 transition-all">
                     <Trash2 className="size-3.5" />
@@ -346,7 +346,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
                 {n.tags.slice(0,3).map(t=><span key={t} className="text-xs font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>)}
                 <span className="text-xs text-muted-foreground ml-auto">{new Date(n.updated_at).toLocaleDateString('ko-KR')}</span>
                 {n.is_shared && (
-                  <span className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                     <Share2 className="size-2.5" />공개
                   </span>
                 )}
@@ -366,7 +366,7 @@ export default function NotesPage() {
 
   if (!user) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center">
-      <p className="font-black text-xl uppercase">로그인이 필요합니다</p>
+      <p className="font-semibold text-xl">로그인이 필요합니다</p>
     </section>
   );
 

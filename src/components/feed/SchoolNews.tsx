@@ -82,7 +82,7 @@ export default function SchoolNews() {
         {items.map((item, i) => (
           <a key={i} href={item.link} target="_blank" rel="noopener noreferrer"
             className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group">
-            <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
+            <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
               <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">

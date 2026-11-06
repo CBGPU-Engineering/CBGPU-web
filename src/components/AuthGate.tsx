@@ -38,19 +38,19 @@ export default function AuthGate({ children, publicSite = false,workspaceSite=fa
           <span style={{ fontFamily: 'Tossface', fontSize: 56, lineHeight: 1 }}>🔒</span>
         </div>
         <div className="space-y-1.5">
-          <p className="text-xl font-black tracking-tight">로그인이 필요해요</p>
+          <p className="text-xl font-semibold tracking-tight">로그인이 필요해요</p>
           <p className="text-sm text-muted-foreground font-medium">이 페이지는 로그인한 학생만 볼 수 있어요</p>
         </div>
         <div className="flex flex-col gap-2">
           <Link
             href={`/auth/login?next=${encodeURIComponent(pathname)}`}
-            className="rounded-2xl bg-primary text-primary-foreground py-3.5 font-black text-sm uppercase tracking-widest active:scale-[0.98] transition-transform"
+            className="rounded-2xl bg-primary text-primary-foreground py-3.5 font-semibold text-sm active:scale-[0.98] transition-transform"
           >
             로그인
           </Link>
           <Link
             href="/auth/signup"
-            className="rounded-2xl bg-card ring-1 ring-foreground/5 py-3.5 font-black text-sm uppercase tracking-widest active:scale-[0.98] transition-transform"
+            className="rounded-2xl bg-card ring-1 ring-foreground/5 py-3.5 font-semibold text-sm active:scale-[0.98] transition-transform"
           >
             회원가입
           </Link>

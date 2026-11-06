@@ -84,8 +84,8 @@ function Pomodoro() {
       <div className="relative flex items-center justify-center">
         <Ring pct={pct} color={phase === 'work' ? '#6366f1' : '#22c55e'} size={200} />
         <div className="absolute text-center">
-          <p className="text-4xl font-black tabular-nums">{mm}:{ss}</p>
-          <p className={`text-xs font-black uppercase tracking-widest mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
+          <p className="text-4xl font-semibold tabular-nums">{mm}:{ss}</p>
+          <p className={`text-xs font-semibold mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
             {phase === 'work' ? '집중' : '휴식'}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5">{cycles} 사이클 완료</p>
@@ -93,7 +93,7 @@ function Pomodoro() {
       </div>
 
       <div className="flex gap-2">
-        <Button onClick={() => setRunning(r => !r)} className="gap-2 font-black uppercase tracking-widest w-28">
+        <Button onClick={() => setRunning(r => !r)} className="gap-2 font-semibold w-28">
           {running ? <><Pause className="size-4" />일시정지</> : <><Play className="size-4" />{secs === total ? '시작' : '계속'}</>}
         </Button>
         <Button variant="outline" size="icon" onClick={reset}><RotateCcw className="size-4" /></Button>
@@ -151,7 +151,7 @@ function DDayCounter() {
         </div>
         <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="이벤트 이름 (예: 수학 기말고사)" className="font-medium" onKeyDown={e => e.key === 'Enter' && add()} />
         <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="font-medium" />
-        <Button onClick={add} disabled={!label.trim() || !date} className="w-full font-black uppercase gap-2">
+        <Button onClick={add} disabled={!label.trim() || !date} className="w-full font-semibold gap-2">
           <Plus className="size-4" />추가
         </Button>
       </div>
@@ -165,10 +165,10 @@ function DDayCounter() {
             <div key={item.id} className="flex items-center gap-3 p-3 border border-border/40 rounded-xl bg-card hover:bg-muted/20 tilt-3d transition-all">
               <span className="text-2xl select-none">{item.emoji}</span>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-sm truncate">{item.label}</p>
+                <p className="font-semibold text-sm truncate">{item.label}</p>
                 <p className="text-xs text-muted-foreground">{dateStr}</p>
               </div>
-              <span className={`font-black text-sm tabular-nums shrink-0 ${color}`}>{dl}</span>
+              <span className={`font-semibold text-sm tabular-nums shrink-0 ${color}`}>{dl}</span>
               <button onClick={() => remove(item.id)} className="text-muted-foreground/30 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
             </div>
           );

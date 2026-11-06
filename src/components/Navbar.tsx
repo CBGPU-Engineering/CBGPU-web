@@ -153,7 +153,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
         <div className="hidden xl:flex items-center gap-2">
-          <Link href="/contact" className={`text-xs transition-colors font-black px-3 py-1.5 rounded-lg uppercase tracking-widest ${pathname === '/contact' ? 'bg-primary text-primary-foreground shadow-lg' : 'hover:bg-muted text-muted-foreground'}`}>
+          <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Contact
           </Link>
           <ThemeToggle />
@@ -229,7 +229,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                     <Image src={profile.avatar_url} alt="" width={40} height={40} className="size-10 rounded-full object-cover ring-2 ring-background shadow-sm" />
                   )}
                   <div className="flex flex-col">
-                    <span className="text-sm font-black uppercase text-primary leading-none">
+                    <span className="text-sm font-semibold text-primary leading-none">
                       {profile?.full_name || 'My Profile'}
                     </span>
                     <span className="text-xs text-muted-foreground font-medium opacity-70">
@@ -272,10 +272,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                 Contact
               </Link>
               <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full font-black uppercase tracking-widest">로그인</Button>
+                <Button variant="outline" className="w-full font-semibold">로그인</Button>
               </Link>
               <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full font-black uppercase tracking-widest shadow-md">회원가입</Button>
+                <Button className="w-full font-semibold shadow-md">회원가입</Button>
               </Link>
             </div>
           )}

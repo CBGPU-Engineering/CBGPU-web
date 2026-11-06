@@ -61,7 +61,7 @@ export default function ContactPage() {
       <form onSubmit={handleSubmit} className="tilt-3d space-y-5 ring-1 ring-foreground/5 rounded-[28px] p-6 md:p-8 bg-card shadow-lg">
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">이름 *</label>
+            <label className="text-xs font-semibold text-muted-foreground">이름 *</label>
             <Input
               name="name"
               value={form.name}
@@ -71,7 +71,7 @@ export default function ContactPage() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">이메일 *</label>
+            <label className="text-xs font-semibold text-muted-foreground">이메일 *</label>
             <Input
               name="email"
               type="email"
@@ -84,7 +84,7 @@ export default function ContactPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">분류</label>
+          <label className="text-xs font-semibold text-muted-foreground">분류</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map(cat => (
               <button
@@ -92,7 +92,7 @@ export default function ContactPage() {
                 type="button"
                 onClick={() => setForm(prev => ({ ...prev, category: prev.category === cat ? '' : cat }))}
                 className={cn(
-                  'text-xs font-black px-3 py-1.5 rounded-full border transition-all',
+                  'text-xs font-semibold px-3 py-1.5 rounded-full border transition-all',
                   form.category === cat
                     ? 'bg-primary text-primary-foreground border-primary shadow-sm'
                     : 'border-border hover:border-primary/50 hover:bg-muted/50'
@@ -105,7 +105,7 @@ export default function ContactPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">내용 *</label>
+          <label className="text-xs font-semibold text-muted-foreground">내용 *</label>
           <textarea
             name="message"
             value={form.message}
@@ -119,7 +119,7 @@ export default function ContactPage() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-12 font-black uppercase tracking-widest text-xs gap-2 active:scale-95 transition-all"
+          className="w-full h-12 font-semibold text-xs gap-2 active:scale-95 transition-all"
         >
           <Send className="size-4" />
           {isSubmitting ? '전송 중...' : '문의 보내기'}

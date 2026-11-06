@@ -183,7 +183,7 @@ export default function WakeupSongPage() {
       <div className="rounded-[28px] border border-primary/15 bg-card p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Music className="size-5 text-primary" />
-          <h2 className="text-lg font-black">{dorm} · {format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열</h2>
+          <h2 className="text-lg font-semibold">{dorm} · {format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열</h2>
           <Badge variant="default">{queue.length}곡 신청</Badge>
           {playlistUrl && <a href={playlistUrl} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-[#1DB954] hover:underline"><ExternalLink className="size-3.5" /> Spotify 플레이리스트</a>}
         </div>
@@ -194,8 +194,8 @@ export default function WakeupSongPage() {
             // 뱃지를 안 보여준다 — 실제 신청곡만 상태를 표시한다.
             return (
               <li key={song.id ?? song._key} className="flex items-center gap-2 text-xs p-2 rounded-lg">
-                <span className="text-muted-foreground font-black w-4 shrink-0">{i + 1}</span>
-                <span className={`truncate flex-1 font-semibold ${song.isFiller ? 'text-muted-foreground italic' : ''}`}>{song.title}</span>
+                <span className="text-muted-foreground font-semibold w-4 shrink-0">{i + 1}</span>
+                <span className={`truncate flex-1 font-semibold ${song.isFiller ? 'text-muted-foreground ' : ''}`}>{song.title}</span>
               </li>
             );
           })}
@@ -204,10 +204,10 @@ export default function WakeupSongPage() {
 
       {/* ── 신청 폼 ──────────────────────────────────────────────────── */}
       <form onSubmit={handleSubmit} className="rounded-[28px] border border-border/60 bg-card p-5 space-y-4">
-        <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-black">{dorm}에 신청하기</h2></div>
+        <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-semibold">{dorm}에 신청하기</h2></div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-black uppercase text-muted-foreground ml-1">틀어줄 날짜</label>
+          <label className="text-xs font-semibold text-muted-foreground ml-1">틀어줄 날짜</label>
           <div className="flex gap-1.5 overflow-x-auto py-1 -mx-1 px-1">
             {NEXT_14_DAYS.map((day, i) => {
               const isSelected = isSameDay(day, selectedDate);
@@ -217,11 +217,11 @@ export default function WakeupSongPage() {
                   type="button"
                   onClick={() => setSelectedDate(day)}
                   className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-xl border text-center transition-all active:scale-95 ${
-                    isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
-                  }`}
+ isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
+ }`}
                 >
                   <span className="text-xs font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
-                  <span className="text-xs font-black">{format(day, 'M/d')}</span>
+                  <span className="text-xs font-semibold">{format(day, 'M/d')}</span>
                 </button>
               );
             })}
@@ -239,7 +239,7 @@ export default function WakeupSongPage() {
           </div>
         ) : (
           <div className="space-y-1.5 relative">
-            <label className="text-xs font-black uppercase text-muted-foreground ml-1">Spotify에서 노래 검색</label>
+            <label className="text-xs font-semibold text-muted-foreground ml-1">Spotify에서 노래 검색</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -274,10 +274,10 @@ export default function WakeupSongPage() {
         )}
 
         <div className="space-y-1.5">
-          <label className="text-xs font-black uppercase text-muted-foreground ml-1">한마디 (선택)</label>
+          <label className="text-xs font-semibold text-muted-foreground ml-1">한마디 (선택)</label>
           <Input placeholder="누구에게, 어떤 마음으로 신청하는지 적어보세요" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={80} />
         </div>
-        <Button type="submit" disabled={!preview || submitting} className="w-full py-5 font-black">
+        <Button type="submit" disabled={!preview || submitting} className="w-full py-5 font-semibold">
           {submitting ? '신청 중...' : '신청하기'}
         </Button>
       </form>
@@ -285,7 +285,7 @@ export default function WakeupSongPage() {
       {/* ── 내 신청 내역 ─────────────────────────────────────────────── */}
       {myRequests.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2"><History className="size-5 text-muted-foreground" /><h2 className="text-lg font-black">내 신청 내역 ({dorm})</h2></div>
+          <div className="flex items-center gap-2"><History className="size-5 text-muted-foreground" /><h2 className="text-lg font-semibold">내 신청 내역 ({dorm})</h2></div>
           <ul className="space-y-2">
             {myRequests.map((song) => (
               <li key={song.id} className="flex items-center gap-3 rounded-2xl bg-card ring-1 ring-border/60 p-3">

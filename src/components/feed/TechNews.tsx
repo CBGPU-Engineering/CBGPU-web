@@ -144,9 +144,9 @@ export default function TechNews() {
           <button
             key={c.id}
             onClick={() => setCat(c.id)}
-            className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
-              cat === c.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
+            className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+ cat === c.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/70'
+ }`}
           >
             {c.label}
           </button>
@@ -199,7 +199,7 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{s.title}</p>
                 <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
@@ -224,7 +224,7 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-xl border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-xs font-black text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
                 <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">

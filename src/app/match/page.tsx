@@ -48,11 +48,11 @@ function PostCard({
               {!post.is_open && <Badge variant="muted" icon={<Lock className="size-2.5" />}>마감</Badge>}
               {joined && <Badge variant="success">참여 중</Badge>}
             </div>
-            <h3 className="font-black text-sm">{post.title}</h3>
+            <h3 className="font-semibold text-sm">{post.title}</h3>
             {post.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{post.description}</p>}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex items-center gap-1 text-xs font-black text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
               <Users className="size-3" />{cnt}/{post.max_members}
             </div>
             {isOwner && (
@@ -72,7 +72,7 @@ function PostCard({
         <div className="border-t border-border/20 p-4 space-y-3">
           {post.description && <p className="text-sm text-muted-foreground">{post.description}</p>}
           <div className="space-y-1.5">
-            <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">참여 멤버 ({cnt}/{post.max_members})</p>
+            <p className="text-xs font-semibold text-muted-foreground">참여 멤버 ({cnt}/{post.max_members})</p>
             <div className="flex flex-wrap gap-1.5">
               {allMemberIds.map(id => {
                 const avatar = profileMap.get(id)?.avatar_url;
@@ -84,7 +84,7 @@ function PostCard({
                       <span className="size-5 rounded-full bg-muted-foreground/20 shrink-0" />
                     )}
                     {profileMap.get(id)?.full_name || '익명'}
-                    {id === post.user_id && <span className="text-xs text-primary font-black uppercase">장</span>}
+                    {id === post.user_id && <span className="text-xs text-primary font-semibold">장</span>}
                   </span>
                 );
               })}
@@ -92,8 +92,8 @@ function PostCard({
           </div>
           {post.is_open && !isOwner && (
             joined
-              ? <Button variant="outline" size="sm" onClick={onLeave} className="font-black text-xs uppercase gap-1.5"><X className="size-3" />탈퇴</Button>
-              : <Button size="sm" onClick={onJoin} disabled={full} className="font-black text-xs uppercase gap-1.5">
+              ? <Button variant="outline" size="sm" onClick={onLeave} className="font-semibold text-xs gap-1.5"><X className="size-3" />탈퇴</Button>
+              : <Button size="sm" onClick={onJoin} disabled={full} className="font-semibold text-xs gap-1.5">
                   <Plus className="size-3" />{full ? '정원 초과' : '참여하기'}
                 </Button>
           )}
@@ -149,13 +149,13 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-background border border-border rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-black text-lg uppercase tracking-tighter">새 스터디 만들기</h2>
+          <h2 className="font-semibold text-lg tracking-tight">새 스터디 만들기</h2>
           <Button variant="ghost" size="icon" onClick={onCancel}><X className="size-4" /></Button>
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {SUBJECTS.map(s => (
             <button key={s} onClick={() => setSubject(s)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${subject===s?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground'}`}>{s}</button>
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${subject===s?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>
         <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="스터디 제목 *" className="font-bold" />
@@ -163,11 +163,11 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
           className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-xl outline-none focus:border-primary resize-none font-medium" />
         <div className="flex items-center gap-3">
           <div className="flex-1">
-            <p className="text-xs font-black text-muted-foreground uppercase mb-1">최대 인원</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-1">최대 인원</p>
             <Input type="number" min={2} max={20} value={max} onChange={e => setMax(+e.target.value)} className="md:text-sm" />
           </div>
           <div className="flex-1">
-            <p className="text-xs font-black text-muted-foreground uppercase mb-1">태그 (최대 5개)</p>
+            <p className="text-xs font-semibold text-muted-foreground mb-1">태그 (최대 5개)</p>
             <div className="flex gap-1">
               <Input value={tagInput} onChange={e => setTagInput(e.target.value)}
                 onKeyDown={e => (e.key==='Enter'||e.key===',') && (e.preventDefault(),addTag())}
@@ -184,7 +184,7 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
         )}
         {(suggestingTags || suggestedTags.some(tag => !tags.includes(tag))) && <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite"><Sparkles className="size-3 text-primary" /><span>{suggestingTags ? '태그 추천 중…' : '추천 태그'}</span>{suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => setTags(current => current.length < 5 && !current.includes(tag) ? [...current, tag] : current)} disabled={tags.length >= 5} className="rounded-full border border-primary/30 px-2 py-1 font-bold text-primary disabled:opacity-50">+ {tag}</button>)}</div>}
         <p className="text-xs text-muted-foreground">설명을 마치면 태그 추천을 위해 제목과 설명이 NVIDIA AI로 전송됩니다.</p>
-        <Button onClick={submit} disabled={saving} className="w-full font-black uppercase tracking-widest">
+        <Button onClick={submit} disabled={saving} className="w-full font-semibold">
           {saving ? '만드는 중...' : '스터디 만들기'}
         </Button>
       </div>
@@ -259,7 +259,7 @@ export default function MatchPage() {
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <p className="font-black text-xl uppercase tracking-tight">DB 설정 필요</p>
+      <p className="font-semibold text-xl tracking-tight">DB 설정 필요</p>
       <p className="text-sm text-muted-foreground"><code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_notes_study_migration.sql</code>을 실행해 주세요.</p>
     </section>
   );
@@ -284,7 +284,7 @@ export default function MatchPage() {
           <h1 className="cb-page-title">스터디 매칭</h1>
           <p className="cb-page-sub mt-1">같이 공부할 사람 구하기</p>
         </div>
-        {user && <Button onClick={() => setCreating(true)} className="font-black uppercase gap-2"><Plus className="size-4" />만들기</Button>}
+        {user && <Button onClick={() => setCreating(true)} className="font-semibold gap-2"><Plus className="size-4" />만들기</Button>}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -295,10 +295,10 @@ export default function MatchPage() {
         />
         <div className="flex gap-1 flex-wrap">
           <button onClick={() => setFilter('')}
-            className={`px-2 py-1 rounded-lg text-xs font-black transition-all ${!filter?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>전체</button>
+            className={`px-2 py-1 rounded-lg text-xs font-semibold transition-all ${!filter?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>전체</button>
           {SUBJECTS.map(s => (
             <button key={s} onClick={() => setFilter(f => f===s?'':s)}
-              className={`px-2 py-1 rounded-lg text-xs font-black transition-all ${filter===s?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{s}</button>
+              className={`px-2 py-1 rounded-lg text-xs font-semibold transition-all ${filter===s?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>
       </div>

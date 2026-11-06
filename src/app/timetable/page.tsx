@@ -147,7 +147,7 @@ export default function TimetablePage() {
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">DB 설정 필요</h2>
+      <h2 className="font-semibold text-xl tracking-tight">DB 설정 필요</h2>
       <p className="text-sm text-muted-foreground">
         <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_timetable_migration.sql</code>을
         Supabase SQL Editor에서 실행해 주세요.
@@ -174,19 +174,19 @@ export default function TimetablePage() {
             </Button>
           )}
           {isAdmin && !editing && (
-            <Button onClick={startEdit} variant="outline" size="sm" className="font-black text-xs uppercase gap-1.5 active:scale-95 transition-transform">
+            <Button onClick={startEdit} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
               <Edit3 className="size-3.5" /> 직접 편집
             </Button>
           )}
           {isAdmin && editing && (
             <div className="flex gap-2">
-              <Button onClick={() => setDraft({})} variant="ghost" size="sm" className="font-black text-xs gap-1.5 text-muted-foreground active:scale-95 transition-transform">
+              <Button onClick={() => setDraft({})} variant="ghost" size="sm" className="font-semibold text-xs gap-1.5 text-muted-foreground active:scale-95 transition-transform">
                 <RotateCcw className="size-3" />
               </Button>
-              <Button onClick={() => setEditing(false)} variant="outline" size="sm" className="font-black text-xs gap-1.5 active:scale-95 transition-transform">
+              <Button onClick={() => setEditing(false)} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
                 <X className="size-3" /> 취소
               </Button>
-              <Button onClick={save} size="sm" disabled={saving} className="font-black text-xs uppercase gap-1.5 active:scale-95 transition-transform">
+              <Button onClick={save} size="sm" disabled={saving} className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
                 <Save className="size-3" /> {saving ? '저장 중...' : '저장'}
               </Button>
             </div>
@@ -205,7 +205,7 @@ export default function TimetablePage() {
           value={String(cls)}
           onChange={(v) => switchTo(grade, Number(v))}
         />
-        {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
+        {editing && <span className="text-xs font-semibold text-amber-500 flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
       </div>
 
       {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 확인이 지연되어 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
@@ -220,7 +220,7 @@ export default function TimetablePage() {
         </div>
       )}
 
-      {prepTip && !editing && <p className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-black text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
+      {prepTip && !editing && <p className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
 
       {loading || justFinished ? (
         <div className="py-16 flex items-center justify-center">
@@ -233,7 +233,7 @@ export default function TimetablePage() {
               <tr>
                 <th className="w-10 p-1" />
                 {DAYS.map((day, i) => (
-                  <th key={day} className={`p-2 text-xs font-black uppercase tracking-widest text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
+                  <th key={day} className={`p-2 text-xs font-semibold text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
                     {day}{todayWd===i&&<span className="block text-xs text-primary/70">오늘</span>}
                   </th>
                 ))}
@@ -242,7 +242,7 @@ export default function TimetablePage() {
             <tbody>
               {PERIODS.map(p => (
                 <tr key={p}>
-                  <td className="p-1 text-center"><span className="text-xs font-black text-muted-foreground">{p}</span></td>
+                  <td className="p-1 text-center"><span className="text-xs font-semibold text-muted-foreground">{p}</span></td>
                   {DAYS.map((_, di) => {
                     const cell    = editing ? undefined : grid[di]?.[p];
                     const subject = editing ? (draft[di]?.[p] ?? '') : (cell?.subject ?? '');
@@ -262,7 +262,7 @@ export default function TimetablePage() {
                             className={`relative h-14 pl-2.5 pr-1.5 rounded-lg border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden tilt-3d transition-all ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
                             <span className={`absolute inset-y-0 left-0 w-1 ${subjectColor(subject).bar}`} />
                             {changed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-amber-500" />}
-                            <span className={`text-xs font-black leading-tight line-clamp-1 ${subjectColor(subject).text}`}>{subject}</span>
+                            <span className={`text-xs font-semibold leading-tight line-clamp-1 ${subjectColor(subject).text}`}>{subject}</span>
                             {teacher && <span className="text-xs text-muted-foreground leading-tight">{teacher}</span>}
                           </div>
                         ) : (

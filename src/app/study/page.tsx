@@ -120,9 +120,9 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
                   aria-pressed={selectedId === seat.id}
                   aria-label={`${seat.name}번 좌석, ${status}${occupants.length ? ', ' + occupants.map(o => o.label + (o.status === 'PENDING' ? ' 승인 대기' : '')).join(', ') : ''}`}
                   className={`absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border-2 px-2 text-center focus-visible:outline-2 focus-visible:outline-foreground focus-visible:outline-offset-2 ${selectedId === seat.id ? 'ring-2 ring-foreground ring-offset-2 ring-offset-muted' : ''} ${pending
-                    ? 'border-dashed border-primary bg-card text-foreground'
-                    : occupants.length ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-input bg-card text-foreground'}`}
+ ? 'border-dashed border-primary bg-card text-foreground'
+ : occupants.length ? 'border-primary bg-primary text-primary-foreground'
+ : 'border-input bg-card text-foreground'}`}
                   style={{ left: seat.x * cellSize, top: seat.y * cellSize, width: cellSize - 8, height: cellSize - 8 }}>
                   <span className="text-base font-semibold leading-tight">{seat.name}</span>
                   <span className="text-xs font-medium">{status}</span>
@@ -397,7 +397,7 @@ export default function StudyPage() {
         ) : selectedStudent ? (
           <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-black text-sm">{formatStudentLabel(selectedStudent)}</p>
+              <p className="font-semibold text-sm">{formatStudentLabel(selectedStudent)}</p>
               <Button variant="ghost" size="sm" onClick={clearStudentSearch} className="font-bold text-xs">
                 다른 학생 검색
               </Button>
