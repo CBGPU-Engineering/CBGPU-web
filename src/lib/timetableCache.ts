@@ -7,7 +7,8 @@ function monday(date:string){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.
 export function validTimetableRaw(raw:unknown):raw is TimetableRaw{
  if(!raw||typeof raw!=='object')return false;const x=raw as TimetableRaw;
  if(!['자료481','자료147','자료446','자료492','학급수'].every(k=>Array.isArray(x[k])))return false;
- return x['자료147'].some((g:unknown)=>Array.isArray(g)&&g.some(c=>Array.isArray(c)&&c.some(day=>Array.isArray(day)&&day.some(cell=>/[1-9]/.test(String(cell))))));
+ const separator=Number(x['분리']??100);if(!Number.isSafeInteger(separator)||separator<=0)return false;
+ return x['자료147'].some((g:unknown)=>Array.isArray(g)&&g.some(c=>Array.isArray(c)&&c.some(day=>Array.isArray(day)&&day.some(cell=>{const value=Number(String(cell).replace(/^>/,'')),subject=x['자료492'][Math.floor(value/1000)%1000%separator];return Number.isSafeInteger(value)&&value%1000>0&&typeof subject==='string'&&subject.trim().length>0})))));
 }
 export function usableTimetableSnapshot(value:unknown,now:number):value is TimetableSnapshot{
  const x=value as TimetableSnapshot;if(!x||x.version!==1||!Number.isFinite(x.at)||x.at>now+60_000||now-x.at>MAX_AGE||!validTimetableRaw(x.raw))return false;

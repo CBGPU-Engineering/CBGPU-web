@@ -20,6 +20,7 @@ test('last week, expired, future-dated and invalid snapshots are never shown as 
  assert.equal(usableTimetableSnapshot(snapshot,initial+49*3600_000),false);
  assert.equal(usableTimetableSnapshot({...snapshot,at:initial+3600_000},initial),false);
  assert.equal(usableTimetableSnapshot({...snapshot,raw:{}},initial),false);
+ assert.equal(usableTimetableSnapshot({...snapshot,raw:{...raw(),'자료492':[]}},initial),false);
  const nextMonday=Date.parse('2026-11-16T00:00:00Z');const store={read:async()=>({...snapshot,at:nextMonday-3600_000}),write:async()=>{}};
  await assert.rejects(createTimetableLoader(async()=>{throw Error('offline')},store,()=>nextMonday).get());
  const sunday=Date.parse('2026-11-08T03:00:00Z');assert.equal(usableTimetableSnapshot({...snapshot,at:sunday},sunday),true);
