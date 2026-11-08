@@ -9,6 +9,8 @@ use; invalid data never replaces a valid snapshot.
 The server coalesces concurrent requests, caches successful data for five minutes,
 reloads current provider metadata once on failure, and backs off for one minute
 when unavailable. Even forced refreshes share the in-flight request/backoff.
+When a usable snapshot exists, a slow refresh gets a three-second response budget;
+the page receives flagged last-good data while the single refresh continues.
 
 Successful school-wide data is written atomically with mode 600 to
 `~/.local/share/cbgpu-timetable/latest.json`. This path survives immutable web

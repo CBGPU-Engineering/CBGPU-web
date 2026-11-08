@@ -23,14 +23,21 @@ export function usableTimetableSnapshot(value:unknown,now:number):value is Timet
  return diff===0||((day===0||day===6)&&diff===7);
 }
 export function createTimetableLoader(load:()=>Promise<TimetableRaw>,store:TimetableStore,clock=Date.now){
- let snapshot:TimetableSnapshot|null=null,boot:Promise<void>|null=null,pending:Promise<{raw:TimetableRaw;at:number;stale:boolean}>|null=null,retryAt=0,lastError:unknown=null;
+ let snapshot:TimetableSnapshot|null=null,boot:Promise<void>|null=null,pending:Promise<{raw:TimetableRaw;at:number;stale:boolean}>|null=null,retryAt=0,lastError:unknown=null,started=0;
  const current=()=>snapshot&&usableTimetableSnapshot(snapshot,clock())?snapshot:null;
+ const answer=(work:Promise<{raw:TimetableRaw;at:number;stale:boolean}>)=>{
+  const saved=current();if(!saved)return work;
+  let timer:ReturnType<typeof setTimeout>;
+  const budget=Math.max(0,3000-(Date.now()-started));
+  return Promise.race([work,new Promise<{raw:TimetableRaw;at:number;stale:boolean}>(resolve=>{timer=setTimeout(()=>resolve({...saved,stale:true}),budget)})]).finally(()=>clearTimeout(timer));
+ };
  return {async get(force=false):Promise<{raw:TimetableRaw;at:number;stale:boolean}>{
   boot??=store.read().then(value=>{if(usableTimetableSnapshot(value,clock()))snapshot=value}).catch(()=>{});await boot;
-  if(pending)return pending;
+  if(pending)return answer(pending);
   const cached=current();
   if(clock()<retryAt){if(cached)return {...cached,stale:true};throw lastError||Error('시간표 제공처에 잠시 연결할 수 없습니다')}
   if(!force&&!lastError&&cached&&clock()-cached.at<FRESH)return {...cached,stale:false};
+  started=Date.now();
   pending=(async()=>{
    try{
     const raw=await load();if(!validTimetableRaw(raw))throw Error('시간표 제공처의 데이터가 비어 있습니다');
@@ -39,6 +46,6 @@ export function createTimetableLoader(load:()=>Promise<TimetableRaw>,store:Timet
     return {raw,at:snapshot.at,stale:false};
    }catch(error){lastError=error;retryAt=clock()+RETRY;console.warn('Timetable refresh unavailable; last-good fallback checked');const saved=current();if(saved)return {...saved,stale:true};throw error}
    finally{pending=null}
-  })();return pending;
+  })();return answer(pending);
  }};
 }

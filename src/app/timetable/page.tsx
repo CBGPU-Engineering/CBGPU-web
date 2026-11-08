@@ -208,7 +208,7 @@ export default function TimetablePage() {
         {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
       </div>
 
-      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 조회에 실패해 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 확인이 지연되어 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">

@@ -29,3 +29,11 @@ test('failed or empty responses cannot overwrite the last valid stored schedule'
  let now=initial,bad=false;const store=memory(),loader=createTimetableLoader(async()=>bad?{資料:[]}:raw(),store,()=>now);await loader.get();bad=true;now+=6*60_000;
  assert.equal((await loader.get()).stale,true);assert.equal(store.value().at,initial);assert.ok(store.value().raw.자료147);
 });
+
+test('a hanging provider does not hold an available timetable hostage',async()=>{
+ let now=initial,slow=false,finish;const store=memory(),loader=createTimetableLoader(async()=>{if(slow)await new Promise(resolve=>{finish=resolve});return raw()},store,()=>now);
+ await loader.get();now+=6*60_000;slow=true;const start=Date.now();
+ const fallback=await loader.get();assert.equal(fallback.stale,true);assert.ok(Date.now()-start<4500);assert.equal(fallback.at,initial);
+ const again=Date.now();assert.equal((await loader.get()).stale,true);assert.ok(Date.now()-again<500);
+ finish();await new Promise(resolve=>setTimeout(resolve,5));assert.equal((await loader.get()).stale,false);
+});

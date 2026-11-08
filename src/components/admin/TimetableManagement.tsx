@@ -208,7 +208,7 @@ export default function TimetablePage() {
         {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />  Editing</span>}
       </div>
 
-      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">Latest provider check failed. Showing the last verified timetable; substitutions may be missing.<span className="mt-1 block text-xs">Last verified: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('en-GB',{timeZone:'Asia/Seoul'}):'Unavailable'}{freshness.weekStart?' · Week of '+freshness.weekStart:''} · Retrying automatically.</span></div>}
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">Latest provider check is delayed. Showing the last verified timetable; substitutions may be missing.<span className="mt-1 block text-xs">Last verified: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('en-GB',{timeZone:'Asia/Seoul'}):'Unavailable'}{freshness.weekStart?' · Week of '+freshness.weekStart:''} · Retrying automatically.</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
