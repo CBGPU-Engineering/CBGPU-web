@@ -1,0 +1,10 @@
+[Unit]
+Description=Verify and preserve the latest school timetable
+After=cbgpu-frontend.service
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 %h/.local/lib/cbgpu-timetable/refresh.py
+TimeoutStartSec=110s
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes

@@ -4,10 +4,10 @@ import {createDecipheriv,createHash,createHmac,timingSafeEqual} from 'node:crypt
 export function decodeComciganPayload(body:string,keyHex:string|null):string{
  if(body.length>8_000_000)throw Error('시간표 제공처 응답이 너무 큽니다');
  body=body.replace(/\x00+$/,'');
- if(!/^enc[12]:/.test(body))return body;
+ if(!/^enc\d+:/.test(body))return body;
  if(!keyHex||!/^\w{64}$/.test(keyHex)||!/^[\da-f]+$/i.test(keyHex))throw Error('시간표 응답 해석 정보가 없습니다');
  const parts=body.split(':');if(parts.length!==4)throw Error('잘못된 시간표 응답 형식');
- const encoding=parts[0]==='enc2'?'base64':'hex';
+ const encoding=parts[0]==='enc1'?'hex':'base64';
  const binary=parts.slice(1).map(value=>{
   const bytes=Buffer.from(value,encoding);
   if(!value||bytes.toString(encoding)!==value)throw Error('잘못된 시간표 응답 인코딩');

@@ -56,6 +56,7 @@ export default function TimetablePage() {
   const [justFinished, setJustFinished] = useState(false);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
+  const [freshness,setFreshness]=useState<{stale:boolean;fetchedAt:string;weekStart:string|null}|null>(null);
   const [source,  setSource]  = useState<'comcigan' | 'manual'>('comcigan');
   const [dbMissing, setDbMissing] = useState(false);
   const todayWd = (() => { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; })();
@@ -64,7 +65,7 @@ export default function TimetablePage() {
     : [];
   const todayDate = new Date().toLocaleDateString('sv-SE');
   const prepInput = todaySubjects.length >= 2 ? `${todayDate} ${grade}학년 ${cls}반 시간표: ${todaySubjects.join(', ')}` : '';
-  const prepTip = useCachedAi('timetable', prepInput, `timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing);
+  const prepTip = useCachedAi('timetable', prepInput, `timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing && !freshness?.stale);
 
   const loadComcigan = useCallback(async (g: number, c: number, refresh = false) => {
     setLoading(true); setError('');
@@ -76,6 +77,7 @@ export default function TimetablePage() {
       if (json.grades?.length)  setGrades(json.grades);
       if (json.classes?.length) setClasses(json.classes);
       setSource('comcigan');
+      setFreshness({stale:!!json.stale,fetchedAt:json.fetchedAt||'',weekStart:json.weekStart||null});
     } catch (e: any) {
       setError(e.message ?? String(e));
       await loadManual(g, c);
@@ -96,7 +98,7 @@ export default function TimetablePage() {
       if (!g2[r.weekday]) g2[r.weekday] = {};
       g2[r.weekday][r.period] = { subject: r.subject, teacher: '' };
     }
-    setGrid(g2); setSource('manual');
+    setGrid(g2); setSource('manual');setFreshness(null);
   }, []);
 
   const didInitRef = useRef(false);
@@ -109,6 +111,12 @@ export default function TimetablePage() {
     if (own) { setGrade(own.grade); setCls(own.cls); loadComcigan(own.grade, own.cls); }
     else loadComcigan(1, 1);
   }, [authLoading, user, profile]); // eslint-disable-line
+
+  useEffect(()=>{
+    if(!freshness?.stale||editing)return;
+    const timer=setInterval(()=>{if(document.visibilityState==='visible')void loadComcigan(grade,cls,true)},60_000);
+    return()=>clearInterval(timer);
+  },[freshness?.stale,editing,grade,cls,loadComcigan]);
 
   const switchTo = (g: number, c: number) => {
     if (editing) { showAlert('편집 중에는 변경할 수 없습니다.', 'info'); return; }
@@ -199,6 +207,8 @@ export default function TimetablePage() {
         />
         {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
       </div>
+
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 조회에 실패해 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">

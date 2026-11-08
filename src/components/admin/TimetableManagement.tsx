@@ -56,6 +56,7 @@ export default function TimetablePage() {
   const [justFinished, setJustFinished] = useState(false);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
+  const [freshness,setFreshness]=useState<{stale:boolean;fetchedAt:string;weekStart:string|null}|null>(null);
   const [source,  setSource]  = useState<'comcigan' | 'manual'>('comcigan');
   const [dbMissing, setDbMissing] = useState(false);
   const todayWd = (() => { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; })();
@@ -64,7 +65,7 @@ export default function TimetablePage() {
     : [];
   const todayDate = new Date().toLocaleDateString('sv-SE');
   const prepInput = todaySubjects.length >= 2 ? `${todayDate} Grade ${grade}, Class ${cls} timetable: ${todaySubjects.join(', ')}` : '';
-  const prepTip = useCachedAi('timetable', prepInput, `admin-en-timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing);
+  const prepTip = useCachedAi('timetable', prepInput, `admin-en-timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing && !freshness?.stale);
 
   const loadComcigan = useCallback(async (g: number, c: number, refresh = false) => {
     setLoading(true); setError('');
@@ -76,6 +77,7 @@ export default function TimetablePage() {
       if (json.grades?.length)  setGrades(json.grades);
       if (json.classes?.length) setClasses(json.classes);
       setSource('comcigan');
+      setFreshness({stale:!!json.stale,fetchedAt:json.fetchedAt||'',weekStart:json.weekStart||null});
     } catch (e: any) {
       setError(/[가-힣]/.test(e.message??String(e))?'The timetable provider is unavailable.':(e.message??String(e)));
       await loadManual(g, c);
@@ -96,7 +98,7 @@ export default function TimetablePage() {
       if (!g2[r.weekday]) g2[r.weekday] = {};
       g2[r.weekday][r.period] = { subject: r.subject, teacher: '' };
     }
-    setGrid(g2); setSource('manual');
+    setGrid(g2); setSource('manual');setFreshness(null);
   }, []);
 
   const didInitRef = useRef(false);
@@ -109,6 +111,12 @@ export default function TimetablePage() {
     if (own) { setGrade(own.grade); setCls(own.cls); loadComcigan(own.grade, own.cls); }
     else loadComcigan(1, 1);
   }, [authLoading, user, profile]); // eslint-disable-line
+
+  useEffect(()=>{
+    if(!freshness?.stale||editing)return;
+    const timer=setInterval(()=>{if(document.visibilityState==='visible')void loadComcigan(grade,cls,true)},60_000);
+    return()=>clearInterval(timer);
+  },[freshness?.stale,editing,grade,cls,loadComcigan]);
 
   const switchTo = (g: number, c: number) => {
     if (editing) { showAlert("Finish editing before switching classes.", 'info'); return; }
@@ -199,6 +207,8 @@ export default function TimetablePage() {
         />
         {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />  Editing</span>}
       </div>
+
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">Latest provider check failed. Showing the last verified timetable; substitutions may be missing.<span className="mt-1 block text-xs">Last verified: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('en-GB',{timeZone:'Asia/Seoul'}):'Unavailable'}{freshness.weekStart?' · Week of '+freshness.weekStart:''} · Retrying automatically.</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">

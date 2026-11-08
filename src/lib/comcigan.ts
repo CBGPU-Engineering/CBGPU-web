@@ -7,8 +7,10 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest } from './comciganSource';
 import {decodeComciganPayload} from './comciganPayload';
+import {createTimetableLoader} from './timetableCache';
+import {fileTimetableStore} from './timetableStore';
 
 const ENTRY_URL = 'http://컴시간학생.kr';
 const SCHOOL_KEYWORD = '충북과학고';
@@ -16,11 +18,11 @@ const SCHOOL_DISPLAY_NAME = '충북과학고등학교';
 const MAX_PERIOD = 8;
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-const META_TTL = 6 * 60 * 60 * 1000; // 사이트 토큰은 자주 바뀌지 않음
-const DATA_TTL = 5 * 60 * 1000; // 실시간 변경 반영을 위해 짧게 유지
+const META_TTL = 5 * 60 * 1000; // 제공처 조회 정보도 데이터 갱신마다 확인
 
 interface SiteMeta {
   baseUrl: string;
+  request: ReturnType<typeof extractComciganRequest>;
   transport: ReturnType<typeof extractComciganTransport>;
   extractCode: string; // e.g. "/36179?17384l"
   scPrefix: string;    // e.g. "73629_"
@@ -43,6 +45,9 @@ export interface TimetableResult {
   grades: number[];
   classes: number[];
   schoolName: string;
+  stale:boolean;
+  fetchedAt:string;
+  weekStart:string|null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -50,10 +55,10 @@ type RawData = Record<string, any>;
 
 let metaCache: { meta: SiteMeta; at: number } | null = null;
 let schoolCodeCache: number | null = null;
-let dataCache: { raw: RawData; at: number } | null = null;
 
-async function fetchBuffer(url: string): Promise<Buffer> {
-  const res = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(10_000) });
+
+async function fetchBuffer(url: string, token?:string|null): Promise<Buffer> {
+  const res = await fetch(url, { headers: { 'User-Agent': UA,...(token?{'X-Hour-Token':token}:{}) }, signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`HTTP ${res.status} (${url})`);
   return Buffer.from(await res.arrayBuffer());
 }
@@ -62,8 +67,8 @@ async function fetchEucKr(url: string): Promise<string> {
   return iconv.decode(await fetchBuffer(url), 'euc-kr');
 }
 
-async function fetchUtf8(url: string): Promise<string> {
-  return (await fetchBuffer(url)).toString('utf-8');
+async function fetchUtf8(url: string,token?:string|null): Promise<string> {
+  return (await fetchBuffer(url,token)).toString('utf-8');
 }
 
 function hexEncodeEucKr(text: string): string {
@@ -79,7 +84,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin, ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
+  return { baseUrl: frameUrl.origin, request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -90,8 +95,9 @@ async function getMeta(forceRefresh = false): Promise<SiteMeta> {
 }
 
 async function searchSchool(meta: SiteMeta, keyword: string) {
-  const url = meta.baseUrl + meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix;
-  const body = decodeComciganPayload(await fetchUtf8(url),meta.transport.key);
+  const query=meta.request.base64Search?encodeURIComponent(Buffer.from(meta.extractCode.split('?')[1]+encodeURIComponent(keyword)+meta.transport.suffix).toString('base64')):null;
+  const url = meta.baseUrl + (query?meta.extractCode.split('?')[0]+'?'+query:meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const list = JSON.parse(jsonStr)?.['학교검색'];
   if (!list?.length) throw new Error('검색된 학교가 없습니다');
@@ -112,7 +118,7 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const payload = `${meta.scPrefix}${schoolCode}_0_${meta.scSuffix}${meta.transport.suffix}`;
   const b64 = Buffer.from(payload).toString('base64');
   const url = meta.baseUrl + path + '?' + b64;
-  const body = decodeComciganPayload(await fetchUtf8(url),meta.transport.key);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {
@@ -122,24 +128,13 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   return raw;
 }
 
-async function loadRawData(forceRefresh = false): Promise<RawData> {
-  if (!forceRefresh && dataCache && Date.now() - dataCache.at < DATA_TTL) return dataCache.raw;
-
-  try {
-    const meta = await getMeta();
-    const raw = await fetchRawData(meta, await resolveSchoolCode(meta));
-    dataCache = { raw, at: Date.now() };
-    return raw;
-  } catch {
-    // 컴시간 쪽 토큰(extractCode 등)이 갱신됐을 가능성 -> 메타를 새로 받아 1회 재시도
-    metaCache = null;
-    schoolCodeCache = null;
-    const meta = await getMeta(true);
-    const raw = await fetchRawData(meta, await resolveSchoolCode(meta));
-    dataCache = { raw, at: Date.now() };
-    return raw;
-  }
-}
+const timetableLoader=createTimetableLoader(async()=>{
+ try{const meta=await getMeta();return await fetchRawData(meta,await resolveSchoolCode(meta))}
+ catch{
+  metaCache=null;schoolCodeCache=null;
+  const meta=await getMeta(true);return await fetchRawData(meta,await resolveSchoolCode(meta));
+ }
+},fileTimetableStore());
 
 // ---- 컴시간 웹뷰어 디코딩 로직 포팅 ----
 
@@ -221,7 +216,7 @@ function decodeGrid(raw: RawData, grade: number, cls: number): Grid {
 }
 
 export async function getTimetable(grade: number, cls: number, opts?: { forceRefresh?: boolean }): Promise<TimetableResult> {
-  const raw = await loadRawData(opts?.forceRefresh);
+  const {raw,at,stale} = await timetableLoader.get(opts?.forceRefresh);
 
   const classCounts: number[] = raw?.['학급수'] ?? [];
   const maxGrade = Math.max(0, classCounts.length - 1);
@@ -237,5 +232,6 @@ export async function getTimetable(grade: number, cls: number, opts?: { forceRef
     grades,
     classes,
     schoolName: SCHOOL_DISPLAY_NAME,
+    stale,fetchedAt:new Date(at).toISOString(),weekStart:typeof raw["시작일"]==="string"?raw["시작일"]:null,
   };
 }

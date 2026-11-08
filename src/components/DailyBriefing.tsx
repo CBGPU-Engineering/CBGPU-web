@@ -34,6 +34,7 @@ export default function DailyBriefing() {
   const [loaded, setLoaded] = useState(false);
 
   const [timetableSubjects, setTimetableSubjects] = useState<string[] | null>(null);
+  const [timetableStale,setTimetableStale]=useState(false);
   const [gpuStatus, setGpuStatus] = useState<string | null>(null);
   const [makingStatus, setMakingStatus] = useState<string | null>(null);
 
@@ -66,6 +67,8 @@ export default function DailyBriefing() {
       .then(res => res.json())
       .then(json => {
         if (controller.signal.aborted) return;
+        setTimetableStale(!!json.stale);
+        if(json.stale){setTimetableSubjects(null);return}
         const grid = json?.grid ?? {};
         const subjects = PERIODS.map(p => grid[todayWd]?.[p]?.subject).filter(Boolean);
         setTimetableSubjects(subjects);
@@ -142,6 +145,7 @@ export default function DailyBriefing() {
       ) : (
         <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
       )}
+      {timetableStale&&<p className="mt-2 text-xs text-amber-700 dark:text-amber-300">시간표 최신 확인이 지연되어 요약에서 제외했어요. 시간표 페이지에서 마지막 확인 정보를 볼 수 있어요.</p>}
       <p className="mt-3 text-xs text-muted-foreground">급식·공지·시간표·GPU/제작 현황을 참고한 AI 요약이에요. 자세한 내용은 각 페이지에서 확인하세요.</p>
     </section>
   );

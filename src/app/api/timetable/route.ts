@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
       grades:  result.grades,
       classes: result.classes,
       school:  result.schoolName,
-    });
+      stale:result.stale,fetchedAt:result.fetchedAt,weekStart:result.weekStart,
+    }, {headers:{"Cache-Control":"no-store"}});
   } catch (e: any) {
     return NextResponse.json({ error: e.message ?? String(e) }, { status: 500 });
   }
