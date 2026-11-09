@@ -52,11 +52,11 @@ export default function ForgotPassword() {
       <p className="text-sm text-muted-foreground text-center font-medium mb-6">가입한 이메일로 재설정 링크를 보내드립니다.</p>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">Email</label>
+          <label className="text-sm font-semibold text-foreground">Email</label>
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             value={email}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required

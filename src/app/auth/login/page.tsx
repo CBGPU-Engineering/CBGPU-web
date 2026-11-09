@@ -44,24 +44,24 @@ export default function Login() {
       <h1 className="cb-page-title mb-6 text-center">로그인</h1>
       <form onSubmit={handleLogin} className="space-y-4">
         <div className="space-y-1">
-          <label htmlFor="login-email" className="text-xs font-semibold text-muted-foreground ml-1">이메일</label>
+          <label htmlFor="login-email" className="text-sm font-semibold text-foreground">이메일</label>
           <Input
             id="login-email" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} inputMode="email" type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
           />
         </div>
         <div className="space-y-1">
-          <div className="flex items-center justify-between ml-1">
-            <label htmlFor="login-password" className="text-xs font-semibold text-muted-foreground">비밀번호</label>
-            <Link href="/auth/forgot-password" className="text-xs font-semibold text-primary hover:underline">비밀번호 찾기</Link>
+          <div className="flex items-center justify-between">
+            <label htmlFor="login-password" className="text-sm font-semibold text-foreground">비밀번호</label>
+            <Link href="/auth/forgot-password" className="text-sm font-semibold text-primary hover:underline">비밀번호 찾기</Link>
           </div>
           <div className="relative"><Input
             id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'}
             placeholder="••••••••"
-            className="h-12 bg-background border-input text-foreground font-bold pr-12"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background pr-12"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
           /><button type="button" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(v=>!v)} className="absolute right-1 top-1/2 -translate-y-1/2 size-10 min-h-0 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>

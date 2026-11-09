@@ -51,22 +51,22 @@ export default function ResetPassword() {
       <h1 className="cb-page-title mb-6 text-center">새 비밀번호 설정</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">새 비밀번호</label>
+          <label className="text-sm font-semibold text-foreground">새 비밀번호</label>
           <Input
             type="password"
             placeholder="••••••••"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             value={newPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
             required
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">새 비밀번호 확인</label>
+          <label className="text-sm font-semibold text-foreground">새 비밀번호 확인</label>
           <Input
             type="password"
             placeholder="••••••••"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             value={confirmPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
             required

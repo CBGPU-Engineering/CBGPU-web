@@ -81,21 +81,21 @@ export default function Signup() {
       <h1 className="cb-page-title mb-6 text-center">Join CBGPU</h1>
       <form onSubmit={handleSignup} className="space-y-4">
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">이름 (Name)</label>
+          <label className="text-sm font-semibold text-foreground">이름 (Name)</label>
           <Input
             placeholder="Name"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             onChange={(e: any) => setFullName(e.target.value)}
             required
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">학번 (Student ID)</label>
+          <label className="text-sm font-semibold text-foreground">학번 (Student ID)</label>
           <Input
             placeholder="2309"
             inputMode="numeric"
             maxLength={4}
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             value={studentId}
             onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
             required
@@ -104,21 +104,21 @@ export default function Signup() {
           <p className="text-xs text-muted-foreground font-medium ml-1">같은 학년도에는 한 학번으로 한 계정만 사용할 수 있습니다.</p>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">Email</label>
+          <label className="text-sm font-semibold text-foreground">Email</label>
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             onChange={(e: any) => setEmail(e.target.value)}
             required
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">Password</label>
+          <label className="text-sm font-semibold text-foreground">Password</label>
           <Input
             type="password"
             placeholder="••••••••"
-            className="h-12 bg-background border-input text-foreground font-bold"
+            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
             onChange={(e: any) => setPassword(e.target.value)}
             required
           />
