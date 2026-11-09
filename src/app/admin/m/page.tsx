@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useMemo,useState} from 'react';
 import {useRouter,useSearchParams} from 'next/navigation';
-import {Check,Clock,Cpu,ExternalLink,UserPlus,X,ArrowLeft,Loader2} from 'lucide-react';
+import {Check,Clock,Cpu,ExternalLink,UserPlus,X,ArrowLeft,Loader2,Activity} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth} from '@/lib/useAuth';
 import {siteHref} from '@/lib/siteHref';
@@ -13,6 +13,9 @@ import {Button} from '@/components/ui/button';
  */
 type Tab='home'|'signups'|'gpu'|'more';
 const tabs:{id:Tab;label:string}[]=[{id:'home',label:'요약'},{id:'signups',label:'가입 승인'},{id:'gpu',label:'GPU 예약'},{id:'more',label:'더보기'}];
+type StudyHealth={state:'ok'|'warning'|'critical'|'unknown';label:string;detail:string;minutesAgo:number|null;hoursLeft:number|null;rooms:number|null};
+const healthTone={ok:'text-emerald-500',warning:'text-amber-500',critical:'text-destructive',unknown:'text-muted-foreground'} as const;
+const leftText=(h:number|null)=>h===null?'':h<=0?'만료됨':h<24?`${Math.max(1,Math.round(h))}시간`:`${Math.floor(h/24)}일 ${Math.round(h%24)}시간`;
 const fmt=(v:string)=>new Date(v).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
 export default function MobileAdminPage(){
  const {isLoading:authLoading,isAdmin}=useAuth();
@@ -21,6 +24,7 @@ export default function MobileAdminPage(){
  const tab:Tab=param&&tabs.some(t=>t.id===param)?param:'home';
  const [profiles,setProfiles]=useState<any[]>([]),[reservations,setReservations]=useState<any[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[busyKey,setBusyKey]=useState('');
+ const [study,setStudy]=useState<StudyHealth|null>(null);
  const go=(next:Tab)=>router.replace(`/admin/m${next==='home'?'':`?tab=${next}`}`);
  const load=useCallback(async()=>{
   setLoading(true);setError('');
@@ -31,6 +35,7 @@ export default function MobileAdminPage(){
     supabase.from('reservations').select('*, profiles:user_id (full_name, student_id)').order('created_at',{ascending:false}).limit(300).then(({data,error})=>{if(error)throw new Error('GPU 예약을 불러오지 못했습니다.');return data||[]}),
    ]);
    setProfiles(p);setReservations(r);
+   try{const res=await fetch('/api/admin/health',{headers:{Authorization:`Bearer ${session?.access_token||''}`},cache:'no-store'});setStudy(res.ok?(await res.json()).study:null)}catch{setStudy(null)}
   }catch(e){setError(e instanceof Error?e.message:'불러오지 못했습니다.')}
   setLoading(false);
  },[]);
@@ -53,6 +58,7 @@ export default function MobileAdminPage(){
  {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
  {loading&&!profiles.length&&!reservations.length?<div className="flex justify-center py-16"><LoadingSpinner label="불러오는 중"/></div>:<>
   {tab==='home'&&<div className="space-y-3">
+   {study&&<a href="/admin/study" className="flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-5"><span className={`mt-0.5 ${healthTone[study.state]}`}><Activity className="size-6"/></span><span className="min-w-0 flex-1"><span className="block text-sm text-muted-foreground">자습 연결</span><span className={`block text-lg font-semibold ${healthTone[study.state]}`}>{study.label}</span><span className="mt-1 block text-sm text-muted-foreground">{study.detail}</span><span className="mt-2 block text-xs text-muted-foreground">{study.hoursLeft!==null&&<>토큰 만료까지 {leftText(study.hoursLeft)}</>}{study.minutesAgo!==null&&<>{study.hoursLeft!==null?' · ':''}마지막 점검 {study.minutesAgo}분 전</>}</span></span></a>}
    <button onClick={()=>go('signups')} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left"><span><span className="block text-sm text-muted-foreground">승인 대기 계정</span><span className="block text-3xl font-semibold">{pendingProfiles.length}<span className="ml-1 text-base font-medium">명</span></span></span><UserPlus className="size-6 text-primary"/></button>
    <button onClick={()=>go('gpu')} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left"><span><span className="block text-sm text-muted-foreground">대기 중인 GPU 예약</span><span className="block text-3xl font-semibold">{pendingReservations.length}<span className="ml-1 text-base font-medium">건</span></span></span><Cpu className="size-6 text-primary"/></button>
   </div>}
