@@ -10,6 +10,7 @@ interface Props {
   title?: string;
   description?: string;
   confirmLabel?: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -19,6 +20,7 @@ export default function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel,
   onConfirm,
   onCancel,
 }: Props) {
@@ -32,7 +34,7 @@ export default function ConfirmDialog({
         </DialogHeader>
         <DialogFooter className="gap-2 flex-row justify-end">
           <Button variant="outline" onClick={onCancel} className="font-semibold text-xs">
-            {english ? 'Cancel' : '취소'}
+            {cancelLabel ?? (english ? 'Cancel' : '취소')}
           </Button>
           <Button variant="destructive" onClick={onConfirm} className="font-semibold text-xs">
             {confirmLabel ?? (english ? 'Delete' : '삭제')}
