@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import {browserAuthLock} from './browserAuthLock';
+import {browserSharedSessionStorage} from './sharedSessionStorage';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -13,6 +14,8 @@ export const supabase = existing ?? createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     lock:browserAuthLock,
+    // Regular CBGPU sites share one login through a .cbgpu.com cookie; admin/equipment hosts keep their own (undefined = localStorage).
+    storage:browserSharedSessionStorage(),
   }
 });
 if(typeof window!=='undefined')window.__cbgpuAuthClient=supabase;
