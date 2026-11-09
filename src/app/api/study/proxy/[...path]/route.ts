@@ -10,9 +10,9 @@ export const preferredRegion = 'icn1';
 
 const BASE_URL = 'https://api.cbsh.edu-set.com';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.SUPABASE_INTERNAL_URL||'http://127.0.0.1:54321';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false}});
 
 /**
  * 이 프록시는 관리자가 등록해둔 조회용 공유 토큰으로 학교 API를 대신 호출한다.
