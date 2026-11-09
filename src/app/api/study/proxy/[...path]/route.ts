@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { decryptToken } from '@/lib/edusetTokenCrypto';
 import { requireApprovedUser } from '@/lib/studyAuth';
-import {selectSelfStudyEntries} from '@/lib/studyLookup';
+import {selectSelfStudyEntries,selectStudyRooms,selectStudyStudents} from '@/lib/studyLookup';
+import {createStudyReadQueue} from '@/lib/studyReadQueue';
 
 // 함수가 기본값(iad1, 미국 동부)에서 돌면 Supabase·학교 API(둘 다 한국 근처) 왕복마다 태평양을 건넌다.
 export const preferredRegion = 'icn1';
@@ -94,7 +95,8 @@ type UpstreamResult = { status: number; body: string; contentType: string };
 // 모든 방문자가 같은 공유 토큰으로 같은 데이터를 보므로 응답을 사용자와 무관하게 공유한다.
 // 방 구성·학생 목록·정책은 거의 안 바뀌어서 오래, 신청 현황(search/occupations)만 짧게 둔다.
 // 같은 요청이 동시에 여러 개 오면 하나만 학교 API로 보내고 나머지는 그 결과를 기다린다.
-const responseCache = new Map<string, { expires: number; promise: Promise<UpstreamResult> }>();
+const readQueue=createStudyReadQueue();
+const responseCache = new Map<string, { expires: number; pending:boolean; promise: Promise<UpstreamResult> }>();
 const STATIC_TTL_MS = 5 * 60_000;
 const LIVE_TTL_MS = 15_000;
 const MAX_BODY_CHARS = 1_000;
@@ -109,15 +111,9 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
     return { status: 503, body: JSON.stringify({ message: '관리자가 아직 자습신청 토큰을 등록하지 않았습니다.' }), contentType: 'application/json' };
   }
 
-  const send = (accessToken: string) => fetch(targetUrl, {
-    method: request.method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
-      'x-jwt': accessToken,
-    },
-    body,
-    signal:AbortSignal.timeout(12_000),
+  const send=(accessToken:string)=>readQueue(async()=>{
+   const response=await fetch(targetUrl,{method:request.method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`,'x-jwt':accessToken},body,signal:AbortSignal.timeout(12_000)});
+   return {status:response.status,body:await response.text(),contentType:getResponseContentType(response.headers)};
   });
 
   let upstream = await send(token);
@@ -128,12 +124,12 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
     if (refreshedToken && refreshedToken !== token) upstream = await send(refreshedToken);
   }
 
-  let responseBody=await upstream.text();
-  if(upstream.ok&&targetUrl.pathname==='/selfstudy/search'){
-    try{responseBody=JSON.stringify(selectSelfStudyEntries(JSON.parse(responseBody)))}
+  let responseBody=upstream.body;
+  if(upstream.status>=200&&upstream.status<300&&['/selfstudy/search','/rooms','/students'].includes(targetUrl.pathname)){
+    try{responseBody=JSON.stringify((targetUrl.pathname==='/rooms'?selectStudyRooms:targetUrl.pathname==='/students'?selectStudyStudents:selectSelfStudyEntries)(JSON.parse(responseBody)))}
     catch{return {status:502,body:JSON.stringify({message:'학교 자습 조회 응답의 형식을 확인하지 못했습니다. 잠시 후 다시 조회해 주세요.'}),contentType:'application/json'}}
   }
-  return { status: upstream.status, body: responseBody, contentType: getResponseContentType(upstream.headers) };
+  return { status: upstream.status, body: responseBody, contentType: upstream.contentType };
 }
 
 async function proxyRequest(request: NextRequest) {
@@ -160,17 +156,17 @@ async function proxyRequest(request: NextRequest) {
   const cached = responseCache.get(key);
 
   let promise: Promise<UpstreamResult>;
-  if (!forceFresh && cached && cached.expires > Date.now()) {
+  if (cached && (cached.pending || !forceFresh && cached.expires > Date.now())) {
     promise = cached.promise;
   } else {
     promise = callUpstream(request, targetUrl, body);
-    const entry = { expires: Date.now() + ttlFor(pathname), promise };
+    const entry = { expires: Date.now() + ttlFor(pathname),pending:true, promise };
     responseCache.set(key, entry);
     trimCache(responseCache);
     // 실패 응답이나 예외는 기억하지 않는다 — 다음 요청이 바로 다시 시도한다.
     promise.then(
-      (result) => { if ((result.status < 200 || result.status >= 300) && responseCache.get(key) === entry) responseCache.delete(key); },
-      () => { if (responseCache.get(key) === entry) responseCache.delete(key); },
+      (result) => { entry.pending=false;if ((result.status < 200 || result.status >= 300) && responseCache.get(key) === entry) responseCache.delete(key); },
+      () => { entry.pending=false;if (responseCache.get(key) === entry) responseCache.delete(key); },
     );
   }
 

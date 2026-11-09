@@ -9,6 +9,8 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import SelfStudyReminderSettings from '@/components/study/SelfStudyReminderSettings';
 import SupervisorCard from '@/components/study/SupervisorCard';
+import {useAuth} from '@/lib/useAuth';
+import {loadStudyRooms,formatStudentLabel,type RoomData,type OccupancyEntry,type Occupant} from '@/lib/studyRoomView';
 import StudyRequestPanel,{type StudyPrefill} from '@/components/study/StudyRequestPanel';
 import {
   getRooms, getRoomComposition, getStudents,
@@ -19,40 +21,6 @@ import {
 const OFFICIAL_STUDY_URL = 'https://cbsh.edu-set.com';
 /** 정책을 못 받아왔을 때만 쓰는 최후의 추정치 */
 const FALLBACK_MIN_PERIODS = 4;
-
-function formatStudentLabel(student: Student): string {
-  if (!student || typeof student.grade !== 'number' || typeof student.classNo !== 'number' || typeof student.number !== 'number') {
-    return student?.name ?? '알 수 없음';
-  }
-  const studentNumber = student.grade * 1000 + student.classNo * 100 + student.number;
-  return `${studentNumber} ${student.name}`;
-}
-
-interface Occupant {
-  label: string;
-  period: number;
-  status: SelfStudyStatus;
-}
-
-interface OccupancyEntry {
-  roomId: number;
-  roomName: string;
-  seatName: string;
-  period: number;
-  label: string;
-  studentId: number;
-  status: SelfStudyStatus;
-}
-
-interface RoomData {
-  room: Room;
-  seats: Seat[];
-  obstacles: Obstacle[];
-  occupantsBySeat: Map<number, Occupant[]>;
-  occupancy: OccupancyEntry[];
-  /** true면 "신청자 없음"이 아니라 조회 자체가 실패한 것 — 0명과 구분해서 보여줘야 한다 */
-  failed?: boolean;
-}
 
 function PeriodSelector({ periods, selectedPeriod, onSelect, className = '' }: {
   periods: number[];
@@ -80,7 +48,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
   selectedPeriod: number;
   failed?: boolean;
   onRetry: () => void;
-  onChoose: (seat: Seat) => void;
+  onChoose?: (seat: Seat) => void;
 }) {
   const [view, setView] = useState('map');
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -136,7 +104,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
               <><p className="font-semibold">{selected.seat.name}번 좌석 · {selected.status}</p>
                 <p className="mt-1 break-words text-muted-foreground">{selected.occupants.length
                   ? selected.occupants.map(o => `${o.label}${o.status === 'PENDING' ? ' (승인 대기)' : ''}`).join(' · ')
-                  : '이 교시에 조회된 신청자가 없습니다.'}</p><Button type="button" variant="outline" size="sm" className="mt-2 min-h-11" disabled={selected.occupants.length>0} onClick={()=>onChoose(selected.seat)}>이 자리 신청하기</Button></>
+                  : '이 교시에 조회된 신청자가 없습니다.'}</p><Button type="button" variant="outline" size="sm" className="mt-2 min-h-11" disabled={selected.occupants.length>0||!onChoose} onClick={()=>onChoose?.(selected.seat)}>이 자리 신청하기</Button></>
             ) : <p className="text-muted-foreground">확인할 좌석을 선택하세요.</p>}
           </div>
           <div ref={mapRef} role="region" aria-label={`${selectedPeriod}교시 좌석 배치도, 스크롤 가능`} tabIndex={0}
@@ -243,11 +211,14 @@ function useStudyDialogViewport() {
 }
 
 export default function StudyPage() {
+  const {user,isLoading:authLoading,isApproved}=useAuth();
+  const generation=useRef(0),busy=useRef(false),lastDate=useRef('');
   const dialogViewport = useStudyDialogViewport();
   const [requestPrefill,setRequestPrefill]=useState<StudyPrefill|null>(null);
   const consumePrefill=useCallback(()=>setRequestPrefill(null),[]);
   const [roomData, setRoomData] = useState<RoomData[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [studentsUnavailable,setStudentsUnavailable]=useState(false);
   const [periodCount, setPeriodCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -260,113 +231,59 @@ export default function StudyPage() {
   const [searchMode, setSearchMode] = useState<'room' | 'student'>('room');
 
   const loadData = useCallback(async (fresh = false) => {
+    if(authLoading||!user||!isApproved||busy.current)return;
+    busy.current=true;const request=++generation.current;
+    const dateStr=localDateStr();
+    if(lastDate.current&&lastDate.current!==dateStr){setRoomData([]);setAllStudents([]);setUpdatedAt(null);setOpenRoomId(null)}
     setLoading(true);
     setError('');
 
     try {
       const today = new Date();
-      const dateStr = localDateStr(today);
+
 
       // 서로 의존하지 않는 요청은 전부 한꺼번에 시작한다. 예전엔 (방·정책·학생) → (신청 현황) → (방별 구성)
       // 순서로 기다려서 왕복 지연이 세 번 쌓였다. 학생 목록은 학생 검색에서만 쓰므로 화면 표시를 막지 않는다.
       const policyPromise = getSelfStudyPolicy().catch(() => null);
-      void getStudents().catch(() => []).then(setAllStudents);
+      void getStudents().then(rows=>{if(request===generation.current){setAllStudents(rows);setStudentsUnavailable(false)}}).catch(()=>{if(request===generation.current){setAllStudents([]);setStudentsUnavailable(true)}});
 
       // 전체 신청을 한 번 조회한다. 실패하면 오류를 표시하고 개별 조회로 확장하지 않는다.
       const [rooms, selfStudyEntries] = await Promise.all([
         getRooms(), searchSelfStudy({ date: dateStr }, { fresh }),
       ]);
 
-      const data = await Promise.all(
-        rooms.map(async (room): Promise<RoomData> => {
-          if (!room.hasSeats) {
-            // 정원제 자습실은 좌석이 없어서 SeatMap은 못 그리지만, 신청자 명단 자체는
-            // /selfstudy/search 응답에 seat: null로 같이 들어있으니 그대로 모아서 보여준다.
-            // type 값이 좌석형과 다를 수 있어 room.id만으로 매칭한다 (좌석 없는 실이라 e.seat은 항상 비어있음).
-            try {
-              const occupancy: OccupancyEntry[] = [];
-              const roomEntries = selfStudyEntries.filter(
-                (e) => e.room.id === room.id && e.status !== 'REJECTED'
-              );
-
-
-                roomEntries.forEach((e) => {
-                  occupancy.push({
-                    roomId: room.id, roomName: room.name, seatName: '',
-                    period: e.period, label: formatStudentLabel(e.student),
-                    studentId: e.student.id, status: e.status,
-                  });
-                });
-
-
-              return { room, seats: [], obstacles: [], occupantsBySeat: new Map(), occupancy };
-            } catch {
-              return { room, seats: [], obstacles: [], occupantsBySeat: new Map(), occupancy: [], failed: true };
-            }
-          }
-          try {
-            // 좌석 배치는 신청 내역과 별도인 교실 구성 정보다.
-            const composition = await getRoomComposition(room.id);
-            const seatNameById = new Map(composition.seats.map((s) => [s.id, s.name]));
-            const occupantsBySeat = new Map<number, Occupant[]>();
-            const occupancy: OccupancyEntry[] = [];
-
-            const addEntry = (
-              seatId: number, seatName: string, period: number,
-              studentId: number, label: string, status: SelfStudyStatus
-            ) => {
-              const list = occupantsBySeat.get(seatId) ?? [];
-              list.push({ label, period, status });
-              occupantsBySeat.set(seatId, list);
-              occupancy.push({ roomId: room.id, roomName: room.name, seatName, period, label, studentId, status });
-            };
-
-            const roomEntries = selfStudyEntries.filter(
-              (e) => e.room.id === room.id && e.type === 'selfstudy' && e.status !== 'REJECTED' && e.seat
-            );
-
-
-              roomEntries.forEach((e) => {
-                if (!e.seat) return;
-                addEntry(e.seat.id, e.seat.name, e.period, e.student.id, formatStudentLabel(e.student), e.status);
-              });
-
-
-            return { room, seats: composition.seats, obstacles: composition.obstacles, occupantsBySeat, occupancy };
-          } catch {
-            return { room, seats: [], obstacles: [], occupantsBySeat: new Map(), occupancy: [], failed: true };
-          }
-        })
-      );
+      const data=await loadStudyRooms(rooms,selfStudyEntries,id=>getRoomComposition(id,{fresh}));
+      if(request!==generation.current)return;
+      if(dateStr!==localDateStr())throw Error('날짜가 바뀌었습니다. 새로고침해 주세요.');
+      lastDate.current=dateStr;
 
       setRoomData(data);
 
       const policy = await policyPromise;
       const policyCount = policy ? getPeriodCountForDate(policy, today) : 0;
+      if(request!==generation.current)return;
       if (policyCount > 0) {
         setPeriodCount(policyCount);
       } else {
         let maxObserved = 0;
-        data.forEach(({ occupantsBySeat }) => {
-          occupantsBySeat.forEach((list) => {
-            list.forEach((o) => {
-              if (o.period > maxObserved) maxObserved = o.period;
-            });
-          });
-        });
+        data.forEach(({occupancy})=>occupancy.forEach(row=>{maxObserved=Math.max(maxObserved,row.period)}));
         setPeriodCount(Math.max(FALLBACK_MIN_PERIODS, maxObserved));
       }
       setUpdatedAt(new Date());
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '현황을 불러오지 못했습니다.');
+      if(request===generation.current)setError(err instanceof Error ? err.message : '현황을 불러오지 못했습니다.');
     } finally {
-      setLoading(false);
+      if(request===generation.current){busy.current=false;setLoading(false)}
     }
-  }, []);
+  }, [user?.id,authLoading,isApproved]);
 
-  useEffect(() => {
-    void loadData();
-  }, [loadData]);
+  useEffect(()=>{
+    setRoomData([]);setAllStudents([]);setStudentsUnavailable(false);setUpdatedAt(null);setError('');setOpenRoomId(null);lastDate.current='';
+    if(!authLoading&&user&&!isApproved){setLoading(false);setError('승인된 계정만 조회할 수 있습니다.')}else void loadData();
+    const refresh=()=>{if(document.visibilityState==='visible')void loadData()};
+    const timer=setInterval(refresh,30_000);document.addEventListener('visibilitychange',refresh);
+    return()=>{generation.current++;busy.current=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)};
+  },[loadData]);
 
   const periods = useMemo(
     () => Array.from({ length: periodCount }, (_, i) => i + 1),
@@ -409,7 +326,7 @@ export default function StudyPage() {
 
   const selectedStudentEntry = useMemo(() => {
     if (!selectedStudent) return undefined;
-    return occupancyIndex.find((e) => e.studentId === selectedStudent.id && e.period === selectedPeriod);
+    return occupancyIndex.find((e) => String(e.studentId) === String(selectedStudent.id) && e.period === selectedPeriod);
   }, [occupancyIndex, selectedStudent, selectedPeriod]);
 
   const openRoomData = openRoomId != null ? roomData.find((d) => d.room.id === openRoomId) : undefined;
@@ -537,6 +454,8 @@ export default function StudyPage() {
         )}
       </div>
 
+      {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했습니다. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
+
       {error && (
         <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 md:flex-row md:items-start md:justify-between">
           <div className="flex items-start gap-3">
@@ -562,7 +481,7 @@ export default function StudyPage() {
         <div className="rounded-2xl border border-border bg-card divide-y divide-border">
           {sortedRoomData.map(({ room, seats, occupiedCount, failed }) => {
             const total = seats.length;
-            const clickable = room.hasSeats ? total > 0 : true;
+            const clickable = !!failed || (room.hasSeats ? total > 0 : true);
             return (
               <button
                 key={room.id}
@@ -623,7 +542,7 @@ export default function StudyPage() {
               <div className="min-h-0 min-w-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-3">
               <PeriodSelector periods={periods} selectedPeriod={selectedPeriod} onSelect={setSelectedPeriod} />
               {openRoomData.room.hasSeats ? (
-                <SeatMap
+                <><SeatMap
                   key={openRoomData.room.id}
                   room={openRoomData.room}
                   seats={openRoomData.seats}
@@ -632,8 +551,9 @@ export default function StudyPage() {
                   selectedPeriod={selectedPeriod}
                   failed={openRoomData.failed}
                   onRetry={() => loadData(true)}
-                  onChoose={seat=>{setOpenRoomId(null);setRequestPrefill({roomId:openRoomData.room.id,seatId:seat.id,period:selectedPeriod})}}
-                />
+                  onChoose={error||loading?undefined:seat=>{setOpenRoomId(null);setRequestPrefill({roomId:openRoomData.room.id,seatId:seat.id,period:selectedPeriod})}}
+                />{openRoomData.failed&&<><p className="text-sm text-destructive">{openRoomData.failedReason}</p><CapacityList occupancy={openRoomData.occupancy} selectedPeriod={selectedPeriod}/></>}
+                </>
               ) : (
                 <CapacityList
                   occupancy={openRoomData.occupancy}

@@ -6,7 +6,7 @@
  * 이 앱의 Supabase 액세스 토큰을 함께 실어 보낸다 (apiFetch 참고).
  */
 import { supabase } from '@/lib/supabase';
-import {selectSelfStudyEntries} from './studyLookup';
+import {selectSelfStudyEntries,selectStudyRooms,selectStudyStudents} from './studyLookup';
 
 const BASE_URL = '/api/study/proxy';
 const TOKEN_KEY = 'eduset_token';
@@ -95,10 +95,7 @@ export interface SelfStudyPolicy {
 
 /** 'YYYY-MM-DD'. UTC가 아니라 로컬(한국) 날짜 기준 — toISOString()은 자정~오전9시에 전날로 밀린다 */
 export function localDateStr(date: Date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  return date.toLocaleDateString('sv-SE',{timeZone:'Asia/Seoul'});
 }
 
 /** 해당 날짜에 자율학습이 몇 교시까지 있는지. 정책 자체가 없거나 그날 배정이 없으면 0 */
@@ -234,11 +231,11 @@ export async function getMe(): Promise<Me> {
 }
 
 export function getRooms(): Promise<Room[]> {
-  return apiFetch('/rooms');
+  return apiFetch('/rooms').then(selectStudyRooms);
 }
 
 export function getStudents(): Promise<Student[]> {
-  return apiFetch('/students');
+  return apiFetch('/students').then(selectStudyStudents);
 }
 
 /** /policies/:id 응답은 { data: <policy> } 형태로 한 번 더 감싸져 있다 */
@@ -247,8 +244,8 @@ export async function getSelfStudyPolicy(): Promise<SelfStudyPolicy> {
   return res.data;
 }
 
-export function getRoomComposition(roomId: number | string): Promise<RoomComposition> {
-  return apiFetch(`/rooms/${roomId}/composition`);
+export function getRoomComposition(roomId: number | string,options?:{fresh?:boolean}): Promise<RoomComposition> {
+  return apiFetch(`/rooms/${roomId}/composition`,options?.fresh?{headers:{'x-cbgpu-fresh':'1'}}:undefined);
 }
 
 export function getSeatOccupations(roomId: number | string, dateStr: string): Promise<SeatOccupation[]> {

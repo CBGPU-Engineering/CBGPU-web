@@ -8,6 +8,8 @@ test('mixed official outstay and selfstudy responses preserve seated and capacit
 });
 test('outstay-only days are valid empty study results; malformed real applications fail closed',()=>{
  assert.deepEqual(selectSelfStudyEntries([{type:'outstay',student:{id:2}}]),[]);
- for(const rows of [null,{},[{type:'selfstudy',student:{id:1},period:1}],[{type:'selfstudy',room:{id:1},period:1}],[{...study(1,1,1),period:0}]])assert.throws(()=>selectSelfStudyEntries(rows));
+ for(const rows of [null,{},[{type:'selfstudy',student:{id:1},period:1}],[{...study(1,1,1),period:0}]])assert.throws(()=>selectSelfStudyEntries(rows));
  assert.equal(selectSelfStudyEntries([{...study(1,1,1),period:'2'}])[0].period,2);
 });
+
+test('missing student details retain an occupied seat with an explicit unknown label',()=>{const row=selectSelfStudyEntries([{...study(1,1,1),student:null,studentId:12}])[0];assert.equal(row.student.id,12);assert.equal(row.student.name,'학생 정보 확인 불가');assert.equal(row.seat.id,1)});
