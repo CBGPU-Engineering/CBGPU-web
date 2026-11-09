@@ -11,11 +11,12 @@ import SelfStudyReminderSettings from '@/components/study/SelfStudyReminderSetti
 import SupervisorCard from '@/components/study/SupervisorCard';
 import {useAuth} from '@/lib/useAuth';
 import {loadStudyRooms,formatStudentLabel,type RoomData,type OccupancyEntry,type Occupant} from '@/lib/studyRoomView';
+import StudySeatBrowser from '@/components/study/StudySeatBrowser';
 import StudyRequestPanel,{type StudyPrefill} from '@/components/study/StudyRequestPanel';
 import {
   getRooms, getRoomComposition, getStudents,
   getSelfStudyPolicy, getPeriodCountForDate, localDateStr, searchSelfStudy,
-  type Room, type Seat, type Obstacle, type Student, type SelfStudyStatus,
+  type Room, type Seat, type Obstacle, type Student,
 } from '@/lib/eduset';
 
 const OFFICIAL_STUDY_URL = 'https://cbsh.edu-set.com';
@@ -50,109 +51,21 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
   onRetry: () => void;
   onChoose?: (seat: Seat) => void;
 }) {
-  const [view, setView] = useState('map');
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [seatQuery, setSeatQuery] = useState('');
-  const columns = Math.max(1, room.width, ...seats.map(s => s.x + 1), ...obstacles.map(o => o.x + o.w));
-  const rowCount = Math.max(1, room.height, ...seats.map(s => s.y + 1), ...obstacles.map(o => o.y + o.h));
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [cellSize, setCellSize] = useState(104);
-  useEffect(() => {
-    const element = mapRef.current;
-    if (!element) return;
-    const resize = () => setCellSize(window.matchMedia('(max-width: 640px)').matches
-      ? Math.max(52, Math.min(72, Math.floor((element.clientWidth - 16) / columns))) : 104);
-    resize();
-    const observer = new ResizeObserver(resize);
-    observer.observe(element);
-    window.addEventListener('resize', resize);
-    return () => { observer.disconnect(); window.removeEventListener('resize', resize); };
-  }, [view, failed, columns]);
-  const rows = seats.map(seat => {
-    const occupants = occupantsBySeat.get(seat.id)?.filter(o => o.period === selectedPeriod) ?? [];
-    const pending = occupants.length > 0 && occupants.every(o => o.status === 'PENDING');
-    return { seat, occupants, pending, status: occupants.length ? (pending ? '승인 대기' : '신청됨') : '빈자리' };
+  const [selectedId, setSelectedId] = useState('');
+  const rows=seats.map(seat=>{
+    const occupants=occupantsBySeat.get(seat.id)?.filter(o=>o.period===selectedPeriod)??[];
+    return {seat,available:occupants.length===0,pending:occupants.length>0&&occupants.every(o=>o.status==='PENDING'),detail:occupants.map(o=>o.label).join(' · ')};
   });
-  const selected = rows.find(row => row.seat.id === selectedId);
-  const emptyCount = rows.filter(row => row.occupants.length === 0).length;
-  const query = seatQuery.trim().toLocaleLowerCase();
-  const filtered = rows.filter(row => `${row.seat.name} ${row.status} ${row.occupants.map(o => o.label).join(' ')}`.toLocaleLowerCase().includes(query))
-    .sort((a, b) => a.seat.name.localeCompare(b.seat.name, 'ko', { numeric: true }));
-
-  if (failed) {
-    return <div role="alert" className="space-y-3 rounded-2xl border p-4">
-      <p className="text-sm">좌석 현황을 불러오지 못했습니다. 빈자리 여부를 확인할 수 없습니다.</p>
-      <Button variant="outline" className="min-h-11" onClick={onRetry}>다시 불러오기</Button>
-    </div>;
-  }
-
-  return (
-    <div className="min-w-0 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          총 {seats.length}석 · <strong className="font-semibold text-foreground">빈자리 {emptyCount}석</strong> · 신청 {seats.length - emptyCount}석
-        </p>
-        <SegmentedTabs appearance="neutral" label="좌석 표시 방법" value={view} onChange={setView}
-          items={[{ value: 'map', label: '배치도' }, { value: 'list', label: '목록' }]} />
-      </div>
-
-      {view === 'map' ? (
-        <>
-          <p className="text-xs text-muted-foreground">배치도 안에서 좌우·위아래로 스크롤하세요. 좌석을 누르면 학번과 이름을 확인할 수 있어요.</p>
-          <div aria-live="polite" className="rounded-lg border border-border bg-card p-3 text-sm">
-            {selected ? (
-              <><p className="font-semibold">{selected.seat.name}번 좌석 · {selected.status}</p>
-                <p className="mt-1 break-words text-muted-foreground">{selected.occupants.length
-                  ? selected.occupants.map(o => `${o.label}${o.status === 'PENDING' ? ' (승인 대기)' : ''}`).join(' · ')
-                  : '이 교시에 조회된 신청자가 없습니다.'}</p><Button type="button" variant="outline" size="sm" className="mt-2 min-h-11" disabled={selected.occupants.length>0||!onChoose} onClick={()=>onChoose?.(selected.seat)}>이 자리 신청하기</Button></>
-            ) : <p className="text-muted-foreground">확인할 좌석을 선택하세요.</p>}
-          </div>
-          <div ref={mapRef} role="region" aria-label={`${selectedPeriod}교시 좌석 배치도, 스크롤 가능`} tabIndex={0}
-            className="h-[min(38dvh,360px)] min-w-0 w-full overflow-auto rounded-2xl border border-border bg-muted p-2 focus-visible:outline-2 focus-visible:outline-ring">
-            <div className="relative" data-seat-canvas style={{ width: columns * cellSize, height: rowCount * cellSize, margin: '0' }}>
-              {obstacles.map(ob => (
-                <div key={`ob-${ob.id}`} className="absolute flex items-center justify-center overflow-hidden rounded border border-border bg-card px-1 text-center text-sm font-medium text-muted-foreground"
-                  style={{ left: ob.x * cellSize, top: ob.y * cellSize, width: ob.w * cellSize, height: ob.h * cellSize, fontSize: Math.min(12, cellSize * 0.3) }}
-                  title={ob.name}>{ob.name}</div>
-              ))}
-              {rows.map(({ seat, occupants, pending, status }) => (
-                <button key={seat.id} type="button" onClick={() => setSelectedId(seat.id)}
-                  aria-pressed={selectedId === seat.id}
-                  aria-label={`${seat.name}번 좌석, ${status}${occupants.length ? ', ' + occupants.map(o => o.label + (o.status === 'PENDING' ? ' 승인 대기' : '')).join(', ') : ''}`}
-                  className={`absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border-2 px-2 text-center focus-visible:outline-2 focus-visible:outline-foreground focus-visible:outline-offset-2 ${selectedId === seat.id ? 'ring-2 ring-foreground ring-offset-2 ring-offset-muted' : ''} ${pending
- ? 'border-dashed border-primary bg-card text-foreground'
- : occupants.length ? 'border-primary bg-primary text-primary-foreground'
- : 'border-input bg-card text-foreground'}`}
-                  style={{ left: seat.x * cellSize, top: seat.y * cellSize, width: cellSize - 8, height: cellSize - 8 }}>
-                  <span className="text-base font-semibold leading-tight">{seat.name}</span>
-                  <span className="text-xs font-medium">{status}</span>
-                  {occupants.length > 0 && <span className={cellSize < 80 ? "sr-only" : "line-clamp-2 w-full break-words text-sm leading-tight"}>
-                    {occupants.length === 1 ? occupants[0].label : `${occupants[0].label} 외 ${occupants.length - 1}명`}
-                  </span>}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <Input type="search" aria-label="좌석 번호 또는 신청자 검색" placeholder="좌석 번호, 이름, 학번 또는 빈자리 검색"
-            className="min-h-11" value={seatQuery} onChange={event => setSeatQuery(event.target.value)} />
-          <div className="divide-y divide-border rounded-2xl border border-border">
-            {filtered.map(({ seat, occupants, status }) => <div key={seat.id} className="flex items-start gap-4 px-4 py-3">
-              <span className="min-w-12 shrink-0 text-base font-semibold">{seat.name}번</span>
-              <div className="min-w-0 flex-1">
-                <p className={`text-sm font-medium ${occupants.length ? 'text-primary' : 'text-muted-foreground'}`}>{status}</p>
-                {occupants.map((o, index) => <p key={index} className="mt-1 break-words text-base">{o.label}{o.status === 'PENDING' ? ' · 승인 대기' : ''}</p>)}
-              </div>
-            </div>)}
-            {!filtered.length && <p role="status" className="p-5 text-sm text-muted-foreground">일치하는 좌석이 없습니다.</p>}
-          </div>
-        </>
-      )}
-      <p className="text-xs text-muted-foreground">조회 시점의 현황입니다. 신청 결과와 승인 여부는 내 자습 신청에서 확인하세요.</p>
+  const selected=rows.find(row=>String(row.seat.id)===selectedId);
+  if(failed)return <div role="alert" className="space-y-3 rounded-2xl border p-4"><p className="text-sm">좌석 현황을 불러오지 못했습니다. 빈자리 여부를 확인할 수 없습니다.</p><Button variant="outline" className="min-h-11" onClick={onRetry}>다시 불러오기</Button></div>;
+  return <div className="min-w-0 space-y-4">
+    <StudySeatBrowser items={rows} obstacles={obstacles} width={room.width} height={room.height} selectedId={selectedId} onSelect={seat=>setSelectedId(String(seat.id))} selectOccupied/>
+    <div aria-live="polite" className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-3 shadow-sm">
+      <div className="min-w-0 flex-1">{selected?<><p className="font-semibold">{selected.seat.name}번 좌석 · {selected.available?'빈자리':selected.pending?'승인 대기':'신청됨'}</p><p className="mt-1 break-words text-xs text-muted-foreground">{selected.detail||`${selectedPeriod}교시에 신청할 수 있는 자리예요.`}</p></>:<p className="text-sm text-muted-foreground">좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.</p>}</div>
+      {selected&&<Button type="button" className="min-h-11" disabled={!selected.available||!onChoose} onClick={()=>onChoose?.(selected.seat)}>{selected.available?'이 자리 신청하기':'이미 신청된 자리'}</Button>}
     </div>
-  );
+    <p className="text-xs text-muted-foreground">조회 시점의 현황이에요. 신청할 때 빈자리를 다시 확인해요.</p>
+  </div>;
 }
 
 /** 정원제(좌석 없는) 자습실용 — 좌석 배치 대신 해당 교시 신청자만 단순 목록으로 보여준다 */
@@ -228,6 +141,8 @@ export default function StudyPage() {
   const [openRoomId, setOpenRoomId] = useState<number | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(1);
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
+  const [onlyAvailable,setOnlyAvailable]=useState(false);
+  const [roomSort,setRoomSort]=useState('name');
   const [searchMode, setSearchMode] = useState<'room' | 'student'>('room');
 
   const loadData = useCallback(async (fresh = false) => {
@@ -302,7 +217,7 @@ export default function StudyPage() {
     return roomData.filter(({ room }) => room.name.toLowerCase().includes(q));
   }, [roomData, query]);
 
-  /** 신청자 많은 실이 맨 위로 오도록 정렬 */
+  /** Keep names stable between refreshes; optionally prioritize available seats. */
   const sortedRoomData = useMemo(() => {
     return filteredRoomData
       .map((d) => {
@@ -311,8 +226,11 @@ export default function StudyPage() {
           : d.occupancy.filter((o) => o.period === selectedPeriod).length;
         return { ...d, occupiedCount };
       })
-      .sort((a, b) => b.occupiedCount - a.occupiedCount);
-  }, [filteredRoomData, selectedPeriod]);
+      .filter(d=>!onlyAvailable||(!d.failed&&d.room.hasSeats&&d.seats.length>d.occupiedCount))
+      .sort((a,b)=>roomSort==='free'
+        ? ((b.failed||!b.room.hasSeats? -1:b.seats.length-b.occupiedCount)-(a.failed||!a.room.hasSeats? -1:a.seats.length-a.occupiedCount))||a.room.name.localeCompare(b.room.name,'ko',{numeric:true})
+        : a.room.name.localeCompare(b.room.name,'ko',{numeric:true}));
+  }, [filteredRoomData, selectedPeriod,onlyAvailable,roomSort]);
 
   const studentMatches = useMemo(() => {
     const q = studentQuery.trim().toLowerCase();
@@ -345,7 +263,7 @@ export default function StudyPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 id="study-heading" className="text-3xl font-semibold tracking-tight">자습신청</h1>
-          <p className="mt-2 text-sm text-muted-foreground">공식 EduSet 현황 확인과 본인 자습 신청을 한곳에서 진행하세요.</p>
+          <p className="mt-2 text-sm text-muted-foreground">오늘의 자리를 고르고, 여러 교시를 한 번에 신청하세요.</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <button
@@ -356,7 +274,7 @@ export default function StudyPage() {
           >
             <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <Button onClick={openOfficialSite} className="min-h-11 gap-2">
+          <Button variant="outline" onClick={openOfficialSite} className="min-h-11 gap-2">
             <ExternalLink className="size-4" />
             <span>공식 사이트 열기</span><span className="sr-only"> (공식 사이트, 새 탭)</span>
           </Button>
@@ -364,7 +282,7 @@ export default function StudyPage() {
       </div>
 
       <StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />
-      <SupervisorCard />
+      <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
 
       <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{loading ? (roomData.length ? '현황 업데이트 중 · 이전 결과를 표시합니다.' : '자습 현황을 불러오는 중…') : updatedAt ? `최근 조회 ${updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}${error ? ' · 업데이트 실패, 이전 결과입니다.' : ''}` : '아직 조회된 현황이 없습니다.'}</p>
 
@@ -390,8 +308,8 @@ export default function StudyPage() {
               value={query}
               aria-label="자습실 검색"
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="자습실 이름으로 검색"
-              className="pl-9"
+              placeholder="어느 교실에서 자습할까요?"
+              className="min-h-12 pl-9"
             />
           </div>
         ) : selectedStudent ? (
@@ -454,6 +372,8 @@ export default function StudyPage() {
         )}
       </div>
 
+      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<select aria-label="자습실 정렬" value={roomSort} onChange={e=>setRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="free">빈자리 많은 순</option></select></label></div>}
+
       {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했습니다. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
 
       {error && (
@@ -475,7 +395,7 @@ export default function StudyPage() {
       ) : error && roomData.length === 0 ? null : sortedRoomData.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
           {roomData.length === 0 ? '아직 확인 가능한 자습실 데이터가 없습니다.' : '검색 결과가 없습니다.'}
-          {query && <Button variant="outline" className="mt-4 min-h-11" onClick={() => setQuery('')}>전체 자습실 보기</Button>}
+          {(query||onlyAvailable) && <Button variant="outline" className="mt-4 min-h-11" onClick={() => {setQuery('');setOnlyAvailable(false)}}>전체 자습실 보기</Button>}
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-card divide-y divide-border">
@@ -497,7 +417,7 @@ export default function StudyPage() {
                       <span className="text-sm text-destructive">조회 실패 · 새로고침해 주세요</span>
                     ) : room.hasSeats ? (
                       <span className="text-sm text-muted-foreground tabular-nums">
-                        <span className="font-semibold text-foreground">{occupiedCount}명</span> 신청 · 총 {total}석
+                        <span className="font-semibold text-emerald-700 dark:text-emerald-400">빈자리 {Math.max(0,total-occupiedCount)}석</span> · 전체 {total}석
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground tabular-nums">
@@ -505,7 +425,8 @@ export default function StudyPage() {
                       </span>
                     )}
                   </div>
-                  {clickable && <p className="text-sm text-muted-foreground">{room.hasSeats ? '좌석 보기' : '신청자 보기'}</p>}
+                  {room.hasSeats&&!failed&&total>0&&<div className="h-1.5 max-w-48 overflow-hidden rounded-full bg-muted" aria-hidden="true"><div className="h-full rounded-full bg-primary/60" style={{width:`${Math.min(100,occupiedCount/total*100)}%`}}/></div>}
+                  {clickable && <p className="text-xs text-muted-foreground">{room.hasSeats ? '좌석 선택하기' : '신청자 보기'}</p>}
                 </div>
                 {clickable && <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground shrink-0" />}
               </button>
@@ -514,6 +435,7 @@ export default function StudyPage() {
         </div>
       )}
 
+      <SupervisorCard />
       <details className="rounded-2xl border bg-card p-4">
         <summary className="min-h-11 cursor-pointer font-semibold">알림 및 연결 설정</summary>
         <div className="flex flex-wrap items-center gap-3 pt-3"><SelfStudyReminderSettings /><Button asChild variant="outline" className="min-h-11"><Link href="/study/contribute"><Puzzle className="size-4" /> 연결 기여하기</Link></Button></div>
@@ -535,7 +457,7 @@ export default function StudyPage() {
               <DialogHeader className="shrink-0 flex-row items-start gap-3 border-b p-3 text-left sm:p-4">
                 <div className="min-w-0 flex-1 space-y-1">
                   <DialogTitle className="break-words leading-snug">{openRoomData.room.name} {openRoomData.room.hasSeats ? '좌석 배치' : '신청자 명단'}</DialogTitle>
-                  <DialogDescription>{openRoomData.room.hasSeats ? '좌석 번호 옆에 학번/이름이 표시됩니다.' : '정원제 자습실이라 좌석 없이 신청자만 표시됩니다.'}</DialogDescription>
+                  <DialogDescription>{openRoomData.room.hasSeats ? '좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.' : '정원제 자습실이라 좌석 없이 신청자만 표시됩니다.'}</DialogDescription>
                 </div>
                 <DialogClose asChild><Button type="button" variant="ghost" size="icon" aria-label="자습실 창 닫기" className="size-11 shrink-0"><X className="size-5" /></Button></DialogClose>
               </DialogHeader>
