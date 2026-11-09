@@ -57,6 +57,7 @@ function createDemoServer(){
     if(!user)return reply(401,{message:'Demo login required'});
     const endpoint=p.slice('/api/study/proxy'.length);
     if(endpoint.endsWith('/composition'))return reply(200,composition);
+    if(endpoint==='/selfstudy/search')return reply(201,[...records,{id:'demo-outstay',type:'outstay',student,from:'2026-11-03T00:00:00Z',to:'2026-11-03T03:00:00Z'}]);
     if(endpoint.startsWith('/policies/'))return reply(200,{data:policy});
     if(endpoint==='/rooms')return reply(200,rooms);if(endpoint==='/teachers')return reply(200,teachers);
     return reply(200,[]);

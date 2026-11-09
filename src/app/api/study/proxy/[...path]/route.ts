@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { decryptToken } from '@/lib/edusetTokenCrypto';
 import { requireApprovedUser } from '@/lib/studyAuth';
+import {selectSelfStudyEntries} from '@/lib/studyLookup';
 
 // 함수가 기본값(iad1, 미국 동부)에서 돌면 Supabase·학교 API(둘 다 한국 근처) 왕복마다 태평양을 건넌다.
 export const preferredRegion = 'icn1';
@@ -127,7 +128,12 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
     if (refreshedToken && refreshedToken !== token) upstream = await send(refreshedToken);
   }
 
-  return { status: upstream.status, body: await upstream.text(), contentType: getResponseContentType(upstream.headers) };
+  let responseBody=await upstream.text();
+  if(upstream.ok&&targetUrl.pathname==='/selfstudy/search'){
+    try{responseBody=JSON.stringify(selectSelfStudyEntries(JSON.parse(responseBody)))}
+    catch{return {status:502,body:JSON.stringify({message:'학교 자습 조회 응답의 형식을 확인하지 못했습니다. 잠시 후 다시 조회해 주세요.'}),contentType:'application/json'}}
+  }
+  return { status: upstream.status, body: responseBody, contentType: getResponseContentType(upstream.headers) };
 }
 
 async function proxyRequest(request: NextRequest) {

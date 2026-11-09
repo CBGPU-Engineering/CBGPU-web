@@ -6,6 +6,7 @@
  * 이 앱의 Supabase 액세스 토큰을 함께 실어 보낸다 (apiFetch 참고).
  */
 import { supabase } from '@/lib/supabase';
+import {selectSelfStudyEntries} from './studyLookup';
 
 const BASE_URL = '/api/study/proxy';
 const TOKEN_KEY = 'eduset_token';
@@ -265,7 +266,7 @@ export function searchSelfStudy(params: { date: string }, options?: { fresh?: bo
     body: JSON.stringify({ ...params, date: /^\d{4}-\d{2}-\d{2}$/.test(params.date) ? params.date + 'T00:00:00.000Z' : params.date }),
     // 프록시는 신청 현황을 몇 초간 공유 캐시한다. 사용자가 직접 새로고침했을 땐 건너뛴다.
     headers: options?.fresh ? { 'x-cbgpu-fresh': '1' } : undefined,
-  });
+  }).then(selectSelfStudyEntries);
 }
 
 export function occupySeat(roomId: number, seatId: number, period: number, date: string): Promise<void> {
