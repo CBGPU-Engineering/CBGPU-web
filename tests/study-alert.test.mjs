@@ -4,16 +4,19 @@ const H=3600_000,now=Date.parse('2026-11-09T12:00:00Z');
 const at=(t,extra={})=>({status:'healthy',checked_at:new Date(t-60_000).toISOString(),rooms:82,failed_rooms:0,connection_expires_at:new Date(now+200*H).toISOString(),...extra});
 const ok=(extra={})=>at(now,extra);
 test('healthy and far from expiry sends nothing',()=>{assert.equal(decide(ok(),now,{}).send,false)});
-test('72h warning is sent once, then repeats only after 12h',()=>{
- const s=ok({connection_expires_at:new Date(now+60*H).toISOString()});
- const first=decide(s,now,{});assert.equal(first.send,true);assert.equal(first.key,'expiring_72h');
- const exp=new Date(now+60*H).toISOString();
- assert.equal(decide(at(now+H,{connection_expires_at:exp}),now+H,{key:'expiring_72h',sentAt:now}).send,false);
- assert.equal(decide(at(now+13*H,{connection_expires_at:exp}),now+13*H,{key:'expiring_72h',sentAt:now}).send,true);
+test('no warning more than 24h before expiry',()=>{
+ for(const h of [100,60,30,24.5]) assert.equal(decide(ok({connection_expires_at:new Date(now+h*H).toISOString()}),now,{}).send,false);
 });
-test('moving from 72h to 24h warns again immediately',()=>{
- const s=ok({connection_expires_at:new Date(now+10*H).toISOString()});
- const d=decide(s,now,{key:'expiring_72h',sentAt:now-H});assert.equal(d.send,true);assert.equal(d.key,'expiring_24h');
+test('24h warning is sent once, then repeats only after 12h',()=>{
+ const exp=new Date(now+20*H).toISOString();
+ const first=decide(ok({connection_expires_at:exp}),now,{});assert.equal(first.send,true);assert.equal(first.key,'expiring_24h');
+ assert.equal(decide(at(now+H,{connection_expires_at:exp}),now+H,{key:'expiring_24h',sentAt:now}).send,false);
+ assert.equal(decide(at(now+13*H,{connection_expires_at:exp}),now+13*H,{key:'expiring_24h',sentAt:now}).send,true);
+});
+test('expiring warning is followed by an immediate expired alert',()=>{
+ const exp=new Date(now+1*H).toISOString();
+ const d=decide(at(now+2*H,{connection_expires_at:exp}),now+2*H,{key:'expiring_24h',sentAt:now});
+ assert.equal(d.send,true);assert.equal(d.key,'connection_expired');assert.equal(d.level,'critical');
 });
 test('expired connection is critical',()=>{
  const d=decide(ok({status:'unavailable',detail:'shared_connection_expired'}),now,{});assert.equal(d.level,'critical');assert.equal(d.key,'connection_expired');

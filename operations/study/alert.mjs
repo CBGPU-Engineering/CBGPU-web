@@ -39,9 +39,6 @@ export function decide(status, now, prev = {}) {
   } else if (hoursLeft !== null && hoursLeft <= 24) {
     key = 'expiring_24h'; level = 'warning';
     title = '자습 토큰이 하루 안에 만료돼요'; body = `학교 자습 연결 토큰이 약 ${Math.max(1, Math.round(hoursLeft))}시간 뒤 만료됩니다. 미리 새 토큰을 등록해 주세요.`;
-  } else if (hoursLeft !== null && hoursLeft <= 72) {
-    key = 'expiring_72h'; level = 'warning';
-    title = '자습 토큰이 곧 만료돼요'; body = `학교 자습 연결 토큰이 약 ${Math.round(hoursLeft / 24 * 10) / 10}일 뒤 만료됩니다. 만료 전에 새 토큰을 등록해 주세요.`;
   }
   const lastKey = prev.key || 'ok';
   if (key === 'ok') {

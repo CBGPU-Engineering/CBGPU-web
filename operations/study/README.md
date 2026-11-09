@@ -61,7 +61,7 @@ admin study settings in the app. It never reads tokens or student records.
 
 | Situation | Level | When it is sent |
 | --- | --- | --- |
-| token expires in ≤72h / ≤24h | warning | when the stage changes, then every 12h |
+| token expires in ≤24h | warning | once it enters the last day, then every 12h |
 | token expired, missing, or school read failing | critical | immediately, then every 3h |
 | some room layouts failing | warning | when it starts, then every 12h |
 | probe result missing/overdue (>15 min) | critical | immediately, then every 3h |
