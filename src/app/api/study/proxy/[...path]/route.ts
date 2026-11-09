@@ -124,6 +124,8 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
     if (refreshedToken && refreshedToken !== token) upstream = await send(refreshedToken);
   }
 
+  if(upstream.status===401)return {status:503,body:JSON.stringify({code:'school_connection_expired',message:'학교 조회 연결이 만료되었거나 해제되었습니다. 운영자가 연결을 갱신해야 합니다.'}),contentType:'application/json'};
+
   let responseBody=upstream.body;
   if(upstream.status>=200&&upstream.status<300&&['/selfstudy/search','/rooms','/students'].includes(targetUrl.pathname)){
     try{responseBody=JSON.stringify((targetUrl.pathname==='/rooms'?selectStudyRooms:targetUrl.pathname==='/students'?selectStudyStudents:selectSelfStudyEntries)(JSON.parse(responseBody)))}
