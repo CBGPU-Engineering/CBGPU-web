@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import Image from 'next/image';
-import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing } from 'lucide-react';
+import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing, LogOut } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
@@ -135,6 +135,17 @@ export default function Profile() {
       showError(error.message || '알림 설정 저장 실패');
     } finally {
       setSavingNotifKey(null);
+    }
+  }
+
+  async function handleSignOut() {
+    try {
+      const { error } = await signOutEverywhere();
+      if (error) throw error;
+      showSuccess('로그아웃됐습니다.');
+      router.push('/auth/login');
+    } catch {
+      showError('로그아웃에 실패했습니다.');
     }
   }
 
@@ -474,6 +485,12 @@ export default function Profile() {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm">
+        <Button type="button" variant="outline" onClick={() => void handleSignOut()} className="h-12 w-full rounded-lg font-semibold text-sm gap-2">
+          <LogOut className="size-5" /> 로그아웃
+        </Button>
       </div>
 
       <div className="bg-card ring-1 ring-destructive/20 p-5 rounded-2xl shadow-sm space-y-6">
