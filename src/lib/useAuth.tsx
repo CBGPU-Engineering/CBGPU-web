@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import {matchesPortalSession,portalAuthSessionId,reconcilePortalSession} from '@/lib/portalSession';
 import { User } from '@supabase/supabase-js';
 import { createNativeSessionCoordinator } from '@/lib/nativeSessionCoordinator';
 import { getNativeBridge, onNativeBridgeReady, isNativeAppHint } from '@/lib/nativeBridge';
@@ -80,6 +81,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
       let cancelled = false;
       let verified = false;
       let expectedUser = '';
+      let expectedSessionId:string|null=null;
       let csrf = '';
       let leaving = false;
       const abort = new AbortController();
@@ -92,7 +94,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
       };
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         if (!verified || cancelled) return;
-        if (!session || session.user.id !== expectedUser) { void leave(); return; }
+        if (!matchesPortalSession(session,expectedUser,expectedSessionId)) { void leave(); return; }
         setUser(session.user);
       });
       void (async () => {
@@ -103,17 +105,11 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
           csrf = typeof gate.csrf_token === 'string' ? gate.csrf_token : '';
           expectedUser = typeof gate.user_id === 'string' ? gate.user_id : '';
           if (!expectedUser || !csrf) { await leave(); return; }
-          const { data: existing } = await supabase.auth.getSession();
-          if (cancelled) return;
-          let session = existing.session;
-          // Preserve locally refreshed tokens for the same verified account.
-          if (!session || session.user.id !== expectedUser) {
-            if (!gate.session?.access_token || !gate.session?.refresh_token) { await leave(); return; }
-            const restored = await supabase.auth.setSession({ access_token: gate.session.access_token, refresh_token: gate.session.refresh_token });
-            if (restored.error) throw restored.error;
-            session = restored.data.session;
-          }
-          if (!session || session.user.id !== expectedUser) { await leave(); return; }
+          expectedSessionId=portalAuthSessionId(gate);
+          const session=await reconcilePortalSession(gate,{
+            getSession:async()=>(await supabase.auth.getSession()).data.session,
+            setSession:async tokens=>{if(cancelled)throw Error('Portal check cancelled');const restored=await supabase.auth.setSession(tokens);if(restored.error)throw restored.error;return restored.data.session},
+          });
           if (cancelled) return;
           setUser(session.user);
           await Promise.all([fetchProfile(expectedUser), fetchManagedPrinters(expectedUser)]);
