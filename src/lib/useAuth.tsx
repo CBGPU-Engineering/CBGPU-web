@@ -147,6 +147,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
     // rather than spin indefinitely.
     const fallbackTimeout = nativeHint ? setTimeout(resolveLoading, 8000) : null;
     let explicitSignOut = false;
+    let disposed=false,authGeneration=0;
     const coordinator = createNativeSessionCoordinator({
       webSession: async () => (await supabase.auth.getSession()).data.session,
       saveWeb: async tokens => { const result = await supabase.auth.setSession(tokens); if (result.error) throw result.error; },
@@ -167,6 +168,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const currentUser = session?.user ?? null;
+      const generation=++authGeneration;
       setUser(currentUser);
 
       if (currentUser || !nativeHint || resolved) {
@@ -175,8 +177,9 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
 
       // Fetch profile in the background after auth state is known
       if (currentUser) {
-        fetchProfile(currentUser.id);
-        fetchManagedPrinters(currentUser.id);
+        // Auth callbacks run while Supabase owns its session lock. Defer even
+        // fire-and-forget SDK queries until that callback has returned.
+        setTimeout(()=>{if(disposed||generation!==authGeneration)return;void fetchProfile(currentUser.id);void fetchManagedPrinters(currentUser.id)},0);
       } else {
         setProfile(null);
         setManagedPrinterIds([]);
@@ -218,6 +221,7 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
     });
 
     return () => {
+      disposed=true;
       coordinator.cancel();
       window.removeEventListener('cbgpu:explicit-signout', onExplicitSignOut);
       subscription.unsubscribe();

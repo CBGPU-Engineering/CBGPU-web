@@ -159,11 +159,16 @@ function decodeUserId(token: string): number {
 }
 
 class EdusetError extends Error {}
+let sessionRead:ReturnType<typeof supabase.auth.getSession>|null=null;
+function studySession(){
+ if(!sessionRead)sessionRead=supabase.auth.getSession().finally(()=>{sessionRead=null});
+ return sessionRead;
+}
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const rawToken = getToken();
   const token = rawToken?.startsWith('Bearer ') ? rawToken.slice(7) : rawToken;
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await studySession();
   if (!session) throw new EdusetError('로그인이 필요합니다.');
 
   const res = await fetch(BASE_URL + path, {
@@ -191,7 +196,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function signIn(id: string, password: string, turnstileResponse?: string): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await studySession();
   if (!session) throw new Error('로그인이 필요합니다.');
 
   const response = await fetch('/api/study/auth', {

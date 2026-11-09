@@ -116,6 +116,7 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
       'x-jwt': accessToken,
     },
     body,
+    signal:AbortSignal.timeout(12_000),
   });
 
   let upstream = await send(token);
@@ -162,12 +163,13 @@ async function proxyRequest(request: NextRequest) {
     trimCache(responseCache);
     // 실패 응답이나 예외는 기억하지 않는다 — 다음 요청이 바로 다시 시도한다.
     promise.then(
-      (result) => { if (result.status !== 200 && responseCache.get(key) === entry) responseCache.delete(key); },
+      (result) => { if ((result.status < 200 || result.status >= 300) && responseCache.get(key) === entry) responseCache.delete(key); },
       () => { if (responseCache.get(key) === entry) responseCache.delete(key); },
     );
   }
 
-  const result = await promise;
+  let result:UpstreamResult;
+  try{result=await promise}catch{return NextResponse.json({message:'학교 조회 서버의 응답이 지연되고 있어요. 잠시 후 새로고침해 주세요.'},{status:504,headers:{'Cache-Control':'no-store'}})}
   return new NextResponse(result.body, {
     status: result.status,
     headers: { 'Content-Type': result.contentType, 'Cache-Control': 'no-store' },
