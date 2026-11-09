@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {serverProjectRequest} from '@/lib/deploymentApi';
 import { useAuth } from '@/lib/useAuth';
-import { useAlert } from '@/lib/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -31,18 +30,18 @@ const SCOPE_ICON: Record<AccessScope, React.ReactNode> = {
 
 export default function ServerPage() {
   const { user, isAdmin, isLoading: authLoading } = useAuth();
-  const { showError } = useAlert();
   const router = useRouter();
 
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [listError,setListError]=useState('');
 
   const fetchProjects = async () => {
     if (!user) return;
     setLoading(true);
     const {data,error}=await serverProjectRequest();
-    if (error) showError('프로젝트 목록 로드 실패: ' + error.message);
-    else setProjects(data || []);
+    if(error)setListError('프로젝트 목록을 불러오지 못했습니다: '+error.message);
+    else{setProjects(data||[]);setListError('')}
     setLoading(false);
   };
 
@@ -100,12 +99,13 @@ export default function ServerPage() {
         </div>
       </div>
 
+      {listError&&<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm text-destructive">{listError}</p><Button variant="outline" disabled={loading} onClick={fetchProjects}>다시 불러오기</Button></div>}
       {/* 프로젝트 목록 */}
       {loading ? (
         <div className="py-16 flex items-center justify-center">
           <LoadingSpinner size={48} label="프로젝트 불러오는 중" />
         </div>
-      ) : projects.length === 0 ? (
+      ) : projects.length === 0 && listError ? null : projects.length === 0 ? (
         <div className="text-center py-24 border border-dashed rounded-2xl text-muted-foreground bg-muted/10 pop-in-3d">
           <Server className="size-12 mx-auto mb-4 opacity-20" />
           <p className="font-semibold text-sm opacity-70">배포된 프로젝트가 없습니다</p>

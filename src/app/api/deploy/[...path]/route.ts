@@ -23,7 +23,7 @@ function invalidEngine(env:Record<string,string>,previous?:Record<string,string>
 }
 async function handle(request:NextRequest,context:{params:Promise<{path:string[]}>}){
  const host=request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'';
- if(!['developer.cbgpu.com','app.cbgpu.com','cbgpu.com','localhost:3002','127.0.0.1:3002'].includes(host))return error('Not found',404);
+ if(!['researcher.cbgpu.com','developer.cbgpu.com','app.cbgpu.com','cbgpu.com','localhost:3002','127.0.0.1:3002'].includes(host))return error('Not found',404);
  if(!['GET','HEAD'].includes(request.method)&&request.headers.get('origin')!==`https://${host}`&&!host.startsWith('localhost:')&&!host.startsWith('127.0.0.1:'))return error('Invalid request origin',403);
  if(!ipLimits.allow(request.headers.get('cf-connecting-ip')||'local'))return error('요청이 많습니다. 잠시 후 다시 시도해 주세요.',429);
  let user;try{user=await publicationUser(request)}catch{return error('Authentication unavailable',503)}if(!user)return error('로그인과 계정 승인이 필요합니다.',401);if(!limits.allow(user.id))return error('요청이 많습니다. 잠시 후 다시 시도해 주세요.',429);try{if(!await activeDeploymentSession(request,user.id))return error('로그인 세션이 종료됐습니다. 다시 로그인해 주세요.',401)}catch{return error('세션을 확인하지 못했습니다.',503)}
