@@ -52,3 +52,22 @@ journalctl --user -u cbgpu-study-health.service -n 10
 Run synthetic transport, auth, room-projection and mixed-response tests via
 `npm test`. The browser demo includes `outstay` records and a missing room layout;
 no real school applications are used for testing.
+
+## Admin push alerts
+
+`alert.mjs` runs right after each probe (`ExecStartPost`). It reads only `status.json` and, when needed, sends a short
+push to every admin through the internal `notify-admin-event` function (`type: ops_alert`); tapping it opens the
+admin study settings in the app. It never reads tokens or student records.
+
+| Situation | Level | When it is sent |
+| --- | --- | --- |
+| token expires in ≤72h / ≤24h | warning | when the stage changes, then every 12h |
+| token expired, missing, or school read failing | critical | immediately, then every 3h |
+| some room layouts failing | warning | when it starts, then every 12h |
+| probe result missing/overdue (>15 min) | critical | immediately, then every 3h |
+| back to healthy | info | once |
+
+State lives in `~/.local/share/cbgpu-study-monitor/alert-state.json`. Install next to `check.mjs`
+(`~/.local/lib/cbgpu-study-monitor/alert.mjs`), reload the unit, and check with `node alert.mjs --dry-run`.
+The notify function authenticates with `INTERNAL_TRIGGER_SECRET` from the backend `functions.env`
+(path override: `CBGPU_FUNCTIONS_ENV`). Decision logic is covered by `tests/study-alert.test.mjs`.
