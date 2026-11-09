@@ -48,7 +48,7 @@ export default function Login() {
           <Input
             id="login-email" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} inputMode="email" type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
           />
@@ -61,10 +61,10 @@ export default function Login() {
           <div className="relative"><Input
             id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'}
             placeholder="••••••••"
-            className="bg-background border-input text-foreground font-bold pr-12"
+            className="h-12 bg-background border-input text-foreground font-bold pr-12"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             required
-          /><button type="button" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(v=>!v)} className="absolute right-0 top-0 h-full min-w-11 flex items-center justify-center text-muted-foreground">{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
+          /><button type="button" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(v=>!v)} className="absolute right-1 top-1/2 -translate-y-1/2 size-10 min-h-0 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
         </div>
         <Button
           type="submit" disabled={isSubmitting}

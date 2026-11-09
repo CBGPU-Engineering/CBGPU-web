@@ -84,7 +84,7 @@ export default function Signup() {
           <label className="text-xs font-semibold text-muted-foreground ml-1">이름 (Name)</label>
           <Input
             placeholder="Name"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             onChange={(e: any) => setFullName(e.target.value)}
             required
           />
@@ -95,7 +95,7 @@ export default function Signup() {
             placeholder="2309"
             inputMode="numeric"
             maxLength={4}
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             value={studentId}
             onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
             required
@@ -108,7 +108,7 @@ export default function Signup() {
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             onChange={(e: any) => setEmail(e.target.value)}
             required
           />
@@ -118,7 +118,7 @@ export default function Signup() {
           <Input
             type="password"
             placeholder="••••••••"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             onChange={(e: any) => setPassword(e.target.value)}
             required
           />

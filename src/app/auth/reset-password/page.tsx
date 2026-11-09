@@ -55,7 +55,7 @@ export default function ResetPassword() {
           <Input
             type="password"
             placeholder="••••••••"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             value={newPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
             required
@@ -66,7 +66,7 @@ export default function ResetPassword() {
           <Input
             type="password"
             placeholder="••••••••"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             value={confirmPassword}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
             required

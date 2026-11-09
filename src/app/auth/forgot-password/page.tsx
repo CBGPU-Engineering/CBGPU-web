@@ -56,7 +56,7 @@ export default function ForgotPassword() {
           <Input
             type="email"
             placeholder="이메일 주소를 입력하세요"
-            className="bg-background border-input text-foreground font-bold"
+            className="h-12 bg-background border-input text-foreground font-bold"
             value={email}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
             required
