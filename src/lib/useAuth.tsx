@@ -39,7 +39,7 @@ const AuthContext = createContext<AuthContextType>({
   refreshProfile: async () => {},
 });
 
-export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode; siteHost?: string }) => {
+export const AuthProvider = ({ children, siteHost, portalGate }: { children: React.ReactNode; siteHost?: string; portalGate?: boolean }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [managedPrinterIds, setManagedPrinterIds] = useState<number[]>([]);
@@ -77,7 +77,8 @@ export const AuthProvider = ({ children, siteHost }: { children: React.ReactNode
   };
 
   useEffect(() => {
-    if (['admin.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname)) {
+    // The separate portal login applies on admin always, and on the equipment hosts only while the gateway is in front of them.
+    if (portalGate ?? ['admin.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname)) {
       let cancelled = false;
       let verified = false;
       let expectedUser = '';

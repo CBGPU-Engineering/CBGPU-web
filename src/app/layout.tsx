@@ -93,11 +93,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const adminSite = host === 'admin.cbgpu.com';
   const appWebView=/;\s*wv\)/.test(requestHeaders.get('user-agent')||'');
   const manufacturingSite=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host||'');
+  // The equipment gateway (portal) adds this header only while its separate login is in front of the site (never trust it elsewhere).
+  const portalGate = adminSite || (manufacturingSite && requestHeaders.get('x-cbgpu-portal-gate') === '1');
   const publicSite = section === 'docs' || section === 'arxiv' || host === 'docs.cbgpu.com' || host === 'arxiv.cbgpu.com';
 
   return (
     <html lang={adminSite||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
       <head>
+        {portalGate&&<script dangerouslySetInnerHTML={{ __html: 'window.__CBGPU_PORTAL_GATE=true' }} />}
         {process.env.CBGPU_DEMO!=='1'&&<link rel="preconnect" href="https://cdn.jsdelivr.net" />}
         {process.env.CBGPU_DEMO!=='1'&&<DeferredStylesheet href="https://cdn.jsdelivr.net/gh/toss/tossface/dist/tossface.css" />}
         <script
@@ -115,7 +118,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           disableTransitionOnChange
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
-          <AuthProvider siteHost={host || undefined}>
+          <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
             <AlertProvider english={adminSite||manufacturingSite}>
               {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}

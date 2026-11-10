@@ -17,12 +17,16 @@ export type SharedSessionOptions = { hostname: string; cookies: CookieJar; local
 const CHUNK = 1800; // raw characters per cookie; URL-encoded stays well below the 4KB cookie limit
 const MAX_AGE = 60 * 60 * 24 * 365;
 const ROOT = 'cbgpu.com';
-// Separately authenticated hosts: never share their login with the regular sites.
-const SEPARATE_HOSTS = new Set(['admin.cbgpu.com', 'manufacturing.cbgpu.com', 'print.cbgpu.com', 'laser.cbgpu.com', 'developers.cbgpu.com']);
+// Always separately authenticated: never share their login with the regular sites.
+const SEPARATE_HOSTS = new Set(['admin.cbgpu.com', 'developers.cbgpu.com']);
+// Equipment hosts keep their own login only while the portal gateway is in front of them (portalGate);
+// once it passes through, equipment managers sign in like everyone else.
+const GATEWAY_HOSTS = new Set(['manufacturing.cbgpu.com', 'print.cbgpu.com', 'laser.cbgpu.com']);
 
-export function isSharedSessionHost(hostname: string): boolean {
+export function isSharedSessionHost(hostname: string, portalGate = false): boolean {
   const host = hostname.toLowerCase();
   if (SEPARATE_HOSTS.has(host)) return false;
+  if (GATEWAY_HOSTS.has(host)) return !portalGate;
   return host === ROOT || host.endsWith('.' + ROOT) || host === 'localhost' || host === '127.0.0.1';
 }
 
@@ -101,7 +105,7 @@ export function createSharedSessionStorage(options: SharedSessionOptions) {
 /** Browser wiring; returns undefined when the default (localStorage) storage should be used. */
 export function browserSharedSessionStorage() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
-  if (!isSharedSessionHost(window.location.hostname)) return undefined;
+  if (!isSharedSessionHost(window.location.hostname, Boolean((window as {__CBGPU_PORTAL_GATE?: boolean}).__CBGPU_PORTAL_GATE))) return undefined;
   return createSharedSessionStorage({
     hostname: window.location.hostname,
     cookies: {read: () => document.cookie, write: cookie => { document.cookie = cookie; }},

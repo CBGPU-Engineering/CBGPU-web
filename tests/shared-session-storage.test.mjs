@@ -8,7 +8,11 @@ const K='sb-cbgpu-auth-token';
 const make=(host='app.cbgpu.com')=>{const cookies=jar(),local=mem();return{cookies,local,s:createSharedSessionStorage({hostname:host,cookies,local})}};
 test('which hosts share the login',()=>{
  for(const h of ['cbgpu.com','www.cbgpu.com','app.cbgpu.com','researcher.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','localhost']) assert.equal(isSharedSessionHost(h),true,h);
- for(const h of ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com','developers.cbgpu.com','evil.example.com','cbgpu.com.evil.com']) assert.equal(isSharedSessionHost(h),false,h);
+ for(const h of ['admin.cbgpu.com','developers.cbgpu.com','evil.example.com','cbgpu.com.evil.com']) assert.equal(isSharedSessionHost(h),false,h);
+ // equipment hosts: separate only while the portal gateway is in front
+ for(const h of ['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com']){assert.equal(isSharedSessionHost(h,true),false,h+' gated');assert.equal(isSharedSessionHost(h,false),true,h+' passthrough');assert.equal(isSharedSessionHost(h),true,h+' default')}
+ // admin is separate even if the gate flag is missing
+ assert.equal(isSharedSessionHost('admin.cbgpu.com',false),false);
 });
 test('small session round-trips through a cookie',()=>{const {s,cookies}=make();s.setItem(K,'{"a":1}');assert.equal(s.getItem(K),'{"a":1}');assert.equal([...cookies.store.keys()].join(),K+'.0')});
 test('a large session is split into several cookies and rebuilt exactly',()=>{
