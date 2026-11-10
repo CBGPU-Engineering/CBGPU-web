@@ -138,7 +138,7 @@ export default function MaterialsPage() {
       </div>
     </div>
 
-    <Link href="/ai?tab=search&scope=materials" className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-primary">의미로 자료 찾기 · AI 검색</Link>
+    <Link href="/ai?tool=search&scope=materials" className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-primary">의미로 자료 찾기 · AI 검색</Link>
 
     {availableTags.length > 0 && <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 segmented-tabs" role="group" aria-label="태그 필터">
       {[null, ...availableTags].map(tag => {

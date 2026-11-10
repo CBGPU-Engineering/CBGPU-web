@@ -281,6 +281,7 @@ export default function StudyPage() {
         </div>
       </div>
 
+      <SupervisorCard />
       <StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />
       <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
 
@@ -435,7 +436,6 @@ export default function StudyPage() {
         </div>
       )}
 
-      <SupervisorCard />
       <details className="rounded-2xl border bg-card p-4">
         <summary className="min-h-11 cursor-pointer font-semibold">알림 및 연결 설정</summary>
         <div className="flex flex-wrap items-center gap-3 pt-3"><SelfStudyReminderSettings /><Button asChild variant="outline" className="min-h-11"><Link href="/study/contribute"><Puzzle className="size-4" /> 연결 기여하기</Link></Button></div>

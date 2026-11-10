@@ -1,59 +1,14 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import { UserCheck } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-
-type Duty = { type: string; teacher: string };
-type Supervisors = { date: string | null; duties: Duty[] | null };
-
-const SOURCE_URL = 'https://script.google.com/macros/s/AKfycbzQJ6tHq5yhgnfN_TjL96zSUD8ug28famlojcv9J-6kDTMqfVkezZgcikD7JOyywePu/exec';
-
-const todayKst = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Seoul' }).format(new Date());
-
-/**
- * 오늘의 자습 감독. 서버가 스케줄에 맞춰 외부 스크립트에서 가져와 Supabase에 저장해 두므로, 여기서는 그
- * 저장된 값을 읽기만 한다 (모든 사용자가 같은 값을 보고, 접속은 외부 호출에 영향을 주지 않는다).
- * 오늘 값이 아직 없거나 읽기에 실패하면 카드를 그리지 않는다 — 자습 현황을 보는 데 꼭 필요한 정보가 아니라서
- * 에러 문구로 화면을 어지럽히지 않는다.
- */
-export default function SupervisorCard() {
-  const [data, setData] = useState<Supervisors | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    supabase.from('study_supervisors').select('duty_date, date_label, duties').eq('id', 1).maybeSingle()
-      .then(({ data: row }) => {
-        // 어제 값은 오늘의 감독이 아니므로 보여주지 않는다.
-        if (!cancelled && row && row.duty_date === todayKst()) setData({ date: row.date_label || null, duties: row.duties ?? [] });
-      }, () => {});
-    return () => { cancelled = true; };
-  }, []);
-
-  if (!data?.duties) return null;
-
-  return (
-    <section aria-label="오늘의 자습 감독" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5">
-      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><UserCheck className="size-5" aria-hidden /></div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-muted-foreground">오늘의 자습 감독{data.date ? ` · ${data.date}` : ''}</p>
-        {data.duties.length ? (
-          <ul className="mt-1.5 space-y-1">
-            {data.duties.map((duty, index) => (
-              <li key={`${duty.type}-${index}`} className="flex flex-wrap items-baseline gap-x-2 text-sm">
-                {duty.type && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{duty.type}</span>}
-                <span className="font-semibold">{duty.teacher} 선생님</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-1 text-sm font-bold text-muted-foreground">오늘은 자습 감독이 없어요.</p>
-        )}
-        <p className="mt-2 flex flex-wrap items-center justify-between gap-x-3 text-xs text-muted-foreground">
-          <span>감독 일정은 학교 사정에 따라 변경될 수 있습니다.</span>
-          <a href={SOURCE_URL} target="_blank" rel="noopener noreferrer" className="rounded-md underline underline-offset-4">원본 확인<span className="sr-only"> (새 탭)</span></a>
-        </p>
-      </div>
-    </section>
-  );
+import {useCallback,useEffect,useState} from 'react';
+import {UserCheck,RefreshCw} from 'lucide-react';
+import {supabase} from '@/lib/supabase';
+type Duty={type:string;teacher:string};
+const SOURCE_URL='https://script.google.com/macros/s/AKfycbzQJ6tHq5yhgnfN_TjL96zSUD8ug28famlojcv9J-6kDTMqfVkezZgcikD7JOyywePu/exec';
+const todayKst=()=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+/** One shared daily duty card, before applications and room selection. Never substitute yesterday's data. */
+export default function SupervisorCard(){
+ const [duties,setDuties]=useState<Duty[]|null>(null),[state,setState]=useState<'loading'|'ready'|'missing'|'error'>('loading');
+ const load=useCallback(async()=>{setState('loading');try{const {data,error}=await supabase.from('study_supervisors').select('duty_date,duties').eq('id',1).maybeSingle();if(error)throw error;if(!data||data.duty_date!==todayKst()||!Array.isArray(data.duties)){setDuties(null);setState('missing');return}const byTeacher=new Map<string,Set<string>>();for(const item of data.duties){if(typeof item?.teacher!=='string'||!item.teacher.trim())continue;const teacher=item.teacher.trim(),types=byTeacher.get(teacher)||new Set<string>();if(typeof item.type==='string'&&item.type.trim())types.add(item.type.trim());byTeacher.set(teacher,types)}setDuties([...byTeacher].map(([teacher,types])=>({teacher,type:[...types].join(' · ')})));setState('ready')}catch{setDuties(null);setState('error')}},[]);
+ useEffect(()=>{void load();const timer=setInterval(()=>{if(document.visibilityState==='visible')void load()},60000);return()=>clearInterval(timer)},[load]);
+ return <section aria-label="오늘의 자습 감독" className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 sm:p-5"><div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground"><UserCheck size={21} aria-hidden/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xs font-semibold text-muted-foreground">오늘의 자습 감독 · {todayKst()}</h2><button type="button" onClick={()=>void load()} disabled={state==='loading'} aria-label="자습 감독 새로고침" className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-xs text-muted-foreground hover:bg-muted"><RefreshCw size={12} className={state==='loading'?'animate-spin':''}/>새로고침</button></div>{state==='ready'?duties?.length?<ul className="space-y-1">{duties.map(d=><li key={d.teacher} className="flex flex-wrap items-center gap-x-3 gap-y-1"><strong className="text-lg font-semibold tracking-tight">{d.teacher.replace(/\s*선생님$/,'')} 선생님</strong>{d.type&&<span className="text-xs text-muted-foreground">{d.type}</span>}</li>)}</ul>:<p className="text-sm text-muted-foreground">오늘 등록된 감독 정보가 없어요.</p>:<p role="status" className="text-sm text-muted-foreground">{state==='loading'?'감독 선생님을 확인하고 있어요…':state==='error'?'감독 정보를 불러오지 못했어요. 새로고침해 주세요.':'오늘의 감독 정보가 아직 확인되지 않았어요.'}</p>}<p className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><span>학교 일정에 따라 변경될 수 있어요.</span><a href={SOURCE_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">원본 확인<span className="sr-only"> (새 탭)</span></a></p></div></section>
 }

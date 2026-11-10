@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar';
 import SiteBanner from '@/components/SiteBanner';
 import ApprovalNotice from '@/components/ApprovalNotice';
 import AuthGate from '@/components/AuthGate';
-export default function MainSiteFrame({children}:{children:React.ReactNode}){const path=usePathname(),currentYear=new Date().getFullYear();if(path==='/ai/chat')return <AuthGate>{children}</AuthGate>;if(path==='/')return <>{children}</>;return <>
+export default function MainSiteFrame({children}:{children:React.ReactNode}){const path=usePathname(),currentYear=new Date().getFullYear();if((path==='/ai'||path==='/ai/chat'))return <AuthGate>{children}</AuthGate>;if(path==='/')return <>{children}</>;return <>
               <Navbar />
               <SiteBanner />
               <ApprovalNotice />

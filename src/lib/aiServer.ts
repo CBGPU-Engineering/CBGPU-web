@@ -12,7 +12,7 @@ const origins=new Set([...workspaceOrigins,'https://arxiv.cbgpu.com','https://do
 export async function aiInternal(path:string,owner:string,method='GET',body?:unknown,stream?:ReadableStream<Uint8Array>|null,query=''){
  const key=(await readFile('/home/cbgpu/.config/cbgpu-ai-internal-key','utf8')).trim();
  const headers:Record<string,string>={'x-cbgpu-ai-key':key,'x-cbgpu-owner':owner,'Content-Type':stream?'application/octet-stream':'application/json'};
- return fetch('http://127.0.0.1:3550/'+path+query,{method,headers,body:stream??(body===undefined?undefined:JSON.stringify(body)),...(stream?{duplex:'half'}:{}),signal:AbortSignal.timeout(stream?180_000:path.startsWith('downloads/')||path.endsWith('/artifact')?600_000:20_000),cache:'no-store'} as RequestInit);
+ return fetch('http://127.0.0.1:3550/'+path+query,{method,headers,body:stream??(body===undefined?undefined:JSON.stringify(body)),...(stream?{duplex:'half'}:{}),signal:AbortSignal.timeout(stream?180_000:path.endsWith('/messages')||path.startsWith('web/')?45_000:path.startsWith('downloads/')||path.endsWith('/artifact')?600_000:20_000),cache:'no-store'} as RequestInit);
 }
 export async function aiJson(path:string,owner:string,method='GET',body?:unknown){
  let response:Response;try{response=await aiInternal(path,owner,method,body)}catch{throw new AiFailure('로컬 AI 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.',503)}

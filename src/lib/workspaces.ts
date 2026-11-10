@@ -1,8 +1,8 @@
 import {siteHref} from './siteHref';
 export type WorkspaceId='student'|'researcher';
 export const workspaces:Record<WorkspaceId,{name:string;label:string;eyebrow:string;description:string;host:string;accent:string;primary:string[]}>={
- student:{name:'for Students',label:'학교생활',eyebrow:'오늘 필요한 학교생활, 한곳에서.',description:'자습 신청, 시간표, 급식과 자료 공유를 바로 이용하세요.',host:'student.cbgpu.com',accent:'#4678ed',primary:['/study','/timetable','/meal','/wakeup','/materials']},
- researcher:{name:'for Research & Development',label:'연구·개발',eyebrow:'실험부터 서비스 배포까지, 한곳에서.',description:'GPU, 프론트엔드·서버 배포, 논문 작성과 제작을 함께 이용하세요.',host:'researcher.cbgpu.com',accent:'#248b70',primary:['/dashboard','/deploy','/server','/latex','/notes']},
+ student:{name:'for Students',label:'학교생활',eyebrow:'오늘 필요한 학교생활, 한곳에서.',description:'자습 신청, 시간표, 급식과 자료 공유를 바로 이용하세요.',host:'student.cbgpu.com',accent:'#4678ed',primary:['/ai','/study','/timetable','/meal','/wakeup','/materials']},
+ researcher:{name:'for Research & Development',label:'연구·개발',eyebrow:'실험부터 서비스 배포까지, 한곳에서.',description:'GPU, 프론트엔드·서버 배포, 논문 작성과 제작을 함께 이용하세요.',host:'researcher.cbgpu.com',accent:'#248b70',primary:['/ai','/dashboard','/deploy','/server','/latex','/notes']},
 };
 export const workspaceIds:WorkspaceId[]=['student','researcher'];
 export function isWorkspace(value:unknown):value is WorkspaceId{return value==='student'||value==='researcher'}
@@ -13,7 +13,7 @@ export const workspaceOrigins=['https://cbgpu.com','https://www.cbgpu.com','http
 export function safeWorkspacePath(path:string){return path.startsWith('/')&&!path.startsWith('//')&&!/[\\\r\n]/.test(path)?path:'/'}
 // Discovery preferences do not grant permissions.
 export const workspaceServicePaths:Record<WorkspaceId,string[]>={
- student:['/ai/chat','/ai','/download','/study','/timetable','/meal','/wakeup','/materials','/contests','/match','/polls','/feed','/tools','/games','https://docs.cbgpu.com'],
- researcher:['/ai/chat','/ai','/download','/dashboard','/dashboard/ssh-guide','/deploy','/server','/latex','/notes','/materials','/manufacturing','/manufacturing/print','/manufacturing/laser','/contests','/tools','https://docs.cbgpu.com','https://arxiv.cbgpu.com'],
+ student:['/ai/cli','/ai/chat','/ai','/download','/study','/timetable','/meal','/wakeup','/materials','/contests','/match','/polls','/feed','/tools','/games','https://docs.cbgpu.com'],
+ researcher:['/ai/cli','/ai/chat','/ai','/download','/dashboard','/dashboard/ssh-guide','/deploy','/server','/latex','/notes','/materials','/manufacturing','/manufacturing/print','/manufacturing/laser','/contests','/tools','https://docs.cbgpu.com','https://arxiv.cbgpu.com'],
 };
 export function appWorkspaceHome(mode:WorkspaceId){return siteHref((process.env.NEXT_PUBLIC_CBGPU_DEMO==='1'?'/?mode=':'https://app.cbgpu.com/?mode=')+mode)}

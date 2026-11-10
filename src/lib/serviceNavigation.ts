@@ -1,5 +1,5 @@
 import type {LucideIcon} from 'lucide-react';
-import { BookOpen, CalendarDays, UtensilsCrossed, Music, Cpu, Server, Printer, NotebookPen, FolderOpen, Users, Vote, Newspaper, Wrench, Gamepad2, Trophy, Globe, TerminalSquare, Scissors, Smartphone, Sparkles } from 'lucide-react';
+import { BookOpen, CalendarDays, UtensilsCrossed, Music, Cpu, Server, Printer, NotebookPen, FolderOpen, Users, Vote, Newspaper, Wrench, Gamepad2, Trophy, Globe, TerminalSquare, Scissors, Smartphone, Sparkles, Code2 } from 'lucide-react';
 
 // 홈, 하단 탐색, 전체 서비스가 같은 이름과 순서를 사용한다.
 export type Service = {href:string;label:string;description:string;icon:LucideIcon;keywords?:string};
@@ -11,7 +11,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     { href: '/wakeup', label: '기상송', description: '노래 신청과 플레이리스트', icon: Music, keywords: '음악 노래 스포티파이' },
     { href: '/materials', label: '자료 공유', description: '학습·연구 자료 찾기', icon: FolderOpen, keywords: '파일 태그 학습자료 자료공유 업로드 올리기 다운로드 공유' },
   ] },
-  {id:'ai',title:'AI · 유휴 GPU',services:[{href:'/ai/chat',label:'AI 대화',description:'글쓰기·코딩·궁금한 것을 대화로 풀기',icon:Sparkles,keywords:'채팅 챗봇 chatgpt AI 대화 질문 글쓰기 코딩'},{href:'/ai',label:'CBGPU AI',description:'음성 전사·자료 검색·AI API·GPU 작업',icon:Sparkles,keywords:'AI 인공지능 로컬 챗봇 요약 전사 자막 음성 검색 임베딩 작업 대기열 학습'}]},
+  {id:'ai',title:'AI',services:[{href:'/ai',label:'CBGPU AI',description:'대화·프롬프트 최적화·전사·검색·GPU·API·CLI',icon:Sparkles,keywords:'AI 인공지능 채팅 chatgpt 프롬프트 최적화 전사 검색 모델 API CLI 코딩 에이전트'}]},
   {id:'compute',title:'GPU 사용',services:[
     {href:'/dashboard',label:'GPU 예약',description:'사용 가능한 GPU 확인과 예약',icon:Cpu,keywords:'GPU 대여 컴퓨팅 그래픽카드 주피터 jupyter 실험 학습'},
     {href:'/dashboard/ssh-guide',label:'GPU 접속 안내',description:'Jupyter·SSH 접속 방법',icon:TerminalSquare,keywords:'ssh 원격 터미널 vscode 주피터 jupyter 연결'},
