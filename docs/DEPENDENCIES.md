@@ -27,6 +27,8 @@ are covered by the generated web SBOM where applicable.
 | `radix-ui` | 1.4.3 | runtime | MIT |
 | `react` | 19.2.3 | runtime | MIT |
 | `react-dom` | 19.2.3 | runtime | MIT |
+| `react-markdown` | 10.1.0 | runtime | MIT |
+| `remark-gfm` | 4.0.1 | runtime | MIT |
 | `resend` | 6.34.1 | runtime | MIT |
 | `sonner` | 2.0.7 | runtime | MIT |
 | `tailwind-merge` | 3.5.0 | runtime | MIT |

@@ -36,7 +36,8 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
-  {slug:'ai',title:'CBGPU AI · 전사·검색·GPU 작업',description:'학교 유휴 GPU에서 텍스트·음성·자료를 처리하고 Python 작업과 AI API를 이용합니다.',category:'research',features:['/ai'],sections:[
+  {slug:'ai',title:'CBGPU AI · 전사·검색·GPU 작업',description:'학교 유휴 GPU에서 텍스트·음성·자료를 처리하고 Python 작업과 AI API를 이용합니다.',category:'research',features:['/ai','/ai/chat'],sections:[
+    {title:'AI 대화',body:'AI 대화는 /ai/chat에서 이용합니다. 왼쪽 목록에서 새 대화, 검색, 이름 변경과 삭제를 할 수 있고 휴대폰에서는 왼쪽 위 버튼으로 목록을 엽니다. 대화는 내 계정에 저장되므로 다른 기기에서도 이어갈 수 있습니다. 글·코드 답변을 복사하고 생성을 중지할 수 있습니다. 데스크톱은 Enter로 전송하고 Shift+Enter로 줄을 바꾸며, 휴대폰에서는 전송 버튼을 누릅니다. 긴 대화는 최근 메시지 중심으로 답합니다. 외부 파일을 읽거나 웹을 검색하는 기능은 없으며, 전사·자료 검색은 AI 도구 모음을 이용하세요.'},
     {title:'어디서 사용하나요?',body:'전체 서비스 → CBGPU AI에서 텍스트·음성 전사·자료 검색·GPU 작업·개발 API를 선택합니다. 연구노트, 논문 초록, 공유자료 상세, 배포 로그에도 AI 버튼이 있습니다. 자료는 외부 AI API에 보내지 않고 이 컴퓨터에서 처리합니다.'},
     {title:'GPU 예약 우선',body:'공용 작업은 현재 예약 및 5분 이내 시작할 예약을 제외하고, 사용자 GPU 프로세스가 없는 GPU 한 개에서 순차 실행합니다. 예약·사용자 프로세스가 확인되거나 예약 정보를 읽지 못하면 공용 작업을 중단하고 재대기합니다. 검사 간격과 종료 시간 동안 짧은 지연이 있을 수 있습니다. 학생 Jupyter 컨테이너를 초기화하거나 중단하지 않습니다.'},
     {title:'음성 전사·문서 요약',body:'음성 또는 동영상 파일(최대 200 MB)을 선택하면 텍스트와 SRT 자막을 받습니다. 전사 진행은 저장되며 중단 후 이어서 처리합니다. 공유자료 상세의 AI 요약은 PDF·텍스트를 지원하며 이미지 전용 PDF는 OCR을 지원하지 않습니다. 긴 문서는 앞 100페이지의 추출 텍스트 중 모델 문맥 길이 안에서 처리하며, 일부만 읽었을 때 표시합니다. 결과는 원문과 확인한 뒤 복사·다운로드하거나 비공개 연구노트로 저장하세요.'},

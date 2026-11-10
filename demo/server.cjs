@@ -6,7 +6,7 @@ require.extensions['.ts']=(m,file)=>m._compile(ts.transpileModule(fs.readFileSyn
 const {validateAutomation,nextAutomaticStudyDate}=require('../src/lib/studyAutomation.ts');
 const {handleStudentStudy,StudyFailure}=require('../src/lib/edusetStudent.ts');
 function createDemoServer(){
- const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map(),aiJobs=new Map(),aiKeys=new Map(),aiUploads=new Map();let records=[],sequence=1;
+ const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map(),aiJobs=new Map(),aiKeys=new Map(),aiUploads=new Map(),aiChats=new Map();let records=[],sequence=1;
  function userFor(req){return sessions.get((req.headers['x-cbgpu-auth']||req.headers.authorization||'').replace(/^Bearer /,''))||null}
  const student={id:'demo-school-student',name:'Demo Student',grade:2,classNo:3,number:1};
  const rooms=[{id:1,name:'Demo study room',hasSeats:true,width:2,height:1}],teachers=[{id:'demo-teacher',name:'Demo Teacher'}];
@@ -51,6 +51,9 @@ function createDemoServer(){
     if(!user)return reply(401,{message:'Demo login required'});
     const route=p.slice('/api/ai'.length),now=Date.now()/1000;
     const make=(kind,input,title)=>{const id=require('node:crypto').randomUUID();const job={id,owner:user.id,kind,title:title||kind,state:'succeeded',created:now,updated:now,gpu:null,attempts:1,progress:'Synthetic demo output; no GPU used',artifacts:[],result:kind==='transcribe'?{text:'Synthetic demo transcript.',srt:'1\n00:00:00,000 --> 00:00:01,000\nSynthetic demo transcript.'}:kind==='search'?{hits:[{id:'doc:ai',label:'CBGPU AI guide',href:'https://docs.cbgpu.com/ai',snippet:'Synthetic search fixture.',score:1}]}:kind==='python'?{text:'Synthetic GPU job completed; no code was executed.'}:{choices:[{message:{content:'Synthetic local AI response.'}}]}};aiJobs.set(id,job);return job};
+    if(route==='/chats'&&req.method==='GET')return reply(200,{chats:[...aiChats.values()].filter(c=>c.owner===user.id).sort((a,b)=>b.updated-a.updated).map(({messages,owner,...c})=>c)});
+    if(route==='/chats'&&req.method==='POST'){const chat={id:require('node:crypto').randomUUID(),owner:user.id,title:'새 대화',updated:now,messages:[]};aiChats.set(chat.id,chat);return reply(201,{chat})}
+    if(route.startsWith('/chats/')){const id=route.split('/')[2],chat=aiChats.get(id);if(!chat||chat.owner!==user.id)return reply(404,{message:'Chat not found'});if(req.method==='DELETE'){aiChats.delete(id);return reply(200,{ok:true})}if(req.method==='POST'){if(route.endsWith('/messages')){if(!chat.messages.length)chat.title=body.content.slice(0,70);chat.messages.push({id:require('node:crypto').randomUUID(),role:'user',content:body.content,state:'succeeded'},{id:require('node:crypto').randomUUID(),role:'assistant',content:'Synthetic conversation answer.\n\n```python\nprint("CBGPU")\n```',state:'succeeded'});chat.updated=now}else chat.title=body.title}return reply(200,{chat})}
     if(route==='/status')return reply(200,{scheduler:{status:'ok',gpus:[{id:1,available:true,reserved:false}]},queue:{queued:0,running:0}});
     if(route==='/jobs'&&req.method==='GET')return reply(200,{jobs:[...aiJobs.values()].filter(j=>j.owner===user.id)});
     if(route==='/jobs'&&req.method==='POST')return reply(202,{job:make(body.kind,body.input,body.title)});
