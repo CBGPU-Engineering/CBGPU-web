@@ -19,3 +19,12 @@ html[data-cbgpu-ai-input=pointer] :is(.chat-frame,.chat-menu,.chat-mobile-sideba
 .chat-effort-panel :focus-visible{outline:2px solid var(--primary);outline-offset:3px}html[data-cbgpu-ai-input=pointer] .chat-effort-panel :focus-visible{outline:none;box-shadow:none}
 
 .chat-frame,.chat-main{overflow:clip}.chat-tool-scroll{overscroll-behavior:contain}
+
+.chat-attachments { display: flex; flex-wrap: wrap; gap: .4rem; padding: .5rem .65rem 0; }
+.chat-attachments > span { display: flex; align-items: center; gap: .35rem; min-width: 0; max-width: 100%; border: 1px solid currentColor; border-radius: .65rem; padding-inline: .45rem .15rem; font-size: .8rem; }
+.chat-attachments > span > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-attachments .chat-icon { width: 28px; height: 28px; }
+.chat-file-sources { display: grid; gap: .45rem; margin-block: .75rem; }
+.chat-file-sources details { padding: .55rem .75rem; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: .65rem; overflow-wrap: anywhere; }
+.chat-file-sources summary { cursor: pointer; font-size: .85rem; }
+.chat-file-sources p { margin-top: .5rem; font-size: .85rem; white-space: pre-wrap; }
