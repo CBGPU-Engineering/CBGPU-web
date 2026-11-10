@@ -28,7 +28,7 @@ function createDemoServer(){
   const reply=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store','X-CBGPU-Demo':'synthetic'});res.end(JSON.stringify(value))};
   try{
    const p=new URL(req.url,'http://localhost').pathname.replace(/^\/backend/,'');let raw='';for await(const part of req){raw+=part;if(Buffer.byteLength(raw)>65536)return reply(413,{message:'Demo request too large'})}
-   let body={};try{body=raw?JSON.parse(raw):{}}catch{return reply(400,{message:'Invalid JSON'})}
+   let body={};try{body=p==='/api/ai/uploads'?{}:raw?JSON.parse(raw):{}}catch{return reply(400,{message:'Invalid JSON'})}
    if(p==='/health')return reply(200,{demo:true,persistent:false,outbound:false});
    if(p==='/auth/v1/token'&&req.method==='POST'){
     const u=fixtures.users.find(u=>body.email===u.email&&body.password===fixtures.password||body.refresh_token==='demo-refresh-'+u.id);
