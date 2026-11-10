@@ -56,7 +56,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
   if(path.length===2&&request.method==='POST'){
    const input=value||{};const type=String(input.deploy_type||'');if(!['docker','git'].includes(type)||typeof input.name!=='string'||!input.name.trim()||input.name.length>100)return error('프로젝트 이름과 배포 방식을 확인해 주세요.',400);
    const {count,error:countError}=await client.from('cpu_projects').select('id',{head:true,count:'exact'}).eq('user_id',user.id).neq('status','deleted');if(countError)return error('프로젝트 수를 확인하지 못했습니다.',503);if((count||0)>=5)return error('계정당 서버 프로젝트는 최대 5개입니다.',429);
-   const cpu=Number(input.cpu_limit||1),memory=String(input.memory_limit||'512m'),scope=String(input.access_scope||'private');if(!Number.isFinite(cpu)||cpu<0.1||cpu>4||!['128m','256m','512m','1g','2g','4g'].includes(memory)||!['private','school','public'].includes(scope))return error('CPU는 0.1~4코어, RAM은 최대 4GB로 설정해 주세요.',400);
+   const cpu=Number(input.cpu_limit||1),memory=String(input.memory_limit||'512m'),scope=String(input.access_scope||'private');if(!Number.isFinite(cpu)||cpu<0.1||cpu>4||!['128m','256m','512m','1g','2g','4g','8g','16g'].includes(memory)||!['private','school','public'].includes(scope))return error('CPU는 0.1~4코어, RAM은 최대 16GB로 설정해 주세요.',400);
    const port=Number(input.container_port||80);if(!Number.isSafeInteger(port)||port<1||port>65535)return error('컨테이너 포트를 확인해 주세요.',400);
    if(type==='docker'&&/^(cbgpu[\/-]|cbcpu_|jupiterhub_)/.test(String(input.docker_image||'')))return error('시스템 이미지는 배포할 수 없습니다.',400);
    if(type==='docker'&&!/^[a-zA-Z0-9][a-zA-Z0-9._/:@-]{0,199}$/.test(String(input.docker_image||'')))return error('Docker 이미지 이름을 확인해 주세요.',400);
@@ -84,7 +84,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
   if('git_url'in updates){if(project.deploy_type!=='git')return error('Git 배포에서만 저장소를 변경할 수 있습니다.',400);try{const repo=new URL(String(updates.git_url));if(repo.protocol!=='https:'||repo.hostname!=='github.com'||repo.username||repo.password||repo.port||!/^\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+\/?$/.test(repo.pathname))throw Error()}catch{return error('GitHub 저장소 URL을 확인해 주세요.',400)}}
   for(const key of ['container_port','host_port'])if(key in updates&&(!Number.isSafeInteger(updates[key])||Number(updates[key])<1||Number(updates[key])>65535))return error('올바른 포트를 입력하세요.',400);
   if('cpu_limit'in updates&&(!Number.isFinite(Number(updates.cpu_limit))||Number(updates.cpu_limit)<0.1||Number(updates.cpu_limit)>4))return error('CPU 범위를 확인해 주세요.',400);
-  if('memory_limit'in updates&&!['128m','256m','512m','1g','2g','4g'].includes(String(updates.memory_limit)))return error('메모리 설정을 확인해 주세요.',400);
+  if('memory_limit'in updates&&!['128m','256m','512m','1g','2g','4g','8g','16g'].includes(String(updates.memory_limit)))return error('메모리 설정을 확인해 주세요.',400);
   if('access_scope'in updates&&!['private','school','public'].includes(String(updates.access_scope)))return error('공개 범위를 확인해 주세요.',400);
   if('runtime'in updates&&!['node20','node18','python311','python39'].includes(String(updates.runtime)))return error('런타임을 확인해 주세요.',400);
   if('docker_image'in updates&&!/^[a-zA-Z0-9][a-zA-Z0-9._/:@-]{0,199}$/.test(String(updates.docker_image)))return error('이미지 이름을 확인해 주세요.',400);

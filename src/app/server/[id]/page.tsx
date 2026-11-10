@@ -32,7 +32,7 @@ type AccessScope = 'private' | 'school' | 'public';
 
 const RUNTIMES=SERVER_RUNTIMES;
 
-const MEMORY_OPTS = ['128m', '256m', '512m', '1g', '2g', '4g'] as const;
+const MEMORY_OPTS = ['128m', '256m', '512m', '1g', '2g', '4g', '8g', '16g'] as const;
 type MemoryLimit = typeof MEMORY_OPTS[number];
 
 type EnvEntry = { key: string; value: string };

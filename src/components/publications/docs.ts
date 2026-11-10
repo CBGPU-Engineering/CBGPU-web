@@ -845,7 +845,7 @@ export const guides:Guide[] = [
       },
       {
         "title": "Docker Compose 설정",
-        "body": "여러 컨테이너가 필요하면 Compose 모드를 선택합니다. Compose File 경로, 외부 연결을 받을 Gateway Service 이름, 컨테이너 포트와 CPU·RAM·저장 공간을 확인합니다. 예를 들어 api-gw가 HTTP를 8000번으로 제공한다면 서비스 이름과 내부 포트를 그 값으로 입력합니다. 실제 저장소의 Compose 정의와 일치해야 합니다."
+        "body": "여러 컨테이너가 필요하면 Compose 모드를 선택합니다. Compose File 경로, 외부 연결을 받을 Gateway Service 이름, 컨테이너 포트와 CPU·RAM·저장 공간을 확인합니다. 서버 RAM은 최대 16GB까지 선택할 수 있으며, 기존 프로젝트의 변경값은 재배포할 때 적용됩니다. 예를 들어 api-gw가 HTTP를 8000번으로 제공한다면 서비스 이름과 내부 포트를 그 값으로 입력합니다. 실제 저장소의 Compose 정의와 일치해야 합니다."
       },
       {
         "title": "공개 범위와 주소",
