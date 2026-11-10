@@ -13,7 +13,7 @@ export const workspaceOrigins=['https://cbgpu.com','https://www.cbgpu.com','http
 export function safeWorkspacePath(path:string){return path.startsWith('/')&&!path.startsWith('//')&&!/[\\\r\n]/.test(path)?path:'/'}
 // Discovery preferences do not grant permissions.
 export const workspaceServicePaths:Record<WorkspaceId,string[]>={
- student:['/download','/study','/timetable','/meal','/wakeup','/materials','/contests','/match','/polls','/feed','/tools','/games','https://docs.cbgpu.com'],
- researcher:['/download','/dashboard','/dashboard/ssh-guide','/deploy','/server','/latex','/notes','/materials','/manufacturing','/manufacturing/print','/manufacturing/laser','/contests','/tools','https://docs.cbgpu.com','https://arxiv.cbgpu.com'],
+ student:['/ai','/download','/study','/timetable','/meal','/wakeup','/materials','/contests','/match','/polls','/feed','/tools','/games','https://docs.cbgpu.com'],
+ researcher:['/ai','/download','/dashboard','/dashboard/ssh-guide','/deploy','/server','/latex','/notes','/materials','/manufacturing','/manufacturing/print','/manufacturing/laser','/contests','/tools','https://docs.cbgpu.com','https://arxiv.cbgpu.com'],
 };
 export function appWorkspaceHome(mode:WorkspaceId){return siteHref((process.env.NEXT_PUBLIC_CBGPU_DEMO==='1'?'/?mode=':'https://app.cbgpu.com/?mode=')+mode)}

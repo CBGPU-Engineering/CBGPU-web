@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  experimental: { proxyClientMaxBodySize: '24mb' },
+  experimental: { proxyClientMaxBodySize: '220mb' },
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   // @sparticuz/chromium ships a large native binary that Next.js's bundler
   // shouldn't try to trace/inline — it needs to stay a plain node_modules require.
@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     if(process.env.CBGPU_DEMO==='1')return []; 
     // Only public Supabase APIs are routed; Studio and Postgres stay private.
-    return [{source:'/api/files/:path*',destination:'http://127.0.0.1:8421/:path*'}, { source: '/backend/functions/v1/contact', destination: '/api/contact' }, ...['auth', 'rest', 'storage', 'realtime', 'functions'].map(service => ({
+    return [{source:'/api/files/materials/:id/content',destination:'/api/ai-native-files/:id'}, {source:'/api/files/:path*',destination:'http://127.0.0.1:8421/:path*'}, { source: '/backend/functions/v1/contact', destination: '/api/contact' }, ...['auth', 'rest', 'storage', 'realtime', 'functions'].map(service => ({
       source: `/backend/${service}/v1/:path*`,
       destination: `http://127.0.0.1:54321/${service}/v1/:path*`,
     }))];

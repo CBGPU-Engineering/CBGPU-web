@@ -1,16 +1,8 @@
-import { supabase } from '@/lib/supabase';
-
-export type AiMode = 'tags' | 'poll_insight' | 'daily' | 'news' | 'study_tags' | 'timetable';
-
-export async function requestAi(mode: AiMode, input: string): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
-  const response = await fetch('/api/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-    body: JSON.stringify({ mode, input: input.slice(0, 4000) }),
-  });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'AI 요청에 실패했습니다.');
-  return data.result;
+import {aiRequest,waitForAiJob,type AiJob} from './aiClient';
+export type AiMode='tags'|'poll_insight'|'daily'|'news'|'study_tags'|'timetable'|'summary'|'improve'|'explain';
+export async function requestAi(mode:AiMode,input:string,options:{signal?:AbortSignal;userId?:string;onJob?:(id:string)=>void;onProgress?:(job:AiJob)=>void}={}):Promise<string>{
+ const result=await aiRequest('','POST',{mode,input:input.slice(0,12000)},options.signal,options.userId);
+ if(result.result)return result.result;
+ options.onJob?.(result.job_id);
+ const job=await waitForAiJob(result.job_id,options);return job.result?.choices?.[0]?.message.content||job.result?.text||'';
 }

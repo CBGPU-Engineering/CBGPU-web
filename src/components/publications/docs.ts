@@ -36,6 +36,15 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'ai',title:'CBGPU AI · 전사·검색·GPU 작업',description:'학교 유휴 GPU에서 텍스트·음성·자료를 처리하고 Python 작업과 AI API를 이용합니다.',category:'research',features:['/ai'],sections:[
+    {title:'어디서 사용하나요?',body:'전체 서비스 → CBGPU AI에서 텍스트·음성 전사·자료 검색·GPU 작업·개발 API를 선택합니다. 연구노트, 논문 초록, 공유자료 상세, 배포 로그에도 AI 버튼이 있습니다. 자료는 외부 AI API에 보내지 않고 이 컴퓨터에서 처리합니다.'},
+    {title:'GPU 예약 우선',body:'공용 작업은 현재 예약 및 5분 이내 시작할 예약을 제외하고, 사용자 GPU 프로세스가 없는 GPU 한 개에서 순차 실행합니다. 예약·사용자 프로세스가 확인되거나 예약 정보를 읽지 못하면 공용 작업을 중단하고 재대기합니다. 검사 간격과 종료 시간 동안 짧은 지연이 있을 수 있습니다. 학생 Jupyter 컨테이너를 초기화하거나 중단하지 않습니다.'},
+    {title:'음성 전사·문서 요약',body:'음성 또는 동영상 파일(최대 200 MB)을 선택하면 텍스트와 SRT 자막을 받습니다. 전사 진행은 저장되며 중단 후 이어서 처리합니다. 공유자료 상세의 AI 요약은 PDF·텍스트를 지원하며 이미지 전용 PDF는 OCR을 지원하지 않습니다. 긴 문서는 앞 100페이지의 추출 텍스트 중 모델 문맥 길이 안에서 처리하며, 일부만 읽었을 때 표시합니다. 결과는 원문과 확인한 뒤 복사·다운로드하거나 비공개 연구노트로 저장하세요.'},
+    {title:'의미로 자료 검색',body:'본인이 열람할 수 있는 연구노트 본문, 공유자료와 공개 논문의 제목·태그·추출 가능한 파일 본문, 사용 문서를 검색합니다. 준비가 끝난 공유 PDF·텍스트와 게시된 논문을 주기적으로 읽어 본문을 색인합니다. 이미지 전용 PDF는 본문을 추출하지 못해 제목·메타데이터만 검색됩니다. 파일당 앞 100페이지와 최대 20만 글자를 처리합니다. 최근 노트·자료·논문을 합쳐 최대 500개 후보를 의미와 키워드로 정렬하며, 결과를 조회할 때 현재 열람 권한을 다시 확인합니다. 비공개 노트는 소유자만 검색합니다.'},
+    {title:'Python GPU 작업',body:'Python 코드를 입력하거나 ZIP(업로드 200 MB, 압축 해제 후 2 GB, 최대 10,000파일)을 올리고 실행 파일을 선택합니다. PyTorch 2.7.1 / CUDA 12.6, GPU 1개, CPU 4코어, RAM 16GB, 인터넷 연결 없이 실행합니다. 작업 폴더 /workspace는 중단 후에도 유지합니다. /workspace/output에 결과를 쓰면 다운로드할 수 있습니다. 학습을 이어가려면 체크포인트를 저장하고 재실행 시 읽도록 코드를 작성하세요. 대기열 예제에 SIGTERM 처리와 체크포인트가 있습니다. 누적 실행 시간은 1–120분입니다.'},
+    {title:'AI API',body:'개발 API에서 키를 만들면 한 번만 표시합니다. 서버 환경변수에 보관하고 필요 없으면 폐기하세요. Base URL은 https://cbgpu.com/api/ai/v1 입니다. cbgpu-chat은 /chat/completions, cbgpu-embeddings는 /embeddings, cbgpu-whisper는 /audio/transcriptions를 사용합니다. 비스트리밍 요청만 지원하며, GPU가 계속 바쁘면 503 응답을 받을 수 있습니다. API 키로 웹의 비공개 작업 기록이나 코드 실행 권한을 관리할 수 없습니다. API로 만든 결과는 같은 계정의 내 작업에서 확인합니다.'},
+    {title:'개인정보·보관·취소',body:'작업과 결과는 본인만 열람합니다. 완료한 작업·결과는 30일, 업로드 원본은 14일 보관하며 실행·대기 중인 작업 파일은 유지합니다. 작업 삭제는 실행 중단 후 입력·결과·원본을 정리합니다. 계정당 활성 작업은 5개, API 키는 5개, 업로드 원본 합계는 2GB까지입니다. 예약이 많을 때는 오래 대기할 수 있고, 내 작업에서 취소·재실행·삭제할 수 있습니다. AI 출력은 자동 게시·저장하지 않습니다.'}
+  ],related:['gpu-notebook','materials','notes']},
   {
     "slug": "getting-started",
     "title": "처음 시작하기",

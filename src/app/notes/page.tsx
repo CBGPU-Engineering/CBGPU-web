@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -10,6 +11,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { requestAi } from '@/lib/requestAi';
+import InlineAi from '@/components/ai/InlineAi';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 interface Note {
@@ -110,7 +112,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
     lastTagRequestRef.current = signature;
     setSuggestingTags(true);
     try {
-      const result = await requestAi('tags', `${title}\n${content.slice(0, 1200)}`);
+      const result = await requestAi('tags', `${title}\n${content.slice(0, 1200)}`,{userId:user?.id});
       setSuggestedTags(result.split(/[,，\n]+/).map(tag => tag.replace(/^[#\s\d.\-]+/, '').trim()).filter(tag => tag.length > 1 && tag.length <= 20 && !tags.includes(tag)).slice(0, 3));
     } catch {
       // Suggestions are optional; never interrupt editing or saving.
@@ -206,6 +208,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
         </div>
       </div>
 
+      <details className="mx-4 shrink-0"><summary className="min-h-11 cursor-pointer text-sm font-medium text-primary">AI로 요약·문장 다듬기</summary><div className="max-h-[45dvh] overflow-auto"><InlineAi input={title+'\n'+content} label="이 연구노트 살펴보기" actions={isOwner?['summary','improve','explain']:['summary','explain']} onApply={isOwner?text=>{if(autoRef.current){clearTimeout(autoRef.current);autoRef.current=null}setContent(text);setSaveState('idle')}:undefined}/></div></details>
       {/* toolbar */}
       {view === 'edit' && (
         <div className="flex gap-1 px-4 py-1.5 border-b border-border/20 overflow-x-auto flex-shrink-0">
@@ -247,7 +250,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
           {suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => { const next = [...tags, tag]; setTags(next); setSuggestedTags(current => current.filter(item => item !== tag)); saveNow(title, content, next, shared); }} className="rounded-full border border-primary/30 px-2 py-1 font-bold text-primary hover:bg-primary/10">+ {tag}</button>)}
           {!suggestingTags && <span>· AI 제안은 눌렀을 때만 저장돼요</span>}
         </span>}
-        {content.trim().length >= 80 && <span className="basis-full text-xs text-muted-foreground">편집을 마치면 태그 추천을 위해 노트 내용이 NVIDIA AI로 전송됩니다.</span>}
+        {content.trim().length >= 80 && <span className="basis-full text-xs text-muted-foreground">편집을 마치면 CBGPU 로컬 AI가 태그를 추천해요. 원문을 외부 AI에 보내지 않아요.</span>}
       </div>
     </div>
   );
@@ -281,6 +284,8 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
   }, [user]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(()=>{if(loading)return;const id=new URLSearchParams(window.location.search).get('note');const found=[...notes,...shared].find(n=>n.id===id);if(found){onOpen(found);window.history.replaceState(null,'',window.location.pathname)}},[loading,notes,shared,onOpen]);
 
   const deleteNote = async (id: string) => {
     await supabase.from('research_notes').delete().eq('id', id);
@@ -388,6 +393,7 @@ export default function NotesPage() {
         <h1 className="cb-page-title">연구노트</h1>
         <p className="cb-page-sub mt-1">마크다운 지원 · 자동 저장 · 공유 가능</p>
       </div>
+      <Link href="/ai?tab=search&scope=notes" className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-primary">의미로 연구노트 찾기 · AI 검색</Link>
       <NoteList onOpen={(n) => setEditing(n ?? 'new')} />
     </section>
   );

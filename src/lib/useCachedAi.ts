@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {useAuth} from '@/lib/useAuth';
 import { requestAi, type AiMode } from '@/lib/requestAi';
 
 const inFlight = new Map<string, Promise<string>>();
@@ -15,10 +16,11 @@ function fingerprint(value: string) {
 }
 
 export function useCachedAi(mode: AiMode, input: string, scope: string, enabled = true) {
+  const {user}=useAuth();
   const [result, setResult] = useState('');
   useEffect(() => {
-    if (!enabled || !input.trim()) { setResult(''); return; }
-    const key = `cbgpu.ai.v2:${mode}:${scope}:${fingerprint(input)}`;
+    if (!user || !enabled || !input.trim()) { setResult(''); return; }
+    const key = `cbgpu.ai.v3:${user.id}:${mode}:${scope}:${fingerprint(input)}`;
     try {
       const raw = localStorage.getItem(key);
       if (raw) {
@@ -33,7 +35,7 @@ export function useCachedAi(mode: AiMode, input: string, scope: string, enabled 
     let cancelled = false;
     let pending = inFlight.get(key);
     if (!pending) {
-      pending = requestAi(mode, input);
+      pending = requestAi(mode, input,{userId:user.id});
       inFlight.set(key, pending);
       pending.then(() => inFlight.delete(key), () => inFlight.delete(key));
     }
@@ -44,6 +46,6 @@ export function useCachedAi(mode: AiMode, input: string, scope: string, enabled 
       // An AI enhancement must never block the underlying page.
     });
     return () => { cancelled = true; };
-  }, [mode, input, scope, enabled]);
+  }, [mode, input, scope, enabled,user?.id]);
   return result;
 }

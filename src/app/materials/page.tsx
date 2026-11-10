@@ -138,6 +138,8 @@ export default function MaterialsPage() {
       </div>
     </div>
 
+    <Link href="/ai?tab=search&scope=materials" className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-primary">의미로 자료 찾기 · AI 검색</Link>
+
     {availableTags.length > 0 && <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 segmented-tabs" role="group" aria-label="태그 필터">
       {[null, ...availableTags].map(tag => {
         const active = selectedTag === tag;
@@ -160,7 +162,7 @@ export default function MaterialsPage() {
             <div className="flex min-w-0 items-start gap-3">
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-sm font-semibold leading-tight" title={material.title}>{material.title}</h2>
+                <h2 className="truncate text-sm font-semibold leading-tight" title={material.title}><Link href={'/materials/'+material.id} className="hover:text-primary">{material.title}</Link></h2>
                 <p className="mt-1 truncate text-xs text-muted-foreground" title={material.file_name}>{material.file_name}</p>
               </div>
               {mine && <button type="button" disabled={busy} aria-label={`${material.title} 삭제`} onClick={() => setDeleteTarget(material)}
@@ -172,7 +174,7 @@ export default function MaterialsPage() {
               {material.tags.slice(0, 3).map(tag => <Badge key={tag} className="normal-case tracking-normal">#{tag}</Badge>)}
               {material.tags.length > 3 && <span className="text-xs font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
             </div>
-            <div className="mt-auto flex items-center justify-between gap-3">
+            <Link href={'/materials/'+material.id} className="min-h-8 text-xs font-medium text-primary">자세히 보기 · AI 요약 →</Link><div className="mt-auto flex items-center justify-between gap-3">
               <span className="text-xs text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
               <Button variant="outline" size="sm" className="gap-1.5 font-semibold text-xs" disabled={busy} onClick={() => void download(material)}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}받기

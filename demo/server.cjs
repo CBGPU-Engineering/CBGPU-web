@@ -6,7 +6,7 @@ require.extensions['.ts']=(m,file)=>m._compile(ts.transpileModule(fs.readFileSyn
 const {validateAutomation,nextAutomaticStudyDate}=require('../src/lib/studyAutomation.ts');
 const {handleStudentStudy,StudyFailure}=require('../src/lib/edusetStudent.ts');
 function createDemoServer(){
- const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map();let records=[],sequence=1;
+ const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map(),aiJobs=new Map(),aiKeys=new Map(),aiUploads=new Map();let records=[],sequence=1;
  function userFor(req){return sessions.get((req.headers['x-cbgpu-auth']||req.headers.authorization||'').replace(/^Bearer /,''))||null}
  const student={id:'demo-school-student',name:'Demo Student',grade:2,classNo:3,number:1};
  const rooms=[{id:1,name:'Demo study room',hasSeats:true,width:2,height:1}],teachers=[{id:'demo-teacher',name:'Demo Teacher'}];
@@ -46,6 +46,22 @@ function createDemoServer(){
      else{try{const settings=validateAutomation(body);automation.set(user.id,{...settings,starts_on:nextAutomaticStudyDate(settings.run_time,new Date('2026-11-03T07:00:00Z'))})}catch(e){return reply(400,{message:e.message})}}
     }
     return reply(200,{settings:automation.get(user.id)||null,runs:[]});
+   }
+   if(p==='/api/ai'||p.startsWith('/api/ai/')){
+    if(!user)return reply(401,{message:'Demo login required'});
+    const route=p.slice('/api/ai'.length),now=Date.now()/1000;
+    const make=(kind,input,title)=>{const id=require('node:crypto').randomUUID();const job={id,owner:user.id,kind,title:title||kind,state:'succeeded',created:now,updated:now,gpu:null,attempts:1,progress:'Synthetic demo output; no GPU used',artifacts:[],result:kind==='transcribe'?{text:'Synthetic demo transcript.',srt:'1\n00:00:00,000 --> 00:00:01,000\nSynthetic demo transcript.'}:kind==='search'?{hits:[{id:'doc:ai',label:'CBGPU AI guide',href:'https://docs.cbgpu.com/ai',snippet:'Synthetic search fixture.',score:1}]}:kind==='python'?{text:'Synthetic GPU job completed; no code was executed.'}:{choices:[{message:{content:'Synthetic local AI response.'}}]}};aiJobs.set(id,job);return job};
+    if(route==='/status')return reply(200,{scheduler:{status:'ok',gpus:[{id:1,available:true,reserved:false}]},queue:{queued:0,running:0}});
+    if(route==='/jobs'&&req.method==='GET')return reply(200,{jobs:[...aiJobs.values()].filter(j=>j.owner===user.id)});
+    if(route==='/jobs'&&req.method==='POST')return reply(202,{job:make(body.kind,body.input,body.title)});
+    if(route==='/search'&&req.method==='POST')return reply(202,{job:make('search',{},'Synthetic search')});
+    if(route==='/uploads'&&req.method==='POST'){const id=require('node:crypto').randomUUID();aiUploads.set(id,user.id);return reply(201,{id,name:'demo.wav',size:raw.length})}
+    if(route==='/keys'&&req.method==='GET')return reply(200,{keys:[...aiKeys.values()].filter(k=>k.owner===user.id)});
+    if(route==='/keys'&&req.method==='POST'){const id=require('node:crypto').randomUUID(),key='cbgpu_ai_demo_'+id;aiKeys.set(id,{id,owner:user.id,name:body.name,prefix:'cbgpu_ai_demo',created:now,last_used:null});return reply(201,{id,key})}
+    if(route.startsWith('/keys/')&&req.method==='DELETE'){const id=route.split('/')[2];if(aiKeys.get(id)?.owner===user.id)aiKeys.delete(id);return reply(200,{ok:true})}
+    if(route.startsWith('/jobs/')){const id=route.split('/')[2],job=aiJobs.get(id);if(!job||job.owner!==user.id)return reply(404,{message:'Task not found'});if(req.method==='DELETE'){aiJobs.delete(id);return reply(200,{ok:true})}return reply(200,{job})}
+    if(route===''&&req.method==='POST'){const job=make('chat',{},body.mode);return reply(202,{job_id:job.id,state:job.state,provider:'synthetic-demo'})}
+    return reply(404,{message:'Unsupported synthetic AI operation'});
    }
    if(p==='/api/study/student'){
     const headers={...req.headers,host:'student.cbgpu.com',origin:'https://student.cbgpu.com'};

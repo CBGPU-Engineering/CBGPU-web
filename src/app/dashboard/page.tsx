@@ -1,5 +1,6 @@
 'use client';
 
+import GpuQueueHint from '@/components/ai/GpuQueueHint';
 import { useEffect, useState, Fragment } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchGpuEndpoints, FALLBACK_GPU_ENDPOINTS, type GpuEndpoint } from '@/lib/gpuEndpoints';
@@ -282,7 +283,7 @@ export default function Dashboard() {
       <section>
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div className="flex flex-col gap-2">
-            <h1 className="cb-page-title">GPU</h1>
+            <h1 className="cb-page-title">GPU</h1><GpuQueueHint/>
             <div className="h-1 w-20 bg-primary rounded-full"></div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
