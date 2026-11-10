@@ -4,9 +4,10 @@ import {conversationStream} from '@/lib/aiConversationStream';
 import {chatModelIds} from '@/lib/aiModels';
 import {aiStream} from '@/lib/aiStream';
 import {aiSources} from '@/lib/aiSources';
-import {readJsonBody,RequestBodyError} from '@/lib/requestSecurity';
+import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
 export const runtime='nodejs';export const maxDuration=360;
 let activeUploads=0;
+const robotPairing=new WindowRateLimiter(12,60_000);
 async function audioForm(request:NextRequest){
  const maximum=201*1024*1024;if(Number(request.headers.get('content-length'))>maximum)throw new AiFailure('200 MB 이하의 파일을 올려 주세요.',413);
  const reader=request.body?.getReader();if(!reader)throw new AiFailure('파일을 넣어 주세요.');let size=0;const parts:Uint8Array[]=[];
@@ -16,9 +17,18 @@ async function audioForm(request:NextRequest){
 const uuid=(v:string)=>/^[a-f0-9-]{36}$/.test(v);
 async function handle(request:NextRequest,context:{params:Promise<{path:string[]}>}){
  try{
-  const {path}=await context.params;const keyManagement=path[0]==='keys';const identity=await aiIdentity(request,!keyManagement);const {owner,token,isKey}=identity;
+  const {path}=await context.params;
+  if(path.join('/')==='v1/robotics/agent/enroll'||path.join('/')==='v1/robotics/agent/sync'){
+   if(request.method!=='POST')throw new AiFailure('Method not allowed',405);
+   const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('Use a JSON object');
+   const agentToken=request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]||'';
+   if(path[3]==='sync'&&!agentToken.startsWith('cbgpu_robot_'))throw new AiFailure('Device authentication required',401);
+   if(path[3]==='enroll'&&!robotPairing.allow(request.headers.get('cf-connecting-ip')||'unknown'))throw new AiFailure('Pairing requests are too frequent',429);
+   return NextResponse.json(await aiJson(path.slice(1).join('/'),'','POST',{...value,device_token:agentToken}));
+  }
+  const keyManagement=path[0]==='keys',robotManagement=path[0]==='v1'&&path[1]==='robotics'&&path[2]==='devices';const identity=await aiIdentity(request,!keyManagement&&!robotManagement);const {owner,token,isKey}=identity;
   if(isKey&&path[0]!=='v1')throw new AiFailure('AI API 키는 /v1의 추론·Robotics API에서 사용할 수 있어요. 작업 관리에는 계정 로그인이 필요해요.',403);
-  if(path.some(p=>!/^[-a-z0-9]+$/.test(p))||path.length>4)throw new AiFailure('Not found',404);
+  if(path.some(p=>!/^[-a-z0-9]+$/.test(p))||path.length>5)throw new AiFailure('Not found',404);
   let body:Record<string,unknown>={};if(request.method==='POST'&&!['uploads'].includes(path[0])&&path.join('/')!=='v1/audio/transcriptions'){const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('JSON 객체를 보내 주세요.');body=value as Record<string,unknown>}
   if(path.length===3&&path[0]==='chats'&&uuid(path[1])&&path[2]==='events'&&request.method==='GET')return conversationStream(request,owner,path[1],await aiJson('chats/'+path[1]+'/live',owner));
   if(path.join('/')==='search'&&request.method==='POST'){
@@ -34,6 +44,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    return NextResponse.json(await aiJson('jobs',owner,'POST',{kind:'document',title:'자료 요약: '+material.title,input:{upload_id:upload.id}}),{status:202});
   }
   if(path[0]==='v1'){
+   if(path[1]==='robotics'&&path[2]==='devices'&&(path.length===3&&['GET','POST'].includes(request.method)||path.length===4&&uuid(path[3])&&['GET','DELETE'].includes(request.method)||path.length===5&&uuid(path[3])&&['control','goal','stop','pair'].includes(path[4])&&request.method==='POST'))return NextResponse.json(await aiJson(path.slice(1).join('/'),owner,request.method,request.method==='POST'?body:undefined),{status:request.method==='POST'&&path.length===3?201:request.method==='POST'&&path[4]==='goal'?202:200});
    if(path[1]==='robotics'&&path[2]==='plans'&&(path.length===3&&request.method==='POST'||path.length===4&&uuid(path[3])&&['GET','DELETE'].includes(request.method)))return NextResponse.json(await aiJson(path.slice(1).join('/'),owner,request.method,request.method==='POST'?body:undefined),{status:request.method==='POST'?202:200});
    if(path.length===3&&path[1]==='web'&&['search','read'].includes(path[2])&&request.method==='POST')return NextResponse.json(await aiJson(path.slice(1).join('/'),owner,'POST',body));
    if(path.join('/')==='v1/models'&&request.method==='GET')return NextResponse.json(await aiJson('models',owner));

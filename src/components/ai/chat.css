@@ -17,3 +17,5 @@ html[data-cbgpu-ai-input=pointer] :is(.chat-frame,.chat-menu,.chat-mobile-sideba
 @media(max-width:359px){.chat-header{gap:4px;padding-left:8px;padding-right:8px}.chat-model{font-size:15px;gap:5px}.chat-header .chat-icon{width:32px}.chat-web-toggle,.chat-effort-trigger{padding-inline:8px}.chat-composer-toolbar{gap:6px}}
 .chat-composer textarea{max-height:min(200px,max(56px,calc(var(--chat-height,100dvh) * .3)))}
 .chat-effort-panel :focus-visible{outline:2px solid var(--primary);outline-offset:3px}html[data-cbgpu-ai-input=pointer] .chat-effort-panel :focus-visible{outline:none;box-shadow:none}
+
+.chat-frame,.chat-main{overflow:clip}.chat-tool-scroll{overscroll-behavior:contain}
