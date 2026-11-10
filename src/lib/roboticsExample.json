@@ -1,0 +1,59 @@
+[
+  {
+    "name": "navigate_to",
+    "description": "Navigate to a known named waypoint using local obstacle avoidance.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "waypoint": {
+          "type": "string",
+          "enum": [
+            "desk",
+            "charging_station"
+          ],
+          "maxLength": 32
+        }
+      },
+      "required": [
+        "waypoint"
+      ],
+      "additionalProperties": false
+    },
+    "max_duration_s": 10
+  },
+  {
+    "name": "set_gripper",
+    "description": "Open or close the local gripper.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "closed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "closed"
+      ],
+      "additionalProperties": false
+    },
+    "max_duration_s": 2
+  },
+  {
+    "name": "say",
+    "description": "Speak a short sentence.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "max_duration_s": 5
+  }
+]

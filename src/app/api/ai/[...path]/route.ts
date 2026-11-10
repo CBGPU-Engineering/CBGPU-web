@@ -17,7 +17,7 @@ const uuid=(v:string)=>/^[a-f0-9-]{36}$/.test(v);
 async function handle(request:NextRequest,context:{params:Promise<{path:string[]}>}){
  try{
   const {path}=await context.params;const keyManagement=path[0]==='keys';const identity=await aiIdentity(request,!keyManagement);const {owner,token,isKey}=identity;
-  if(isKey&&path[0]!=='v1')throw new AiFailure('AI API 키는 /v1의 추론 API에서 사용할 수 있어요. 작업 관리에는 계정 로그인이 필요해요.',403);
+  if(isKey&&path[0]!=='v1')throw new AiFailure('AI API 키는 /v1의 추론·Robotics API에서 사용할 수 있어요. 작업 관리에는 계정 로그인이 필요해요.',403);
   if(path.some(p=>!/^[-a-z0-9]+$/.test(p))||path.length>4)throw new AiFailure('Not found',404);
   let body:Record<string,unknown>={};if(request.method==='POST'&&!['uploads'].includes(path[0])&&path.join('/')!=='v1/audio/transcriptions'){const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('JSON 객체를 보내 주세요.');body=value as Record<string,unknown>}
   if(path.length===3&&path[0]==='chats'&&uuid(path[1])&&path[2]==='events'&&request.method==='GET')return conversationStream(request,owner,path[1],await aiJson('chats/'+path[1]+'/live',owner));
@@ -34,6 +34,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    return NextResponse.json(await aiJson('jobs',owner,'POST',{kind:'document',title:'자료 요약: '+material.title,input:{upload_id:upload.id}}),{status:202});
   }
   if(path[0]==='v1'){
+   if(path[1]==='robotics'&&path[2]==='plans'&&(path.length===3&&request.method==='POST'||path.length===4&&uuid(path[3])&&['GET','DELETE'].includes(request.method)))return NextResponse.json(await aiJson(path.slice(1).join('/'),owner,request.method,request.method==='POST'?body:undefined),{status:request.method==='POST'?202:200});
    if(path.length===3&&path[1]==='web'&&['search','read'].includes(path[2])&&request.method==='POST')return NextResponse.json(await aiJson(path.slice(1).join('/'),owner,'POST',body));
    if(path.join('/')==='v1/models'&&request.method==='GET')return NextResponse.json(await aiJson('models',owner));
    if(path.join('/')==='v1/chat/completions'&&request.method==='POST'){
