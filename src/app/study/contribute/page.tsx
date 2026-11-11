@@ -26,7 +26,7 @@ function extensionDetailsUrl(browser: Browser): string {
 
 export default function StudyContributorPage() {
   const { user, isApproved, isLoading } = useAuth();
-  const { showError, showSuccess } = useAlert();
+  const { showError, showSuccess, confirm } = useAlert();
   const [devices, setDevices] = useState<ContributorDevice[]>([]);
   const [devicesLoading, setDevicesLoading] = useState(true);
   const [showGuide, setShowGuide] = useState(false);
@@ -109,7 +109,7 @@ export default function StudyContributorPage() {
   };
 
   const revoke = async (id: string) => {
-    if (!window.confirm('이 브라우저 연결을 해제할까요? 해제하면 이 브라우저에서는 더 이상 자동 동기화되지 않습니다.')) return;
+    if (!await confirm({ title: '브라우저 연결을 해제할까요?', message: '해제하면 이 브라우저에서는 더 이상 자동 동기화되지 않아요.', confirmLabel: '연결 해제' })) return;
     const { error } = await supabase.from('eduset_contributor_devices').delete().eq('id', id);
     if (error) showError(error.message);
     else { showSuccess('기기 연결을 해제했습니다.'); await loadDevices(); }

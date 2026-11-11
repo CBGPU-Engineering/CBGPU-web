@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {Check,Plus,RefreshCw,Unplug,X} from 'lucide-react';
 import {useAuth} from '@/lib/useAuth';
+import {useAlert} from '@/lib/alert';
 import {supabase} from '@/lib/supabase';
 import {getRoomComposition,getSeatOccupations,searchSelfStudy,type Seat,type Obstacle} from '@/lib/eduset';
 import type {StudyContext,OwnStudy,StudyId} from '@/lib/edusetStudent';
@@ -15,7 +16,7 @@ export type StudyPrefill={roomId:StudyId;seatId:StudyId;period:number};
 const field='mt-2 w-full min-w-0 min-h-11 rounded-lg border border-input bg-background px-3 py-2 text-base';
 const statusLabel:Record<string,string>={PENDING:'승인 대기',APPROVED:'승인됨',REJECTED:'거절됨'};
 export default function StudyRequestPanel({prefill,onPrefillConsumed,onChanged}:{prefill:StudyPrefill|null;onPrefillConsumed:()=>void;onChanged:()=>void}){
- const {user,isLoading}=useAuth();const [context,setContext]=useState<StudyContext|null>(null),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[dialog,setDialog]=useState<'connect'|'apply'|null>(null);
+ const {user,isLoading}=useAuth();const {confirm}=useAlert();const [context,setContext]=useState<StudyContext|null>(null),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[dialog,setDialog]=useState<'connect'|'apply'|null>(null);
  const [roomId,setRoomId]=useState(''),[periods,setPeriods]=useState<number[]>([]),[seatId,setSeatId]=useState(''),[teacherId,setTeacherId]=useState(''),[reason,setReason]=useState('자율학습');
  const [obstacles,setObstacles]=useState<Obstacle[]>([]);
  const [seats,setSeats]=useState<Seat[]>([]),[occupations,setOccupations]=useState<{seatId:StudyId;period:number;studentId:StudyId}[]>([]),[seatLoading,setSeatLoading]=useState(false),[seatError,setSeatError]=useState(''),[seatRetry,setSeatRetry]=useState(0);
@@ -55,7 +56,7 @@ export default function StudyRequestPanel({prefill,onPrefillConsumed,onChanged}:
    if(failure)setError(`${completed?completed+'개 교시는 반영됐어요. ':''}${failure}`);else setDialog(null);
   }finally{setBusy(false)}
  }
- async function cancel(entry:OwnStudy){if(!context||busy||!confirm(`${entry.period}교시 ${entry.room.name} 신청을 취소할까요?`))return;setBusy(true);setError('');try{await request({action:'cancel',date:context.date,id:entry.id});setNotice(entry.period+'교시 신청을 취소했어요.');await refresh();onChanged()}catch(e){await refresh();setError((e as Error).message)}finally{setBusy(false)}}
+ async function cancel(entry:OwnStudy){if(!context||busy||!await confirm({title:'신청을 취소할까요?',message:`${entry.period}교시 ${entry.room.name} 신청을 취소해요.`,confirmLabel:'신청 취소',cancelLabel:'닫기'}))return;setBusy(true);setError('');try{await request({action:'cancel',date:context.date,id:entry.id});setNotice(entry.period+'교시 신청을 취소했어요.');await refresh();onChanged()}catch(e){await refresh();setError((e as Error).message)}finally{setBusy(false)}}
  const windowTime=(value:string)=>value?new Date(value).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'확인 필요';
  if(isLoading)return null;
 

@@ -53,7 +53,7 @@ function RegistrationForm({ contest, existing, onSaved, onCancelEdit }: { contes
 }
 
 function GuestTicket({ contest, registration, access, onCancelled, onEdit }: { contest: Contest; registration: EventRegistration; access: EventAccessDetails | null; onCancelled: () => void; onEdit: () => void }) {
-  const { showError, showSuccess } = useAlert();
+  const { showError, showSuccess, confirm } = useAlert();
   const [busy, setBusy] = useState(false);
   const confirmed = registration.status === 'confirmed';
   return <section className="contest-panel space-y-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="contest-eyebrow mb-2 text-primary">MY REGISTRATION</p><h2 className="text-xl font-bold">{registration.attendee_name}</h2></div><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${statusClass[registration.status]}`}>{REGISTRATION_STATUS_LABELS[registration.status]}</span></div>
@@ -62,7 +62,7 @@ function GuestTicket({ contest, registration, access, onCancelled, onEdit }: { c
     {confirmed && <div className="grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center"><div className="mx-auto rounded-2xl border bg-white p-3"><QRCodeSVG value={`cbgpu:event:${contest.id}:${registration.ticket_code}`} size={150} level="M" /></div><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><TicketCheck className="size-5 text-primary" />체크인 QR 티켓</h3><p className="text-sm text-muted-foreground">행사 입장 시 운영진에게 이 QR을 보여주세요.</p>{registration.checked_in_at && <p className="text-sm font-semibold text-emerald-600">{formatContestDate(registration.checked_in_at)} 체크인 완료</p>}</div></div>}
     {confirmed && access?.meeting_url && <a href={access.meeting_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-2xl border bg-primary/5 p-4 text-sm font-bold text-primary">온라인 행사 입장하기<ExternalLink className="size-4" /></a>}
     {confirmed && access?.access_note && <p className="whitespace-pre-wrap rounded-lg bg-muted/50 p-4 text-sm">{access.access_note}</p>}
-    <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={onEdit}>{['declined','cancelled'].includes(registration.status) ? '다시 신청' : '신청 정보 수정'}</Button>{!['declined', 'cancelled'].includes(registration.status) && <Button type="button" variant="ghost" disabled={busy} onClick={async () => { if (!confirm('참가 신청을 취소할까요?')) return; setBusy(true); try { const { error } = await supabase.from('event_registrations').update({ status: 'cancelled' }).eq('id', registration.id); if (error) throw error; showSuccess('참가 신청을 취소했어요.'); onCancelled(); } catch (error) { showError(eventError(error)); } finally { setBusy(false); } }}><CircleX />신청 취소</Button>}</div>
+    <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={onEdit}>{['declined','cancelled'].includes(registration.status) ? '다시 신청' : '신청 정보 수정'}</Button>{!['declined', 'cancelled'].includes(registration.status) && <Button type="button" variant="ghost" disabled={busy} onClick={async () => { if (!await confirm({ title: '참가 신청을 취소할까요?', message: '취소하면 다시 신청해야 해요.', confirmLabel: '신청 취소', cancelLabel: '닫기' })) return; setBusy(true); try { const { error } = await supabase.from('event_registrations').update({ status: 'cancelled' }).eq('id', registration.id); if (error) throw error; showSuccess('참가 신청을 취소했어요.'); onCancelled(); } catch (error) { showError(eventError(error)); } finally { setBusy(false); } }}><CircleX />신청 취소</Button>}</div>
   </section>;
 }
 
@@ -117,9 +117,9 @@ function HostTeam({ contest }: { contest: Contest }) {
 }
 
 function EventLifecycle({ contest, sessions, access, onUpdated }: { contest: Contest; sessions: EventSession[]; access: EventAccessDetails | null; onUpdated: (contest: Contest) => void }) {
-  const { user } = useAuth(); const { showError, showSuccess } = useAlert(); const [busy, setBusy] = useState(false);
+  const { user } = useAuth(); const { showError, showSuccess, prompt } = useAlert(); const [busy, setBusy] = useState(false);
   async function setStatus(status: Contest['lifecycle_status']) {
-    const message = status === 'cancelled' ? window.prompt('참가자에게 보여줄 취소 사유를 입력해 주세요.', '호스트가 행사를 취소했어요.') : '';
+    const message = status === 'cancelled' ? await prompt({ title: '행사를 취소할까요?', message: '참가자에게 보여줄 취소 사유를 입력해 주세요.', defaultValue: '호스트가 행사를 취소했어요.', confirmLabel: '행사 취소', cancelLabel: '닫기' }) : '';
     if (status === 'cancelled' && message === null) return;
     setBusy(true); try { const { data, error } = await supabase.from('contests').update({ lifecycle_status: status, cancellation_message: message || '' }).eq('id', contest.id).select('*').single(); if (error) throw error; onUpdated(data); showSuccess(status === 'published' ? '행사를 다시 공개했어요.' : status === 'cancelled' ? '행사를 취소 처리했어요.' : '행사를 보관했어요.'); } catch (error) { showError(eventError(error)); } finally { setBusy(false); }
   }

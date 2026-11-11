@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {FileText,Upload,Plus,ArrowUpRight,RefreshCw,ArrowLeft,Check,Loader2,FolderOpen,X,Trash2} from 'lucide-react';
 import {useAuth} from '@/lib/useAuth';
+import {useAlert} from '@/lib/alert';
 import {supabase} from '@/lib/supabase';
 import './latex.css';
 type Project={id:string;name:string;updated_at:string;compiler:string;role:string};
@@ -15,7 +16,7 @@ async function api(action:string,body?:unknown){
  const result=await response.json();if(!response.ok)throw Error(result.error||'요청을 처리하지 못했습니다.');return result;
 }
 export default function LatexProjects(){
- const {user,isLoading}=useAuth();const [projects,setProjects]=useState<Project[]>([]),[loading,setLoading]=useState(false),[busy,setBusy]=useState(''),[error,setError]=useState(''),[info,setInfo]=useState<ImportInfo|null>(null),[main,setMain]=useState(''),[compiler,setCompiler]=useState('pdflatex'),[name,setName]=useState(''),[query,setQuery]=useState(''),[drag,setDrag]=useState(false);const file=useRef<HTMLInputElement>(null);const [uploadProgress,setUploadProgress]=useState(0);
+ const {user,isLoading}=useAuth();const {confirm}=useAlert();const [projects,setProjects]=useState<Project[]>([]),[loading,setLoading]=useState(false),[busy,setBusy]=useState(''),[error,setError]=useState(''),[info,setInfo]=useState<ImportInfo|null>(null),[main,setMain]=useState(''),[compiler,setCompiler]=useState('pdflatex'),[name,setName]=useState(''),[query,setQuery]=useState(''),[drag,setDrag]=useState(false);const file=useRef<HTMLInputElement>(null);const [uploadProgress,setUploadProgress]=useState(0);
  const load=useCallback(async()=>{setLoading(true);setError('');try{setProjects((await api('projects')).projects)}catch(e){setError((e as Error).message)}finally{setLoading(false)}},[]);
  useEffect(()=>{if(user)void load()},[user,load]);
  async function inspect(selected:File){
@@ -30,7 +31,7 @@ export default function LatexProjects(){
   return()=>{window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh)};
  },[user,load]);
  async function trash(project:Project){
-  if(!window.confirm('“'+project.name+'” 프로젝트를 휴지통으로 이동할까요? Overleaf 휴지통에서 복원할 수 있습니다.'))return;
+  if(!await confirm({title:'프로젝트를 휴지통으로 이동할까요?',message:'“'+project.name+'” 프로젝트를 휴지통으로 옮겨요. Overleaf 휴지통에서 복원할 수 있어요.',confirmLabel:'휴지통으로 이동'}))return;
   setBusy('trash');setError('');try{await api('trash',{project:project.id});setProjects(current=>current.filter(p=>p.id!==project.id));}catch(e){setError((e as Error).message)}finally{setBusy('')}
  }
  const connecting=useRef(false);
