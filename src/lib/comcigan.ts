@@ -7,7 +7,7 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest, extractComciganCellKey, decodeComciganCell } from './comciganSource';
 import {decodeComciganPayload} from './comciganPayload';
 import {createTimetableLoader} from './timetableCache';
 import {fileTimetableStore} from './timetableStore';
@@ -22,6 +22,7 @@ const META_TTL = 5 * 60 * 1000; // 제공처 조회 정보도 데이터 갱신�
 
 interface SiteMeta {
   baseUrl: string;
+  cellKey:number[]|null;
   request: ReturnType<typeof extractComciganRequest>;
   transport: ReturnType<typeof extractComciganTransport>;
   extractCode: string; // e.g. "/36179?17384l"
@@ -84,7 +85,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin, request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
+  return { baseUrl: frameUrl.origin, cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -101,7 +102,7 @@ async function searchSchool(meta: SiteMeta, keyword: string) {
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const list = JSON.parse(jsonStr)?.['학교검색'];
   if (!list?.length) throw new Error('검색된 학교가 없습니다');
-  return extractComciganSchools(list,meta.transport.schoolCodeDivisor);
+  return extractComciganSchools(list,meta.transport.schoolCodeDivisor,meta.cellKey);
 }
 
 async function resolveSchoolCode(meta: SiteMeta): Promise<number> {
@@ -123,8 +124,11 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {
     if (!Array.isArray(raw[field])) throw new Error('시간표 제공처의 데이터가 올바르지 않습니다');
-    raw[alias] = raw[field];
+    raw[alias] = meta.cellKey&&['자료446','자료492'].includes(alias)
+      ? raw[field].map((value:unknown)=>typeof value==='string'?decodeComciganCell(value,meta.cellKey):value)
+      : raw[field];
   }
+  if(meta.cellKey&&typeof raw['시작일']==='string')raw['시작일']=decodeComciganCell(raw['시작일'],meta.cellKey);
   return raw;
 }
 

@@ -79,13 +79,35 @@ export function extractComciganRequest(html:string){
  return {base64Search:/function\s+QAjaxSchool/.test(source),token:source.match(/window\.__HourRequestToken\s*=\s*['"]([\da-f]+)['"]/i)?.[1]||null};
 }
 
-export function extractComciganSchools(value:unknown,divisor:number|null){
+/** Literal byte keys in the public viewer are data, never executable code. */
+export function extractComciganCellKey(html:string):number[]|null{
+ const source=decodeComciganSource(html);
+ if(!/function\s+QnmsbChange\(/.test(source))return null;
+ const match=source.match(/function\s+QnmsbChange\([^)]*\)\s*\{[\s\S]{0,300}?String\.fromCharCode\(([\d,\s]+)\)/);
+ if(!match)throw new Error('시간표 제공처의 문자열 형식을 확인하지 못했습니다');
+ const key=match[1].split(',').map(value=>Number(value.trim()));
+ if(key.length<2||key.length>128||key.some(value=>!Number.isInteger(value)||value<0||value>255)){
+  throw new Error('잘못된 시간표 문자열 형식');
+ }
+ return key;
+}
+
+export function decodeComciganCell(value:string,key:readonly number[]|null):string{
+ if(!key||!value)return value;
+ const bytes=Buffer.from(value,'base64');
+ if(value.length>100000||!bytes.length||bytes.toString('base64')!==value)throw new Error('잘못된 시간표 문자열');
+ for(let index=0;index<bytes.length;index++)bytes[index]^=key[index%key.length];
+ return new TextDecoder('euc-kr',{fatal:true}).decode(bytes);
+}
+
+export function extractComciganSchools(value:unknown,divisor:number|null,key:readonly number[]|null=null){
  if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
  return value.map(row=>{
   if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
   const index=divisor?Math.floor(Number(row[0])/divisor)+2:3;
-  const code=row[index];
+  const encoded=row[index];
+  const code=key&&typeof encoded==='string'?Number(decodeComciganCell(encoded,key)):encoded;
   if(!Number.isInteger(index)||index<3||!Number.isSafeInteger(code)||code<=0)throw new Error('시간표 제공처의 학교 코드가 올바르지 않습니다');
-  return {region:row[1],name:row[2],code:code as number};
+  return {region:decodeComciganCell(row[1],key),name:decodeComciganCell(row[2],key),code:code as number};
  });
 }
