@@ -112,7 +112,7 @@ export default function HomeAiSearch(){
  return <section className="cb-home-ask" aria-label="CBGPU에 물어보기">
   <form onSubmit={event=>{event.preventDefault();void ask()}}>
    <Link href={serviceDestination('/ai',mode,isApp)} aria-label="CBGPU AI에게 물어보기" title="CBGPU AI 열기"><Sparkles size={20} aria-hidden="true"/></Link>
-   <input ref={input} type="search" aria-label="CBGPU 정보 질문" placeholder="CBGPU에 궁금한 걸 물어보세요" value={question}
+   <input ref={input} data-no-focus-ring type="search" aria-label="CBGPU 정보 질문" placeholder="CBGPU에 궁금한 걸 물어보세요" value={question}
     maxLength={1000} onChange={event=>setQuestion(event.target.value)} disabled={!user||!isApproved}/>
    {busy||pending?<button type="button" aria-label="홈 AI 답변 중지" onClick={()=>void stop()}><Square size={15}/></button>:
     <button type="submit" aria-label="CBGPU에 질문하기" disabled={!question.trim()||!user||!isApproved}><ArrowUp size={19}/></button>}
