@@ -28,3 +28,19 @@ html[data-cbgpu-ai-input=pointer] :is(.chat-frame,.chat-menu,.chat-mobile-sideba
 .chat-file-sources details { padding: .55rem .75rem; border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: .65rem; overflow-wrap: anywhere; }
 .chat-file-sources summary { cursor: pointer; font-size: .85rem; }
 .chat-file-sources p { margin-top: .5rem; font-size: .85rem; white-space: pre-wrap; }
+.chat-csv-chart { display: grid; gap: .45rem; margin: .75rem 0 0; }
+.chat-csv-chart figcaption { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; font-size: .8rem; }
+.chat-csv-chart label { display: inline-flex; align-items: center; gap: .4rem; max-width: 100%; }
+.chat-csv-chart select, .chat-csv-chart button { min-width: 0; max-width: 12rem; border: 1px solid var(--border); border-radius: .45rem; padding: .35rem .55rem; background: var(--background); }
+.chat-csv-chart canvas { display: block; width: 100%; height: auto; border-radius: .4rem; }
+.chat-csv-chart small { color: var(--muted-foreground); }
+.chat-menu [role=menuitemradio] { padding: .55rem .75rem; border-radius: .45rem; cursor: pointer; }
+.chat-menu [role=menuitemradio][data-highlighted], .chat-menu [role=menuitemradio][data-state=checked] { background: var(--chat-hover); }
+.chat-project-picker { display:flex; align-items:end; gap:.35rem; margin:.5rem 0; }
+.chat-project-picker label { display:grid; flex:1; min-width:0; gap:.35rem; font-size:.75rem; color:var(--muted-foreground); }
+.chat-project-picker select, .chat-project-picker button { border:1px solid var(--border); border-radius:.45rem; min-height:36px; padding:.35rem; background:var(--background); color:var(--foreground); }
+.chat-project-picker button { min-width:36px; }
+.chat-project-files { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem; padding:.15rem .5rem; font-size:.8rem; }
+.chat-project-files > span { display:flex; align-items:center; gap:.35rem; border:1px solid var(--border); border-radius:.5rem; min-width:0; max-width:100%; padding-left:.4rem; }
+.chat-project-files > span > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-project-files .chat-icon { width:28px; height:28px; }

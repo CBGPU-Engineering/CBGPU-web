@@ -70,7 +70,12 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
   }
   const allowed=path.length===1&&['status','jobs','keys','uploads','chats'].includes(path[0])||path.length===2&&['jobs','keys','downloads','chats'].includes(path[0])&&uuid(path[1])||path.length===3&&path[0]==='jobs'&&uuid(path[1])&&['cancel','retry','artifact','download'].includes(path[2]);
   const chatMessage=path.length===3&&path[0]==='chats'&&uuid(path[1])&&path[2]==='messages';
-  if(!allowed&&!chatMessage)throw new AiFailure('Not found',404);
+  const projectRoute=path[0]==='projects'&&(
+   path.length===1&&['GET','POST'].includes(request.method)||
+   request.method==='DELETE'&&uuid(path[1]||'')&&(path.length===2||
+    path.length===4&&path[2]==='files'&&uuid(path[3]))
+  );
+  if(!allowed&&!chatMessage&&!projectRoute)throw new AiFailure('Not found',404);
   if(path[0]==='uploads'){
    if(request.method!=='POST')throw new AiFailure('Method not allowed',405);
    if(activeUploads>=2)throw new AiFailure('다른 파일을 받고 있어요. 잠시 후 다시 시도해 주세요.',429);activeUploads++;
