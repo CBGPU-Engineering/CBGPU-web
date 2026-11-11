@@ -46,12 +46,12 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
   const port=Number(process.env.PORT||3000);
   if(!Number.isInteger(port)||port<1||port>65535)throw Error('Invalid local port');
   const response=await fetch('http://127.0.0.1:'+port+path,{
-   headers:{Authorization:'Bearer '+token,Host:'app.cbgpu.com'},
+   headers:{Authorization:'Bearer '+token,Host:'app.cbgpu.com','x-cbgpu-public-host':'app.cbgpu.com','x-forwarded-host':'app.cbgpu.com'},
    redirect:'error',cache:'no-store',signal:AbortSignal.timeout(12_000),
   });
   if(!response.ok)throw Error('Source unavailable');
   const value=await response.json();
-  if(value.error||value.stale)throw Error('Stale source');
+  if(value.error)throw Error('Source unavailable');
   return value;
  }
  async function rows(table:string,fields:string,own=false){
@@ -59,13 +59,15 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
   if(own)query=query.eq('user_id',owner);
   const result=await query;
   if(result.error)throw result.error;
-  return {scope:own?'로그인한 본인의 기록':'현재 계정에 공개된 최근 기록',limit:10,rows:result.data||[]};
+  return {조회:'성공',scope:own?'로그인한 본인의 기록':'현재 계정에 공개된 최근 기록',limit:10,count:result.data?.length||0,rows:result.data||[],note:result.data?.length?'조회된 실제 기록입니다.':'조회는 성공했으며 해당 내역이 없습니다. 조회 실패가 아닙니다.'};
  }
  const addTask=(title:string,href:string,load:()=>Promise<unknown>)=>tasks.push(collect(title,href,load));
  if(/급식|식단|점심|저녁|아침|중식|석식|조식|밥|meal/i.test(question)){
   addTask(date+' 급식','/meal',async()=>{
    const value=await local('/api/meal?date='+date.replaceAll('-',''));
-   return {date,meals:value.meals,source_cache:'학교 식단은 최대 30분 캐시될 수 있습니다. 빈 목록은 식단 미등록일 수 있습니다.'};
+   const meals=Array.isArray(value.meals)?value.meals:[];
+   const type=/점심|중식/.test(question)?'중식':/아침|조식/.test(question)?'조식':/저녁|석식/.test(question)?'석식':null;
+   return {조회:'성공',date,meals:type?meals.filter((meal:{type:string})=>meal.type===type):meals,source_cache:'학교 식단은 최대 30분 캐시될 수 있습니다. 빈 목록은 식단 미등록일 수 있습니다.'};
   });
  }
  if(/시간표|수업|교시|timetable/i.test(question)){
@@ -76,7 +78,10 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
    const own=explicit?{grade:Number(explicit[1]),cls:Number(explicit[2])}:parseStudentGradeClass(data?.student_id);
    if(!own)return '학년과 반을 확인할 수 없습니다. 몇 학년 몇 반인지 질문에 적어 주세요.';
    const value=await local('/api/timetable?grade='+own.grade+'&class='+own.cls);
-   return {grade:own.grade,class:own.cls,target_date:date,weekday_monday_zero:(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,
+   if(value.stale&&(!value.fetchedAt||Date.now()-Date.parse(value.fetchedAt)>48*3600000||!Number.isFinite(Date.parse(value.fetchedAt))))throw Error('No dated fallback');
+   return {조회:value.stale?'마지막 정상 조회 자료':'성공',stale:!!value.stale,
+    freshness:value.stale?'현재 제공처 갱신에 실패했습니다. 아래는 fetchedAt 시점의 시간표이며 이후 변경은 확인되지 않았습니다. 반드시 마지막 확인 시각을 함께 안내하세요.':'현재 서비스가 제공하는 시간표입니다.',
+    grade:own.grade,class:own.cls,target_date:date,weekday_monday_zero:(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,
     weekStart:value.weekStart,fetchedAt:value.fetchedAt,grid:value.grid,times:value.times};
   });
  }
@@ -96,7 +101,7 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
    const {data,error}=await client.from('reservations').select('gpu_id,start_time,end_time,status')
     .eq('user_id',owner).gt('end_time',new Date().toISOString()).order('start_time').limit(10);
    if(error)throw error;
-   return {scope:'본인의 종료되지 않은 예약, 최대 10개',rows:data||[]};
+   return {조회:'성공',scope:'본인의 종료되지 않은 예약, 최대 10개',count:data?.length||0,rows:data||[],note:data?.length?'실제 조회된 예약입니다.':'조회 성공. 종료되지 않은 본인 예약이 없습니다.'};
   });
  }
  if(/프린|출력|제작|print|내 신청/i.test(question)){
@@ -108,7 +113,7 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  if(/배포|서버|deploy|server|frontend|프론트/i.test(question)){
   addTask('내 서버 배포','/server',async()=>{
    const value=await local('/api/deploy/servers/projects');
-   return {scope:'본인 및 공동작업자로 열람 가능한 프로젝트, 최근 10개',
+   return {조회:'성공',scope:'본인 및 공동작업자로 열람 가능한 프로젝트, 최근 10개',count:value.projects?.length||0,
     projects:(value.projects||[]).slice(0,10).map((project:Record<string,unknown>)=>({
      id:project.id,name:project.name,status:project.status,memory_limit:project.memory_limit,
      runtime:project.runtime,deployed_at:project.deployed_at,deploy_requested_at:project.deploy_requested_at,
@@ -117,9 +122,9 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
   addTask('내 프론트엔드 배포','/deploy',async()=>{
    const value=await local('/api/deploy/projects');
    const projects=Array.isArray(value)?value:value.projects||[];
-   return projects.slice(0,10).map((project:Record<string,unknown>)=>({
+   return {조회:'성공',count:projects.length,projects:projects.slice(0,10).map((project:Record<string,unknown>)=>({
     id:project.id,name:project.name,status:project.status,url:project.url,updated_at:project.updated_at,
-   }));
+   }))};
   });
  }
  if(/공지|소식|학사|news/i.test(question)){
@@ -133,7 +138,9 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  if(/대회|행사|contest|event/i.test(question))addTask('공개 대회·행사','/contests',()=>rows('contests','id,title,event_start_at,event_end_at,registration_open,lifecycle_status,created_at'));
  if(/투표|설문|poll/i.test(question))addTask('현재 투표','/polls',()=>rows('polls','id,title,ends_at,is_active,created_at'));
  if(/스터디|모임|매칭/i.test(question))addTask('스터디 모집','/match',()=>rows('study_posts','id,title,subject,is_open,created_at'));
- tasks.push((async()=>{
+ const operational=tasks.length>0;
+ const instructions=/방법|어떻게|사용법|설정|신청하|배포하|시작|안내|설명/.test(question);
+ if(!operational||/자료|노트|논문|파일|문서|paper|note/i.test(question))tasks.push((async()=>{
   try{
    const found=await aiSources(token,'all');
    const ranked=found.filter(source=>!source.id.startsWith('doc:'))
@@ -148,13 +155,13 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  })());
  await Promise.all(tasks);
  const descriptions=serviceSearchPages.map(service=>({title:service.title,url:canonical(service.href),text:service.description+' '+service.keywords}));
- const sections=guides.flatMap(guide=>guide.sections.map(section=>({
+ const sections=guides.filter(guide=>guide.slug!=='ai'||/\bAI\b|인공지능|OCR|프롬프트|음성|모델|채팅/i.test(question)).flatMap(guide=>guide.sections.map(section=>({
   title:guide.title+' · '+section.title,url:'https://docs.cbgpu.com/'+guide.slug,
   text:[section.body,...(section.steps||[])].join('\n').slice(0,1600),
  })));
- const ranked=[...descriptions,...sections].map(source=>({source,score:score(question,source.title+' '+source.text)}))
+ const ranked=(operational&&!instructions?[]:[...descriptions,...sections]).map(source=>({source,score:score(question,source.title+' '+source.text)}))
   .filter(item=>item.score>0).sort((a,b)=>b.score-a.score).slice(0,Math.max(1,8-sources.length));
- if(!ranked.length)ranked.push({score:0,source:{title:'CBGPU 서비스 안내',url:'https://cbgpu.com/services',
+ if(!ranked.length&&!operational)ranked.push({score:0,source:{title:'CBGPU 서비스 안내',url:'https://cbgpu.com/services',
   text:serviceSearchPages.map(service=>service.title+': '+service.description).join('\n').slice(0,1600)}});
  let budget=6500;
  const selected=[...sources,...ranked.map(item=>item.source)].slice(0,8).map(source=>{
