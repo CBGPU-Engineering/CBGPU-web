@@ -3,6 +3,7 @@ import {AiFailure,aiIdentity,aiInternal,aiJson,waitAi,aiUserClient} from '@/lib/
 import {conversationStream} from '@/lib/aiConversationStream';
 import {chatModelIds} from '@/lib/aiModels';
 import {aiStream} from '@/lib/aiStream';
+import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
 import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
 export const runtime='nodejs';export const maxDuration=360;
@@ -30,6 +31,27 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
   if(isKey&&path[0]!=='v1')throw new AiFailure('AI API 키는 /v1의 추론·Robotics API에서 사용할 수 있어요. 작업 관리에는 계정 로그인이 필요해요.',403);
   if(path.some(p=>!/^[-a-z0-9]+$/.test(p))||path.length>5)throw new AiFailure('Not found',404);
   let body:Record<string,unknown>={};if(request.method==='POST'&&!['uploads'].includes(path[0])&&path.join('/')!=='v1/audio/transcriptions'){const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('JSON 객체를 보내 주세요.');body=value as Record<string,unknown>}
+  // Context must always come from authorized server-side reads.
+  delete body.site_context;
+  if(path.join('/')==='site-ask'&&request.method==='POST'){
+   const question=typeof body.question==='string'?body.question.trim():'';
+   if(!question||question.length>1000)throw new AiFailure('질문을 1,000자 이내로 입력해 주세요.');
+   let id=typeof body.chat_id==='string'?body.chat_id:'';
+   let lookup=question;
+   if(id){
+    if(!uuid(id))throw new AiFailure('대화를 확인해 주세요.');
+    const existing=await aiJson('chats/'+id,owner);
+    if(!existing.chat.site_search)throw new AiFailure('CBGPU 검색 대화에서 이어가 주세요.');
+    const previous=existing.chat.messages?.filter((message:{role:string})=>message.role==='user').at(-1)?.content;
+    if(question.length<20&&typeof previous==='string')lookup=previous.slice(0,800)+' '+question;
+   }
+   const snapshot=await cbgpuKnowledge(token,owner,lookup);
+   if(!id)id=(await aiJson('chats',owner,'POST',{site_search:true})).chat.id;
+   const result=await aiJson('chats/'+id+'/messages',owner,'POST',{
+    content:question,model:'cbgpu-chat',effort:'medium',site_context:snapshot,
+   });
+   return NextResponse.json({...result,checked_at:snapshot.checked_at},{status:202,headers:{'Cache-Control':'no-store'}});
+  }
   if(path.length===3&&path[0]==='chats'&&uuid(path[1])&&path[2]==='events'&&request.method==='GET')return conversationStream(request,owner,path[1],await aiJson('chats/'+path[1]+'/live',owner));
   if(path.join('/')==='search'&&request.method==='POST'){
    if(isKey)throw new AiFailure('웹 자료 검색에는 계정 로그인이 필요해요.',403);
@@ -86,6 +108,17 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    try{const response=await aiInternal('uploads',owner,'POST',undefined,request.body,'?name='+encodeURIComponent(request.nextUrl.searchParams.get('name')||'upload'));return new NextResponse(response.body,{status:response.status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})}finally{activeUploads--}
   }
   if(path[0]==='jobs'&&path.length===1&&request.method==='POST'&&isKey&&body.kind==='python')throw new AiFailure('GPU 코드 실행에는 CBGPU 계정 로그인이 필요해요.',403);
+  if(chatMessage&&request.method==='POST'){
+   const existing=await aiJson('chats/'+path[1],owner);
+   if(existing.chat.site_search){
+    const content=typeof body.content==='string'?body.content.trim():'';
+    if(!content||content.length>1000)throw new AiFailure('질문을 1,000자 이내로 입력해 주세요.');
+    const previous=existing.chat.messages?.filter((message:{role:string})=>message.role==='user').at(-1)?.content;
+    const lookup=content.length<20&&typeof previous==='string'?previous.slice(0,800)+' '+content:content;
+    body.site_context=await cbgpuKnowledge(token,owner,lookup);
+    body.web_search=false;body.research=false;
+   }
+  }
   const query=path[2]==='artifact'?'?path='+encodeURIComponent(request.nextUrl.searchParams.get('path')||''):'';
   const response=await aiInternal(path.join('/'),owner,request.method,request.method==='POST'?body:undefined,undefined,query);
   if(path[2]==='artifact'||path[0]==='downloads')return new NextResponse(response.body,{status:response.status,headers:{'Content-Type':'application/octet-stream','Content-Disposition':"attachment; filename*=UTF-8''"+encodeURIComponent((request.nextUrl.searchParams.get('path')||'output').split('/').pop()!),'Cache-Control':'no-store'}});
