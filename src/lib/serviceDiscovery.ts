@@ -3,10 +3,16 @@ export function serviceAudience(href:string):WorkspaceId{return workspaceService
 /** A cross-space link carries its destination mode, including inside the native app. */
 export function serviceDestination(href:string,audience:WorkspaceId|null,isApp=false){
  if(href.startsWith('https:'))return href;
- const target=audience&&workspaceServicePaths[audience].some(path=>href===path||href.startsWith(path+'/'))?audience:serviceAudience(href);
- if(isApp)return href+'?mode='+target+'&native=1';
+ const url=new URL(href,'https://cbgpu.com');
+ const path=url.pathname;
+ const target=audience&&workspaceServicePaths[audience].some(value=>path===value||path.startsWith(value+'/'))?audience:serviceAudience(path);
+ if(isApp){
+  url.searchParams.set('mode',target);
+  url.searchParams.set('native','1');
+  return url.pathname+url.search+url.hash;
+ }
  if(audience===target)return href;
- return 'https://'+workspaces[target].host+href;
+ return 'https://'+workspaces[target].host+url.pathname+url.search+url.hash;
 }
 export function matchesService(query:string,text:string){
  const normalize=(value:string)=>value.toLocaleLowerCase().normalize('NFKC');
