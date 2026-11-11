@@ -22,5 +22,23 @@ try{
  await page.click('.chat-mobile-toggle');await page.click('.chat-mobile-sidebar .chat-history-open');await page.waitForFunction(()=>document.querySelectorAll('.chat-message-assistant').length===2);await page.click('.chat-mobile-toggle');await page.click('.chat-mobile-sidebar .chat-row-menu');await page.waitForSelector('.chat-menu [role="menuitem"]');await page.evaluate(()=>[...document.querySelectorAll('.chat-menu [role="menuitem"]')].find(b=>b.textContent.includes('이름 변경')).click());await page.waitForSelector('[aria-label="대화 제목"]');await page.$eval('[aria-label="대화 제목"]',e=>e.value='');await page.type('[aria-label="대화 제목"]','Renamed QA conversation');await page.evaluate(()=>document.querySelector('.chat-rename-dialog form').requestSubmit());await page.waitForFunction(()=>document.querySelector('.chat-mobile-sidebar')?.textContent.includes('Renamed QA conversation'));await page.click('.chat-mobile-sidebar .chat-row-menu');await page.evaluate(()=>[...document.querySelectorAll('.chat-menu [role="menuitem"]')].find(b=>b.textContent.includes('삭제')).click());await page.waitForSelector('[role=dialog]');await page.evaluate(()=>[...document.querySelectorAll('[role=dialog] button')].find(b=>b.textContent.trim()==='삭제').click());await page.waitForFunction(()=>!document.body.textContent.includes('Renamed QA conversation'));await page.waitForSelector('[role=dialog]',{hidden:true});await page.waitForFunction(()=>getComputedStyle(document.body).pointerEvents!=='none');
  for(const width of [320,390,768,1440]){await page.setViewport({width,height:width===320?400:900,isMobile:width<768,hasTouch:width<768});await page.waitForFunction(()=>{const r=document.querySelector('.chat-composer')?.getBoundingClientRect();return r&&r.top>=0&&r.bottom<=innerHeight&&r.width<=innerWidth});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.waitForFunction(()=>{const el=document.querySelector('.chat-effort-trigger');if(!el)return false;const box=el.getBoundingClientRect();return el.contains(document.elementFromPoint(box.x+box.width/2,box.y+box.height/2))});await page.click('.chat-effort-trigger');await page.waitForSelector('.chat-effort-panel');assert.ok(await page.evaluate(()=>{const r=document.querySelector('.chat-effort-panel').getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight}));await page.keyboard.press('Escape');await page.waitForSelector('.chat-effort-panel',{hidden:true});assert.ok(await page.evaluate(()=>{const elements=[...document.querySelectorAll('.chat-web-toggle,.chat-effort-trigger,.chat-send')].map(e=>e.getBoundingClientRect());return elements.every((a,i)=>elements.slice(i+1).every(b=>Math.min(a.right,b.right)<=Math.max(a.left,b.left)||Math.min(a.bottom,b.bottom)<=Math.max(a.top,b.top)))}),'Composer controls must not overlap')}
 
+
+ await page.click('.chat-header [aria-label="새 대화"]');
+ const attachment='/tmp/cbgpu-demo-ocr.png';fs.writeFileSync(attachment,'synthetic fixture, not an actual OCR call');
+ try{
+  await (await page.$('.chat-composer input[type=file]')).uploadFile(attachment);
+  await page.waitForSelector('.chat-file-card.ready');
+  await page.evaluate(()=>[...document.querySelectorAll('.chat-file-card button')].find(button=>button.textContent==='내용 확인').click());
+  await page.waitForFunction(()=>document.querySelector('.chat-file-preview pre')?.textContent.includes('Voltage 12.5 V'));
+  const bounds=await page.$eval('.chat-file-preview',element=>{const r=element.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}});
+  assert.ok(bounds.top>=0&&bounds.bottom<=900&&bounds.left>=0&&bounds.right<=1440);
+  await page.click('[aria-label="파일 내용 닫기"]');
+  await page.waitForSelector('.chat-file-preview',{hidden:true});
+  await page.click('[aria-label="메시지 보내기"]');
+  await page.waitForSelector('.chat-file-sources summary');
+  await page.click('.chat-file-sources summary');
+  await page.waitForFunction(()=>document.querySelector('.chat-file-sources')?.textContent.includes('Voltage 12.5 V'));
+  assert.ok(await page.$('.chat-source-method'));
+ }finally{fs.unlinkSync(attachment)}
  assert.deepEqual(external,[]);console.log('PASS unified AI: student/research/app entry, private multi-turn/reload, prompt optimization/transfer, transcription/SRT, search, GPU, API, remote map/control/goal/stop, CLI links, rename/delete and compact/mobile/desktop layout. No external calls or real GPU execution.');
 }finally{await browser.close()}

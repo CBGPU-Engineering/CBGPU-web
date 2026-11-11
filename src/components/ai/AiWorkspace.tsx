@@ -13,6 +13,7 @@ import AiToolsPanel from './AiToolsPanel';
 import CliGuide from './CliGuide';
 import RoboticsGuide from './RoboticsGuide';
 import EffortControl from './EffortControl';
+import {useAiAttachments} from './useAiAttachments';
 import CsvChart,{type CsvSeries} from './CsvChart';
 import {watchChat} from '@/lib/aiChatStream';
 import {aiRequest,saveAiBlob} from '@/lib/aiClient';
@@ -20,7 +21,7 @@ import {useAlert} from '@/lib/alert';
 import {useAuth} from '@/lib/useAuth';
 import './chat.css';
 
-type Source={title:string;url?:string;snippet?:string;page?:number|null;excerpt?:string;charts?:CsvSeries[]};
+type Source={title:string;url?:string;snippet?:string;page?:number|null;excerpt?:string;charts?:CsvSeries[];ocr?:boolean;low_confidence?:boolean;truncated?:boolean};
 type Message={sources?:Source[];id:string;role:'user'|'assistant';content:string;job_id?:string;state:string;error?:string;progress?:string;truncated?:boolean};
 type Project={id:string;title:string;files:{id:string;name:string}[]};
 type Chat={project?:string|null;effort?:string;model?:string;id:string;title:string;updated:number;messages:Message[];context_truncated?:boolean};
@@ -40,15 +41,25 @@ function Answer({text}:{text:string}){
 function MessageSources({sources}:{sources:Source[]}){
  const web=sources.filter(source=>source.url);
  const files=sources.filter(source=>source.excerpt);
- return <>
+ if(!sources.length)return null;
+ return <section className="chat-evidence" aria-label="답변 근거">
+  <header><FileText size={14}/><span>참고한 자료</span><small>{sources.length}개</small></header>
   {!!web.length&&<div className="chat-sources" aria-label="웹 검색 출처">{web.map((source,i)=>
    <a href={source.url} key={source.url} target="_blank" rel="noopener noreferrer">
     <span>{i+1}</span><span>{source.title}<small>{new URL(source.url!).hostname}</small></span>
    </a>)}</div>}
   {!!files.length&&<div className="chat-file-sources" aria-label="첨부 자료 근거">{files.map((source,i)=>
-   <details key={i}><summary>파일 {i+1} · {source.title}{source.page? ` · ${source.page}쪽`:''}</summary><p>{source.excerpt}</p>{!!source.charts?.length&&<CsvChart series={source.charts} filename={source.title}/>}</details>
+   <div className="chat-evidence-file" key={i}>
+    <details><summary><span>파일 {i+1}</span><strong>{source.title}</strong>{source.page&&<small>{source.page}쪽</small>}</summary>
+     {source.ocr&&<span className="chat-source-method">OCR로 인식한 글자</span>}
+     <p>{source.excerpt}</p>
+    </details>
+    {source.low_confidence&&<p className="chat-source-warning">인식 정확도가 낮을 수 있어요. 숫자와 고유명사를 확인해 주세요.</p>}
+    {source.truncated&&<p className="chat-source-warning">문서가 길어 일부 텍스트만 읽었어요.</p>}
+    {!!source.charts?.length&&<CsvChart series={source.charts} filename={source.title}/>}
+   </div>
   )}</div>}
- </>;
+ </section>;
 }
 
 export default function AiWorkspace(){
@@ -63,9 +74,11 @@ export default function AiWorkspace(){
  const [projectId,setProjectId]=useState('');
  const [projectDialog,setProjectDialog]=useState(false);
  const [projectTitle,setProjectTitle]=useState('');
+ const [preview,setPreview]=useState<{name:string;text:string;loading:boolean}|null>(null);
  const [projectBusy,setProjectBusy]=useState(false);
  const project=projects.find(item=>item.id===projectId);
- const [files,setFiles]=useState<File[]>([]);
+ const attachments=useAiAttachments(user?.id);
+ const {files}=attachments;
  const fileInput=useRef<HTMLInputElement>(null);
  const [model,setModel]=useState('cbgpu-chat');
  const [chats,setChats]=useState<Summary[]>([]),[chat,setChat]=useState<Chat|null>(null),[draft,setDraft]=useState(''),[query,setQuery]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[sidebar,setSidebar]=useState(true),[mobile,setMobile]=useState(false),[jump,setJump]=useState(false),[rename,setRename]=useState<Summary|null>(null),[title,setTitle]=useState('');
@@ -83,48 +96,51 @@ export default function AiWorkspace(){
   const value=await request('/projects');
   if(owner.current===expected)setProjects(value.projects);
  },[request,user?.id]);
- const openChat=useCallback(async(id:string)=>{const expected=user?.id,version=++generation.current;selected.current=id;setTool('');chatUrl(id);setMobile(false);setError('');setLoading(true);setChat(null);setDraft('');setFiles([]);try{const {chat}=await request('/chats/'+id);if(owner.current===expected&&version===generation.current){setChat(chat);setProjectId(chat.project||'');setWebSearch(!chat.project);setResearch(false);setModel(chat.model||'cbgpu-chat');setEffort(chat.effort||'medium');stick.current=true}}catch(e){if(owner.current===expected&&version===generation.current)setError((e as Error).message)}finally{if(version===generation.current)setLoading(false)}},[request,user?.id]);
- useEffect(()=>{generation.current++;selected.current='';setChat(null);setChats([]);setProjects([]);setProjectId('');setDraft('');setFiles([]);setBusy(false);setError('');if(!user||!isApproved){setLoading(false);return}let active=true;setLoading(true);void (async()=>{try{await refreshList();void refreshProjects().catch(()=>{});if(!active)return;const id=new URL(location.href).searchParams.get('c');if(id&&/^[a-f0-9-]{36}$/.test(id)){const wanted=new URL(location.href).searchParams.get('tool');await openChat(id);if(wanted)chooseTool(wanted)}else setLoading(false)}catch(e){if(active){setError((e as Error).message);setLoading(false)}}})();return()=>{active=false}},[user?.id,isApproved,refreshList,refreshProjects,openChat]);
+ const openChat=useCallback(async(id:string)=>{const expected=user?.id,version=++generation.current;selected.current=id;setTool('');chatUrl(id);setMobile(false);setError('');setLoading(true);setChat(null);setDraft('');attachments.reset();try{const {chat}=await request('/chats/'+id);if(owner.current===expected&&version===generation.current){setChat(chat);setProjectId(chat.project||'');setWebSearch(!chat.project);setResearch(false);setModel(chat.model||'cbgpu-chat');setEffort(chat.effort||'medium');stick.current=true}}catch(e){if(owner.current===expected&&version===generation.current)setError((e as Error).message)}finally{if(version===generation.current)setLoading(false)}},[request,user?.id]);
+ useEffect(()=>{generation.current++;selected.current='';setChat(null);setChats([]);setProjects([]);setProjectId('');setPreview(null);setDraft('');attachments.reset();setBusy(false);setError('');if(!user||!isApproved){setLoading(false);return}let active=true;setLoading(true);void (async()=>{try{await refreshList();void refreshProjects().catch(()=>{});if(!active)return;const id=new URL(location.href).searchParams.get('c');if(id&&/^[a-f0-9-]{36}$/.test(id)){const wanted=new URL(location.href).searchParams.get('tool');await openChat(id);if(wanted)chooseTool(wanted)}else setLoading(false)}catch(e){if(active){setError((e as Error).message);setLoading(false)}}})();return()=>{active=false}},[user?.id,isApproved,refreshList,refreshProjects,openChat]);
  useEffect(()=>{if(!pending||!chat)return;const id=chat.id,expected=user?.id;let active=true,running=false;const sync=async()=>{if(running||(liveStream.current&&!liveStream.current.signal.aborted))return;running=true;try{const data=await request('/chats/'+id);if(active&&selected.current===id&&owner.current===expected){setChat(data.chat);setError('');if(!data.chat.messages.some(live))void refreshList().catch(()=>{})}}catch(e){if(active&&selected.current===id)setError((e as Error).message)}finally{running=false}};const timer=setInterval(()=>void sync(),3000);return()=>{active=false;clearInterval(timer)}},[pending?.id,chat?.id,user?.id,request,refreshList]);
  useEffect(()=>{if(!pending||!chat||!user)return;const abort=new AbortController(),id=chat.id,expected=user.id;liveStream.current=abort;void watchChat(id,expected,abort.signal,event=>{if(owner.current!==expected||selected.current!==id||abort.signal.aborted)return;setChat(current=>{if(!current||current.id!==id)return current;const rows=current.messages.map(message=>{if(event.type==='delta'&&message.id===event.id)return {...message,content:(message.content||'').slice(0,event.offset??message.content.length)+(event.text||'')};if(event.type==='replace'&&message.id===event.id)return {...message,content:event.text||''};if((event.type==='state'||event.type==='done')&&event.message&&typeof event.message==='object'&&event.message.id===message.id)return {...message,...event.message} as Message;return message});return {...current,messages:rows}})}).catch(()=>{}).finally(()=>{if(liveStream.current===abort)liveStream.current=null});return()=>abort.abort()},[pending?.id,chat?.id,user?.id]);
  useEffect(()=>{const el=textarea.current;if(el){el.style.height='0px';el.style.height=Math.min(el.scrollHeight,200)+'px'}},[draft]);
  useEffect(()=>{if(stick.current)scroll.current?.scrollTo({top:scroll.current.scrollHeight,behavior:'instant'})},[chat?.id,messages.length,messages.at(-1)?.content,messages.at(-1)?.state]);
- function fresh(){generation.current++;selected.current='';setWebSearch(!project?.files.length);setResearch(false);setTool('');chatUrl();setChat(null);setDraft('');setFiles([]);setError('');setLoading(false);setMobile(false);stick.current=true;setTimeout(()=>textarea.current?.focus(),0)}
+ function fresh(){generation.current++;selected.current='';setWebSearch(!project?.files.length);setResearch(false);setTool('');chatUrl();setChat(null);setDraft('');attachments.reset();setError('');setLoading(false);setMobile(false);stick.current=true;setTimeout(()=>textarea.current?.focus(),0)}
  async function send(content=draft){
-  if(!content.trim()||busy||pending||!user)return;
+  if((!content.trim()&&!files.length)||attachments.waiting||attachments.failed||busy||pending||!user)return;
   const expected=user.id,version=generation.current;
   const current=()=>owner.current===expected&&version===generation.current;
   let id=selected.current;
   setBusy(true);setError('');
   try{
-   const attachments:string[]=[];
-   for(const file of files){
-    const upload=await request('/uploads?name='+encodeURIComponent(file.name),'POST',file);
-    if(!current())return;
-    attachments.push(upload.id);
-   }
+   const fileIds=files.map(item=>item.prepared!.id);
    if(!id){
     const value=await request('/chats','POST',projectId?{project:projectId}:{});
     if(!current())return;
     id=value.chat.id;selected.current=id;setTool('');chatUrl(id);setChat(value.chat);
    }
    const {chat:next}=await request('/chats/'+id+'/messages','POST',{
-    content:content.trim(),model,effort,web_search:webSearch,attachments,research,
+    content:content.trim()||'첨부한 자료의 핵심 내용과 근거를 요약해 줘.',model,effort,web_search:webSearch,attachments:fileIds,research,
    });
    if(current()&&selected.current===id){
-    setChat(next);setDraft('');setFiles([]);stick.current=true;setJump(false);
+    setChat(next);setDraft('');attachments.reset();stick.current=true;setJump(false);
    }
    if(owner.current===expected)await Promise.all([refreshList(),projectId?refreshProjects():undefined]);
   }catch(e){if(current())setError((e as Error).message)}
   finally{if(owner.current===expected)setBusy(false)}
  }
- function attach(incoming:FileList|null){
-  if(!incoming?.length)return;
-  const next=[...files,...Array.from(incoming)];
-  if(next.length+(project?.files.length||0)>3||next.some(file=>!file.size||file.size>8*1024*1024||!/\.(pdf|csv|txt|md|json|tex|py|log)$/i.test(file.name))){
-   setError('파일은 최대 3개, 각각 8MB 이하의 PDF, CSV, 텍스트 파일을 첨부해 주세요.');return;
+ function attach(incoming:FileList|File[]|null){
+  try{
+   attachments.attach(incoming,project?.files.length||0);
+   if(incoming?.length){setWebSearch(false);setResearch(false);setError('')}
+  }catch(error){setError((error as Error).message)}
+ }
+ async function previewFile(id:string,name:string){
+  const expected=user?.id;
+  setPreview({name,text:'',loading:true});
+  try{
+   const result=await request('/uploads/'+id+'/text');
+   if(owner.current===expected)setPreview(current=>current?.name===name?{name,text:result.text,loading:false}:current);
+  }catch(error){
+   if(owner.current===expected)setPreview(current=>current?.name===name?{name,text:(error as Error).message,loading:false}:current);
   }
-  setFiles(next);setWebSearch(false);setResearch(false);setError('');
  }
  function switchProject(id:string){
   fresh();setProjectId(id);
@@ -174,9 +190,19 @@ export default function AiWorkspace(){
    {tool?<div className="chat-tool-scroll">{tool==='cli'?<CliGuide/>:tool==='robotics'?<RoboticsGuide key={user?.id||'guest'}/>:<AiToolsPanel key={tool} initialTab={tool} onUsePrompt={async text=>{if(draft&&!await confirm({title:'입력을 바꿀까요?',message:'작성 중인 입력을 최적화 결과로 바꿔요.',confirmLabel:'바꾸기'}))return;chooseTool('');setDraft(text);setTimeout(()=>textarea.current?.focus(),0)}}/>}</div>:<><div className="chat-scroll" ref={scroll} onScroll={()=>{const el=scroll.current;if(el){stick.current=el.scrollHeight-el.scrollTop-el.clientHeight<100;setJump(!stick.current)}}}>
     {loading||isLoading?<div className="chat-loading" role="status"><Loader2 className="animate-spin" size={22}/>대화 불러오는 중…</div>:!messages.length?<div className="chat-welcome"><div className="chat-welcome-brand"><Image src="/img/cbgpu-logo.png" alt="" width={46} height={46}/><span>YOUR EVERYDAY COPILOT</span></div><h1>무엇을 도와드릴까요?</h1><p>작은 궁금증부터 다음 연구 아이디어까지.<br className="chat-mobile-break"/> CBGPU와 함께 풀어보세요.</p><div className="chat-suggestions">{suggestions.map(s=><button key={s.title} onClick={()=>{setDraft(s.prompt);textarea.current?.focus()}}><s.icon size={21}/><span>{s.title}</span></button>)}</div></div>:<div className="chat-thread" aria-label="대화 내용">{messages.map((message,index)=><article key={message.id} className={'chat-message chat-message-'+message.role} aria-label={message.role==='user'?'내 메시지':'CBGPU AI 답변'}>{message.role==='assistant'&&<div className="chat-assistant-logo"><Image src="/img/cbgpu-logo.png" alt="CBGPU AI" width={24} height={24}/></div>}<div className="chat-message-body">{message.content?message.role==='assistant'?<Answer text={message.content}/>:<p className="chat-user-text">{message.content}</p>:live(message)?<div className="chat-thinking" role="status"><span className="chat-thinking-dot"/>{message.state==='paused'?'예약된 GPU에 양보했어요. 사용 가능한 GPU를 기다려요.':message.state==='queued'?'답변을 준비하고 있어요…':'생각하고 있어요…'}</div>:<p className="chat-message-error">{message.error||'답변 생성이 중단됐어요.'}</p>}<MessageSources sources={message.sources||[]}/>{message.content&&['failed','cancelled'].includes(message.state)&&<p className="chat-context-note">생성이 중단되어 이 답변은 미완성 상태예요.</p>}{message.truncated&&<p className="chat-context-note">답변 길이 한도에 도달했어요. 이어서 설명해 달라고 요청할 수 있어요.</p>}{message.content&&<div className="chat-message-actions"><CopyButton text={message.content} label={message.role==='assistant'?'답변 복사':'질문 복사'}/>{message.role==='assistant'&&!live(message)&&<button className="chat-icon" aria-label="답변 다운로드" title="Markdown 다운로드" onClick={()=>saveAiBlob(message.content,'cbgpu-answer.md')}><Download size={15}/></button>}{message.role==='user'&&<button className="chat-icon" aria-label="질문 다시 사용" onClick={()=>{setDraft(message.content);textarea.current?.focus()}}><PenLine size={14}/></button>}</div>}{message.role==='assistant'&&!live(message)&&!message.content&&index===messages.length-1&&<button className="chat-retry" disabled={busy} onClick={()=>void send(messages[index-1]?.content)}>다시 질문하기</button>}</div></article>)}</div>}
    </div>
-   <div className="chat-composer-area">{jump&&<button className="chat-jump chat-icon" aria-label="최근 메시지로 이동" onClick={()=>{stick.current=true;scroll.current?.scrollTo({top:scroll.current.scrollHeight,behavior:'smooth'})}}><ArrowDown size={18}/></button>}<div className="chat-composer-wrap">{error&&<div className="chat-error" role="alert"><span>{error}</span><button className="chat-icon" aria-label="오류 닫기" onClick={()=>setError('')}><X size={15}/></button></div>}{project&&<div className="chat-project-files"><strong>{project.title}</strong><button type="button" className="chat-icon" disabled={busy||!!pending} aria-label="프로젝트 삭제" onClick={()=>void deleteProject()}><Trash2 size={14}/></button>{project.files.map(file=><span key={file.id}><FileText size={14}/><span title={file.name}>{file.name}</span><button type="button" className="chat-icon" disabled={busy||!!pending} aria-label={file.name+' 프로젝트에서 제거'} onClick={()=>void removeProjectFile(file.id)}><X size={14}/></button></span>)}</div>}{chat?.context_truncated&&<p className="chat-context-note">대화가 길어 최근 메시지를 중심으로 답변해요.</p>}<form className="chat-composer" onSubmit={e=>{e.preventDefault();void send()}}>{!!files.length&&<div className="chat-attachments">{files.map((file,index)=><span key={index}><FileText size={14}/><span title={file.name}>{file.name}</span><button className="chat-icon" type="button" disabled={busy} aria-label={file.name+' 제거'} onClick={()=>setFiles(files.filter((_,i)=>i!==index))}><X size={14}/></button></span>)}</div>}<textarea data-no-focus-ring ref={textarea} aria-label="메시지 입력" placeholder="CBGPU에게 무엇이든 물어보세요" rows={1} maxLength={8000} value={draft} disabled={!user||!isApproved||loading} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing&&window.matchMedia('(pointer: fine)').matches){e.preventDefault();if(!pending)void send()}}}/><div className="chat-composer-toolbar"><div className="chat-composer-options"><input ref={fileInput} type="file" accept=".pdf,.csv,.txt,.md,.json,.tex,.py,.log" hidden multiple onChange={e=>{attach(e.target.files);e.target.value=''}}/><button type="button" className="chat-icon" aria-label="파일 첨부" title="파일 첨부" disabled={busy||!!pending||!user||!isApproved||loading} onClick={()=>fileInput.current?.click()}><Paperclip size={17}/></button><DropdownMenu.Root><DropdownMenu.Trigger asChild><button type="button" className="chat-web-toggle" aria-label="웹 검색 설정" aria-pressed={webSearch||research} title="검색을 켜면 질문을 검색엔진에 전송해요"><Globe size={14}/>{research?'출처 비교':webSearch?'웹 검색 켜짐':'웹 검색 꺼짐'}<ChevronDown size={12}/></button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="chat-menu" side="top" align="start" sideOffset={6}><DropdownMenu.RadioGroup value={research?'research':webSearch?'search':'off'} onValueChange={value=>{setResearch(value==='research');setWebSearch(value!=='off')}}><DropdownMenu.RadioItem value="off">검색 끄기</DropdownMenu.RadioItem><DropdownMenu.RadioItem value="search">웹 검색</DropdownMenu.RadioItem><DropdownMenu.RadioItem value="research">여러 출처 비교</DropdownMenu.RadioItem></DropdownMenu.RadioGroup></DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root><EffortControl value={effort} onChange={setEffort}/></div>{pending?<button className="chat-send chat-stop" type="button" aria-label="답변 생성 중지" onClick={()=>void stop()}><Square size={15} fill="currentColor"/></button>:<button className="chat-send" type="submit" aria-label="메시지 보내기" disabled={busy||!draft.trim()||!user||!isApproved||loading}>{busy?<Loader2 size={19} className="animate-spin"/>:<ArrowUp size={21}/>}</button>}</div></form><p className="chat-disclaimer">AI 답변은 부정확할 수 있어요. 중요한 내용은 확인해 주세요.</p></div></div>
+   <div className="chat-composer-area">{jump&&<button className="chat-jump chat-icon" aria-label="최근 메시지로 이동" onClick={()=>{stick.current=true;scroll.current?.scrollTo({top:scroll.current.scrollHeight,behavior:'smooth'})}}><ArrowDown size={18}/></button>}<div className="chat-composer-wrap">{error&&<div className="chat-error" role="alert"><span>{error}</span><button className="chat-icon" aria-label="오류 닫기" onClick={()=>setError('')}><X size={15}/></button></div>}{project&&<div className="chat-project-files"><strong>{project.title}</strong><button type="button" className="chat-icon" disabled={busy||!!pending} aria-label="프로젝트 삭제" onClick={()=>void deleteProject()}><Trash2 size={14}/></button>{project.files.map(file=><span key={file.id}><FileText size={14}/><span title={file.name}>{file.name}</span><button type="button" className="chat-icon" disabled={busy||!!pending} aria-label={file.name+' 프로젝트에서 제거'} onClick={()=>void removeProjectFile(file.id)}><X size={14}/></button></span>)}</div>}{chat?.context_truncated&&<p className="chat-context-note">대화가 길어 최근 메시지를 중심으로 답변해요.</p>}<form className="chat-composer" onDragOver={event=>{if(event.dataTransfer.types.includes('Files'))event.preventDefault()}} onDrop={event=>{event.preventDefault();if(!busy&&!pending&&user&&isApproved)attach(event.dataTransfer.files)}} onPaste={event=>{if(event.clipboardData.files.length&&!busy&&!pending&&user&&isApproved){event.preventDefault();attach(event.clipboardData.files)}}} onSubmit={e=>{e.preventDefault();void send()}}>{!!files.length&&<div className="chat-attachments" aria-label="첨부 파일">{files.map(item=><div className={'chat-file-card '+item.status} key={item.key}>
+ {item.status==='uploading'||item.status==='processing'?<Loader2 className="animate-spin" size={18}/>:item.status==='ready'?<Check size={18}/>:<FileText size={18}/>}
+ <div><strong title={item.file.name}>{item.file.name}</strong><span role={item.status==='failed'?'alert':'status'}>{item.status==='uploading'?'업로드 중…':item.status==='processing'?item.prepared?.pages?`문서 읽는 중 · ${item.prepared.progress||0}/${item.prepared.pages}쪽`:'문서 읽는 중 · 스캔은 자동 OCR':item.status==='failed'?item.error:item.prepared?.ocr_pages?`준비 완료 · ${item.prepared.ocr_pages}쪽 OCR`:'준비 완료'}</span>
+ {!!item.prepared?.weak_pages?.length&&<small>글자가 흐린 페이지가 있어요. 답변의 인식 결과를 확인해 주세요.</small>}
+ {item.prepared?.truncated&&<small>문서가 길어 일부 텍스트만 읽었어요.</small>}
+ </div>
+ {item.status==='ready'&&<button type="button" className="chat-file-retry" onClick={()=>void previewFile(item.prepared!.id,item.file.name)}>내용 확인</button>}
+ {item.status==='failed'&&<button type="button" className="chat-file-retry" onClick={()=>attachments.retry(item)}>재시도</button>}
+ <button className="chat-icon" type="button" disabled={busy} aria-label={item.file.name+' 제거'} onClick={()=>attachments.remove(item.key)}><X size={15}/></button>
+ </div>)}</div>}<textarea data-no-focus-ring ref={textarea} aria-label="메시지 입력" placeholder={files.length?'이 자료에 대해 무엇이 궁금한가요?':'CBGPU에게 무엇이든 물어보세요'} rows={1} maxLength={8000} value={draft} disabled={!user||!isApproved||loading} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.nativeEvent.isComposing&&window.matchMedia('(pointer: fine)').matches){e.preventDefault();if(!pending)void send()}}}/><div className="chat-composer-toolbar"><div className="chat-composer-options"><input ref={fileInput} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.csv,.txt,.md,.json,.tex,.py,.log" hidden multiple onChange={e=>{attach(e.target.files);e.target.value=''}}/><button type="button" className="chat-icon" aria-label="파일 첨부" title="파일 첨부" disabled={busy||!!pending||!user||!isApproved||loading} onClick={()=>fileInput.current?.click()}><Paperclip size={17}/></button><DropdownMenu.Root><DropdownMenu.Trigger asChild><button type="button" className="chat-web-toggle" aria-label="웹 검색 설정" aria-pressed={webSearch||research} title="검색을 켜면 질문을 검색엔진에 전송해요"><Globe size={14}/>{research?'출처 비교':webSearch?'웹 검색 켜짐':'웹 검색 꺼짐'}<ChevronDown size={12}/></button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="chat-menu" side="top" align="start" sideOffset={6}><DropdownMenu.RadioGroup value={research?'research':webSearch?'search':'off'} onValueChange={value=>{setResearch(value==='research');setWebSearch(value!=='off')}}><DropdownMenu.RadioItem value="off">검색 끄기</DropdownMenu.RadioItem><DropdownMenu.RadioItem value="search">웹 검색</DropdownMenu.RadioItem><DropdownMenu.RadioItem value="research">여러 출처 비교</DropdownMenu.RadioItem></DropdownMenu.RadioGroup></DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root><EffortControl value={effort} onChange={setEffort}/></div>{pending?<button className="chat-send chat-stop" type="button" aria-label="답변 생성 중지" onClick={()=>void stop()}><Square size={15} fill="currentColor"/></button>:<button className="chat-send" type="submit" aria-label="메시지 보내기" disabled={busy||attachments.waiting||attachments.failed||(!draft.trim()&&!files.length)||!user||!isApproved||loading}>{busy?<Loader2 size={19} className="animate-spin"/>:<ArrowUp size={21}/>}</button>}</div></form><p className="chat-disclaimer">AI 답변은 부정확할 수 있어요. 중요한 내용은 확인해 주세요.</p></div></div>
    </>}
   </main>
+  <Dialog.Root open={!!preview} onOpenChange={open=>{if(!open)setPreview(null)}}><Dialog.Portal><Dialog.Overlay className="chat-drawer-overlay"/><Dialog.Content className="chat-file-preview" aria-describedby={undefined}><header><div><Dialog.Title>{preview?.name}</Dialog.Title><p>AI가 참고할 텍스트</p></div><Dialog.Close className="chat-icon" aria-label="파일 내용 닫기"><X size={19}/></Dialog.Close></header><div className="chat-file-preview-body">{preview?.loading?<p role="status"><Loader2 className="animate-spin" size={18}/>내용을 불러오는 중…</p>:<pre>{preview?.text}</pre>}</div><footer><button type="button" disabled={preview?.loading} onClick={()=>preview&&saveAiBlob(preview.text,preview.name+'.txt')}>텍스트 저장</button><Dialog.Close>닫기</Dialog.Close></footer></Dialog.Content></Dialog.Portal></Dialog.Root>
   <Dialog.Root open={projectDialog} onOpenChange={setProjectDialog}><Dialog.Portal><Dialog.Overlay className="chat-drawer-overlay"/><Dialog.Content className="chat-rename-dialog" aria-describedby={undefined}><Dialog.Title>새 프로젝트</Dialog.Title><form onSubmit={event=>{event.preventDefault();void createProject()}}><input aria-label="프로젝트 이름" value={projectTitle} onChange={event=>setProjectTitle(event.target.value)} maxLength={80} required autoFocus/><div><Dialog.Close className="chat-dialog-cancel">취소</Dialog.Close><button className="chat-dialog-save" disabled={projectBusy||!projectTitle.trim()}>만들기</button></div></form></Dialog.Content></Dialog.Portal></Dialog.Root>
   <Dialog.Root open={!!rename} onOpenChange={open=>{if(!open)setRename(null)}}><Dialog.Portal><Dialog.Overlay className="chat-drawer-overlay"/><Dialog.Content className="chat-rename-dialog" aria-describedby={undefined}><Dialog.Title>대화 이름 변경</Dialog.Title><form onSubmit={e=>{e.preventDefault();if(!rename)return;const expected=user?.id;void request('/chats/'+rename.id,'POST',{title}).then(async value=>{if(owner.current!==expected)return;if(selected.current===rename.id)setChat(value.chat);setRename(null);await refreshList()}).catch(e=>setError(e.message))}}><input aria-label="대화 제목" value={title} onChange={e=>setTitle(e.target.value)} maxLength={100} required autoFocus/><div><Dialog.Close className="chat-dialog-cancel">취소</Dialog.Close><button className="chat-dialog-save" disabled={!title.trim()}>저장</button></div></form></Dialog.Content></Dialog.Portal></Dialog.Root>
  </div>;

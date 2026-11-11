@@ -75,8 +75,12 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    request.method==='DELETE'&&uuid(path[1]||'')&&(path.length===2||
     path.length===4&&path[2]==='files'&&uuid(path[3]))
   );
-  if(!allowed&&!chatMessage&&!projectRoute)throw new AiFailure('Not found',404);
-  if(path[0]==='uploads'){
+  const filePreparation=path[0]==='uploads'&&uuid(path[1]||'')&&(
+   path.length===2&&request.method==='GET'||
+   path.length===3&&(path[2]==='prepare'&&request.method==='POST'||path[2]==='text'&&request.method==='GET')
+  );
+  if(!allowed&&!chatMessage&&!projectRoute&&!filePreparation)throw new AiFailure('Not found',404);
+  if(path[0]==='uploads'&&path.length===1){
    if(request.method!=='POST')throw new AiFailure('Method not allowed',405);
    if(activeUploads>=2)throw new AiFailure('다른 파일을 받고 있어요. 잠시 후 다시 시도해 주세요.',429);activeUploads++;
    try{const response=await aiInternal('uploads',owner,'POST',undefined,request.body,'?name='+encodeURIComponent(request.nextUrl.searchParams.get('name')||'upload'));return new NextResponse(response.body,{status:response.status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})}finally{activeUploads--}

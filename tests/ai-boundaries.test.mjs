@@ -13,3 +13,16 @@ test('private note and shared-file candidates use the caller RLS client; only pu
 test('Robotics routes bind every SDK request to the verified owner and expose planning only',async()=>{const h=fixture({key:true});const body={robot_id:'virtual-robot',instruction:'Move',capabilities:[]};const created=await h.routes.POST(request('/v1/robotics/plans','POST',body),{params:Promise.resolve({path:['v1','robotics','plans']})});assert.equal(created.status,202);assert.equal(h.calls[0].path,'robotics/plans');assert.equal(h.calls[0].body.robot_id,'virtual-robot');const id='33333333-3333-4333-8333-333333333333';assert.equal((await h.routes.GET(request('/v1/robotics/plans/'+id),{params:Promise.resolve({path:['v1','robotics','plans',id]})})).status,200);assert.equal((await h.routes.DELETE(request('/v1/robotics/plans/'+id,'DELETE'),{params:Promise.resolve({path:['v1','robotics','plans',id]})})).status,200);assert.equal((await h.routes.POST(request('/v1/robotics/execute','POST',{}),{params:Promise.resolve({path:['v1','robotics','execute']})})).status,404);const denied=fixture({denied:true});assert.equal((await denied.routes.POST(request('/v1/robotics/plans','POST',body),{params:Promise.resolve({path:['v1','robotics','plans']})})).status,401);assert.equal(denied.calls.length,0)});
 
 test('device tokens are scoped to agent sync; AI keys cannot register or steer remote devices',async()=>{const h=fixture({key:true});for(const [path,method] of [[['v1','robotics','devices'],'POST'],[['v1','robotics','devices','33333333-3333-4333-8333-333333333333','goal'],'POST']]){assert.equal((await h.routes.POST(request('/'+path.join('/'),method,{}),{params:Promise.resolve({path})})).status,403)}const agent=fixture({denied:true}),path=['v1','robotics','agent','sync'];let r=await agent.routes.POST(request('/'+path.join('/'),'POST',{}),{params:Promise.resolve({path})});assert.equal(r.status,401);const req=request('/'+path.join('/'),'POST',{device_token:'forged-body',telemetry:{}});req.headers.set('authorization','Bearer cbgpu_robot_scoped-token');r=await agent.routes.POST(req,{params:Promise.resolve({path})});assert.equal(r.status,200);assert.equal(agent.calls[0].body.device_token,'cbgpu_robot_scoped-token');assert.equal(agent.calls[0].path,'robotics/agent/sync')});
+
+test('document preparation, status and extracted text require verified browser identity',async()=>{
+ const id='33333333-3333-4333-8333-333333333333';
+ for(const [suffix,method] of [['','GET'],['/text','GET'],['/prepare','POST']]){
+  const path=['uploads',id,...suffix.split('/').filter(Boolean)];
+  const allowed=fixture();
+  assert.equal((await allowed.routes[method](request('/'+path.join('/'),method,method==='POST'?{}:undefined),{params:Promise.resolve({path})})).status,200);
+  assert.ok(allowed.calls.includes(path.join('/')));
+  const key=fixture({key:true});
+  assert.equal((await key.routes[method](request('/'+path.join('/'),method,method==='POST'?{}:undefined),{params:Promise.resolve({path})})).status,403);
+  assert.equal(key.calls.length,0);
+ }
+});
