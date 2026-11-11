@@ -76,7 +76,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
     path.length===4&&path[2]==='files'&&uuid(path[3]))
   );
   const filePreparation=path[0]==='uploads'&&uuid(path[1]||'')&&(
-   path.length===2&&request.method==='GET'||
+   path.length===2&&['GET','DELETE'].includes(request.method)||
    path.length===3&&(path[2]==='prepare'&&request.method==='POST'||path[2]==='text'&&request.method==='GET')
   );
   if(!allowed&&!chatMessage&&!projectRoute&&!filePreparation)throw new AiFailure('Not found',404);

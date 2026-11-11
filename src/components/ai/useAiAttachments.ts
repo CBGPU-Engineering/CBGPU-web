@@ -105,8 +105,10 @@ export function useAiAttachments(ownerId:string|undefined){
     for(const item of additions)void prepare(item);
   }
   function remove(key:string){
+    const id=files.find(file=>file.key===key)?.prepared?.id;
     active.current.get(key)?.abort();
     active.current.delete(key);
+    if(id&&ownerId)void aiRequest('/uploads/'+id,'DELETE',undefined,undefined,ownerId).catch(()=>{});
     setFiles(current=>current.filter(file=>file.key!==key));
   }
   return {files,attach,remove,reset,retry:(file:Attachment)=>void prepare(file),
