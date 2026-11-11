@@ -74,7 +74,7 @@ export default function AiWorkspace(){
  const [projectId,setProjectId]=useState('');
  const [projectDialog,setProjectDialog]=useState(false);
  const [projectTitle,setProjectTitle]=useState('');
- const [preview,setPreview]=useState<{name:string;text:string;loading:boolean}|null>(null);
+ const [preview,setPreview]=useState<{id:string;name:string;text:string;loading:boolean}|null>(null);
  const [projectBusy,setProjectBusy]=useState(false);
  const project=projects.find(item=>item.id===projectId);
  const attachments=useAiAttachments(user?.id);
@@ -134,12 +134,12 @@ export default function AiWorkspace(){
  }
  async function previewFile(id:string,name:string){
   const expected=user?.id;
-  setPreview({name,text:'',loading:true});
+  setPreview({id,name,text:'',loading:true});
   try{
    const result=await request('/uploads/'+id+'/text');
-   if(owner.current===expected)setPreview(current=>current?.name===name?{name,text:result.text,loading:false}:current);
+   if(owner.current===expected)setPreview(current=>current?.id===id?{id,name,text:result.text,loading:false}:current);
   }catch(error){
-   if(owner.current===expected)setPreview(current=>current?.name===name?{name,text:(error as Error).message,loading:false}:current);
+   if(owner.current===expected)setPreview(current=>current?.id===id?{id,name,text:(error as Error).message,loading:false}:current);
   }
  }
  function switchProject(id:string){
@@ -194,6 +194,7 @@ export default function AiWorkspace(){
  {item.status==='uploading'||item.status==='processing'?<Loader2 className="animate-spin" size={18}/>:item.status==='ready'?<Check size={18}/>:<FileText size={18}/>}
  <div><strong title={item.file.name}>{item.file.name}</strong><span role={item.status==='failed'?'alert':'status'}>{item.status==='uploading'?'업로드 중…':item.status==='processing'?item.prepared?.pages?`문서 읽는 중 · ${item.prepared.progress||0}/${item.prepared.pages}쪽`:'문서 읽는 중 · 스캔은 자동 OCR':item.status==='failed'?item.error:item.prepared?.ocr_pages?`준비 완료 · ${item.prepared.ocr_pages}쪽 OCR`:'준비 완료'}</span>
  {!!item.prepared?.weak_pages?.length&&<small>글자가 흐린 페이지가 있어요. 답변의 인식 결과를 확인해 주세요.</small>}
+ {!!item.prepared?.empty_pages?.length&&<small>일부 페이지에서 글자를 찾지 못했어요.</small>}
  {item.prepared?.truncated&&<small>문서가 길어 일부 텍스트만 읽었어요.</small>}
  </div>
  {item.status==='ready'&&<button type="button" className="chat-file-retry" onClick={()=>void previewFile(item.prepared!.id,item.file.name)}>내용 확인</button>}
