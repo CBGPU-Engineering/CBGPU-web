@@ -1,5 +1,5 @@
 'use client';
-import {useState} from 'react';
+import {Fragment,useState,type ReactNode} from 'react';
 import Link from 'next/link';
 import {Search,X,ArrowUpRight,ArrowRight,LayoutGrid} from 'lucide-react';
 import {serviceGroups} from '@/lib/serviceNavigation';
@@ -7,7 +7,7 @@ import {workspaceServicePaths,workspaces,appWorkspaceHome,type WorkspaceId} from
 import {matchesService,serviceDestination} from '@/lib/serviceDiscovery';
 import WorkspaceLink from '@/components/workspaces/WorkspaceLink';
 import './service-directory.css';
-export default function ServiceDirectory({audience=null,isApp=false,initialQuery='',initialCategory='all',home=false}:{audience?:WorkspaceId|null;isApp?:boolean;initialQuery?:string;initialCategory?:string;home?:boolean}){
+export default function ServiceDirectory({audience=null,isApp=false,initialQuery='',initialCategory='all',home=false,afterFirst=null}:{audience?:WorkspaceId|null;isApp?:boolean;initialQuery?:string;initialCategory?:string;home?:boolean;afterFirst?:ReactNode}){
  const [query,setQuery]=useState(initialQuery),[category,setCategory]=useState(()=>serviceGroups.some(group=>group.id===initialCategory&&group.services.some(service=>!audience||workspaceServicePaths[audience].includes(service.href)))?initialCategory:'all');
  const relevant=(href:string)=>!audience||workspaceServicePaths[audience].includes(href);
  const available=serviceGroups.map(group=>({...group,services:group.services.filter(service=>relevant(service.href))})).filter(group=>group.services.length).map(group=>({...group,title:audience==='researcher'&&group.id==='school'?'자료 공유':group.title})).sort((a,b)=>audience==='researcher'?['compute','deploy','research','making','school','community','knowledge'].indexOf(a.id)-['compute','deploy','research','making','school','community','knowledge'].indexOf(b.id):0);
@@ -20,7 +20,7 @@ export default function ServiceDirectory({audience=null,isApp=false,initialQuery
   <div className="cb-directory-search"><Search size={21} aria-hidden="true"/><input type="search" aria-label="기능 검색" data-no-focus-ring placeholder={audience==='student'?'자습, 급식, 자료… 무엇을 찾고 있나요?':'GPU, 배포, 논문, 프린터… 검색하세요'} value={query} onChange={event=>setQuery(event.target.value)} onKeyDown={event=>{if(event.key==='Escape')setQuery('')}}/>{query&&<button type="button" aria-label="검색어 지우기" onClick={()=>setQuery('')}><X size={18}/></button>}</div>
   <nav className="cb-directory-filters" aria-label="기능 분류"><button type="button" onClick={()=>setCategory('all')} aria-pressed={category==='all'}><LayoutGrid size={15}/>전체</button>{available.map(group=><button key={group.id} type="button" onClick={()=>setCategory(group.id)} aria-pressed={category===group.id}>{group.title}</button>)}</nav>
   {query.trim()&&<p className="cb-directory-result" role="status" aria-live="polite">‘{query}’ 검색 결과 · {count+others.length}개</p>}
-  <div className="cb-directory-sections">{groups.map(group=><section key={group.id} aria-labelledby={'service-group-'+group.id}><h3 id={'service-group-'+group.id}>{group.title}<span>{group.services.length}</span></h3><div className="cb-directory-grid" data-count={group.services.length}>{group.services.map(service=>tile(service,group.id))}</div></section>)}</div>
+  <div className="cb-directory-sections">{groups.map((group,index)=><Fragment key={group.id}><section aria-labelledby={'service-group-'+group.id}><h3 id={'service-group-'+group.id}>{group.title}<span>{group.services.length}</span></h3><div className="cb-directory-grid" data-count={group.services.length}>{group.services.map(service=>tile(service,group.id))}</div></section>{index===0&&afterFirst&&!query.trim()&&category==='all'?afterFirst:null}</Fragment>)}</div>
   {others.length>0&&<section className="cb-directory-other"><h3>다른 공간에서 찾았어요</h3><p>선택하면 해당 기능이 있는 공간으로 이동해요.</p><div className="cb-directory-grid" data-count={others.length}>{others.map(service=>tile(service,'other'))}</div></section>}
   {!count&&!others.length&&<div className="cb-directory-empty"><Search size={25}/><h3>찾는 기능이 보이지 않나요?</h3><p>‘프린터’, ‘자료’, ‘웹사이트’처럼 하고 싶은 일을 검색해보세요.</p><button type="button" onClick={()=>{setQuery('');setCategory('all')}}>검색과 분류 초기화<ArrowRight size={16}/></button></div>}
   {audience&&<div className="cb-directory-switch"><span>{audience==='student'?'GPU·배포·논문·제작을 찾고 있나요?':'자습·시간표·급식을 찾고 있나요?'}</span><WorkspaceLink href={isApp?appWorkspaceHome(audience==='student'?'researcher':'student'):'https://'+workspaces[audience==='student'?'researcher':'student'].host}>{audience==='student'?'연구·개발 공간':'학교생활 공간'}<ArrowRight size={15}/></WorkspaceLink></div>}
