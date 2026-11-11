@@ -79,10 +79,17 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
    if(!own)return '학년과 반을 확인할 수 없습니다. 몇 학년 몇 반인지 질문에 적어 주세요.';
    const value=await local('/api/timetable?grade='+own.grade+'&class='+own.cls);
    if(value.stale&&(!value.fetchedAt||Date.now()-Date.parse(value.fetchedAt)>48*3600000||!Number.isFinite(Date.parse(value.fetchedAt))))throw Error('No dated fallback');
+   const weekday=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7;
+   const grid=value.grid||{};
+   const days=/주간|이번\s*주|다음\s*주|전체/.test(question)?Object.keys(grid):[String(weekday)];
+   const lessons=Object.fromEntries(days.map(day=>[day,Object.entries(grid[day]||{}).map(([period,cell])=>{
+    const lesson=cell as {subject?:string;teacher?:string;changed?:boolean};
+    return {period:Number(period),subject:lesson.subject,teacher:lesson.teacher,changed:lesson.changed};
+   })]));
    return {조회:value.stale?'마지막 정상 조회 자료':'성공',stale:!!value.stale,
     freshness:value.stale?'현재 제공처 갱신에 실패했습니다. 아래는 fetchedAt 시점의 시간표이며 이후 변경은 확인되지 않았습니다. 반드시 마지막 확인 시각을 함께 안내하세요.':'현재 서비스가 제공하는 시간표입니다.',
-    grade:own.grade,class:own.cls,target_date:date,weekday_monday_zero:(new Date(date+'T00:00:00Z').getUTCDay()+6)%7,
-    weekStart:value.weekStart,fetchedAt:value.fetchedAt,grid:value.grid,times:value.times};
+    grade:own.grade,class:own.cls,target_date:date,weekday_monday_zero:weekday,
+    weekStart:value.weekStart,fetchedAt:value.fetchedAt,lessons,times:value.times};
   });
  }
  if(/자습|자리|좌석|내 신청|selfstudy|eduset/i.test(question)){
