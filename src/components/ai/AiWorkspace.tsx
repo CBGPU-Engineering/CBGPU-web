@@ -83,7 +83,7 @@ export default function AiWorkspace(){
   const value=await request('/projects');
   if(owner.current===expected)setProjects(value.projects);
  },[request,user?.id]);
- const openChat=useCallback(async(id:string)=>{const expected=user?.id,version=++generation.current;selected.current=id;setTool('');chatUrl(id);setMobile(false);setError('');setLoading(true);setChat(null);setDraft('');setFiles([]);try{const {chat}=await request('/chats/'+id);if(owner.current===expected&&version===generation.current){setChat(chat);setProjectId(chat.project||'');setModel(chat.model||'cbgpu-chat');setEffort(chat.effort||'medium');stick.current=true}}catch(e){if(owner.current===expected&&version===generation.current)setError((e as Error).message)}finally{if(version===generation.current)setLoading(false)}},[request,user?.id]);
+ const openChat=useCallback(async(id:string)=>{const expected=user?.id,version=++generation.current;selected.current=id;setTool('');chatUrl(id);setMobile(false);setError('');setLoading(true);setChat(null);setDraft('');setFiles([]);try{const {chat}=await request('/chats/'+id);if(owner.current===expected&&version===generation.current){setChat(chat);setProjectId(chat.project||'');setWebSearch(!chat.project);setResearch(false);setModel(chat.model||'cbgpu-chat');setEffort(chat.effort||'medium');stick.current=true}}catch(e){if(owner.current===expected&&version===generation.current)setError((e as Error).message)}finally{if(version===generation.current)setLoading(false)}},[request,user?.id]);
  useEffect(()=>{generation.current++;selected.current='';setChat(null);setChats([]);setProjects([]);setProjectId('');setDraft('');setFiles([]);setBusy(false);setError('');if(!user||!isApproved){setLoading(false);return}let active=true;setLoading(true);void (async()=>{try{await refreshList();void refreshProjects().catch(()=>{});if(!active)return;const id=new URL(location.href).searchParams.get('c');if(id&&/^[a-f0-9-]{36}$/.test(id)){const wanted=new URL(location.href).searchParams.get('tool');await openChat(id);if(wanted)chooseTool(wanted)}else setLoading(false)}catch(e){if(active){setError((e as Error).message);setLoading(false)}}})();return()=>{active=false}},[user?.id,isApproved,refreshList,refreshProjects,openChat]);
  useEffect(()=>{if(!pending||!chat)return;const id=chat.id,expected=user?.id;let active=true,running=false;const sync=async()=>{if(running||(liveStream.current&&!liveStream.current.signal.aborted))return;running=true;try{const data=await request('/chats/'+id);if(active&&selected.current===id&&owner.current===expected){setChat(data.chat);setError('');if(!data.chat.messages.some(live))void refreshList().catch(()=>{})}}catch(e){if(active&&selected.current===id)setError((e as Error).message)}finally{running=false}};const timer=setInterval(()=>void sync(),3000);return()=>{active=false;clearInterval(timer)}},[pending?.id,chat?.id,user?.id,request,refreshList]);
  useEffect(()=>{if(!pending||!chat||!user)return;const abort=new AbortController(),id=chat.id,expected=user.id;liveStream.current=abort;void watchChat(id,expected,abort.signal,event=>{if(owner.current!==expected||selected.current!==id||abort.signal.aborted)return;setChat(current=>{if(!current||current.id!==id)return current;const rows=current.messages.map(message=>{if(event.type==='delta'&&message.id===event.id)return {...message,content:(message.content||'').slice(0,event.offset??message.content.length)+(event.text||'')};if(event.type==='replace'&&message.id===event.id)return {...message,content:event.text||''};if((event.type==='state'||event.type==='done')&&event.message&&typeof event.message==='object'&&event.message.id===message.id)return {...message,...event.message} as Message;return message});return {...current,messages:rows}})}).catch(()=>{}).finally(()=>{if(liveStream.current===abort)liveStream.current=null});return()=>abort.abort()},[pending?.id,chat?.id,user?.id]);
@@ -142,13 +142,16 @@ export default function AiWorkspace(){
   finally{setProjectBusy(false)}
  }
  async function removeProjectFile(id:string){
-  if(!project||!confirm('프로젝트에서 이 파일을 빼겠어요? 이전 답변의 발췌문은 남아요.'))return;
+  const expected=user?.id;
+  if(!project||!await confirm({title:'프로젝트에서 파일을 뺄까요?',message:'이전 답변에 저장된 발췌문은 남아요.',confirmLabel:'제거'}))return;
+  if(owner.current!==expected)return;
   try{await request('/projects/'+project.id+'/files/'+id,'DELETE');await refreshProjects()}
   catch(error){setError((error as Error).message)}
  }
  async function deleteProject(){
-  if(!project||!confirm('프로젝트를 삭제할까요? 대화는 전체 대화에 남아요.'))return;
   const expected=user?.id;
+  if(!project||!await confirm({title:'프로젝트를 삭제할까요?',message:'대화는 전체 대화에 남아요.',confirmLabel:'삭제'}))return;
+  if(owner.current!==expected)return;
   try{
    await request('/projects/'+project.id,'DELETE');
    if(owner.current!==expected)return;
