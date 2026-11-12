@@ -15,7 +15,7 @@ const friends = [
 ];
 type Point = {x: number; y: number};
 type Platform = {element: HTMLElement; left: number; right: number; top: number};
-type Actor = {node: HTMLDivElement; point: Point; height: number; animation?: Animation; platform?: HTMLElement};
+type Actor = {node: HTMLDivElement; point: Point; height: number; animation?: Animation; platform?: HTMLElement; following?: boolean};
 
 /** Original character art inhabits the visible UI: ledges, little walks and jumps. */
 export default function ChiikawaRunner() {
@@ -26,7 +26,9 @@ export default function ChiikawaRunner() {
 
   useEffect(() => {
     if (!mounted) return;
-    let disposed = false, revision = 0, frame = 0;
+    let disposed = false, revision = 0, frame = 0, lastLayoutAt = 0, pendingDirection = 0, scrollingUntil = 0;
+    let layoutTimer: ReturnType<typeof setTimeout> | undefined;
+    const scrollOffsets = new WeakMap<Element, number>();
     const media = matchMedia('(prefers-reduced-motion: reduce)');
     const timers = new Set<ReturnType<typeof setTimeout>>();
     const actors: Actor[] = nodes.current.flatMap((node, index) => node ? [{node, point: {x: 0, y: 0}, height: friends[index].height * 38}] : []);
@@ -84,23 +86,84 @@ export default function ChiikawaRunner() {
       place(actor, {x: platform.left + (platform.right - platform.left) * fraction, y: platform.top - actor.height + 1});
       actor.node.dataset.action = 'rest';
     };
-    const relayout = () => {
-      revision++;
-      const ledges = platforms();
+    const visualPoint = (actor: Actor): Point => {
+      // Sample the in-flight position before cancelling; actor.point is the last landing.
+      const rect = actor.node.getBoundingClientRect();
+      return clamp({x: rect.left, y: rect.top}, actor.height);
+    };
+    const relayout = (smooth = false, direction = 0) => {
+      const version = ++revision, ledges = platforms();
       actors.forEach((actor, index) => {
-        actor.animation?.cancel();
+        const visible = !!actor.node.style.opacity;
+        const start = visible ? visualPoint(actor) : actor.point;
+        const continuing = actor.following;
+        actor.animation?.cancel(); actor.animation = undefined;
+        if (visible) place(actor, start);
         const current = ledges.find(p => p.element === actor.platform);
-        const target = current || ledges[index % ledges.length];
-        if (target) land(actor, target, .2 + index * .28);
-        else {
+        let target = current || ledges[index % ledges.length];
+        if (direction && (!current || Math.abs(current.top - actor.height + 1 - start.y) > 60)) {
+          // Follow the user's reading direction to a nearby newly visible ledge.
+          const forward = ledges.filter(p => direction * (p.top - actor.height - start.y) > 18);
+          const candidates = forward.length ? forward : ledges;
+          target = [...candidates].sort((a, b) => {
+            const score = (p: Platform) => Math.abs(p.top - actor.height - (start.y + direction * 110)) + Math.abs((p.left + p.right) / 2 - start.x) * .35;
+            return score(a) - score(b);
+          })[0];
+        }
+        if (target) {
+          const x = current === target ? Math.max(target.left, Math.min(target.right, start.x)) : target.left + (target.right - target.left) * (.2 + index * .28);
+          const end = clamp({x, y: target.top - actor.height + 1}, actor.height);
+          if (!smooth || !visible || paused || media.matches || document.hidden) {
+            land(actor, target, target.right === target.left ? 0 : (x - target.left) / (target.right - target.left));
+            actor.following = false;
+            return;
+          }
+          actor.following = true;
+          actor.node.dataset.action = 'jump';
+          actor.node.dataset.direction = end.x < start.x ? 'left' : 'right';
+          const transform = (p: Point) => `translate3d(${p.x}px,${p.y}px,0)`;
+          // Start with a hop, then smoothly retarget the descent during a scroll burst.
+          // Repeating a fresh upward impulse on every scroll frame would make them float.
+          const keys = continuing ? [{transform: transform(start)}, {transform: transform(end)}] : [
+            {transform: transform(start), offset: 0},
+            {transform: transform(clamp({x: start.x + (end.x - start.x) * .35, y: Math.min(start.y, end.y) - 26}, actor.height)), offset: .32},
+            {transform: transform(end), offset: 1},
+          ];
+          const distance = Math.hypot(end.x - start.x, end.y - start.y);
+          const animation = actor.node.animate(keys, {duration: continuing ? 320 : Math.min(850, 420 + distance), easing: 'cubic-bezier(.25,.1,.4,1)', fill: 'forwards'});
+          actor.animation = animation;
+          const destination = target;
+          void animation.finished.then(() => {
+            if (disposed || version !== revision || actor.animation !== animation) return;
+            place(actor, end); animation.cancel(); actor.animation = undefined;
+            actor.platform = destination.element; actor.node.dataset.platform = destination.element.tagName.toLowerCase();
+            actor.following = false; actor.node.dataset.action = 'rest';
+          }).catch(() => {});
+        } else {
           const b = bounds();
-          place(actor, actor.node.style.opacity ? actor.point : {x: b.left + (b.right - b.left) * (.15 + index * .32), y: b.top + 24 + index * 46});
-          actor.platform = undefined; actor.node.dataset.action = 'rest';
+          place(actor, visible ? start : {x: b.left + (b.right - b.left) * (.15 + index * .32), y: b.top + 24 + index * 46});
+          actor.platform = undefined; actor.following = false; actor.node.dataset.action = 'rest';
         }
       });
     };
-    const scheduleLayout = () => {if (!frame) frame = requestAnimationFrame(() => {frame = 0; relayout();});};
+    const scheduleLayout = () => {
+      if (frame || layoutTimer) return;
+      const wait = 90 - (performance.now() - lastLayoutAt);
+      if (wait > 0) {layoutTimer = setTimeout(() => {layoutTimer = undefined; scheduleLayout();}, wait); return;}
+      frame = requestAnimationFrame(() => {frame = 0; lastLayoutAt = performance.now(); const direction = pendingDirection; pendingDirection = 0; relayout(true, direction);});
+    };
+    const followScroll = (event: Event) => {
+      const source = event.target instanceof Element ? event.target : document.scrollingElement;
+      if (source) {
+        const value = source.scrollTop, previous = scrollOffsets.get(source) ?? 0;
+        pendingDirection = Math.sign(value - previous) || pendingDirection;
+        scrollOffsets.set(source, value);
+      }
+      scrollingUntil = performance.now() + 450;
+      scheduleLayout();
+    };
     const move = async (actor: Actor, target: Point, jump: boolean) => {
+      if (actor.following || performance.now() < scrollingUntil) return false;
       const version = revision, start = actor.point, end = clamp(target, actor.height);
       const distance = Math.hypot(end.x - start.x, end.y - start.y);
       actor.node.dataset.action = jump ? 'jump' : 'walk';
@@ -122,6 +185,7 @@ export default function ChiikawaRunner() {
       await delay(350 + index * 700);
       while (!disposed) {
         if (document.hidden || paused || media.matches) {await delay(1200); continue;}
+        if (actor.following || performance.now() < scrollingUntil) {await delay(120); continue;}
         const ledges = platforms();
         if (!ledges.length) {place(actor, actor.point); actor.node.dataset.action = 'rest'; await delay(1400); continue;}
         if (!actor.platform || !ledges.some(p => p.element === actor.platform)) land(actor, ledges[index % ledges.length], .2 + .25 * index);
@@ -129,7 +193,7 @@ export default function ChiikawaRunner() {
         const x = current.left + (current.right - current.left) * (Math.random() > .5 ? .85 : .15);
         if (!await move(actor, {x, y: current.top - actor.height + 1}, false)) continue;
         await delay(400 + Math.random() * 1100);
-        if (disposed || paused || media.matches || document.hidden) continue;
+        if (disposed || paused || media.matches || document.hidden || actor.following || performance.now() < scrollingUntil) continue;
         const nearby = platforms().filter(p => p.element !== actor.platform && Math.hypot((p.left + p.right) / 2 - actor.point.x, p.top - actor.point.y) < 560);
         const next = nearby[Math.floor(Math.random() * nearby.length)];
         if (next && await move(actor, {x: next.left + (next.right - next.left) * (.2 + Math.random() * .6), y: next.top - actor.height + 1}, true)) actor.platform = next.element;
@@ -142,7 +206,7 @@ export default function ChiikawaRunner() {
     };
     relayout();
     actors.forEach((actor, index) => {void roam(actor, index);});
-    window.addEventListener('scroll', scheduleLayout, {passive: true, capture: true});
+    window.addEventListener('scroll', followScroll, {passive: true, capture: true});
     window.addEventListener('resize', scheduleLayout, {passive: true});
     window.visualViewport?.addEventListener('resize', scheduleLayout);
     window.visualViewport?.addEventListener('scroll', scheduleLayout);
@@ -155,8 +219,8 @@ export default function ChiikawaRunner() {
       disposed = true; revision++;
       actors.forEach(a => a.animation?.cancel());
       timers.forEach(clearTimeout);
-      cancelAnimationFrame(frame); observer.disconnect();
-      window.removeEventListener('scroll', scheduleLayout, true);
+      cancelAnimationFrame(frame); if (layoutTimer) clearTimeout(layoutTimer); observer.disconnect();
+      window.removeEventListener('scroll', followScroll, true);
       window.removeEventListener('resize', scheduleLayout);
       window.visualViewport?.removeEventListener('resize', scheduleLayout);
       window.visualViewport?.removeEventListener('scroll', scheduleLayout);
