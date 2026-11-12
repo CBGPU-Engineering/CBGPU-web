@@ -10,3 +10,9 @@ relicensed by this repository.
 
 - **Pretendard Variable** (`src/app/fonts/PretendardVariable.woff2`) — Copyright (c) 2021 Kil Hyung-jin,
   SIL Open Font License 1.1. License text: `src/app/fonts/PRETENDARD-OFL.txt`.
+
+## Chiikawa characters
+
+Original character PNGs under `public/characters/chiikawa/` come from the official
+anime website. Copyright © ナガノ / ちいかわ製作委員会. These images are not
+Apache-2.0-licensed; see that directory's `SOURCES.md` for exact source URLs.

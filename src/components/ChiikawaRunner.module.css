@@ -1,58 +1,68 @@
-.viewport {
+.world {
   position: fixed;
-  inset: auto 14px max(14px, env(safe-area-inset-bottom));
-  height: 76px;
+  inset: 0;
   z-index: 18;
+  overflow: clip;
   pointer-events: none;
   contain: layout style;
 }
-.track {
+.actor {
   position: absolute;
   left: 0;
-  bottom: 0;
-  width: 68px;
-  height: 76px;
-  animation: patrol 24s linear infinite;
+  top: 0;
+  width: 38px;
+  opacity: 0;
+  pointer-events: none;
   will-change: transform;
 }
-.character {
+.sprite {
   display: block;
-  width: 68px;
-  height: 76px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
+  width: 38px;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: center bottom;
+  filter: drop-shadow(0 2px 1px #00000014);
+}
+.actor[data-action='walk'] .sprite { animation: scurry .17s ease-in-out infinite alternate; }
+.actor[data-action='jump'] .sprite { animation: leap .7s ease-in-out both; }
+.actor[data-direction='left'] { --facing: -1; }
+.actor[data-direction='right'] { --facing: 1; }
+.actor[data-action='rest'] .sprite { transform: scaleX(var(--facing, 1)); }
+.pause {
+  position: fixed;
+  right: 12px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+.pause:focus-visible {
+  width: auto;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  clip-path: none;
   pointer-events: auto;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  filter: drop-shadow(0 2px 2px #00000012);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--background);
+  color: var(--foreground);
+  outline: 2px solid var(--primary);
 }
-.character svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.character:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
-.track:has(.character:hover), .track:has(.character:focus-visible) { animation-play-state: paused; }
-.body { animation: bounce .28s ease-in-out infinite alternate; }
-.leftFoot, .rightFoot { transform-box: fill-box; transform-origin: center top; animation: step .28s ease-in-out infinite alternate; }
-.rightFoot { animation-direction: alternate-reverse; }
-.leftArm, .rightArm { transform-box: fill-box; transform-origin: center top; animation: swing .28s ease-in-out infinite alternate; }
-.rightArm { animation-direction: alternate-reverse; }
-.shadow { transform-box: fill-box; transform-origin: center; animation: shadow .28s ease-in-out infinite alternate; }
-@keyframes patrol {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(calc(100vw - 96px)); }
+@keyframes scurry {
+  from { transform: scaleX(var(--facing, 1)) translateY(0) rotate(-5deg); }
+  to { transform: scaleX(var(--facing, 1)) translateY(-3px) rotate(5deg); }
 }
-@keyframes bounce { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-5px) rotate(2deg); } }
-@keyframes step { from { transform: rotate(-30deg) translateY(-3px); } to { transform: rotate(30deg) translateY(1px); } }
-@keyframes swing { from { transform: rotate(-12deg); } to { transform: rotate(12deg); } }
-@keyframes shadow { to { transform: scaleX(.8); opacity: .1; } }
-:global(body[data-cbgpu-app='true']) .viewport { bottom: calc(78px + env(safe-area-inset-bottom)); }
-@media (max-width: 960px) {
-  .viewport { bottom: calc(78px + env(safe-area-inset-bottom)); height: 66px; }
-  .track, .character { width: 58px; height: 66px; }
-  @keyframes patrol { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(calc(100vw - 86px)); } }
+@keyframes leap {
+  0%, 100% { transform: scaleX(var(--facing, 1)) scaleY(.92); }
+  45% { transform: scaleX(var(--facing, 1)) scaleY(1.08) rotate(-6deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .track, .viewport * { animation: none !important; will-change: auto; }
+  .actor .sprite { animation: none !important; }
+  .actor { will-change: auto; }
 }
-@media print { .viewport { display: none; } }
+@media print { .world { display: none; } }
