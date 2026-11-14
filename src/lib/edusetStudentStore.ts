@@ -12,7 +12,7 @@ export async function savedSchoolToken(owner:string):Promise<string|null>{
  const {data,error}=await preprintsClient().from('eduset_student_connections').select('student_id,token_enc,expires_at').eq('user_id',owner).maybeSingle();
  if(error)throw new StudyFailure('저장된 학교 연결을 확인하지 못했습니다.',503);
  if(!data)return null;
- if(new Date(data.expires_at).getTime()<=Date.now()){await forgetSchoolConnection(owner);return null}
+ if(new Date(data.expires_at).getTime()<=Date.now()){await forgetSchoolConnection(owner);throw new StudyFailure('학교 EduSet 세션의 유효기간이 지났어요. 학교 계정만 다시 로그인해 주세요.',401,'school_connection_expired')}
  try{const value=JSON.parse(decryptToken(data.token_enc));if(value.scope!=='personal-student-v1'||value.owner!==owner||String(value.studentId)!==data.student_id||typeof value.accessToken!=='string')throw Error();return value.accessToken}catch{await forgetSchoolConnection(owner);return null}
 }
 export async function rememberSchoolConnection(owner:string,accessToken:string,student:StudyStudent){

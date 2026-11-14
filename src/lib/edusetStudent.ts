@@ -6,7 +6,7 @@ export type StudyRoom = {id:StudyId;name:string;hasSeats:boolean;width:number;he
 export type StudyTeacher = {id:StudyId;name:string};
 export type OwnStudy = {id:StudyId;period:number;status:string;room:{id:StudyId;name:string};seat?:{id:StudyId;name:string}|null;teacher?:StudyTeacher;reason?:string};
 export type StudyStudent = {id:StudyId;name:string;grade:number;classNo:number;number:number};
-export type StudyContext = {student:StudyStudent;date:string;open:boolean;opensAt:string;closesAt:string;periods:number[];entries:OwnStudy[];rooms:StudyRoom[];teachers:StudyTeacher[]};
+export type StudyContext = {connectionExpiresAt?:string;student:StudyStudent;date:string;open:boolean;opensAt:string;closesAt:string;periods:number[];entries:OwnStudy[];rooms:StudyRoom[];teachers:StudyTeacher[]};
 export type SubmissionLease={mark:(state:'submitting'|'confirmed'|'released'|'rejected'|'uncertain')=>Promise<void>};
 export class StudyFailure extends Error {constructor(message:string,public status=400,public code?:string){super(message)}}
 const validId=(id:unknown):id is StudyId=>typeof id==='string'?/^[A-Za-z0-9_-]{1,100}$/.test(id):typeof id==='number'&&Number.isSafeInteger(id)&&id>0;
@@ -40,7 +40,7 @@ async function ownEntries(send:Send,token:string,id:StudyId,date:string):Promise
 const activeWrites=new Set<StudyId>();
 const safeHosts=new Set(['cbgpu.com','www.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com','app.cbgpu.com']);
 export async function handleStudentStudy(request:Request,deps:Dependencies){
- let writeOwner:StudyId|undefined;let schoolOwner:string|undefined;let lease:SubmissionLease|null=null;let submitted=false;
+ let writeOwner:StudyId|undefined;let schoolOwner:string|undefined;let schoolIdentityVerified=false;let lease:SubmissionLease|null=null;let submitted=false;
  const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
  try{
   const raw=request.headers.get('host')?.split(':')[0]||new URL(request.url).hostname,host=['127.0.0.1','localhost'].includes(raw)?request.headers.get('x-cbgpu-public-host')||raw:raw;
@@ -70,6 +70,7 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
   if(!token||token.length>8192)throw new StudyFailure('EduSet 학생 계정을 연결해 주세요.',401,'school_connection_required');
   schoolOwner=user;
   const identity=await verifyStudyStudent(deps.send,token),now=deps.now?.()||new Date();
+  schoolIdentityVerified=true;
   if(request.method==='POST'&&['apply','cancel'].includes(body.action)){
    if(activeWrites.has(identity.id))throw new StudyFailure('이전 신청 작업을 처리 중입니다. 내 신청을 확인한 뒤 다시 시도해 주세요.',409);
    activeWrites.add(identity.id);writeOwner=identity.id;
@@ -79,7 +80,8 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
   if(request.method==='GET'){
    const [rooms,teachers]=await Promise.all([deps.send('/rooms',token),deps.send('/teachers',token)]);
    if(!Array.isArray(rooms)||!Array.isArray(teachers))throw new StudyFailure('교실·선생님 목록을 확인하지 못했습니다.',502);
-   return reply({student:identity,...window,entries,rooms:rooms.map(r=>({id:r.id,name:r.name,hasSeats:r.hasSeats,width:r.width,height:r.height,capacity:r.capacity})),teachers:teachers.map(t=>({id:t.id,name:t.name}))});
+   let connectionExpiresAt:string|undefined;try{const exp=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString()).exp;if(typeof exp==='number'&&Number.isFinite(exp))connectionExpiresAt=new Date(exp*1000).toISOString()}catch{}
+   return reply({student:identity,connectionExpiresAt,...window,entries,rooms:rooms.map(r=>({id:r.id,name:r.name,hasSeats:r.hasSeats,width:r.width,height:r.height,capacity:r.capacity})),teachers:teachers.map(t=>({id:t.id,name:t.name}))});
   }
   if(!['apply','cancel'].includes(body.action))throw new StudyFailure('지원하지 않는 요청입니다.');
   if(body.date!==window.date)throw new StudyFailure('오늘 날짜의 신청만 처리할 수 있습니다. 새로고침해 주세요.');
@@ -125,7 +127,11 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
  }catch(e){
   if(lease){const state=!submitted?'released':e instanceof StudyFailure&&e.status>=400&&e.status<500?'rejected':'uncertain';await lease.mark(state).catch(()=>{});lease=null}
   if(e instanceof StudyFailure){
-   if(e.status===401&&schoolOwner&&deps.disconnect){await deps.disconnect(schoolOwner).catch(()=>{});return reply({message:'EduSet 연결이 만료됐습니다. 다시 로그인해 주세요.',code:'school_connection_required'},401)}
+   if(e.status===401&&schoolOwner){
+    if(schoolIdentityVerified)return reply({message:'학교 로그인은 확인됐지만 신청 정보를 조회하지 못했어요. 연결은 유지돼요. 잠시 후 다시 확인해 주세요.',code:'school_lookup_unavailable'},502);
+    if(deps.disconnect)await deps.disconnect(schoolOwner).catch(()=>{});
+    return reply({message:'학교 EduSet 로그인이 만료되거나 해제됐어요. 학교 계정만 다시 로그인해 주세요.',code:'school_connection_expired'},401);
+   }
    return reply({message:e.message,...(e.code?{code:e.code}:{})},e.status);
   }
   const status=(e as {status?:number})?.status;if(status===413||status===400)return reply({message:'입력 내용을 확인해 주세요.'},status);

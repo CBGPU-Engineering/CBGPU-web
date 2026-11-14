@@ -62,9 +62,10 @@ const apply={action:'apply',date:'2026-11-03',roomId:31,seatId:41,teacherId:'tea
  assert.equal((await f.call(undefined,withoutHeader)).status,200);
  f.deps.authorize=async()=> 'other-owner';assert.equal((await f.call(undefined,withoutHeader)).status,401);assert.equal(connections.size,1);
  f.deps.authorize=async()=>null;assert.equal((await f.call({action:'disconnect'},withoutHeader)).status,401);assert.equal(connections.size,1);assert.equal(removed.length,0);
- f.deps.authorize=async()=> 'cbgpu-fixture';connections.set('cbgpu-fixture',token('expired-user'));r=await f.call(undefined,withoutHeader);assert.equal(r.status,401);assert.equal(r.body.code,'school_connection_required');assert.equal(connections.size,0);
+ f.deps.authorize=async()=> 'cbgpu-fixture';connections.set('cbgpu-fixture',token('expired-user'));r=await f.call(undefined,withoutHeader);assert.equal(r.status,401);assert.equal(r.body.code,'school_connection_expired');assert.equal(connections.size,0);
  connections.set('cbgpu-fixture','expired-token');assert.equal((await f.call({action:'disconnect'},withoutHeader)).status,200);assert.equal(connections.size,0);
  assert.equal((await f.call({action:'remember',accessToken:token('other-user')},withoutHeader)).status,401);assert.equal(connections.size,0);
+ f=fixture();let disconnected=false;f.deps.getConnection=async()=>schoolToken;f.deps.disconnect=async()=>{disconnected=true};const originalSend=f.deps.send;f.deps.send=async(path,...args)=>{if(path==='/policies/selfstudy')throw new StudyFailure('temporary unauthorized lookup',401);return originalSend(path,...args)};r=await f.call(undefined,withoutHeader);assert.equal(r.status,502);assert.equal(r.body.code,'school_lookup_unavailable');assert.equal(disconnected,false);f.deps.send=originalSend;assert.equal((await f.call(undefined,withoutHeader)).status,200);
  console.log('PASS persistent school connection: inspect/confirm separation, no raw-token responses, owner isolation, revoked CBGPU denial, school expiry cleanup and expired-session disconnect');
  const {createStudyLinkHandler}=require('../src/lib/edusetStudyLink.ts');
  let owner='owner-a',clock=1000,verified=0;

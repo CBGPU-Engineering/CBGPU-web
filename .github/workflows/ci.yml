@@ -28,6 +28,7 @@ jobs:
           demo_pid=$!
           trap 'kill "$demo_pid" || true; cat /tmp/demo.log' EXIT
           node scripts/demo-smoke.mjs
+          node scripts/study-session-smoke.mjs
           node scripts/app-update-smoke.mjs
           node scripts/ai-smoke.mjs
       - run: node scripts/check-publication.mjs
