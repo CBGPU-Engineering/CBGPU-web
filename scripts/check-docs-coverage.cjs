@@ -1,7 +1,7 @@
 /** Every user-facing static page and catalog entry must have a real guide. */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const root=path.resolve(__dirname,'..');
-function load(relative){const source=fs.readFileSync(path.join(root,relative),'utf8');const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;const context={exports:{},require};vm.runInNewContext(js,context,{filename:relative,timeout:5000});return context.exports}
+function load(relative){const source=fs.readFileSync(path.join(root,relative),'utf8');const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;const context={exports:{},require:(name)=>name==='@/lib/deploymentMcp'?load('src/lib/deploymentMcp.ts'):require(name)};vm.runInNewContext(js,context,{filename:relative,timeout:5000});return context.exports}
 const {guides,docCategories}=load('src/components/publications/docs.ts'),{serviceGroups}=load('src/lib/serviceNavigation.ts');
 const issues=[],slugs=new Set(),categories=new Set(docCategories.map(category=>category.id)),covered=new Set(guides.flatMap(guide=>guide.features));
 function routes(directory,prefix=''){return fs.readdirSync(directory,{withFileTypes:true}).flatMap(entry=>{if(entry.isDirectory()&&!entry.name.startsWith('['))return routes(path.join(directory,entry.name),prefix+'/'+entry.name);return entry.isFile()&&entry.name==='page.tsx'?[prefix||'/']:[]})}

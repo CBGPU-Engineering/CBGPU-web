@@ -1,3 +1,4 @@
+import {run as deploymentMcpRun,deploymentMcpPrompt} from '@/lib/deploymentMcp';
 export const docCategories = [
   {
     "id": "start",
@@ -36,6 +37,15 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'deployment-mcp',title:'Codex · Claude Code 배포 MCP',description:'에이전트에게 설치를 맡기고 CBGPU 프론트·서버·Compose를 바로 배포합니다.',category:'deploy',features:[],keywords:['mcp','codex','claude','에이전트'],sections:[
+    {title:'에이전트에게 설치 맡기기',body:'먼저 아래 프롬프트를 내 컴퓨터에서 사용하는 코딩 에이전트에게 전달하세요. 배포 화면 상단에서도 같은 프롬프트를 복사할 수 있습니다.',code:deploymentMcpPrompt},
+    {title:'로그인',body:'Node.js 22 이상과 승인된 CBGPU 계정이 필요합니다. 비밀번호는 대화형 터미널에서 직접 입력하세요. 비밀번호를 채팅·설정에 넣지 마세요. Google 전용 계정은 먼저 비밀번호 찾기로 계정 비밀번호를 설정해야 합니다.',code:deploymentMcpRun+' login'},
+    {title:'Codex 연결',body:'기존 설정을 보존하면서 사용자 범위 MCP를 등록합니다. 등록 후 에이전트를 재시작하거나 MCP를 다시 연결하세요.',code:'codex mcp add cbgpu-deploy -- '+deploymentMcpRun},
+    {title:'Claude Code 연결',body:'Windows에서 npx가 실행되지 않으면 MCP 명령을 cmd /c npx로 바꾸세요.',code:'claude mcp add --scope user cbgpu-deploy -- '+deploymentMcpRun},
+    {title:'배포 요청하기',body:'로컬 변경은 먼저 GitHub에 올리세요. 프론트는 저장소·브랜치·Root Directory·빌드 설정을, 서버는 Git/Docker/Compose·실행 명령·포트·자원을 지정합니다. 배포는 비동기이므로 에이전트가 상태와 로그를 확인한 뒤 실제 실행 결과를 알려줘야 합니다. 서버는 기본 비공개이며 공개 도메인 사용 시 public 공개 범위도 지정합니다.',code:'이 저장소 frontend/를 CBGPU에 배포해 줘. 기존 프로젝트를 확인하고 main 브랜치를 사용해. 정상 실행까지 확인한 뒤 URL을 알려 줘.'},
+    {title:'권한과 연결 해제',body:'기존 프로젝트 소유자·공동작업자 권한을 그대로 적용합니다. MCP는 배포 기능만 제공하고 환경변수 비밀값을 반환하지 않습니다. 비밀값 설정은 웹 배포 화면에서 하세요. 로그인 세션은 로컬 비공개 파일에 저장·자동 갱신되며, logout은 이 MCP 세션만 종료합니다.',code:deploymentMcpRun+' logout',links:[{label:'MCP 전체 문서와 소스',href:'https://github.com/CBGPU-Engineering/CBGPU-mcp'}]},
+  ],related:['frontend-deployment','server-deployment']},
+
   {slug:'ai',title:'CBGPU AI · 전사·검색·GPU 작업',description:'학교 유휴 GPU에서 텍스트·음성·자료를 처리하고 Python 작업과 AI API를 이용합니다.',category:'research',features:['/ai','/ai/chat','/ai/cli'],sections:[
     {title:'홈에서 CBGPU에 물어보기',body:'학생·연구자·앱 홈의 AI 검색창에서 기능 사용법, 급식·시간표, 본인의 자습·GPU 예약·제작 신청·배포 현황과 열람 가능한 자료를 질문합니다. 질문마다 관련 정보를 다시 읽고 확인 시각과 출처 화면 링크를 표시합니다. 예를 들어 오늘 점심, 내 프린팅 신청 상태, 서버 배포 방법을 물을 수 있습니다. 짧은 후속 질문과 AI에서 이어서 대화를 지원합니다. 조회 실패, 미연결, 오래된 시간표는 현재 상태로 단정하지 않습니다. 급식과 학교 소식은 원본 서비스의 캐시 주기가 있고, 검색 결과는 최근 기록·발췌로 한정됩니다.'},
     {title:'통합 AI',body:'CBGPU AI는 /ai에서 이용합니다. 같은 사이드바에서 대화, 프롬프트 최적화, 음성 전사, 자료 검색, GPU 작업, API와 CLI 안내를 선택합니다. 학생·연구자 홈과 앱 하단 AI 버튼에서 바로 열 수 있습니다. 왼쪽 목록에서 새 대화, 검색, 이름 변경과 삭제를 할 수 있고 휴대폰에서는 왼쪽 위 버튼으로 목록을 엽니다. 대화는 내 계정에 저장되므로 다른 기기에서도 이어갈 수 있습니다. 글·코드 답변을 복사하고 생성을 중지할 수 있습니다. 데스크톱은 Enter로 전송하고 Shift+Enter로 줄을 바꾸며, 휴대폰에서는 전송 버튼을 누릅니다. 긴 대화는 최근 메시지 중심으로 답합니다. 답변은 생성되는 대로 실시간 표시됩니다. 웹 검색을 켜면 질문을 검색엔진에 보내 공개 자료와 출처를 함께 참고합니다. 전사·자료 검색은 같은 AI 사이드바에서 선택하세요.'},

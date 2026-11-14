@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import DeployMcpSetup from '@/components/deploy/DeployMcpSetup';
 import {serverProjectRequest} from '@/lib/deploymentApi';
 import { useAuth } from '@/lib/useAuth';
 import { Button } from '@/components/ui/button';
@@ -99,6 +100,7 @@ export default function ServerPage() {
         </div>
       </div>
 
+      <DeployMcpSetup/>
       {listError&&<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm text-destructive">{listError}</p><Button variant="outline" disabled={loading} onClick={fetchProjects}>다시 불러오기</Button></div>}
       {/* 프로젝트 목록 */}
       {loading ? (
