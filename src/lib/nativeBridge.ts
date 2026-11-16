@@ -1,6 +1,6 @@
 /**
- * Connector to the CBGPU Android/iOS app's WebView shell. The app has no UI
- * of its own beyond this site — it just wraps this page in a WebView and
+ * Connector to CBGPU's hybrid Android/iOS app. Feature screens share this
+ * site while capable clients render workspace navigation natively and
  * injects `window.CBGPUNative` (see cbgpu_app's core/webview_shell.dart)
  * once the page finishes loading, giving the site access to things a
  * browser tab can't do on its own: exact scheduled local notifications, and
@@ -32,9 +32,16 @@ export interface StoredAlarm {
   repeat: AlarmRepeat;
 }
 
+export interface NativeNavigationOptions {
+  visible:boolean;
+  tabs?:{path:string;label:string;svg:string}[];
+  selected?:number;
+  background?:number;foreground?:number;muted?:number;border?:number;accent?:number;selectedBackground?:number;
+}
 export interface NativeBridge {
   readonly isNative: true;
   readonly platform: string;
+  setNavigation?(options:NativeNavigationOptions):Promise<{ok:true}>;
   getAppInfo?():Promise<{version:string;buildNumber:number;platform:string}>;
   /** Official school login, available in Android 1.0.7+. Never exposes the CBGPU bridge to EduSet. */
   loginEduset?(opts?:{forceSignOut?:boolean}):Promise<{accessToken?:string;cancelled?:boolean}>;
@@ -54,6 +61,8 @@ export interface NativeBridge {
 declare global {
   interface Window {
     CBGPUNative?: NativeBridge;
+    __cbgpuNativeNavigate?:(path:string)=>void;
+    __cbgpuNativeNavigationTarget?:string;
   }
 }
 

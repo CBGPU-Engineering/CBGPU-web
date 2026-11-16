@@ -20,3 +20,7 @@
 .cb-admin-nav a{flex:0 0 auto;min-width:80px;padding-inline:10px;white-space:nowrap}
 .cb-app .cb-admin-app-body{background:var(--background)}
 .cb-app .cb-admin-app-body .portal{display:block}
+
+/* Only a successfully acknowledged native navigation capability owns this inset. */
+html[data-cbgpu-native-navigation="true"] .cb-app .cb-bottom-nav{display:none}
+@media(max-width:760px){html[data-cbgpu-native-navigation="true"] .cb-app .cb-workspace-content{padding-bottom:32px}}
