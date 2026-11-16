@@ -1,4 +1,5 @@
 'use client';
+import {Dropdown} from '@/components/ui/dropdown';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Search, ExternalLink, RefreshCw, AlertTriangle, ChevronRight, User, Puzzle, X } from 'lucide-react';
 import Link from 'next/link';
@@ -373,7 +374,7 @@ export default function StudyPage() {
         )}
       </div>
 
-      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<select aria-label="자습실 정렬" value={roomSort} onChange={e=>setRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="free">빈자리 많은 순</option></select></label></div>}
+      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>setRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
 
       {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했습니다. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
 

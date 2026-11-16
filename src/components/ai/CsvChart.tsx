@@ -1,5 +1,6 @@
 'use client';
 
+import {Dropdown} from '@/components/ui/dropdown';
 import {useEffect,useRef,useState} from 'react';
 import {saveAiBlob} from '@/lib/aiClient';
 
@@ -56,9 +57,9 @@ export default function CsvChart({series,filename}:{series:CsvSeries[];filename:
   if(!data)return null;
   return <figure className="chat-csv-chart">
     <figcaption>
-      <label>숫자 열 <select value={column} onChange={event=>setColumn(Number(event.target.value))}>
+      <label>숫자 열 <Dropdown value={column} onChange={event=>setColumn(Number(event.target.value))}>
         {series.map((item,index)=><option key={index} value={index}>{item.column||`열 ${index+1}`}</option>)}
-      </select></label>
+      </Dropdown></label>
       <button type="button" onClick={()=>canvas.current?.toBlob(blob=>{
         if(blob)saveAiBlob(blob,filename.replace(/\.csv$/i,'')+'-chart.png');
       },'image/png')}>PNG 저장</button>

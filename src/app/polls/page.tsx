@@ -1,4 +1,5 @@
 'use client';
+import {Dropdown} from '@/components/ui/dropdown';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -259,23 +260,23 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
             {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type) && p.options.length).length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-muted-foreground font-semibold">표시 조건:</span>
-                <select className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
+                <Dropdown className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                   value={q.config.showIf?.questionId ?? ''}
                   onChange={e => onChange({ ...q, config: { ...q.config, showIf: e.target.value ? { questionId: e.target.value, value: '' } : undefined } })}>
                   <option value="">항상 표시</option>
                   {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type)).map(p => (
                     <option key={p.id} value={p.id}>{p.title || '(제목 없음)'}</option>
                   ))}
-                </select>
+                </Dropdown>
                 {q.config.showIf?.questionId && (
-                  <select className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
+                  <Dropdown className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                     value={q.config.showIf.value}
                     onChange={e => onChange({ ...q, config: { ...q.config, showIf: { ...q.config.showIf!, value: e.target.value } } })}>
                     <option value="">선택지 선택</option>
                     {prevQs.find(p => p.id === q.config.showIf?.questionId)?.options.map(o => (
                       <option key={o.id} value={o.id}>{o.text}</option>
                     ))}
-                  </select>
+                  </Dropdown>
                 )}
               </div>
             )}
