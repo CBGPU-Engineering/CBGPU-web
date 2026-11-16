@@ -43,7 +43,7 @@ export const guides:Guide[] = [
     {title:'Codex 연결',body:'기존 설정을 보존하면서 사용자 범위 MCP를 등록합니다. 등록 후 에이전트를 재시작하거나 MCP를 다시 연결하세요.',code:'codex mcp add cbgpu-deploy -- '+deploymentMcpRun},
     {title:'Claude Code 연결',body:'Windows에서 npx가 실행되지 않으면 MCP 명령을 cmd /c npx로 바꾸세요.',code:'claude mcp add --scope user cbgpu-deploy -- '+deploymentMcpRun},
     {title:'배포 요청하기',body:'로컬 변경은 먼저 GitHub에 올리세요. 프론트는 저장소·브랜치·Root Directory·빌드 설정을, 서버는 Git/Docker/Compose·실행 명령·포트·자원을 지정합니다. 배포는 비동기이므로 에이전트가 상태와 로그를 확인한 뒤 실제 실행 결과를 알려줘야 합니다. 서버는 기본 비공개이며 공개 도메인 사용 시 public 공개 범위도 지정합니다.',code:'이 저장소 frontend/를 CBGPU에 배포해 줘. 기존 프로젝트를 확인하고 main 브랜치를 사용해. 정상 실행까지 확인한 뒤 URL을 알려 줘.'},
-    {title:'권한과 연결 해제',body:'기존 프로젝트 소유자·공동작업자 권한을 그대로 적용합니다. MCP는 배포 기능만 제공하고 환경변수 비밀값을 반환하지 않습니다. 비밀값 설정은 웹 배포 화면에서 하세요. 로그인 세션은 로컬 비공개 파일에 저장·자동 갱신되며, logout은 이 MCP 세션만 종료합니다.',code:deploymentMcpRun+' logout',links:[{label:'MCP 전체 문서와 소스',href:'https://github.com/CBGPU-Engineering/CBGPU-mcp'}]},
+    {title:'권한과 연결 해제',body:'기존 프로젝트 소유자·공동작업자 권한을 그대로 적용합니다. MCP는 배포 기능만 제공하고 환경변수 비밀값을 반환하지 않습니다. 소유자·편집자는 set_environment로 변수를 추가·수정·삭제하거나 set_environment_from_file로 지정한 로컬 .env 파일을 가져올 수 있습니다. 변수 값은 결과에 표시하지 않고 기존 값과 시스템 설정을 보존합니다. CLI의 env list/set/unset도 지원합니다. 변경 후 재배포해야 적용됩니다. 로그인 세션은 로컬 비공개 파일에 저장·자동 갱신되며, logout은 이 MCP 세션만 종료합니다.',code:deploymentMcpRun+' logout',links:[{label:'MCP 전체 문서와 소스',href:'https://github.com/CBGPU-Engineering/CBGPU-mcp'}]},
   ],related:['frontend-deployment','server-deployment']},
 
   {slug:'ai',title:'CBGPU AI · 전사·검색·GPU 작업',description:'학교 유휴 GPU에서 텍스트·음성·자료를 처리하고 Python 작업과 AI API를 이용합니다.',category:'research',features:['/ai','/ai/chat','/ai/cli'],sections:[
