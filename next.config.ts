@@ -65,6 +65,14 @@ const nextConfig: NextConfig = {
           { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization, x-cbgpu-auth, x-cbgpu-device, x-jwt' },
         ],
       },
+      {
+        source: '/api/ai/v1/contests/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Authorization, Content-Type' },
+        ],
+      },
     ];
   },
 };
