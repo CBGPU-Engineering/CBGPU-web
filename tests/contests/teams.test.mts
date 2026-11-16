@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+const compiled=await build({entryPoints:[new URL('../../src/lib/contests.ts',import.meta.url).pathname],bundle:true,platform:'node',format:'cjs',write:false});const module={exports:{}} as {exports:Record<string,any>};vm.runInNewContext(compiled.outputFiles[0].text,{module,exports:module.exports,require:createRequire(import.meta.url),URL,Date,setTimeout});const {contestTeamSettings,contestTeamSettingsError,contestTeamJoinCode}=module.exports;
+test('legacy contests remain individual and team ranges enforce1..50 and ordered min/max',()=>{assert.equal(contestTeamSettings({}).participation_mode,'individual');const base={participation_mode:'team',team_min_size:2,team_max_size:5,allow_individual_entries:true};assert.equal(contestTeamSettingsError(base,'2027-01-01'),null);for(const range of [{team_min_size:0},{team_max_size:51},{team_min_size:6},{team_min_size:1.2}])assert(contestTeamSettingsError({...base,...range},'2027-01-01'));assert(contestTeamSettingsError(base,null));assert.equal(contestTeamSettingsError({...base,participation_mode:'individual'},null),null)});
+test('team invitation accepts direct code and shared URL; rejects malformed inputs',()=>{const code='11111111-1111-4111-8111-111111111111';assert.equal(contestTeamJoinCode(code),code);assert.equal(contestTeamJoinCode(`https://student.cbgpu.com/contests/test?team=${code}`),code);for(const invalid of ['','https://example.invalid','not-a-code','../../etc/passwd'])assert.equal(contestTeamJoinCode(invalid),null)});

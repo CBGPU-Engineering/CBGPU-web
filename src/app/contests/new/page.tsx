@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import {ContestTeamSettingsFields} from '@/components/contests/ContestTeams';
+import {contestTeamSettings,contestTeamSettingsError} from '@/lib/contests';
 import ContestBannerPicker from '@/components/contests/ContestBannerPicker';
 import ContestDescriptionEditor from '@/components/contests/ContestDescriptionEditor';
 import {uploadContestImage,cleanupContestImages} from '@/lib/contestPresentation';
@@ -27,6 +29,7 @@ export default function NewContestPage() {
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
   const { now } = useContestClock();
+  const [teamSettings,setTeamSettings]=useState(()=>contestTeamSettings({}));
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [banner,setBanner]=useState<File|null>(null);
@@ -68,6 +71,7 @@ export default function NewContestPage() {
     const eventStartsAt = deadlineToISO(eventStart)!;
     const eventEndsAt = deadlineToISO(eventEnd);
     const registrationClosesAt = deadlineToISO(registrationCloses);
+    const teamError=contestTeamSettingsError(teamSettings,registrationClosesAt||eventStartsAt);if(teamError)return showError(teamError);
     if (endsAt && new Date(endsAt).getTime() <= now) return showError('마감은 현재 서버 시각 이후로 지정해 주세요.');
     if (new Date(eventStartsAt).getTime() <= now) return showError('행사 시작은 현재 서버 시각 이후로 지정해 주세요.');
     if (eventEndsAt && new Date(eventEndsAt).getTime() <= new Date(eventStartsAt).getTime()) return showError('행사 종료는 시작 이후로 지정해 주세요.');
@@ -83,6 +87,7 @@ export default function NewContestPage() {
       if(banner)bannerPath=(await uploadContestImage(banner,user.id)).path;
       const cleanQuestions = questions.map(question => ({ ...question, label: question.label.trim(), options: question.options.map(option => option.trim()) }));
       const { data, error } = await supabase.from('contests').insert({
+        ...teamSettings,
         host_id: user.id, title: title.trim(), description: description.trim(), ends_at: endsAt, fields: cleanFields, logo_path: logoPath, banner_path:bannerPath,
         event_start_at: eventStartsAt, event_end_at: eventEndsAt, location_type: locationType, location_name: locationName.trim(), address: address.trim(),
         visibility, capacity: capacity ? Number(capacity) : null, waitlist_enabled: waitlistEnabled, approval_required: approvalRequired,
@@ -121,6 +126,7 @@ export default function NewContestPage() {
           </section>
           <section className="contest-panel space-y-5">
             <div className="contest-panel-heading"><span className="contest-step"><Users className="size-4" /></span><div><h2 className="font-bold">참가 신청 설정</h2><p className="mt-1 text-xs text-muted-foreground">정원, 승인 방식과 참가자 질문을 구성하세요.</p></div></div>
+            <ContestTeamSettingsFields value={teamSettings} onChange={setTeamSettings} disabled={busy}/>
             <div className="grid gap-4 sm:grid-cols-2"><label className="space-y-2 text-sm font-bold"><span>정원 (선택)</span><Input type="number" min="1" max="10000" step="1" value={capacity} onChange={e => setCapacity(e.target.value)} placeholder="제한 없음" /></label><label className="space-y-2 text-sm font-bold"><span>공개 범위</span><select className={textareaClass} value={visibility} onChange={e => setVisibility(e.target.value as typeof visibility)}><option value="public">목록에 공개</option><option value="unlisted">링크가 있는 사람만</option></select></label></div>
             <label className="block space-y-2 text-sm font-bold"><span>참가 신청 마감 (선택, 한국 시간)</span><Input type="datetime-local" step="1" value={registrationCloses} onChange={e => setRegistrationCloses(e.target.value)} /><span className="block text-xs font-normal text-muted-foreground">비워두면 행사 시작 전까지 신청을 받아요.</span></label>
             <div className="flex flex-wrap gap-5"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={approvalRequired} onChange={e => setApprovalRequired(e.target.checked)} />호스트 승인 후 확정</label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={waitlistEnabled} onChange={e => setWaitlistEnabled(e.target.checked)} />정원 초과 시 대기 명단</label></div>

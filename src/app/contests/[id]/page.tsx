@@ -19,7 +19,7 @@ import { ContestLogo } from '@/components/contests/ContestLogo';
 import ContestLogoEditor from '@/components/contests/ContestLogoEditor';
 import EventHub from '@/components/contests/EventHub';
 import {
-  Contest, ContestAnswers, ContestSubmission, SubmittedFile, CONTEST_BUCKET, FIELD_LABELS,
+  Contest, ContestTeam, ContestAnswers, ContestSubmission, SubmittedFile, CONTEST_BUCKET, FIELD_LABELS,
   contestClosed, contestError, deadlineToISO, deadlineToInput, fileError,
   formatContestDate, isHttpUrl, validateAnswers,
 } from '@/lib/contests';
@@ -45,13 +45,14 @@ function FileDownload({ file }: { file: SubmittedFile }) {
   }}><Download /><span className="truncate">{busy ? '다운로드 중…' : file.name}</span></Button>;
 }
 
-function SubmissionForm({ contest, submission, closed, clockReady, onSaved }: {
+function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team }: {
+  team?: ContestTeam|null;
   contest: Contest; submission: ContestSubmission | null; closed: boolean; clockReady: boolean;
   onSaved: (submission: ContestSubmission) => void;
 }) {
   const { user, profile } = useAuth();
   const { showError, showSuccess } = useAlert();
-  const [name, setName] = useState(submission?.participant_name || profile?.full_name || '');
+  const [name, setName] = useState(team?.name || submission?.participant_name || profile?.full_name || '');
   const [studentId, setStudentId] = useState(submission?.student_id || profile?.student_id || '');
   const [answers, setAnswers] = useState<ContestAnswers>(submission?.answers || {});
   const [files, setFiles] = useState<Record<string, File>>({});
@@ -63,6 +64,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved }: {
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || submitting.current || closed || !clockReady) return;
+    if(contest.participation_mode==='team'&&!team)return showError('팀에 참가한 뒤 공동 제출물을 등록해 주세요.');
     if (!name.trim()) return showError('제출자 이름 또는 팀명을 입력해 주세요.');
     const validation = validateAnswers(contest.fields, answers, files);
     if (validation) return showError(validation);
@@ -90,9 +92,12 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved }: {
         nextAnswers[field.id] = { path, name: file.name, size: file.size };
       }
       setProgress('제출 내용 저장 중…');
-      const { data, error } = await supabase.from('contest_submissions').upsert({
-        contest_id: contest.id, user_id: user.id, participant_name: name.trim(), student_id: String(studentId).trim(), answers: nextAnswers,
-      }, { onConflict: 'contest_id,user_id' }).select('*').single();
+      const payload={participant_name:team?.name||name.trim(),student_id:team?'':String(studentId).trim(),answers:nextAnswers};
+      const query=team
+       ?submission?supabase.from('contest_submissions').update(payload).eq('contest_id',contest.id).eq('team_id',team.id).eq('user_id',submission.user_id)
+        :supabase.from('contest_submissions').insert({...payload,contest_id:contest.id,user_id:user.id,team_id:team.id})
+       :supabase.from('contest_submissions').upsert({...payload,contest_id:contest.id,user_id:user.id},{onConflict:'contest_id,user_id'});
+      const {data,error}=await query.select('*').single();
       if (error) throw error;
       // Each submission is committed atomically. Failed cleanup cannot remove referenced files under RLS.
       const replaced = Object.values(submission?.answers || {}).filter((value): value is SubmittedFile => typeof value === 'object')
@@ -105,19 +110,20 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved }: {
       onSaved(data);
     } catch (error) {
       if (uploaded.length) await supabase.storage.from(CONTEST_BUCKET).remove(uploaded).catch(() => {});
-      showError(contestError(error));
+      showError((error as {code?:string})?.code==='23505'?'다른 팀원이 먼저 제출했어요. 새로고침하면 팀의 공동 제출물을 수정할 수 있어요.':contestError(error));
     } finally { submitting.current = false; setBusy(false); setProgress(''); }
   }
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      {team&&<div role="status" className="rounded-2xl border bg-primary/5 p-4 text-sm"><strong>{team.name} · 팀 공동 제출</strong><p className="mt-2 text-muted-foreground">팀원 모두 같은 제출물과 파일을 보고 수정할 수 있어요. 마지막으로 제출한 내용이 팀의 최종 제출물이 됩니다.</p></div>}
       {submission && <div role="status" className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-5" />제출 완료</p><p className="mt-1 text-xs text-muted-foreground">마지막 제출: {formatContestDate(submission.submitted_at)}</p><p className="mt-2 text-sm">마감 전까지 내용을 수정할 수 있어요. 수정한 내용은 다시 제출해야 저장돼요.</p></div>}
       <fieldset disabled={closed || busy || !clockReady} className="space-y-5">
         <section className="contest-panel">
           <div className="contest-panel-heading"><span className="contest-step"><Users className="size-4" /></span><div><h2 className="font-bold">참가자 정보</h2><p className="mt-1 text-xs text-muted-foreground">제출물을 확인할 수 있도록 알려주세요.</p></div></div>
           <div className="grid gap-4 sm:grid-cols-2">
-          <label className="space-y-2 text-sm font-bold"><span>제출자 이름 / 팀명 <span className="text-destructive">*</span></span><Input required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>
-          <label className="space-y-2 text-sm font-bold"><span>학번 (선택)</span><Input maxLength={30} value={studentId} onChange={e => setStudentId(e.target.value)} /></label>
+          <label className="space-y-2 text-sm font-bold"><span>제출자 이름 / 팀명 <span className="text-destructive">*</span></span><Input readOnly={!!team} required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>
+          {!team&&<label className="space-y-2 text-sm font-bold"><span>학번 (선택)</span><Input maxLength={30} value={studentId} onChange={e => setStudentId(e.target.value)} /></label>}
           </div>
         </section>
         {contest.fields.map((field, index) => {
@@ -146,7 +152,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved }: {
             </div>}
           </section>;
         })}
-        <p className="text-xs text-muted-foreground">제출 내용은 본인과 대회 호스트만 볼 수 있어요. 계정당 한 건을 제출하며 재제출하면 기존 내용이 갱신돼요.</p>
+        <p className="text-xs text-muted-foreground">{team?'제출 내용과 파일은 같은 팀원 및 대회 호스트만 볼 수 있어요. 팀당 한 건이며 모든 팀원이 수정할 수 있어요.':'제출 내용은 본인과 대회 호스트만 볼 수 있어요. 계정당 한 건을 제출하며 재제출하면 기존 내용이 갱신돼요.'}</p>
         <Button type="submit" size="lg" className="w-full"><Send />{busy ? progress || '제출 중…' : closed ? '제출이 마감되었어요' : !clockReady ? '서버 시각 확인 중…' : submission ? '수정 내용 다시 제출하기' : '작품 제출하기'}</Button>
       </fieldset>
       {submission && <section className="space-y-3"><h2 className="font-bold">저장된 제출 파일</h2>{Object.values(submission.answers).filter((value): value is SubmittedFile => typeof value === 'object').map(file => <div key={file.path}><FileDownload file={file} /></div>)}</section>}
@@ -188,7 +194,7 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
       }} className="space-y-3"><label className="block space-y-2 text-sm font-bold"><span>마감일·시간 (한국 시간, 초 단위)</span><Input type="datetime-local" step="1" value={deadline} onChange={e => setDeadline(e.target.value)} disabled={busy} /></label><p className="text-xs text-muted-foreground">비워서 저장하면 마감 제한이 없어져요. 접수 중지 상태라면 접수도 재개해 주세요.</p><Button type="submit" variant="outline" disabled={busy || now === null}>마감 시간 저장</Button></form>
     </section>
     <section className="space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-bold"><Users className="size-5" />받은 제출물 {submissions.length}건</h2><Button variant="ghost" disabled={busy} onClick={async () => { setBusy(true); try { await refresh(); } finally { setBusy(false); } }}><RefreshCw />새로고침</Button></div>
-      {!submissions.length ? <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">아직 작품 제출물이 없어요. 참가자에게 참가 링크를 공유해 주세요.</div> : submissions.map(submission => <details key={submission.user_id} className="rounded-2xl border bg-card p-5"><summary className="cursor-pointer break-words font-bold">{submission.participant_name}{submission.student_id ? ` · ${submission.student_id}` : ''}<span className="mt-1 block text-xs font-normal text-muted-foreground">최종 제출 {formatContestDate(submission.submitted_at)}</span></summary><div className="mt-5 space-y-5 border-t pt-5">{contest.fields.map(field => {
+      {!submissions.length ? <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">아직 작품 제출물이 없어요. 참가자에게 참가 링크를 공유해 주세요.</div> : submissions.map(submission => <details key={submission.team_id||submission.user_id} className="rounded-2xl border bg-card p-5"><summary className="cursor-pointer break-words font-bold">{submission.team_id&&<span className="mr-2 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary">팀 공동 제출</span>}{submission.participant_name}{submission.student_id ? ` · ${submission.student_id}` : ''}<span className="mt-1 block text-xs font-normal text-muted-foreground">최종 제출 {formatContestDate(submission.submitted_at)}</span></summary><div className="mt-5 space-y-5 border-t pt-5">{contest.fields.map(field => {
         const value = submission.answers[field.id];
         return <div key={field.id} className="space-y-2"><h3 className="text-sm font-bold">{field.label}</h3>{!value ? <p className="text-sm text-muted-foreground">미제출</p> : typeof value === 'object' ? <FileDownload file={value} /> : field.type === 'link' && isHttpUrl(value) ? <a href={value} target="_blank" rel="noopener noreferrer" className="block break-all text-sm text-primary underline underline-offset-4">{value}</a> : <p className="whitespace-pre-wrap break-words text-sm">{value}</p>}</div>;
       })}</div></details>)}
@@ -202,6 +208,8 @@ export default function ContestDetailPage() {
   const [contest, setContest] = useState<Contest | null>(null);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
   const [eventOperatorRole, setEventOperatorRole] = useState<'owner' | 'manager' | 'checkin' | null>(null);
+  const [ownTeam,setOwnTeam]=useState<ContestTeam|null>(null);
+  const [teamSubmissionReady,setTeamSubmissionReady]=useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { now, syncError } = useContestClock();
@@ -219,8 +227,14 @@ export default function ContestDetailPage() {
         operatorRole = hostEntry?.role || null;
       }
       const operator = !!operatorRole;
+      let team:ContestTeam|null=null;let teamReady=false;
+      if(data.participation_mode==='team'&&!operator){
+       const {data:membership,error:memberError}=await supabase.from('contest_team_members').select('team_id,registration_status').eq('contest_id',id).eq('user_id',user.id).maybeSingle();if(memberError)throw memberError;
+       if(membership){const {data:entry,error:teamError}=await supabase.from('contest_teams').select('*').eq('id',membership.team_id).maybeSingle();if(teamError)throw teamError;team=entry;const {data:confirmed,error:rosterError}=await supabase.from('contest_team_members').select('user_id').eq('team_id',membership.team_id).eq('registration_status','confirmed');if(rosterError)throw rosterError;const count=confirmed?.length||0;teamReady=membership.registration_status==='confirmed'&&count>=(data.team_min_size||2)&&count<=(data.team_max_size||5);}
+      }
+      setOwnTeam(team);setTeamSubmissionReady(teamReady);
       let query = supabase.from('contest_submissions').select('*').eq('contest_id', id).order('submitted_at', { ascending: false });
-      if (!operator) query = query.eq('user_id', user.id);
+      if (!operator) query = team?query.eq('team_id',team.id):query.eq('user_id', user.id);
       const { data: entries, error: entriesError } = await query;
       if (entriesError) throw entriesError;
       setContest(data);
@@ -229,7 +243,7 @@ export default function ContestDetailPage() {
     } catch (error) { setError(contestError(error)); }
     finally { setLoading(false); }
   }, [id, user]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void load();const refresh=()=>void load();window.addEventListener('cbgpu:contest-registration',refresh);return()=>window.removeEventListener('cbgpu:contest-registration',refresh); }, [load]);
   useEffect(() => {
     if (!user) return;
     let disposed = false;
@@ -237,25 +251,25 @@ export default function ContestDetailPage() {
       const { data, error } = await supabase.from('contests').select('*').eq('id', id).maybeSingle();
       if (!disposed && !error && data) setContest(data);
     };
-    const interval = setInterval(() => void refreshSettings(), 30000);
+    const interval = setInterval(() => {void refreshSettings();if(contest?.participation_mode==='team')void load();}, 15000);
     const onVisible = () => { if (document.visibilityState === 'visible') void refreshSettings(); };
     document.addEventListener('visibilitychange', onVisible);
     return () => { disposed = true; clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
-  }, [id, user]);
+  }, [id, user,contest?.participation_mode,load]);
   if (loading) return <div className="flex justify-center py-20"><LoadingSpinner /></div>;
   if (error || !contest) return <div className="mx-auto max-w-2xl space-y-4 rounded-2xl border p-8"><p role="alert">{error || '대회를 찾을 수 없어요.'}</p><Button variant="outline" onClick={() => void load()}>다시 불러오기</Button><Button asChild variant="ghost"><Link href="/contests">대회 목록</Link></Button></div>;
   const isOwner = contest.host_id === user?.id;
   const isHost = isOwner || !!eventOperatorRole;
   const canManage = isOwner || eventOperatorRole === 'manager';
-  const ownSubmission = submissions.find(entry => entry.user_id === user?.id) || null;
+  const ownSubmission = submissions.find(entry => ownTeam?entry.team_id===ownTeam.id:entry.user_id===user?.id) || null;
   return <div className="contest-page mx-auto max-w-6xl space-y-7">
     <Link href="/contests" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4" />대회 목록</Link>
-    {contest.banner_path&&<img src={contestImageUrl(contest.banner_path)!} alt={`${contest.title} 배너`} className="aspect-[16/5] w-full rounded-2xl border object-cover"/>}<header className="contest-hero"><div className="flex flex-col gap-6 sm:flex-row sm:items-center"><ContestLogo path={contest.logo_path} title={contest.title} className="contest-logo-large" /><div className="min-w-0 flex-1"><p className="contest-eyebrow mb-3">{isHost ? '호스트 · 대회 관리' : '참가자 · 제출하기'}</p><h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">{contest.title}</h1><div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-white/60"><span className="flex items-center gap-1.5"><Layers3 className="size-3.5" />제출 항목 {contest.fields.length}개</span><span className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" />본인과 호스트에게만 공개</span></div></div></div></header>
+    {contest.banner_path&&<img src={contestImageUrl(contest.banner_path)!} alt={`${contest.title} 배너`} className="aspect-[16/5] w-full rounded-2xl border object-cover"/>}<header className="contest-hero"><div className="flex flex-col gap-6 sm:flex-row sm:items-center"><ContestLogo path={contest.logo_path} title={contest.title} className="contest-logo-large" /><div className="min-w-0 flex-1"><p className="contest-eyebrow mb-3">{isHost ? '호스트 · 대회 관리' : '참가자 · 제출하기'}</p><h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">{contest.title}</h1><div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-white/60"><span className="flex items-center gap-1.5"><Layers3 className="size-3.5" />제출 항목 {contest.fields.length}개</span><span className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" />{contest.participation_mode==='team'?'팀원과 호스트에게만 공개':'본인과 호스트에게만 공개'}</span></div></div></div></header>
     {contest.description&&<section className="contest-panel"><ContestMarkdown>{contest.description}</ContestMarkdown></section>}
     {canManage&&<ContestPresentationEditor contest={contest} onUpdated={setContest}/>}
     <div className="contest-detail-layout">
       <aside className="contest-summary space-y-4"><ContestClock endsAt={contest.ends_at} isOpen={contest.is_open} now={now} syncError={syncError} /><section className="contest-panel"><h2 className="mb-4 text-sm font-bold">제출 항목 안내</h2><ul className="space-y-4">{contest.fields.map(field => { const Icon = field.type === 'file' ? FileUp : field.type === 'link' ? Link2 : FileText; return <li key={field.id} className="flex items-start gap-3"><Icon className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><p className="break-words text-xs font-semibold">{field.label}<span className="ml-2 text-xs font-normal text-muted-foreground">{field.required ? '필수' : '선택'}</span></p><p className="mt-1 break-words text-xs text-muted-foreground">{FIELD_LABELS[field.type]}{field.type === 'file' ? ` · ${field.extensions || '모든 형식'} · ${field.max_size_mb}MB` : ''}</p></div></li>; })}</ul></section></aside>
-      <div className="contest-detail-main space-y-7"><EventHub contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest} />{canManage ? <HostPanel contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={isOwner} /> : !isHost ? <SubmissionForm key={`${contest.id}-${ownSubmission?.submitted_at || 'new'}`} contest={contest} submission={ownSubmission} closed={now !== null && contestClosed(contest, now)} clockReady={now !== null} onSaved={entry => setSubmissions([entry])} /> : null}</div>
+      <div className="contest-detail-main space-y-7"><EventHub contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest} />{canManage ? <HostPanel contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={isOwner} /> : !isHost ? contest.participation_mode==='team'&&(!ownTeam||!teamSubmissionReady)?<section className="contest-panel text-sm text-muted-foreground">{ownTeam?'본인의 참가가 확정되고, 확정 팀원 수가 주최자가 설정한 인원 범위에 들어오면 공동 제출물을 작성할 수 있어요. 팀원 승인 상태를 위에서 확인해 주세요.':'팀 참가 신청을 완료하면 팀 공동 제출물을 작성할 수 있어요. 개인 신청자는 참가 확정 후 신청 마감 시점의 랜덤 팀 배정을 기다려 주세요.'}</section>:<SubmissionForm team={ownTeam} key={`${contest.id}-${ownSubmission?.submitted_at || 'new'}`} contest={contest} submission={ownSubmission} closed={now !== null && contestClosed(contest, now)} clockReady={now !== null} onSaved={entry => setSubmissions([entry])} /> : null}</div>
     </div>
   </div>;
 }
