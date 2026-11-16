@@ -18,7 +18,30 @@ services are in [CBGPU-backend](https://github.com/CBGPU-Engineering/CBGPU-backe
 ![Research workspace](docs/screenshots/research.png)
 <img src="docs/screenshots/app-mobile.png" width="320" alt="Mobile workspace">
 
-More captures and their source URLs are in [docs/screenshots](docs/screenshots/README.md).
+<details>
+<summary>Screenshot sources</summary>
+
+### Capture details
+
+Captured from the running HTTPS sites on November 4, 2026, signed out and using
+the browser's dark color preference. No private account, session or operator
+information is included.
+
+| File | Source | Viewport |
+| ---- | ------ | -------- |
+| `home.png` | `https://cbgpu.com/` | 1440 × 1000 |
+| `student.png` | `https://student.cbgpu.com/` | 1440 × 1000 |
+| `research.png` | `https://researcher.cbgpu.com/` | 1440 × 1000 |
+| `app-mobile.png` | `https://app.cbgpu.com/?mode=student` | 390 × 844 |
+| `services.png` | `https://student.cbgpu.com/services` | 1440 × 1000 |
+| `docs.png` | `https://docs.cbgpu.com/` | 1440 × 1000 |
+| `arxiv.png` | `https://arxiv.cbgpu.com/` | 1440 × 1000 |
+| `developers-signin.png` | `https://developers.cbgpu.com/` | 1440 × 1000 |
+
+The mobile image is a mobile browser capture, not a physical-device screenshot.
+Greetings, service listings and public paper counts may change after capture.
+
+</details>
 
 ## Local demo
 
@@ -44,8 +67,7 @@ npm run start:demo
 For a real isolated backend, configure `.env.local` from `.env.example` and use
 `npm run dev`. A production build uses `npm run build` with your environment.
 See [development](docs/DEVELOPMENT.md) and [contributing](CONTRIBUTING.md).
-SQL migrations now belong to the backend repository; old migration collections
-are retained there with provenance under `schema/legacy`.
+SQL migrations and database test fixtures belong to the [backend schema](https://github.com/CBGPU-Engineering/CBGPU-backend/tree/main/schema). This repository contains no SQL. Runtime and school-integration setup belong to the backend configuration and operations guides.
 
 ## Platform integration
 
@@ -57,4 +79,4 @@ component are reviewed here before the platform pin is updated.
 
 Original code is [Apache-2.0](LICENSE). See [NOTICE](NOTICE),
 [third-party notices](THIRD_PARTY_NOTICES.md) and [security reporting](SECURITY.md).
-Original component commit history is preserved; see [migration details](docs/MIGRATION.md).
+Extracted from platform commit `f41d879f6b0a10192fa36235e370372a78ec7331`; original authors and relevant component history are preserved. The complete original repository history remains in CBGPU-platform.

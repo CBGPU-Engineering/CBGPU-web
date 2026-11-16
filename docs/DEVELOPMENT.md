@@ -61,9 +61,9 @@ at the school's live database. Backend setup and migration notes are in
 [CBGPU-backend](https://github.com/CBGPU-Engineering/CBGPU-backend). GPU, operator, mail, deployment and
 LaTeX services require their own setup and verification.
 
-The frontend includes host-dependent routing. See [SELF_HOSTING.md](SELF_HOSTING.md)
-for adapting domains and identity to another school. See [CONTRIBUTING.md](../CONTRIBUTING.md)
-for checks and the review process.
+The frontend includes host-dependent routing. Production configuration belongs to
+[CBGPU-backend](https://github.com/CBGPU-Engineering/CBGPU-backend); see
+[CONTRIBUTING.md](../CONTRIBUTING.md) for checks and the review process.
 
 
 ## TypeScript sources
@@ -81,3 +81,38 @@ For an isolated local browser run, set `CBGPU_DEMO_PORT`,
 consistently for the build and start commands, then set `DEMO_BASE` for browser
 checks. Defaults remain port 3100, API port 54329 and `.next-demo`. The demo only
 accepts loopback hosts and synthetic identities.
+
+
+## Local site URLs
+
+Run `npm run dev:sites` from this repository. The launcher runs one Next.js
+process and maps local ports to the actual production Host headers. Application
+routes, components and production domain checks are unchanged. Paths and queries
+are preserved; the gateway also maps HTTP Location redirects between these sites.
+
+| Production host | Local origin |
+| --- | --- |
+| cbgpu.com (student.cbgpu.com alias) | http://localhost:3000 |
+| researcher.cbgpu.com | http://localhost:3001 |
+| admin.cbgpu.com | http://localhost:3002 |
+| app.cbgpu.com | http://localhost:3003 |
+| docs.cbgpu.com | http://localhost:3004 |
+| arxiv.cbgpu.com | http://localhost:3005 |
+| manufacturing.cbgpu.com | http://localhost:3006 |
+| print.cbgpu.com | http://localhost:3007 |
+| laser.cbgpu.com | http://localhost:3008 |
+| developers.cbgpu.com | http://localhost:3009 |
+
+For example, `admin.cbgpu.com/admin/gpu` is `localhost:3002/admin/gpu`;
+`docs.cbgpu.com/getting-started` is `localhost:3004/getting-started`.
+There is no path-based override that turns the main site into the admin site.
+
+The developer console is a separate Node service in CBGPU-backend, not a web
+application route. Its local origin is http://localhost:3009; the gateway forwards it to the separate loopback service on port 3400. Use isolated developer-console settings for local work; do not connect local experiments to the production terminal or operator database.
+
+The launcher binds only to loopback. Port 3099 is the private Next.js origin;
+open the site ports above instead. Real integration credentials belong in the
+ignored local environment file, never in this launcher or Git. The launcher supplies NEXT_PUBLIC_CBGPU_SITE_ORIGINS to the shared siteHref
+resolver. Workspace and publication links resolve to local origins during
+development. Production links remain canonical when the setting is absent or
+NODE_ENV is production. The gateway maps server HTTP redirects as well.
