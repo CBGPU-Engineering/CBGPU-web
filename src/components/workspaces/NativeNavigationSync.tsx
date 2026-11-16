@@ -24,7 +24,11 @@ export default function NativeNavigationSync({mode,visible=true}:{mode:Workspace
      const nav=document.querySelector<HTMLElement>('.cb-app .cb-bottom-nav'),links=nav?[...nav.querySelectorAll<HTMLAnchorElement>('a[href]')]:[];
      if(!visible||blocked||!nav||links.length<2){await bridge.setNavigation({visible:false});if(live){accepted=true;document.documentElement.dataset.cbgpuNativeNavigation='true'}return;}
      const style=getComputedStyle(nav),root=getComputedStyle(document.documentElement),workspace=getComputedStyle(nav.closest('.cb-workspace')||nav);
-     const selected=Math.max(0,links.findIndex(a=>a.classList.contains('active'))),active=links[selected];
+     const selected=links.findIndex(a=>a.classList.contains('active'));
+     // Some secondary features have no selected primary tab. Keep the existing
+     // web bar there rather than falsely selecting Home in older native clients.
+     if(selected<0){await bridge.setNavigation({visible:false});if(live)delete document.documentElement.dataset.cbgpuNativeNavigation;return;}
+     const active=links[selected];
      const payload={visible:true,tabs:links.map(a=>{const u=new URL(a.href);return {path:u.pathname+u.search,label:a.querySelector('span')?.textContent||'',svg:a.querySelector('svg')?.outerHTML||'<svg/>'}}),selected,
       background:color(style.backgroundColor),foreground:color(root.color),muted:color(getComputedStyle(links.find((_,i)=>i!==selected)||active).color),border:color(style.borderTopColor),accent:color(workspace.getPropertyValue('--workspace-accent')||getComputedStyle(active).color),selectedBackground:color(getComputedStyle(active,'::before').backgroundColor)};
      await bridge.setNavigation(payload);if(live){accepted=true;document.documentElement.dataset.cbgpuNativeNavigation='true'}
