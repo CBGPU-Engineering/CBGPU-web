@@ -44,7 +44,7 @@ export function Dropdown({ value, onChange, children, className, disabled, requi
   const current = encode(String(value))
   return (
     <Select value={current} onValueChange={next => onChange({ target: { value: decode(next) } })} disabled={disabled} required={required} name={name}>
-      <SelectTrigger id={id} aria-label={rest["aria-label"]} className={cn("min-h-11 w-full min-w-32 rounded-lg border bg-background px-3 text-sm", className)}>
+      <SelectTrigger id={id} aria-label={rest["aria-label"]} className={cn("min-h-11 w-fit min-w-24 rounded-lg border bg-background px-3 text-sm", className)}>
         <SelectValue>{options.find(option => encode(option.value) === current)?.label}</SelectValue>
       </SelectTrigger>
       <SelectContent position="popper" sideOffset={6} className="max-h-72 min-w-(--radix-select-trigger-width)">
