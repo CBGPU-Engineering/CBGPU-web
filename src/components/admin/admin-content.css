@@ -32,3 +32,4 @@
 .admin-developer-shell .careers-row::details-content{block-size:0;overflow:clip;opacity:0;transition:block-size .24s cubic-bezier(.2,.7,.2,1),opacity .2s ease,content-visibility .24s allow-discrete}
 .admin-developer-shell .careers-row[open]::details-content{block-size:auto;opacity:1}
 }
+.admin-developer-shell .admin-list-options [data-slot=select-trigger]{width:auto;min-height:40px;padding:6px 10px;border-color:var(--dev-border);background:var(--dev-surface);color:var(--dev-ink)}
