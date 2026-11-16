@@ -40,7 +40,7 @@ export default function ContestsPage() {
       </header>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><h2 className="text-xl font-bold tracking-tight">{mine ? '내가 만든 도전' : '지금, 새로운 도전'}</h2><p className="mt-1 text-xs text-muted-foreground">{loading ? '대회를 불러오고 있어요.' : `${visible.length}개의 대회를 만나보세요.`}</p></div>
-        <div className="contest-tabs" aria-label="대회 필터"><button type="button" aria-pressed={!mine} onClick={() => setMine(false)}>전체 대회</button><button type="button" aria-pressed={mine} onClick={() => setMine(true)}>내가 연 대회</button></div>
+        <div className="flex flex-wrap items-center gap-3"><Button asChild variant="outline" size="sm"><Link href="/contests/api">외부 서비스 연동</Link></Button><div className="contest-tabs" aria-label="대회 필터"><button type="button" aria-pressed={!mine} onClick={() => setMine(false)}>전체 대회</button><button type="button" aria-pressed={mine} onClick={() => setMine(true)}>내가 연 대회</button></div></div>
       </div>
       {loading ? <div className="flex justify-center py-16"><LoadingSpinner /></div> : error ? <div role="alert" className="rounded-2xl border p-6"><p className="mb-4 text-sm text-destructive">{error}</p><Button onClick={() => void load()} variant="outline">다시 불러오기</Button></div> : !visible.length ? <div className="rounded-2xl border border-dashed p-12 text-center text-muted-foreground">{mine ? '아직 개설한 대회가 없어요.' : '아직 등록된 대회가 없어요.'}</div> : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{visible.map(contest => (

@@ -41,3 +41,11 @@ test('list pagination is bounded and other PostgREST query parameters never pass
   assert.equal((await contestApiProxy(new Request(base+'?'+query,{headers:{authorization:'Bearer token'}}),[],{key:async()=>{throw Error('Must not forward')}})).status,404);
  }
 });
+test('contest credentials and JWT-only key management use the separate fixed executor listener',async()=>{
+ const calls:string[]=[];
+ const fetcher:typeof fetch=async(url,init)=>{calls.push(String(url));assert.equal(new Headers(init?.headers).get('cookie'),null);return Response.json({ok:true})};
+ await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests/register',{method:'POST',headers:{authorization:'Bearer cbgpu_ct_synthetic','content-type':'application/json'},body:'{}'}),['register'],{key:async()=>key,fetch:fetcher});
+ await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests/tokens',{headers:{authorization:'Bearer caller-jwt'}}),['tokens'],{key:async()=>key,fetch:fetcher});
+ await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests/tokens/'+id,{method:'DELETE',headers:{authorization:'Bearer caller-jwt'}}),['tokens',id],{key:async()=>key,fetch:fetcher});
+ assert.deepEqual(calls,['http://127.0.0.1:13545/v1/contests/register','http://127.0.0.1:13545/v1/tokens','http://127.0.0.1:13545/v1/tokens/'+id]);
+});

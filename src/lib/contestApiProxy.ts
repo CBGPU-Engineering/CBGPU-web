@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {readJsonBody,RequestBodyError} from './requestSecurity.ts';
 
-const origin='http://127.0.0.1:3545';
+const jwtOrigin='http://127.0.0.1:3545',tokenOrigin='http://127.0.0.1:13545';
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const common={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow','X-Content-Type-Options':'nosniff',
  'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET, POST, DELETE, OPTIONS',
@@ -12,6 +12,8 @@ let active=0;
 function allowed(path:string[],method:string){
  if(!path.length)return method==='GET';
  if(path.length===1&&path[0]==='register')return method==='POST';
+ if(path.length===1&&path[0]==='tokens')return ['GET','POST'].includes(method);
+ if(path.length===2&&path[0]==='tokens'&&uuid.test(path[1]))return method==='DELETE';
  if(!uuid.test(path[0]))return false;
  if(path.length===1)return method==='GET';
  if(path.length===2&&path[1]==='form')return method==='GET';
@@ -41,7 +43,10 @@ export async function contestApiProxy(request:Request,path:string[],dependencies
   }
   const key=(await (dependencies.key?.()??readFile('/home/cbgpu/.config/cbgpu/contest-api-internal-key','utf8'))).trim();
   if(key.length<32)throw new Error('Contest API is not configured');
-  const response=await (dependencies.fetch??fetch)(origin+'/v1/contests'+(path.length?'/'+path.join('/'):'')+(query.size?'?'+query.toString():''),{
+  const lifecycle=path[0]==='tokens',personal=/^Bearer cbgpu_ct_/i.test(authorization);
+  const origin=lifecycle||personal?tokenOrigin:jwtOrigin;
+  const route=lifecycle?'/v1/'+path.join('/'):'/v1/contests'+(path.length?'/'+path.join('/'):'');
+  const response=await (dependencies.fetch??fetch)(origin+route+(query.size?'?'+query.toString():''),{
    method:request.method,headers:{Authorization:authorization,'x-cbgpu-contest-key':key,'Content-Type':'application/json'},body,
    cache:'no-store',redirect:'error',signal:AbortSignal.timeout(25_000),
   });
