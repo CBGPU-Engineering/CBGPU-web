@@ -11,4 +11,7 @@ const children=[];let stopping=false;
 function stop(code=0){if(stopping)return;stopping=true;for(const c of children)c.kill('SIGTERM');setTimeout(()=>process.exit(code),200).unref()}
 for(const s of ['SIGINT','SIGTERM'])process.on(s,()=>stop());
 if(!build){const api=spawn(process.execPath,['demo/server.cts'],{cwd:root,env:demoEnvironment,stdio:'inherit'});children.push(api);api.on('exit',code=>stop(code||0));console.log('Local demo: http://localhost:'+demoEnvironment.CBGPU_DEMO_PORT+' — student@example.invalid / demo-only. No real services.');}
-const next=spawn(process.execPath,['node_modules/next/dist/bin/next',build?'build':built?'start':'dev',...(build?[]:['--hostname',process.argv.includes('--container')?'0.0.0.0':'127.0.0.1','--port',demoEnvironment.CBGPU_DEMO_PORT])],{cwd:root,env:demoEnvironment,stdio:'inherit'});children.push(next);next.on('exit',code=>stop(code||0));
+const next=spawn(process.execPath,['node_modules/next/dist/bin/next',build?'build':built?'start':'dev',...(build?[]:['--hostname',process.argv.includes('--container')?'0.0.0.0':'127.0.0.1','--port',demoEnvironment.CBGPU_DEMO_PORT])],{cwd:root,env:demoEnvironment,stdio:'inherit'});children.push(next);next.on('exit',(code,signal)=>{
+ if(build&&code===0&&!fs.existsSync(path.join(root,demoEnvironment.NEXT_BUILD_DIR,'BUILD_ID'))){console.error('Demo build did not produce a production BUILD_ID.');stop(1);return}
+ stop(signal?1:code??1);
+});
