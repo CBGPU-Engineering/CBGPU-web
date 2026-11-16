@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import nextConfig from '../next.config.ts';
+import type {NextConfig} from 'next';
+import configModule from '../next.config.ts';
+const nextConfig=(('default' in configModule ? configModule.default : configModule) as NextConfig);
 const {getPathMatch}=createRequire(import.meta.url)('next/dist/shared/lib/router/utils/path-match');
 
 test('effective Next headers allow external registration cancellation without ambient credentials',async()=>{
