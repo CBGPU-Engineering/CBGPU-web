@@ -19,18 +19,21 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --no-audit --no-fund
+      - run: npm run check:source
+      - run: npm run check:tooling
+      - run: npm run check:extensions
       - run: npm test
       - run: npm run build:demo
       - run: npx playwright install --with-deps chromium
       - name: Browser demo
         run: |
-          node scripts/demo.mjs --built > /tmp/demo.log 2>&1 &
+          node scripts/demo.mts --built > /tmp/demo.log 2>&1 &
           demo_pid=$!
           trap 'kill "$demo_pid" || true; cat /tmp/demo.log' EXIT
-          node scripts/demo-smoke.mjs
-          node scripts/study-session-smoke.mjs
-          node scripts/app-update-smoke.mjs
-          node scripts/hybrid-navigation-smoke.mjs
-          node scripts/ai-smoke.mjs
-      - run: node scripts/check-publication.mjs
+          node scripts/demo-smoke.mts
+          node scripts/study-session-smoke.mts
+          node scripts/app-update-smoke.mts
+          node scripts/hybrid-navigation-smoke.mts
+          node scripts/ai-smoke.mts
+      - run: node scripts/check-publication.mts
       - run: npm sbom --sbom-format cyclonedx --omit=dev > /tmp/web-sbom.cdx.json

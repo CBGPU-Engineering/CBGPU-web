@@ -63,3 +63,7 @@ __pycache__/
 .venv/
 /dist/
 /release-artifacts/
+
+# Generated browser assets; maintained sources are TypeScript.
+extension/cbgpu-eduset-contributor/*.js
+public/downloads/cbgpu-eduset-contributor.user.js

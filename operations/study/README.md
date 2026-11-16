@@ -27,7 +27,7 @@ official opening policy, confirmation readback and durable duplicate leases.
 
 ## Operator probe
 
-Install `check.mjs` in `~/.local/lib/cbgpu-study-monitor/` and the two user units in
+Install `check.mts` in `~/.local/lib/cbgpu-study-monitor/` and the two user units in
 `~/.config/systemd/user/`. Enable `cbgpu-study-health.timer` after the web release.
 The probe discovers the current immutable web release from the frontend unit,
 reads its private runtime environment, decrypts the existing shared read token
@@ -55,7 +55,7 @@ no real school applications are used for testing.
 
 ## Admin push alerts
 
-`alert.mjs` runs right after each probe (`ExecStartPost`). It reads only `status.json` and, when needed, sends a short
+`alert.mts` runs right after each probe (`ExecStartPost`). It reads only `status.json` and, when needed, sends a short
 push to every admin through the internal `notify-admin-event` function (`type: ops_alert`); tapping it opens the
 admin study settings in the app. It never reads tokens or student records.
 
@@ -67,7 +67,7 @@ admin study settings in the app. It never reads tokens or student records.
 | probe result missing/overdue (>15 min) | critical | immediately, then every 3h |
 | back to healthy | info | once |
 
-State lives in `~/.local/share/cbgpu-study-monitor/alert-state.json`. Install next to `check.mjs`
-(`~/.local/lib/cbgpu-study-monitor/alert.mjs`), reload the unit, and check with `node alert.mjs --dry-run`.
+State lives in `~/.local/share/cbgpu-study-monitor/alert-state.json`. Install next to `check.mts`
+(`~/.local/lib/cbgpu-study-monitor/alert.mts`), reload the unit, and check with `node alert.mts --dry-run`.
 The notify function authenticates with `INTERNAL_TRIGGER_SECRET` from the backend `functions.env`
-(path override: `CBGPU_FUNCTIONS_ENV`). Decision logic is covered by `tests/study-alert.test.mjs`.
+(path override: `CBGPU_FUNCTIONS_ENV`). Decision logic is covered by `tests/study-alert.test.mts`.

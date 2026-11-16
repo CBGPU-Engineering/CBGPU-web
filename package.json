@@ -6,13 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
-    "prebuild": "node scripts/check-docs-coverage.cjs",
-    "test": "node --test tests/*.test.mjs tests/contests/helpers.test.mjs && node scripts/verify-study-student.cjs",
-    "demo": "node scripts/demo.mjs",
-    "build:demo": "node scripts/check-docs-coverage.cjs && node scripts/demo.mjs --build",
-    "start:demo": "node scripts/demo.mjs --built",
-    "dev:sites": "node scripts/dev-sites.mjs"
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "prebuild": "npm run build:browser && node scripts/check-docs-coverage.cts",
+    "test": "node --test tests/*.test.mts tests/contests/helpers.test.mts && node scripts/verify-study-student.cts",
+    "demo": "node scripts/demo.mts",
+    "build:demo": "npm run build:browser && node scripts/check-docs-coverage.cts && node scripts/demo.mts --build",
+    "start:demo": "node scripts/demo.mts --built",
+    "dev:sites": "node scripts/dev-sites.mts",
+    "check:tooling": "tsc -p tsconfig.tooling.json --noEmit",
+    "build:browser": "node scripts/build-browser-assets.mts",
+    "check:extensions": "tsc -p tsconfig.extensions.json --noEmit",
+    "check:source": "node scripts/check-source-languages.mts"
   },
   "dependencies": {
     "@sparticuz/chromium": "^149.0.0",
@@ -44,10 +48,13 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/chrome": "0.3.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/tampermonkey": "5.5.0",
     "@types/three": "^0.185.4",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "playwright": "1.64.1",
@@ -55,5 +62,8 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "ws": "8.22.0"
+  },
+  "engines": {
+    "node": ">=22.18"
   }
 }

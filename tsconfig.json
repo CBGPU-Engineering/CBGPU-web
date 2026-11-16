@@ -6,7 +6,7 @@
       "dom.iterable",
       "esnext"
     ],
-    "allowJs": true,
+    "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -37,7 +37,9 @@
     ".next-demo/types/**/*.ts",
     ".next-demo/dev/types/**/*.ts",
     ".next-uicheck/types/**/*.ts",
-    ".next-uicheck/dev/types/**/*.ts"
+    ".next-uicheck/dev/types/**/*.ts",
+    ".next-typescript/types/**/*.ts",
+    ".next-typescript/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
