@@ -32,7 +32,7 @@ export function proxy(request: NextRequest) {
     return new NextResponse('Not found',{status:404});
   }
   if(manufacturingHost){
-    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
+    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
     if(!allowed)return new NextResponse('Not found',{status:404});
     if(path==='/')return NextResponse.redirect(new URL('https://'+host+'/manage/manufacturing'),307);
   }

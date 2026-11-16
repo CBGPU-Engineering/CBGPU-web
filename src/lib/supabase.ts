@@ -14,7 +14,7 @@ export const supabase = existing ?? createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     lock:browserAuthLock,
-    // Regular CBGPU sites share one login through a .cbgpu.com cookie; admin/equipment hosts keep their own (undefined = localStorage).
+    // Regular sites use the same-origin HttpOnly session broker; privileged portals remain isolated.
     storage:browserSharedSessionStorage(),
   }
 });

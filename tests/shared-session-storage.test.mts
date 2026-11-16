@@ -1,43 +1,16 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import ts from 'typescript';
-const js=ts.transpileModule(fs.readFileSync(new URL('../src/lib/sharedSessionStorage.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
-const {createSharedSessionStorage,isSharedSessionHost}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
-// Minimal browser cookie jar: honours Max-Age=0 (delete) and enforces the ~4KB cookie size limit.
-function jar(){const m=new Map();return{store:m,read:()=>[...m].map(([k,v])=>`${k}=${v}`).join('; '),write(c){const [pair,...attrs]=c.split(';');const i=pair.indexOf('=');const name=pair.slice(0,i).trim(),val=pair.slice(i+1);assert.ok(c.length<4096,'cookie over 4KB: '+name+' '+c.length);if(attrs.some(a=>a.trim()==='Max-Age=0'))m.delete(name);else m.set(name,val)}}}
-const mem=()=>{const m=new Map();return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>void m.set(k,v),removeItem:k=>void m.delete(k),m}};
-const K='sb-cbgpu-auth-token';
-const make=(host='app.cbgpu.com')=>{const cookies=jar(),local=mem();return{cookies,local,s:createSharedSessionStorage({hostname:host,cookies,local})}};
-test('which hosts share the login',()=>{
- for(const h of ['cbgpu.com','www.cbgpu.com','app.cbgpu.com','researcher.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','localhost']) assert.equal(isSharedSessionHost(h),true,h);
- for(const h of ['admin.cbgpu.com','developers.cbgpu.com','evil.example.com','cbgpu.com.evil.com']) assert.equal(isSharedSessionHost(h),false,h);
- // equipment hosts: separate only while the portal gateway is in front
- for(const h of ['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com']){assert.equal(isSharedSessionHost(h,true),false,h+' gated');assert.equal(isSharedSessionHost(h,false),true,h+' passthrough');assert.equal(isSharedSessionHost(h),true,h+' default')}
- // admin is separate even if the gate flag is missing
- assert.equal(isSharedSessionHost('admin.cbgpu.com',false),false);
-});
-test('small session round-trips through a cookie',()=>{const {s,cookies}=make();s.setItem(K,'{"a":1}');assert.equal(s.getItem(K),'{"a":1}');assert.equal([...cookies.store.keys()].join(),K+'.0')});
-test('a large session is split into several cookies and rebuilt exactly',()=>{
- const {s,cookies}=make();const big=JSON.stringify({access_token:'x'.repeat(2500),refresh_token:'y'.repeat(300),user:{email:'a@b.c',meta:'z'.repeat(2500)}});
- s.setItem(K,big);assert.ok(cookies.store.size>=3);assert.equal(s.getItem(K),big);
-});
-test('shrinking a session removes stale chunks',()=>{const {s,cookies}=make();s.setItem(K,'a'.repeat(5000));assert.ok(cookies.store.size>=3);s.setItem(K,'short');assert.equal(cookies.store.size,1);assert.equal(s.getItem(K),'short')});
-test('an existing localStorage login is adopted once and nobody is logged out',()=>{
- const {s,cookies,local}=make();local.setItem(K,'{"legacy":true}');
- assert.equal(s.getItem(K),'{"legacy":true}');assert.equal(cookies.store.size,1);assert.equal(local.getItem(K),null,'old copy removed after adoption');
- // another site (fresh localStorage) now sees the shared cookie
- const other=createSharedSessionStorage({hostname:'researcher.cbgpu.com',cookies,local:mem()});assert.equal(other.getItem(K),'{"legacy":true}');
-});
-test('sign-out clears the cookie and the local copy',()=>{const {s,cookies,local}=make();local.setItem(K,'x');s.setItem(K,'{"a":1}');s.removeItem(K);assert.equal(cookies.store.size,0);assert.equal(local.getItem(K),null);assert.equal(s.getItem(K),null)});
-test('missing or blocked storage does not throw',()=>{
- const cookies=jar();const blocked={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')},removeItem(){throw Error('blocked')}};
- const s=createSharedSessionStorage({hostname:'app.cbgpu.com',cookies,local:blocked});assert.equal(s.getItem('none'),null);s.setItem(K,'v');assert.equal(s.getItem(K),'v');s.removeItem(K);
-});
-test('if the cookie cannot be stored the old copy is kept (nobody is logged out)',()=>{
- const cookies={read:()=>'',write(){}};const local=mem();local.setItem(K,'{"legacy":true}');
- const s=createSharedSessionStorage({hostname:'app.cbgpu.com',cookies,local});assert.equal(s.getItem(K),'{"legacy":true}');assert.equal(local.getItem(K),'{"legacy":true}');
-});
-test('a stale per-site copy cannot resurrect a signed-out session on another site',()=>{
- const cookies=jar();const a=createSharedSessionStorage({hostname:'app.cbgpu.com',cookies,local:mem()});
- const localB=mem();localB.setItem(K,'{"old":"b"}');const b=createSharedSessionStorage({hostname:'docs.cbgpu.com',cookies,local:localB});
- a.setItem(K,'{"user":"a"}');assert.equal(b.getItem(K),'{"user":"a"}');assert.equal(localB.getItem(K),null,'stale copy removed');
- a.removeItem(K);assert.equal(b.getItem(K),null);
-});
+const compile=(path:string)=>ts.transpileModule(fs.readFileSync(new URL(path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+const storageURL='data:text/javascript;base64,'+Buffer.from(compile('../src/lib/sharedSessionStorage.ts')).toString('base64');
+const {createSharedSessionStorage,isSharedSessionHost,SHARED_SESSION_KEY:K}=await import(storageURL);
+const mem=()=>{const m=new Map<string,string>();return{getItem:(k:string)=>m.get(k)??null,setItem:(k:string,v:string)=>void m.set(k,v),removeItem:(k:string)=>void m.delete(k),m}};
+function fixture(){let value:string|null=null,state='empty',fail=false;const calls:any[]=[];const transport=async(method:string,v?:string|null)=>{calls.push({method,value:v});if(fail)throw Error('offline');if(method==='POST'){value=v??null;state=v?'active':'signed-out';}return{value,state}};const local=mem();const s=createSharedSessionStorage({hostname:'app.cbgpu.com',local,transport});return{s,local,calls,transport,set:(v:string|null,kind=v?'active':'empty')=>{value=v;state=kind},outage:(v:boolean)=>{fail=v}};}
+test('shared login trusts exact owned hosts, never tenant wildcards or privileged portals',()=>{for(const host of ['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','localhost'])assert.equal(isSharedSessionHost(host),true,host);for(const host of ['admin.cbgpu.com','developers.cbgpu.com','evil.cbgpu.com','test.front.cbgpu.com','test.server.cbgpu.com','cbgpu.com.evil.com'])assert.equal(isSharedSessionHost(host),false,host);assert.equal(isSharedSessionHost('laser.cbgpu.com',true),false);assert.equal(isSharedSessionHost('laser.cbgpu.com',false),true);});
+test('existing per-origin login migrates once through verified broker',async()=>{const f=fixture();f.local.setItem(K,'legacy');assert.equal(await f.s.getItem(K),'legacy');assert.deepEqual(f.calls.map(c=>c.method),['GET','POST']);assert.equal(f.local.getItem(K),'legacy');});
+test('shared login replaces stale host cache',async()=>{const f=fixture();f.local.setItem(K,'old');f.set('current');assert.equal(await f.s.getItem(K),'current');assert.equal(f.local.getItem(K),'current');assert.equal(f.calls.length,1);});
+test('sign-out tombstone prevents stale caches resurrecting login',async()=>{const f=fixture();f.local.setItem(K,'old');f.set(null,'signed-out');assert.equal(await f.s.getItem(K),null);assert.equal(f.local.getItem(K),null);assert.equal(f.calls.length,1);});
+test('successful login and logout synchronize without document.cookie',async()=>{const f=fixture();await f.s.setItem(K,'fresh');assert.equal(await f.s.getItem(K),'fresh');await f.s.removeItem(K);assert.equal(await f.s.getItem(K),null);assert.equal(f.local.getItem(K),null);});
+test('network outage preserves cached login and retries pending login',async()=>{const f=fixture();f.outage(true);await f.s.setItem(K,'fresh');assert.equal(await f.s.getItem(K),'fresh');f.outage(false);assert.equal(await f.s.getItem(K),'fresh');assert.equal(f.calls.at(-1).method,'POST');});
+test('offline signout is not resurrected by old shared cookie',async()=>{const f=fixture();await f.s.setItem(K,'fresh');f.outage(true);await f.s.removeItem(K);assert.equal(await f.s.getItem(K),null);f.outage(false);assert.equal(await f.s.getItem(K),null);assert.equal(f.calls.at(-1).value,null);});
+test('PKCE and unrelated keys stay host-local',async()=>{const f=fixture();await f.s.setItem(K+'-code-verifier','private-verifier');assert.equal(await f.s.getItem(K+'-code-verifier'),'private-verifier');await f.s.removeItem(K+'-code-verifier');assert.equal(f.calls.length,0);});
+test('an expired shared cache cannot re-adopt old local session',async()=>{const f=fixture();await f.s.setItem(K,'fresh');f.set(null,'empty');assert.equal(await f.s.getItem(K),null);assert.equal(f.calls.at(-1).method,'GET');});
+test('blocked local storage still permits verified shared sessions',async()=>{const blocked={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')},removeItem(){throw Error('blocked')}};const s=createSharedSessionStorage({hostname:'app.cbgpu.com',local:blocked,transport:async()=>({value:'verified',state:'active'})});assert.equal(await s.getItem(K),'verified');});

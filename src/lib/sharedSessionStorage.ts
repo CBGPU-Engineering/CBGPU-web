@@ -1,115 +1,61 @@
-/**
- * Login storage shared by the regular CBGPU sites.
- *
- * Supabase keeps the session in localStorage by default, which is per origin, so cbgpu.com, app.cbgpu.com,
- * researcher.cbgpu.com, docs.cbgpu.com ... each asked for their own login. Regular sites use a cookie on
- * `.cbgpu.com` instead, so one login covers all of them. The admin and equipment-manager hosts keep their own
- * per-origin login on purpose (they are authenticated separately and must not see a regular-site session).
- *
- * - The session is split into small cookies (browsers cap a cookie at ~4KB).
- * - An existing localStorage session is copied into the cookie on first read, so nobody is logged out by the change.
- * - Pure functions with injected cookie/storage APIs, so they can be unit tested.
- */
-export type CookieJar = { read(): string; write(cookie: string): void };
-export type LocalStore = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
-export type SharedSessionOptions = { hostname: string; cookies: CookieJar; local: LocalStore; secure?: boolean };
-
-const CHUNK = 1800; // raw characters per cookie; URL-encoded stays well below the 4KB cookie limit
-const MAX_AGE = 60 * 60 * 24 * 365;
-const ROOT = 'cbgpu.com';
-// Always separately authenticated: never share their login with the regular sites.
-const SEPARATE_HOSTS = new Set(['admin.cbgpu.com', 'developers.cbgpu.com']);
-// Equipment hosts keep their own login only while the portal gateway is in front of them (portalGate);
-// once it passes through, equipment managers sign in like everyone else.
-const GATEWAY_HOSTS = new Set(['manufacturing.cbgpu.com', 'print.cbgpu.com', 'laser.cbgpu.com']);
-
-export function isSharedSessionHost(hostname: string, portalGate = false): boolean {
-  const host = hostname.toLowerCase();
-  if (SEPARATE_HOSTS.has(host)) return false;
-  if (GATEWAY_HOSTS.has(host)) return !portalGate;
-  return host === ROOT || host.endsWith('.' + ROOT) || host === 'localhost' || host === '127.0.0.1';
+/** Shared login broker. Parent-domain credentials are written only by the server as HttpOnly cookies. */
+export const SHARED_SESSION_KEY = 'sb-cbgpu-auth-token';
+export type LocalStore = Pick<Storage,'getItem'|'setItem'|'removeItem'>;
+export type SharedSessionReply = {value:string|null;state:'active'|'empty'|'signed-out'};
+export type SharedSessionIntent = 'login'|'sync'|'adopt';
+export type SharedSessionTransport = (method:'GET'|'POST',value?:string|null,intent?:SharedSessionIntent)=>Promise<SharedSessionReply>;
+const TRUSTED = new Set(['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com','localhost','127.0.0.1']);
+const EQUIPMENT = new Set(['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com']);
+export function isSharedSessionHost(hostname:string,portalGate=false):boolean {
+ const host=hostname.toLowerCase();return TRUSTED.has(host)&&!(portalGate&&EQUIPMENT.has(host));
 }
-
-function cookieAttributes(hostname: string, maxAge: number, secure: boolean): string {
-  const host = hostname.toLowerCase();
-  const domain = host === ROOT || host.endsWith('.' + ROOT) ? `; Domain=.${ROOT}` : '';
-  return `; Path=/; Max-Age=${maxAge}${domain}; SameSite=Lax${secure ? '; Secure' : ''}`;
+export function createSharedSessionStorage(options:{hostname:string;local:LocalStore;transport:SharedSessionTransport}) {
+ const {local,transport}=options;
+ const read=(key:string)=>{try{return local.getItem(key)}catch{return null}};
+ const write=(key:string,value:string|null)=>{try{if(value===null)local.removeItem(key);else local.setItem(key,value)}catch{/* Native/session memory remains available when storage is blocked. */}};
+ const marker=SHARED_SESSION_KEY+':broker-seen';
+ let queue=Promise.resolve();
+ const serialize=<T>(fn:()=>Promise<T>):Promise<T>=>{const result=queue.then(fn,fn);queue=result.then(()=>{},()=>{});return result};
+ return {
+  async getItem(key:string):Promise<string|null>{
+   if(key!==SHARED_SESSION_KEY)return read(key); // PKCE verifier and other SDK state never become parent cookies.
+   return serialize(async()=>{
+    const cached=read(key);
+    try{
+     if(read(marker)==='logout-pending'){await transport('POST',null);write(marker,'1');return null;}
+     if(['login-pending','sync-pending'].includes(read(marker)||'')&&cached){const saved=await transport('POST',cached,read(marker)==='login-pending'?'login':'sync');if(saved.value){write(key,saved.value);write(marker,'1');return saved.value;}}
+     const shared=await transport('GET');
+     if(shared.state==='active'&&shared.value){write(key,shared.value);write(marker,'1');return shared.value;}
+     if(shared.state==='signed-out'){write(key,null);write(marker,'1');return null;}
+     // Adopt a pre-broker local session once. A previously shared cache cannot undo global sign-out/cookie expiry.
+     if(cached&&!read(marker)){
+      const adopted=await transport('POST',cached,'adopt');
+      if(adopted.value){write(key,adopted.value);write(marker,'1');return adopted.value;}
+     }
+     write(key,null);return null;
+    }catch{return cached;} // A network/Auth outage must not destroy a previously valid local/native session.
+   });
+  },
+  async setItem(key:string,value:string):Promise<void>{
+   if(key!==SHARED_SESSION_KEY){write(key,value);return;}
+   const previous=read(key);
+   let intent:SharedSessionIntent='login';
+   try{const before=JSON.parse(previous||'null'),after=JSON.parse(value);const id=(v:{access_token?:string})=>v?.access_token?JSON.parse(atob(v.access_token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).session_id:null;const prior=id(before),next=id(after);if(prior&&prior===next)intent='sync';}catch{/* An explicit new/legacy login has no comparable session identity. */}
+   write(key,value);write(marker,intent+'-pending'); // Preserve successful login and retry synchronization after an outage.
+   await serialize(async()=>{try{const saved=await transport('POST',value,intent);write(key,saved.value);write(marker,'1');}catch{/* Retry on a later read/auth refresh. */}});
+  },
+  async removeItem(key:string):Promise<void>{
+   write(key,null);if(key!==SHARED_SESSION_KEY)return;
+   write(marker,'logout-pending');
+   await serialize(async()=>{try{await transport('POST',null);write(marker,'1');}catch{/* Keep local sign-out and retry before reading shared cookies. */}});
+  },
+ };
 }
-
-function readAll(jar: CookieJar): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const part of jar.read().split(';')) {
-    const i = part.indexOf('=');
-    if (i < 0) continue;
-    const name = part.slice(0, i).trim();
-    if (!name) continue;
-    try { out.set(name, decodeURIComponent(part.slice(i + 1).trim())); } catch { /* ignore a malformed cookie */ }
-  }
-  return out;
-}
-
-export function createSharedSessionStorage(options: SharedSessionOptions) {
-  const {hostname, cookies, local} = options;
-  const secure = options.secure ?? (hostname !== 'localhost' && hostname !== '127.0.0.1');
-  const write = (name: string, value: string, maxAge: number) => cookies.write(`${name}=${encodeURIComponent(value)}${cookieAttributes(hostname, maxAge, secure)}`);
-
-  function readCookie(key: string): string | null {
-    const all = readAll(cookies);
-    const parts: string[] = [];
-    for (let i = 0; all.has(`${key}.${i}`); i += 1) parts.push(all.get(`${key}.${i}`)!);
-    return parts.length ? parts.join('') : null;
-  }
-  function writeCookie(key: string, value: string) {
-    const chunks: string[] = [];
-    for (let i = 0; i < value.length; i += CHUNK) chunks.push(value.slice(i, i + CHUNK));
-    chunks.forEach((chunk, i) => write(`${key}.${i}`, chunk, MAX_AGE));
-    // Remove chunks left over from a longer previous value.
-    const all = readAll(cookies);
-    for (let i = chunks.length; all.has(`${key}.${i}`); i += 1) write(`${key}.${i}`, '', 0);
-  }
-  function removeCookie(key: string) {
-    const all = readAll(cookies);
-    for (let i = 0; all.has(`${key}.${i}`); i += 1) write(`${key}.${i}`, '', 0);
-  }
-
-  return {
-    getItem(key: string): string | null {
-      const shared = readCookie(key);
-      if (shared !== null) {
-        // A shared login exists: discard any older per-site copy so it can never bring a signed-out session back.
-        try { if (local.getItem(key) !== null) local.removeItem(key); } catch { /* ignore */ }
-        return shared;
-      }
-      // First visit after the change: adopt the login this browser already had on this site.
-      let legacy: string | null = null;
-      try { legacy = local.getItem(key); } catch { /* storage may be blocked */ }
-      if (legacy) {
-        writeCookie(key, legacy);
-        // Drop the old copy only once the cookie really holds it; otherwise a later sign-out elsewhere
-        // would be undone by this stale copy being adopted again.
-        if (readCookie(key) === legacy) { try { local.removeItem(key); } catch { /* ignore */ } }
-      }
-      return legacy;
-    },
-    setItem(key: string, value: string): void {
-      writeCookie(key, value);
-      try { local.removeItem(key); } catch { /* ignore */ }
-    },
-    removeItem(key: string): void {
-      removeCookie(key);
-      try { local.removeItem(key); } catch { /* ignore */ }
-    },
-  };
-}
-
-/** Browser wiring; returns undefined when the default (localStorage) storage should be used. */
-export function browserSharedSessionStorage() {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return undefined;
-  if (!isSharedSessionHost(window.location.hostname, Boolean((window as {__CBGPU_PORTAL_GATE?: boolean}).__CBGPU_PORTAL_GATE))) return undefined;
-  return createSharedSessionStorage({
-    hostname: window.location.hostname,
-    cookies: {read: () => document.cookie, write: cookie => { document.cookie = cookie; }},
-    // Accessed lazily: reading window.localStorage can itself throw when storage is blocked.
-    local: {getItem: k => window.localStorage.getItem(k), setItem: (k, v) => window.localStorage.setItem(k, v), removeItem: k => window.localStorage.removeItem(k)},
-  });
+export function browserSharedSessionStorage(){
+ if(typeof window==='undefined'||!isSharedSessionHost(window.location.hostname,Boolean((window as {__CBGPU_PORTAL_GATE?:boolean}).__CBGPU_PORTAL_GATE)))return undefined;
+ return createSharedSessionStorage({hostname:window.location.hostname,local:{getItem:k=>window.localStorage.getItem(k),setItem:(k,v)=>window.localStorage.setItem(k,v),removeItem:k=>window.localStorage.removeItem(k)},transport:async(method,value,intent)=>{
+  const response=await fetch('/api/auth/shared-session',{method,credentials:'same-origin',cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15_000),headers:method==='POST'?{'Content-Type':'application/json'}:undefined,body:method==='POST'?JSON.stringify({value,intent}):undefined});
+  if(!response.ok)throw Error('Shared session temporarily unavailable');
+  return await response.json() as SharedSessionReply;
+ }});
 }

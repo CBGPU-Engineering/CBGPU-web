@@ -56,7 +56,8 @@ const nextConfig: NextConfig = {
         // tokens, admin checks) — CORS only controls which origins' JS can
         // read the response, not authorization, so opening it doesn't
         // weaken anything those routes already enforce.
-        source: '/api/:path*',
+        // Cookie-authenticated session responses must never inherit public API CORS.
+        source: '/api/:path((?!auth/shared-session(?:/|$)).*)',
         headers: [
           { key: 'Cache-Control', value: 'private, no-store' },
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
