@@ -15,6 +15,7 @@ export type Contest = {
   description: string;
   ends_at: string | null;
   logo_path: string | null;
+  banner_path?: string | null;
   is_open: boolean;
   fields: ContestField[];
   created_at: string;

@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import ContestBannerPicker from '@/components/contests/ContestBannerPicker';
+import ContestDescriptionEditor from '@/components/contests/ContestDescriptionEditor';
+import {uploadContestImage,cleanupContestImages} from '@/lib/contestPresentation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowUp, ArrowDown, Trash2, Trophy, FileUp, Link2, AlignLeft, CalendarDays, MapPin, Users, Plus } from 'lucide-react';
@@ -26,6 +29,8 @@ export default function NewContestPage() {
   const { now } = useContestClock();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [banner,setBanner]=useState<File|null>(null);
+  const [imageUploading,setImageUploading]=useState(false);
   const [deadline, setDeadline] = useState('');
   const [eventStart, setEventStart] = useState('');
   const [eventEnd, setEventEnd] = useState('');
@@ -53,6 +58,7 @@ export default function NewContestPage() {
   async function create(event: React.FormEvent) {
     event.preventDefault();
     if (!user || busy) return;
+    if(imageUploading)return showError('이미지 업로드가 끝나면 신청할 수 있어요.');
     if (!title.trim()) return showError('대회 이름을 입력해 주세요.');
     if (!fields.length || fields.some(field => !field.label.trim())) return showError('이름이 있는 제출 항목을 하나 이상 추가해 주세요.');
     if (!eventStart) return showError('행사 시작 시간을 입력해 주세요.');
@@ -71,11 +77,13 @@ export default function NewContestPage() {
     if (cleanFields.some(field => field.type === 'file' && (field.max_size_mb < 1 || field.max_size_mb > 50 || !Number.isInteger(field.max_size_mb) || (field.extensions && !/^\.[a-z0-9]+(?:\.[a-z0-9]+)*(,\.[a-z0-9]+(?:\.[a-z0-9]+)*)*$/.test(field.extensions))))) return showError('파일 크기는 1~50MB, 확장자는 .ppt,.pptx처럼 입력해 주세요.');
     setBusy(true);
     let logoPath: string | null = null;
+    let bannerPath:string|null=null;
     try {
       if (logo) logoPath = await uploadContestLogo(logo, user.id);
+      if(banner)bannerPath=(await uploadContestImage(banner,user.id)).path;
       const cleanQuestions = questions.map(question => ({ ...question, label: question.label.trim(), options: question.options.map(option => option.trim()) }));
       const { data, error } = await supabase.from('contests').insert({
-        host_id: user.id, title: title.trim(), description: description.trim(), ends_at: endsAt, fields: cleanFields, logo_path: logoPath,
+        host_id: user.id, title: title.trim(), description: description.trim(), ends_at: endsAt, fields: cleanFields, logo_path: logoPath, banner_path:bannerPath,
         event_start_at: eventStartsAt, event_end_at: eventEndsAt, location_type: locationType, location_name: locationName.trim(), address: address.trim(),
         visibility, capacity: capacity ? Number(capacity) : null, waitlist_enabled: waitlistEnabled, approval_required: approvalRequired,
         registration_questions: cleanQuestions, registration_closes_at: registrationClosesAt,
@@ -87,7 +95,7 @@ export default function NewContestPage() {
       }
       showSuccess('교내 대회를 만들었어요. 참가 링크를 공유해 보세요!');
       router.push(`/contests/${data.id}`);
-    } catch (error) { await cleanupContestLogo(logoPath); showError(contestError(error)); }
+    } catch (error) { if(bannerPath)await cleanupContestImages([bannerPath]);await cleanupContestLogo(logoPath); showError(contestError(error)); }
     finally { setBusy(false); }
   }
 
@@ -101,7 +109,7 @@ export default function NewContestPage() {
             <div className="contest-panel-heading"><span className="contest-step">01</span><div><h2 className="font-bold">대회 소개</h2><p className="mt-1 text-xs text-muted-foreground">참가자가 가장 먼저 만나는 정보예요.</p></div></div>
             <ContestLogoPicker file={logo} currentPath={null} onChange={setLogo} onRemove={() => setLogo(null)} disabled={busy} />
             <label className="block space-y-2 text-sm font-bold"><span>대회 이름</span><Input required maxLength={120} value={title} onChange={e => setTitle(e.target.value)} placeholder="예: 교내 창의융합 탐구대회" /></label>
-            <label className="block space-y-2 text-sm font-bold"><span>대회 안내</span><textarea className={textareaClass} rows={4} maxLength={10000} value={description} onChange={e => setDescription(e.target.value)} placeholder="참가 대상, 제출 방법, 유의사항 등을 안내해 주세요." /></label>
+            <ContestBannerPicker file={banner} currentPath={null} onChange={setBanner} onRemove={()=>setBanner(null)} disabled={busy}/><ContestDescriptionEditor value={description} onChange={setDescription} disabled={busy} onBusyChange={setImageUploading}/>
             <label className="block space-y-2 text-sm font-bold"><span>제출 마감일·시간 (한국 시간)</span><Input type="datetime-local" step="1" value={deadline} onChange={e => setDeadline(e.target.value)} /><span className="block text-xs font-normal text-muted-foreground">초 단위까지 지정할 수 있어요. 비워두면 마감 제한 없이 접수해요.</span></label>
           </section>
           <section className="contest-panel space-y-5">
@@ -136,7 +144,7 @@ export default function NewContestPage() {
               return <Button type="button" key={type} variant="outline" className="h-auto flex-col gap-2 rounded-2xl py-5" disabled={fields.length >= MAX_FIELDS} onClick={() => setFields(prev => [...prev, newField(type)])}><Icon className="text-primary" />{FIELD_LABELS[type]} 추가</Button>;
             })}</div>
           </section>
-          <Button type="submit" disabled={!fields.length || !eventStart || now === null} className="w-full" size="lg">{busy ? '교내 대회를 만들고 있어요…' : '교내 대회 만들고 참가 링크 받기'}</Button>
+          <Button type="submit" disabled={busy || imageUploading || !fields.length || !eventStart || now === null} className="w-full" size="lg">{busy ? '교내 대회를 만들고 있어요…' : '교내 대회 만들고 참가 링크 받기'}</Button>
         </fieldset>
       </form>
     </div>
