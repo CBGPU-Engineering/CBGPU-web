@@ -13,7 +13,7 @@ export type StudyConnection = {
 
 const OVERDUE_MIN = 15;
 
-/** status.json is written every 5 minutes by operations/study/check.mts; we only derive a display state from it. */
+/** status.json is written every 5 minutes by CBGPU-backend/operations/study-monitor/check.mts; we only derive a display state from it. */
 export function deriveStudyConnection(raw: unknown, now = Date.now()): StudyConnection {
   const empty: StudyConnection = {state: 'unknown', label: '상태 정보 없음', detail: '점검 결과를 찾을 수 없어요.', rooms: null, failedRooms: null, checkedAt: null, minutesAgo: null, connectionExpiresAt: null, hoursLeft: null};
   if (!raw || typeof raw !== 'object') return empty;
