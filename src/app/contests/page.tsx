@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Plus, Trophy, ArrowRight, CalendarDays, Layers3 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
-import { Contest, contestClosed, contestError, formatContestDate } from '@/lib/contests';
+import { Contest, contestSubmissionPhase, contestClosed, contestError, formatContestDate } from '@/lib/contests';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useContestClock } from '@/components/contests/ContestClock';
@@ -45,7 +45,7 @@ export default function ContestsPage() {
       {loading ? <div className="flex justify-center py-16"><LoadingSpinner /></div> : error ? <div role="alert" className="rounded-2xl border p-6"><p className="mb-4 text-sm text-destructive">{error}</p><Button onClick={() => void load()} variant="outline">다시 불러오기</Button></div> : !visible.length ? <div className="rounded-2xl border border-dashed p-12 text-center text-muted-foreground">{mine ? '아직 개설한 대회가 없어요.' : '아직 등록된 대회가 없어요.'}</div> : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{visible.map(contest => (
           <Link key={contest.id} href={`/contests/${contest.id}`} className="contest-card group">
-            <div className="mb-6 flex items-start justify-between gap-3"><ContestLogo path={contest.logo_path} title={contest.title} /><span className="contest-status" data-closed={now !== null && contestClosed(contest, now)}><span className="contest-status-dot" />{now === null ? '확인 중' : contestClosed(contest, now) ? '접수 마감' : '접수 중'}</span></div>
+            <div className="mb-6 flex items-start justify-between gap-3"><ContestLogo path={contest.logo_path} title={contest.title} /><span className="contest-status" data-closed={now !== null && contestClosed(contest, now)}><span className="contest-status-dot" />{now === null ? '확인 중' : contestClosed(contest, now) ? '접수 마감' : contestSubmissionPhase(contest,now)==='pending'?'제출 시작 전':'접수 중'}</span></div>
             {contest.banner_path&&<img src={contestImageUrl(contest.banner_path)!} alt="" loading="lazy" className="mb-4 aspect-[16/5] w-full rounded-xl object-cover"/>}<h3 className="break-words text-xl font-bold tracking-tight">{contest.title}</h3><p className="mt-3 line-clamp-2 min-h-12 text-sm leading-relaxed text-muted-foreground">{contestDescriptionSummary(contest.description) || '제출 항목을 확인하고 새로운 도전에 참여해 보세요.'}</p>
             <div className="mt-6 space-y-2 text-xs text-muted-foreground"><p className="flex items-start gap-2"><CalendarDays className="size-3.5 shrink-0" />{contest.event_start_at ? `행사 ${formatContestDate(contest.event_start_at)}` : `제출 마감 ${formatContestDate(contest.ends_at)}`}</p><p className="flex items-center gap-2"><Layers3 className="size-3.5" />작품 제출 항목 {contest.fields.length}개{contest.host_id === user?.id && <span className="ml-auto font-semibold text-primary">내가 연 대회</span>}</p></div>
             <span className="mt-6 flex items-center justify-between border-t pt-4 text-sm font-semibold text-primary">{contest.host_id === user?.id ? '제출물 관리' : '대회 살펴보기'}<ArrowRight className="size-4" /></span>

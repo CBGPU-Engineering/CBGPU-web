@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Clock3, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { formatContestDate, remainingTime } from '@/lib/contests';
+import { formatContestDate, remainingTime,contestSubmissionPhase } from '@/lib/contests';
 
 /** Anchor to server time and a monotonic clock so changing the device clock cannot change the countdown. */
 export function useContestClock() {
@@ -47,17 +47,18 @@ export function useContestClock() {
   return { now, syncError };
 }
 
-export default function ContestClock({ endsAt, isOpen, now, syncError }: {
-  endsAt: string | null; isOpen: boolean; now: number | null; syncError: boolean;
+export default function ContestClock({ startsAt=null, endsAt, isOpen, now, syncError }: {
+  startsAt?:string|null; endsAt: string | null; isOpen: boolean; now: number | null; syncError: boolean;
 }) {
-  const closed = !isOpen || (!!endsAt && now !== null && new Date(endsAt).getTime() <= now);
-  const seconds = endsAt && now !== null ? Math.max(0, Math.ceil((new Date(endsAt).getTime() - now) / 1000)) : 0;
+  const phase=contestSubmissionPhase({is_open:isOpen,starts_at:startsAt,ends_at:endsAt},now);
+  const closed=phase==='closed',pending=phase==='pending',target=pending?startsAt:endsAt;
+  const seconds=target&&now!==null?Math.max(0,Math.ceil((new Date(target).getTime()-now)/1000)):0;
   const units = [{ label: '일', value: Math.floor(seconds / 86400) }, { label: '시간', value: Math.floor(seconds / 3600) % 24 }, { label: '분', value: Math.floor(seconds / 60) % 60 }, { label: '초', value: seconds % 60 }];
   return (
     <div className="contest-countdown" data-closed={closed}>
-      <p className="flex items-center gap-2 text-xs font-semibold"><Clock3 className="size-4" />{!isOpen ? '호스트가 접수를 중지했어요' : closed ? '마감되었어요' : !endsAt ? '상시 접수 중' : now === null ? '서버 시각 확인 중…' : '제출 마감까지 남은 시간'}</p>
-      {isOpen && endsAt && now !== null && !closed && <div role="timer" aria-live="off" className="mt-5"><span className="sr-only">{remainingTime(endsAt, now)}</span><div aria-hidden="true" className="flex gap-2">{units.map(unit => <div key={unit.label} className="contest-time-unit"><strong>{String(unit.value).padStart(2, '0')}</strong><span>{unit.label}</span></div>)}</div></div>}
-      <div className="mt-5 border-t border-current/10 pt-4"><p className="text-xs font-semibold">제출 마감</p><p className="mt-1 text-xs leading-relaxed opacity-70">{formatContestDate(endsAt)}</p></div>
+      <p className="flex items-center gap-2 text-xs font-semibold"><Clock3 className="size-4" />{!isOpen ? '호스트가 접수를 중지했어요' : closed ? '마감되었어요' : now === null ? '서버 시각 확인 중…' : pending?'제출 시작까지 남은 시간':!endsAt ? '상시 접수 중' : '제출 마감까지 남은 시간'}</p>
+      {isOpen && target && now !== null && !closed && <div role="timer" aria-live="off" className="mt-5"><span className="sr-only">{remainingTime(target!, now)}</span><div aria-hidden="true" className="flex gap-2">{units.map(unit => <div key={unit.label} className="contest-time-unit"><strong>{String(unit.value).padStart(2, '0')}</strong><span>{unit.label}</span></div>)}</div></div>}
+      <div className="mt-5 border-t border-current/10 pt-4">{startsAt&&<><p className="text-xs font-semibold">제출 시작</p><p className="mb-3 mt-1 text-xs leading-relaxed opacity-70">{formatContestDate(startsAt)}</p></>}<p className="text-xs font-semibold">제출 마감</p><p className="mt-1 text-xs leading-relaxed opacity-70">{formatContestDate(endsAt)}</p></div>
       <p className="mt-4 flex items-start gap-1.5 text-xs leading-relaxed opacity-65"><ShieldCheck className="mt-0.5 size-3 shrink-0" />{syncError ? '서버 시각 재확인 중이에요. 연결되면 자동으로 동기화해요.' : '서버 시각 기준 · 30초마다 동기화'}</p>
     </div>
   );

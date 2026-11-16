@@ -18,6 +18,7 @@ export type Contest = {
   title: string;
   description: string;
   ends_at: string | null;
+  starts_at?: string | null;
   logo_path: string | null;
   banner_path?: string | null;
   is_open: boolean;
@@ -34,6 +35,7 @@ export type Contest = {
   approval_required: boolean;
   registration_open: boolean;
   registration_closes_at: string | null;
+  registration_opens_at?: string | null;
   registration_questions: RegistrationQuestion[];
   lifecycle_status: 'published' | 'cancelled' | 'archived';
   cancellation_message: string;
@@ -184,3 +186,8 @@ export type ContestTeamSettings = {participation_mode:'individual'|'team';team_m
 export function contestTeamSettings(contest:Partial<ContestTeamSettings>):ContestTeamSettings{return {participation_mode:contest.participation_mode||'individual',team_min_size:contest.team_min_size??2,team_max_size:contest.team_max_size??5,allow_individual_entries:contest.allow_individual_entries??false};}
 export function contestTeamSettingsError(settings:ContestTeamSettings,deadline:string|null){if(settings.participation_mode!=='team')return null;if(!Number.isInteger(settings.team_min_size)||!Number.isInteger(settings.team_max_size)||settings.team_min_size<1||settings.team_max_size>50||settings.team_min_size>settings.team_max_size)return '팀 인원은 최소 1명부터 최대 50명까지, 최소 인원 이하로 최대 인원을 설정할 수 없어요.';if(!deadline)return '팀 대회는 참가 신청 마감 또는 행사 시작 시간을 지정해 주세요.';return null;}
 export function contestTeamJoinCode(value:string){const raw=value.trim();try{const fromUrl=new URL(raw).searchParams.get('team');if(fromUrl)return /^[a-f0-9-]{36}$/i.test(fromUrl)?fromUrl:null}catch{}return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw)?raw:null;}
+
+export type ContestPeriodPhase = 'checking'|'pending'|'open'|'closed';
+export function contestSubmissionPhase(contest:Pick<Contest,'is_open'|'ends_at'>&{starts_at?:string|null},now:number|null):ContestPeriodPhase{if(!contest.is_open)return 'closed';if(now===null)return 'checking';if(contest.ends_at&&new Date(contest.ends_at).getTime()<=now)return 'closed';if(contest.starts_at&&new Date(contest.starts_at).getTime()>now)return 'pending';return 'open';}
+export function contestRegistrationPhase(contest:Pick<Contest,'registration_open'|'registration_closes_at'|'event_start_at'>&{registration_opens_at?:string|null;lifecycle_status?:string},now:number|null):ContestPeriodPhase{if(!contest.registration_open||(contest.lifecycle_status&&contest.lifecycle_status!=='published'))return 'closed';if(now===null)return 'checking';const end=contest.registration_closes_at||contest.event_start_at;if(end&&new Date(end).getTime()<=now)return 'closed';if(contest.registration_opens_at&&new Date(contest.registration_opens_at).getTime()>now)return 'pending';return 'open';}
+export function contestPeriodError(start:string|null,end:string|null,label:string):string|null{if(start&&!Number.isFinite(new Date(start).getTime())||end&&!Number.isFinite(new Date(end).getTime()))return `${label} 시작·마감 시각을 확인해 주세요.`;if(start&&end&&new Date(end).getTime()<=new Date(start).getTime())return `${label} 마감은 시작 이후로 지정해 주세요.`;return null;}

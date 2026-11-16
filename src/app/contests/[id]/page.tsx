@@ -20,7 +20,7 @@ import ContestLogoEditor from '@/components/contests/ContestLogoEditor';
 import EventHub from '@/components/contests/EventHub';
 import {
   Contest, ContestTeam, ContestAnswers, ContestSubmission, SubmittedFile, CONTEST_BUCKET, FIELD_LABELS,
-  contestClosed, contestError, deadlineToISO, deadlineToInput, fileError,
+  contestClosed, contestSubmissionPhase,contestPeriodError, contestError, deadlineToISO, deadlineToInput, fileError,
   formatContestDate, isHttpUrl, validateAnswers,
 } from '@/lib/contests';
 
@@ -45,7 +45,8 @@ function FileDownload({ file }: { file: SubmittedFile }) {
   }}><Download /><span className="truncate">{busy ? '다운로드 중…' : file.name}</span></Button>;
 }
 
-function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team }: {
+function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team, pending=false }: {
+  pending?:boolean;
   team?: ContestTeam|null;
   contest: Contest; submission: ContestSubmission | null; closed: boolean; clockReady: boolean;
   onSaved: (submission: ContestSubmission) => void;
@@ -63,7 +64,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (!user || submitting.current || closed || !clockReady) return;
+    if (!user || submitting.current || closed || pending || !clockReady) return;
     if(contest.participation_mode==='team'&&!team)return showError('팀에 참가한 뒤 공동 제출물을 등록해 주세요.');
     if (!name.trim()) return showError('제출자 이름 또는 팀명을 입력해 주세요.');
     const validation = validateAnswers(contest.fields, answers, files);
@@ -116,9 +117,10 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      {pending&&<p role="status" className="rounded-2xl border bg-muted/40 p-4 text-sm">제출 시작 전이에요. {formatContestDate(contest.starts_at||null)}부터 제출할 수 있어요.</p>}
       {team&&<div role="status" className="rounded-2xl border bg-primary/5 p-4 text-sm"><strong>{team.name} · 팀 공동 제출</strong><p className="mt-2 text-muted-foreground">팀원 모두 같은 제출물과 파일을 보고 수정할 수 있어요. 마지막으로 제출한 내용이 팀의 최종 제출물이 됩니다.</p></div>}
       {submission && <div role="status" className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4"><p className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="size-5" />제출 완료</p><p className="mt-1 text-xs text-muted-foreground">마지막 제출: {formatContestDate(submission.submitted_at)}</p><p className="mt-2 text-sm">마감 전까지 내용을 수정할 수 있어요. 수정한 내용은 다시 제출해야 저장돼요.</p></div>}
-      <fieldset disabled={closed || busy || !clockReady} className="space-y-5">
+      <fieldset disabled={closed || pending || busy || !clockReady} className="space-y-5">
         <section className="contest-panel">
           <div className="contest-panel-heading"><span className="contest-step"><Users className="size-4" /></span><div><h2 className="font-bold">참가자 정보</h2><p className="mt-1 text-xs text-muted-foreground">제출물을 확인할 수 있도록 알려주세요.</p></div></div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -153,7 +155,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
           </section>;
         })}
         <p className="text-xs text-muted-foreground">{team?'제출 내용과 파일은 같은 팀원 및 대회 호스트만 볼 수 있어요. 팀당 한 건이며 모든 팀원이 수정할 수 있어요.':'제출 내용은 본인과 대회 호스트만 볼 수 있어요. 계정당 한 건을 제출하며 재제출하면 기존 내용이 갱신돼요.'}</p>
-        <Button type="submit" size="lg" className="w-full"><Send />{busy ? progress || '제출 중…' : closed ? '제출이 마감되었어요' : !clockReady ? '서버 시각 확인 중…' : submission ? '수정 내용 다시 제출하기' : '작품 제출하기'}</Button>
+        <Button type="submit" size="lg" className="w-full"><Send />{busy ? progress || '제출 중…' : closed ? '제출이 마감되었어요' : pending?'아직 제출 시작 전이에요':!clockReady ? '서버 시각 확인 중…' : submission ? '수정 내용 다시 제출하기' : '작품 제출하기'}</Button>
       </fieldset>
       {submission && <section className="space-y-3"><h2 className="font-bold">저장된 제출 파일</h2>{Object.values(submission.answers).filter((value): value is SubmittedFile => typeof value === 'object').map(file => <div key={file.path}><FileDownload file={file} /></div>)}</section>}
     </form>
@@ -164,12 +166,13 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
   contest: Contest; submissions: ContestSubmission[]; onUpdated: (contest: Contest) => void; refresh: () => Promise<void>; now: number | null; canEditIdentity: boolean;
 }) {
   const [deadline, setDeadline] = useState(deadlineToInput(contest.ends_at));
+  const [starts,setStarts]=useState(deadlineToInput(contest.starts_at||null));
   const [busy, setBusy] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const { showError, showSuccess } = useAlert();
   useEffect(() => { setShareUrl(window.location.href.split('?')[0].split('#')[0]); }, []);
 
-  async function update(patch: { is_open?: boolean; ends_at?: string | null }) {
+  async function update(patch: { is_open?: boolean; starts_at?:string|null; ends_at?: string | null }) {
     if (busy) return;
     setBusy(true);
     try {
@@ -188,10 +191,12 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
       <form onSubmit={event => {
         event.preventDefault();
         const endsAt = deadlineToISO(deadline);
+        const startsAt=deadlineToISO(starts);
+        const validation=contestPeriodError(startsAt,endsAt,'작품 제출');if(validation)return showError(validation);
         if (now === null) return showError('서버 시각 확인 후 다시 시도해 주세요.');
         if (endsAt && new Date(endsAt).getTime() <= now) return showError('새 마감 시간은 현재 서버 시각 이후로 지정해 주세요.');
-        void update({ ends_at: endsAt });
-      }} className="space-y-3"><label className="block space-y-2 text-sm font-bold"><span>마감일·시간 (한국 시간, 초 단위)</span><Input type="datetime-local" step="1" value={deadline} onChange={e => setDeadline(e.target.value)} disabled={busy} /></label><p className="text-xs text-muted-foreground">비워서 저장하면 마감 제한이 없어져요. 접수 중지 상태라면 접수도 재개해 주세요.</p><Button type="submit" variant="outline" disabled={busy || now === null}>마감 시간 저장</Button></form>
+        void update({ starts_at:startsAt,ends_at: endsAt });
+      }} className="space-y-3"><label className="block space-y-2 text-sm font-bold"><span>제출 시작 (선택, 한국 시간)</span><Input type="datetime-local" step="1" value={starts} onChange={e=>setStarts(e.target.value)} disabled={busy}/></label><label className="block space-y-2 text-sm font-bold"><span>마감일·시간 (한국 시간, 초 단위)</span><Input type="datetime-local" step="1" value={deadline} onChange={e => setDeadline(e.target.value)} disabled={busy} /></label><p className="text-xs text-muted-foreground">시작을 비우면 즉시 제출할 수 있고, 마감을 비우면 마감 제한이 없어져요. 접수 중지 상태라면 접수도 재개해 주세요.</p><Button type="submit" variant="outline" disabled={busy || now === null}>제출 기간 저장</Button></form>
     </section>
     <section className="space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-lg font-bold"><Users className="size-5" />받은 제출물 {submissions.length}건</h2><Button variant="ghost" disabled={busy} onClick={async () => { setBusy(true); try { await refresh(); } finally { setBusy(false); } }}><RefreshCw />새로고침</Button></div>
       {!submissions.length ? <div className="rounded-2xl border border-dashed p-10 text-center text-sm text-muted-foreground">아직 작품 제출물이 없어요. 참가자에게 참가 링크를 공유해 주세요.</div> : submissions.map(submission => <details key={submission.team_id||submission.user_id} className="rounded-2xl border bg-card p-5"><summary className="cursor-pointer break-words font-bold">{submission.team_id&&<span className="mr-2 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary">팀 공동 제출</span>}{submission.participant_name}{submission.student_id ? ` · ${submission.student_id}` : ''}<span className="mt-1 block text-xs font-normal text-muted-foreground">최종 제출 {formatContestDate(submission.submitted_at)}</span></summary><div className="mt-5 space-y-5 border-t pt-5">{contest.fields.map(field => {
@@ -268,8 +273,8 @@ export default function ContestDetailPage() {
     {contest.description&&<section className="contest-panel"><ContestMarkdown>{contest.description}</ContestMarkdown></section>}
     {canManage&&<ContestPresentationEditor contest={contest} onUpdated={setContest}/>}
     <div className="contest-detail-layout">
-      <aside className="contest-summary space-y-4"><ContestClock endsAt={contest.ends_at} isOpen={contest.is_open} now={now} syncError={syncError} /><section className="contest-panel"><h2 className="mb-4 text-sm font-bold">제출 항목 안내</h2><ul className="space-y-4">{contest.fields.map(field => { const Icon = field.type === 'file' ? FileUp : field.type === 'link' ? Link2 : FileText; return <li key={field.id} className="flex items-start gap-3"><Icon className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><p className="break-words text-xs font-semibold">{field.label}<span className="ml-2 text-xs font-normal text-muted-foreground">{field.required ? '필수' : '선택'}</span></p><p className="mt-1 break-words text-xs text-muted-foreground">{FIELD_LABELS[field.type]}{field.type === 'file' ? ` · ${field.extensions || '모든 형식'} · ${field.max_size_mb}MB` : ''}</p></div></li>; })}</ul></section></aside>
-      <div className="contest-detail-main space-y-7"><EventHub contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest} />{canManage ? <HostPanel contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={isOwner} /> : !isHost ? contest.participation_mode==='team'&&(!ownTeam||!teamSubmissionReady)?<section className="contest-panel text-sm text-muted-foreground">{ownTeam?'본인의 참가가 확정되고, 확정 팀원 수가 주최자가 설정한 인원 범위에 들어오면 공동 제출물을 작성할 수 있어요. 팀원 승인 상태를 위에서 확인해 주세요.':'팀 참가 신청을 완료하면 팀 공동 제출물을 작성할 수 있어요. 개인 신청자는 참가 확정 후 신청 마감 시점의 랜덤 팀 배정을 기다려 주세요.'}</section>:<SubmissionForm team={ownTeam} key={`${contest.id}-${ownSubmission?.submitted_at || 'new'}`} contest={contest} submission={ownSubmission} closed={now !== null && contestClosed(contest, now)} clockReady={now !== null} onSaved={entry => setSubmissions([entry])} /> : null}</div>
+      <aside className="contest-summary space-y-4"><ContestClock startsAt={contest.starts_at||null} endsAt={contest.ends_at} isOpen={contest.is_open} now={now} syncError={syncError} /><section className="contest-panel"><h2 className="mb-4 text-sm font-bold">제출 항목 안내</h2><ul className="space-y-4">{contest.fields.map(field => { const Icon = field.type === 'file' ? FileUp : field.type === 'link' ? Link2 : FileText; return <li key={field.id} className="flex items-start gap-3"><Icon className="mt-0.5 size-4 shrink-0 text-primary" /><div className="min-w-0"><p className="break-words text-xs font-semibold">{field.label}<span className="ml-2 text-xs font-normal text-muted-foreground">{field.required ? '필수' : '선택'}</span></p><p className="mt-1 break-words text-xs text-muted-foreground">{FIELD_LABELS[field.type]}{field.type === 'file' ? ` · ${field.extensions || '모든 형식'} · ${field.max_size_mb}MB` : ''}</p></div></li>; })}</ul></section></aside>
+      <div className="contest-detail-main space-y-7"><EventHub now={now} contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest} />{canManage ? <HostPanel contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={isOwner} /> : !isHost ? contest.participation_mode==='team'&&(!ownTeam||!teamSubmissionReady)?<section className="contest-panel text-sm text-muted-foreground">{ownTeam?'본인의 참가가 확정되고, 확정 팀원 수가 주최자가 설정한 인원 범위에 들어오면 공동 제출물을 작성할 수 있어요. 팀원 승인 상태를 위에서 확인해 주세요.':'팀 참가 신청을 완료하면 팀 공동 제출물을 작성할 수 있어요. 개인 신청자는 참가 확정 후 신청 마감 시점의 랜덤 팀 배정을 기다려 주세요.'}</section>:<SubmissionForm pending={contestSubmissionPhase(contest,now)==='pending'} team={ownTeam} key={`${contest.id}-${ownSubmission?.submitted_at || 'new'}`} contest={contest} submission={ownSubmission} closed={now !== null && contestClosed(contest, now)} clockReady={now !== null} onSaved={entry => setSubmissions([entry])} /> : null}</div>
     </div>
   </div>;
 }
