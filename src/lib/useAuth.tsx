@@ -93,9 +93,15 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
           if (csrf) await fetch('/portal/api/logout', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: '{}' });
         } finally { if (!cancelled) window.location.replace('/'); }
       };
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Keep the portal's sealed copy of these tokens current so a fresh WebView (app restart) can restore the login.
+      const rememberTokens = (session: { access_token: string; refresh_token?: string } | null) => {
+        if (!session?.access_token || !session.refresh_token || !csrf) return;
+        void fetch('/portal/session/tokens', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf }, body: JSON.stringify({ access_token: session.access_token, refresh_token: session.refresh_token }) }).catch(() => {});
+      };
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (!verified || cancelled) return;
         if (!matchesPortalSession(session,expectedUser,expectedSessionId)) { void leave(); return; }
+        if (event === 'TOKEN_REFRESHED') rememberTokens(session);
         setUser(session.user);
       });
       void (async () => {
@@ -116,6 +122,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
           await Promise.all([fetchProfile(expectedUser), fetchManagedPrinters(expectedUser)]);
           if (cancelled) return;
           verified = true;
+          rememberTokens(session);
           setIsLoading(false);
         } catch { if (!cancelled) await leave(); }
       })();
