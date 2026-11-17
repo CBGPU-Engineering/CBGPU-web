@@ -37,3 +37,14 @@ in /opt/cbgpu-browser. Browser assets are extracted only from the integrity-lock
 npm package during build; runtime extraction into executable upload/temp storage
 is not required. Review upstream browser component advisories separately from
 the OS/npm vulnerability report before distributing a production image.
+
+## shadcn Tailwind styles
+
+Only the existing Tailwind stylesheet is retained verbatim from `shadcn@4.23.0` (`dist/tailwind.css`). Its CLI and JavaScript are not vendored. Existing UI components and configuration are unchanged.
+
+- Source: https://github.com/shadcn-ui/ui/tree/main/packages/shadcn
+- Package artifact: https://registry.npmjs.org/shadcn/-/shadcn-4.23.0.tgz
+- Original npm tarball integrity: `sha512-lKgq7QPFgkV/6EOrMCwvEn7ZAw/YnM/grhxzJmK4cZdw3E4F3Ut2EmWvrn2E+vzJp1y/76mxU185OSkXo9Ff+Q==`
+- Stylesheet SHA-256: `4c371f7a1ff5d219ae2f7ff28bd256b4346fd546fe46fbae22092e57db2f0fae`
+- Files: `src/app/vendor/shadcn-tailwind.css` and `public/licenses/shadcn-tailwind.LICENSE`
+- License: MIT, Copyright (c) 2023 shadcn; complete upstream license is preserved in the distributed public assets at `/licenses/shadcn-tailwind.LICENSE`.
