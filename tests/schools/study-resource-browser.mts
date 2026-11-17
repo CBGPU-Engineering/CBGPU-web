@@ -21,11 +21,11 @@ try{
  });
  await page.route('**/api/study/proxy/**',async route=>{
   const path=new URL(route.request().url()).pathname.slice('/api/study/proxy'.length);let data:unknown=[];
+  if(path==='/selfstudy'){schoolWrites++;throw Error('Unexpected school write');}
   if(path==='/rooms')data=[{id:31,name:'Synthetic guest study room',hasSeats:false,width:1,height:1,capacity:20}];
   else if(path==='/policies/selfstudy')data={data:{timetable:{presets:{day:[{},{},{}]},assign:Object.fromEntries(Array.from({length:7},(_,i)=>[i,'day'])),exception:{}},timelimit:{}}};
   else if(path==='/students')data=[];
   else if(path!=='/selfstudy/search')throw Error('Unexpected school request '+path);
-  if(path==='/selfstudy')schoolWrites++;
   await route.fulfill({status:allowed?200:403,contentType:'application/json',body:JSON.stringify(allowed?data:{message:'School permission revoked'})});
  });
  await page.route('**/api/study/student',async route=>{
