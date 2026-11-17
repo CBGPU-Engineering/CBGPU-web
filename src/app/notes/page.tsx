@@ -339,7 +339,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
               style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
               className="relative p-4 border border-border/50 rounded-2xl bg-card hover:bg-muted/20 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 tilt-3d cursor-pointer transition-all group space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="min-w-0 font-semibold text-sm leading-tight"><button type="button" onClick={()=>onOpen(n)} aria-label={`노트 열기: ${n.title}`} className="line-clamp-1 text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none">{n.title}</button></h3>
+                <h3 aria-label={n.title} className="min-w-0 font-semibold text-sm leading-tight"><button type="button" onClick={()=>onOpen(n)} aria-label={`노트 열기: ${n.title}`} className="line-clamp-1 text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none">{n.title}</button></h3>
                 {tab==='mine' && (
                   <button type="button" aria-label={`노트 삭제: ${n.title}`} onClick={e=>{e.stopPropagation();setConfirmDeleteId(n.id);}} className="relative z-10 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-ring active:scale-95 transition-all sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <Trash2 className="size-3.5" />
