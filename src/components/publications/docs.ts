@@ -37,6 +37,23 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'schools',title:'학교 찾기와 학교별 가입',description:'등록된 학교를 찾고, 승인된 학교에 소속 확인을 요청합니다.',category:'start',features:['/schools'],sections:[
+    {title:'사용 가능 여부',body:'학교별 가입 기능은 단계적으로 공개됩니다. 아직 기능을 사용할 수 없다는 화면이 나오면 기존 CBGPU 로그인과 학교생활 기능을 그대로 이용하세요.'},
+    {title:'학교 선택과 소속 확인',body:'학교 이름을 검색한 뒤 지역과 공식 학교 정보를 확인하세요. 운영 승인이 완료된 학교에는 학생·교사·외부 협업자 유형으로 가입을 요청할 수 있습니다. 학생 번호나 교사 정보를 입력하는 것만으로 소속이 인증되지는 않습니다.'},
+    {title:'학교 목록과 실제 도입의 차이',body:'공식 학교 목록에 있는 학교라도 CBGPU 운영 승인이 끝난 것은 아닙니다. 도입 전 학교는 학교 등록 절차로 이동합니다. 학교를 선택하거나 등록 신청해도 관리자 권한이나 GPU 사용 권한이 자동으로 생기지 않습니다.'},
+    {title:'기존 사용자',body:'기존 계정으로 계속 로그인하세요. 새 학교 소속을 요청해도 기존 계정이나 본인 프로젝트를 새로 만들 필요는 없습니다.'}
+  ],related:['school-setup']},
+  {slug:'school-setup',title:'새 학교 도입 신청',description:'학교 정보와 사용할 기능을 입력하고 운영 승인 심사를 요청합니다.',category:'start',features:['/schools/new'],sections:[
+    {title:'학교와 신청자 정보',body:'로그인한 뒤 학교 찾기에서 중복 학교를 먼저 확인합니다. 학교 이름·위치·연락처와 학교 내 역할을 입력하세요. 학생 운영자도 신청할 수 있지만, 신청만으로 다른 구성원의 개인정보나 학교 운영 권한을 얻지는 않습니다.'},
+    {title:'설정과 서비스 선택',body:'표시 이름, 가입 정책과 사용할 기능을 선택합니다. 학교 전용 기능은 제공되는 학교에만 나타납니다. GPU 서버가 없어도 신청할 수 있으며, 지금 연결·나중에 연결·서버 없음 중 실제 상황을 선택하세요.'},
+    {title:'저장하고 이어 하기',body:'임시 저장한 신청은 로그인한 계정의 학교 등록 화면에서 이어서 작성할 수 있습니다. 다른 창에서 수정돼 저장이 충돌하면 최신 내용을 확인하세요. 오류가 나면 입력을 유지한 채 다시 저장할 수 있습니다.'},
+    {title:'제출과 승인',body:'마지막 단계에서 정보를 검토하고 신청을 제출합니다. 제출 완료는 학교 운영 승인 완료와 다릅니다. 승인 대기 중에는 학교 관리자 권한과 GPU 자원 접근 권한이 제공되지 않습니다.'}
+  ],related:['schools','school-administration']},
+  {slug:'school-administration',title:'학교 등록 심사와 학교 관리',description:'플랫폼 등록 심사와 학교별 구성원·기능 관리의 권한을 구분합니다.',category:'operations',features:['/admin/schools'],sections:[
+    {title:'플랫폼 학교 등록 심사',body:'플랫폼 관리자는 학교 등록 신청의 학교 정보, 신청자 관계와 중복 여부를 검토합니다. 확인 없이 학교 운영 권한을 승인하지 마세요. 일반 사용자와 학교 관리자는 플랫폼 심사 기능을 사용할 수 없습니다.'},
+    {title:'학교별 관리',body:'승인된 학교의 관리 화면에서는 해당 학교 구성원의 소속 확인 요청과 학교 설정을 관리합니다. 교사라는 이유만으로 학교 관리자 권한이 생기지는 않습니다. 학교 관리 권한으로 다른 학교를 관리할 수 없습니다.'},
+    {title:'기능과 GPU',body:'사용할 수 있는 공통 기능과 해당 학교에 허용된 전용 기능만 설정할 수 있습니다. 기능을 끄는 것은 기존 데이터를 삭제하는 작업이 아닙니다. GPU 미연결은 정상 상태이며, 서버 연결만으로 외부 GPU 공유가 켜지지 않습니다.'}
+  ],related:['schools','school-setup']},
   {slug:'contest-api',title:'외부 서비스 대회 참가 API',description:'외부 앱과 에이전트에서 본인 계정으로 대회 신청 양식을 조회하고 참가 신청·조회·취소를 처리합니다.',category:'community',features:['/contests/api'],keywords:['api','zero','자동 신청','contest','외부 서비스'],sections:[
     {title:'연결 주소와 지원 범위',body:'Base URL은 https://cbgpu.com/api/ai/v1/contests 입니다. 하나의 참가 신청 URL을 요구하는 도구에는 아래 CBGPU_CONTEST_ENDPOINT를 지정하세요. 이 API는 참가자용입니다. 주최자 명의로 대회를 생성·수정하거나 다른 사람을 대신 신청·승인하는 API는 제공하지 않습니다.',code:'CBGPU_CONTEST_ENDPOINT=https://cbgpu.com/api/ai/v1/contests/register'},
     {title:'대회 연동 키 만들기',body:'대회 목록의 외부 서비스 연동에서 이름, 허용할 대회와 조회·신청·취소 권한을 선택합니다. 기본 30일, 최대 90일이며 대회는 최대 100개를 지정합니다. 키는 한 번만 표시하고 서버에는 해시만 저장합니다. 발급한 로그인 세션에 연결되므로 로그아웃·세션 회수 시에도 사용할 수 없게 됩니다. 필요 없으면 같은 화면에서 폐기하세요.',links:[{label:'연동 키 발급·관리',href:'https://cbgpu.com/contests/api'}]},
