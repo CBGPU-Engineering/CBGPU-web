@@ -16,7 +16,8 @@ const links=[
  {href:'/admin/gpu',key:'gpu',label:'GPU reservations',Icon:Cpu},
  {href:'/admin/server',key:'server',label:'Server deployments',Icon:Server},
  {href:'/admin/accounts',key:'accounts',label:'Accounts',Icon:Users},
- ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{href:'/admin/schools',key:'schools',label:'School applications',Icon:Users}]:[]),
+ ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{href:'/admin/schools',key:'schools',label:'School applications',Icon:Users},{href:'/admin/feature-requests',key:'feature-requests',label:'School feature requests',Icon:Files},{href:'/admin/message-reports',key:'message-reports',label:'Message reports',Icon:Users}]:[]),
+ ...(process.env.NEXT_PUBLIC_CBGPU_AD_REVENUE_V1==='1'?[{href:'/admin/ad-revenue',key:'ad-revenue',label:'Ad revenue',Icon:Files}]:[]),
  {href:'/admin/careers',key:'careers',label:'Careers',Icon:Users},
  {href:'/admin/manufacture',key:'manufacture',label:'Equipment managers',Icon:Printer},
  {href:'/admin/materials',key:'materials',label:'File storage',Icon:Files},
@@ -35,7 +36,7 @@ export default function AdminShell({children,appWebView=false}:{children:React.R
  return <div className="admin-developer-shell" data-theme={mounted?resolvedTheme:undefined}>
   <div className="portal">
    <aside className="sidebar" aria-label="Admin sidebar"><Link href="/admin" className="brand" aria-label="CBGPU Admin overview"><CBGPULogo  alt="" width={30} height={30}/><span className="brand-word">CBGPU<small>Admin</small></span></Link>
-    <p className="nav-caption">Workspace</p><nav className="navigation" aria-label="Admin tools">{links.map(({href,key,label,Icon})=><Link key={key} href={href} aria-current={section===key?'page':undefined} className={'nav-item'+(section===key?' active':'')}><Icon className="icon" strokeWidth={1.6}/>{label}</Link>)}</nav>
+    <p className="nav-caption">Workspace</p><nav className="navigation min-h-0 flex-1 overflow-y-auto" aria-label="Admin tools">{links.map(({href,key,label,Icon})=><Link key={key} href={href} aria-current={section===key?'page':undefined} className={'nav-item'+(section===key?' active':'')}><Icon className="icon" strokeWidth={1.6}/>{label}</Link>)}</nav>
     <div className="sidebar-bottom"><div className="account-summary"><p>{profile?.full_name||user?.email||'Administrator'}</p><p className="meta">{user?.email}</p></div><a href="https://cbgpu.com" target="_blank" rel="noopener noreferrer">Open cbgpu.com<ArrowUpRight className="icon"/></a><button type="button" className="button ghost" onClick={logout} disabled={busy}>{busy?'Signing out…':'Sign out'}</button></div>
    </aside>
    <div className="workspace"><header className="workspace-header"><div className="breadcrumbs"><span>CBGPU</span><span className="breadcrumb-divider">/</span><strong>{current?.label||'Administration'}</strong><span className="environment-badge"><span className="status-dot healthy" aria-hidden="true"/>Production</span></div><div className="header-actions"><button type="button" className="account-button" aria-label="Account management" onClick={()=>router.push('/admin/accounts')}><UserCircle className="icon" strokeWidth={1.6}/><span>{profile?.full_name||'Account'}</span></button><WorkspaceThemeControl/><button type="button" className="button secondary" onClick={()=>window.location.reload()}><RefreshCw className="icon" strokeWidth={1.5}/>Refresh</button></div></header>

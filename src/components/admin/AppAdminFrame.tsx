@@ -12,6 +12,7 @@ const adminNav:SpaceNavItem[]=[
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'schools',href:'/admin/schools',label:'School applications',Icon:Users}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_AD_REVENUE_V1==='1'?[{id:'ad-revenue',href:'/admin/ad-revenue',label:'Ad revenue',Icon:LayoutDashboard}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'feature-requests',href:'/admin/feature-requests',label:'School feature requests',Icon:Files}]:[]),
+ ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'message-reports',href:'/admin/message-reports',label:'Message reports',Icon:Users}]:[]),
  {id:'careers',href:'/admin/careers',label:'Careers',Icon:Briefcase},
  {id:'manufacture',href:'/admin/manufacture',label:'Equipment managers',Icon:Printer},
  {id:'materials',href:'/admin/materials',label:'File storage',Icon:Files},
