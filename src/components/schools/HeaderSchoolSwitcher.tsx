@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { School, Check, Plus, Clock3 } from "lucide-react";
 import { multiSchoolEnabled } from "@/lib/schoolsClient";
@@ -34,6 +34,8 @@ export default function HeaderSchoolSwitcher({
     [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const identity=useRef(user?.id);identity.current=user?.id;
+  useEffect(()=>{setOpen(false);setBusy(false);setError("")},[user?.id]);
   if (!multiSchoolEnabled || !user) return null;
   const resource = scope.resource,
     current = resource.current,
@@ -41,17 +43,18 @@ export default function HeaderSchoolSwitcher({
       current?.school.display_name || scope.school?.display_name || "학교 선택";
   async function choose(id: string) {
     if (busy) return;
+    const owner=user?.id;
     setBusy(true);
     setError("");
     try {
       if (resource.items.some((item) => item.school_id === id))
         await resource.select(id);
       else await scope.switchSchool(id);
-      setOpen(false);
+      if(identity.current===owner)setOpen(false);
     } catch (e) {
-      setError((e as Error).message || "학교를 전환하지 못했어요.");
+      if(identity.current===owner)setError((e as Error).message || "학교를 전환하지 못했어요.");
     } finally {
-      setBusy(false);
+      if(identity.current===owner)setBusy(false);
     }
   }
   const members = resource.items.filter((item) => item.type === "MEMBERSHIP"),
@@ -99,8 +102,8 @@ export default function HeaderSchoolSwitcher({
           <DialogHeader>
             <DialogTitle>어느 학교의 기능을 이용할까요?</DialogTitle>
             <DialogDescription>
-              인증된 학교 소속과 승인된 임시 자원 이용은 별개예요. 계정과 개인
-              프로젝트는 그대로 유지돼요.
+              선택한 학교는 계정에 저장돼 다른 기기에서도 이어져요. 학교를 바꿔도
+              새로운 권한이 생기지 않고, 개인 프로젝트는 그대로 유지돼요.
             </DialogDescription>
           </DialogHeader>
           <InlineFeedback message={error || resource.error || scope.error} />

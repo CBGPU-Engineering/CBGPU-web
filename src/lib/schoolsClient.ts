@@ -10,5 +10,14 @@ export async function schoolsRequest<T>(path:string,method='GET',body?:unknown,p
  if(!multiSchoolEnabled)throw new SchoolsApiError('학교 기능을 준비하고 있어요.');
  const session=publicRead?null:(await supabase.auth.getSession()).data.session;if(expectedOwner&&session?.user.id!==expectedOwner)throw new SchoolsApiError('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');if(!publicRead&&!session)throw new SchoolsApiError('로그인 후 이용해주세요.');
  const response=await fetch('/api/schools/'+path,{method,headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.access_token}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
- const data=await response.json();if(!response.ok)throw new SchoolsApiError(typeof data.error==='string'?data.error:'요청을 처리하지 못했어요.',data.code,data.existing_school_id,data.fields);return data as T;
+ const data=await response.json();if(expectedOwner&&(await supabase.auth.getSession()).data.session?.user.id!==expectedOwner)throw new SchoolsApiError('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');if(!response.ok)throw new SchoolsApiError(typeof data.error==='string'?data.error:'요청을 처리하지 못했어요.',data.code,data.existing_school_id,data.fields);return data as T;
+}
+
+/** Account-owned server preference; never write a device/localStorage default school. */
+export async function selectAccountSchool(schoolId:string,owner:string|undefined):Promise<string>{
+ if(!owner)throw new SchoolsApiError('로그인 후 학교를 선택해주세요.');
+ if(!/^[-A-Za-z0-9_]{1,100}$/.test(schoolId))throw new SchoolsApiError('학교를 확인해주세요.');
+ const result=await schoolsRequest<{ok:boolean;current_school_id:string}>('current-school','POST',{school_id:schoolId},false,owner);
+ if(result.ok!==true||result.current_school_id!==schoolId)throw new SchoolsApiError('학교를 전환하지 못했어요.');
+ return result.current_school_id;
 }

@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { multiSchoolEnabled, schoolsRequest } from "@/lib/schoolsClient";
+import { multiSchoolEnabled, schoolsRequest, selectAccountSchool } from "@/lib/schoolsClient";
 import {
   RESOURCE_IDS,
   resourceAllowed,
@@ -196,13 +196,8 @@ function ResourceSession({ children }: { children: ReactNode }) {
     setStatus("loading");
     setError("");
     try {
-      const result = await schoolsRequest<{
-        ok: boolean;
-        current_school_id: string;
-      }>("current-school", "POST", { school_id: schoolId }, false, owner);
+      await selectAccountSchool(schoolId, owner);
       if (!live.current) return;
-      if (!result.ok || result.current_school_id !== schoolId)
-        throw Error("학교 자원 이용을 전환하지 못했어요.");
       await refresh();
       window.dispatchEvent(
         new CustomEvent("cbgpu-school-changed", {
