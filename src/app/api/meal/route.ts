@@ -1,107 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
-
-// Monthly meal schedule — contains 조식/중식/석식 for every weekday
-const MEAL_LIST = 'https://school.cbe.go.kr/cbs-h/M01050705/list';
-const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-  'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.8',
-  'Referer': 'https://school.cbe.go.kr/',
-};
-
-const MEAL_TYPES = ['조식', '중식', '석식'];
-
-function stripTags(s: string) {
-  return s
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&#\d+;/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function removeAllergens(s: string) {
-  return s.replace(/\s*\([0-9.]+\)\s*/g, '').trim();
-}
-
-interface MealItem {
-  type: string;
-  items: string[];
-  calories: string;
-}
-
-// Parse all <dl> blocks from a day's HTML section
-function parseDayHtml(html: string): MealItem[] {
-  const meals: MealItem[] = [];
-  const dlRegex = /<dl[^>]*>([\s\S]*?)<\/dl>/gi;
-  let dlMatch;
-  while ((dlMatch = dlRegex.exec(html)) !== null) {
-    const dlHtml = dlMatch[1];
-
-    const dtMatch = dlHtml.match(/<dt[^>]*>([\s\S]*?)<\/dt>/i);
-    if (!dtMatch) continue;
-
-    const typeText = stripTags(dtMatch[1]).trim();
-    if (!MEAL_TYPES.includes(typeText)) continue;
-
-    const ddMatch = dlHtml.match(/<dd[^>]*>([\s\S]*?)<\/dd>/i);
-    if (!ddMatch) continue;
-
-    const items: string[] = [];
-    const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/gi;
-    let liMatch;
-    while ((liMatch = liRegex.exec(ddMatch[1])) !== null) {
-      const item = removeAllergens(stripTags(liMatch[1]));
-      if (item) items.push(item);
-    }
-
-    if (items.length > 0) meals.push({ type: typeText, items, calories: '' });
-  }
-  return meals;
-}
-
-// Find the <a href="...?ymd=YYYYMMDD"> cell and extract its contents
-function parseMealPage(html: string, dateYmd: string): MealItem[] {
-  const linkIdx = html.indexOf(`?ymd=${dateYmd}`);
-  if (linkIdx === -1) return [];
-
-  const before = html.slice(0, linkIdx);
-  const aStart = before.lastIndexOf('<a ');
-  if (aStart === -1) return [];
-
-  const fromA = html.slice(aStart);
-  const aEnd = fromA.indexOf('</a>');
-  if (aEnd === -1) return [];
-
-  return parseDayHtml(fromA.slice(0, aEnd));
-}
-
-function fmtDate(d: Date) {
-  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
-}
-
-export async function GET(req: NextRequest) {
-  const today = fmtDate(new Date());
-  const dateParam = req.nextUrl.searchParams.get('date') ?? today;
-
-  try {
-    const url = `${MEAL_LIST}?ymd=${dateParam}`;
-    const res = await fetch(url, {
-      headers: HEADERS,
-      signal: AbortSignal.timeout(10000),
-      next: { revalidate: 1800 },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-    const html = await res.text();
-    const meals = parseMealPage(html, dateParam);
-
-    return NextResponse.json({ meals, date: dateParam, today, source: url });
-  } catch (e: any) {
-    return NextResponse.json({ meals: [], error: e.message, date: dateParam, today }, { status: 500 });
-  }
+import{NextRequest,NextResponse}from'next/server';
+import{parseMealPage,parseNeisMeals,schoolMealTarget,validMealDate,type MealTarget}from'@/lib/schoolMeal';
+import{publicSchoolText}from'@/lib/publicSchoolFetch';
+import{boundedSchoolBody}from'@/lib/schoolsProxySecurity';
+import{trustedInternalServiceUrl}from'@/lib/internalServiceUrl';
+export const dynamic='force-dynamic';
+const legacyUrl='https://school.cbe.go.kr/cbs-h/M01050705/list';
+const reply=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'no-store','Vary':'Authorization'}});
+export async function GET(req:NextRequest){const today=new Date(Date.now()+9*3600000).toISOString().slice(0,10).replaceAll('-',''),sp=req.nextUrl.searchParams,date=sp.get('date')??today,multi=process.env.CBGPU_MULTISCHOOL_V1==='1',schoolId=sp.get('school_id')??(multi?'':'cbsh');
+ if(!validMealDate(date)||!/^[-A-Za-z0-9_]{1,100}$/.test(schoolId)||[...sp.keys()].some(k=>!['date','school_id'].includes(k)))return reply({error:'학교와 급식 날짜를 확인해주세요.'},400);
+ let target:MealTarget={schoolId:'cbsh',provider:'SCHOOL_WEBSITE',url:legacyUrl,allowedHosts:['school.cbe.go.kr'],version:0};
+ if(!multi&&schoolId!=='cbsh')return reply({meals:[],school_id:schoolId,error:'이 학교의 급식 연결을 준비하고 있어요.',code:'SCHOOL_SOURCE_NOT_CONFIGURED'},409);
+ if(multi){const authorization=req.headers.get('authorization');if(!authorization||!/^Bearer [^\s,]{1,8192}$/i.test(authorization))return reply({error:'로그인 후 학교 소속을 확인해주세요.'},401);let endpoint:URL;try{endpoint=trustedInternalServiceUrl(process.env.CBGPU_SCHOOLS_API_URL||'http://127.0.0.1:3546',process.env.CBGPU_INTERNAL_NETWORK_MODE);endpoint.pathname='/v1/schools/'+encodeURIComponent(schoolId)+'/life-sources';endpoint.search='';endpoint.hash=''}catch{return reply({error:'학교 연결 설정을 확인하고 있어요.'},503)}
+  try{const response=await fetch(endpoint,{headers:{Authorization:authorization},cache:'no-store',redirect:'error',signal:AbortSignal.timeout(12000)});if(!response.ok)return reply({error:'인증된 학교 소속과 급식 연결을 확인해주세요.',school_id:schoolId},[401,403].includes(response.status)?response.status:503);target=schoolMealTarget(schoolId,JSON.parse(await boundedSchoolBody(response.body,65536)))}catch{return reply({meals:[],date,today,school_id:schoolId,error:'이 학교의 급식 연결을 준비하고 있어요.',code:'SCHOOL_SOURCE_NOT_CONFIGURED'},409)}
+ }
+ try{const url=new URL(target.url);if(target.provider==='NEIS'){url.search=new URLSearchParams({Type:'json',pIndex:'1',pSize:'100',ATPT_OFCDC_SC_CODE:target.officeCode!,SD_SCHUL_CODE:target.officialId!,MLSV_YMD:date}).toString()}else url.searchParams.set('ymd',date);const text=await publicSchoolText(url.href,target.allowedHosts),meals=target.provider==='NEIS'?parseNeisMeals(JSON.parse(text),target,date):parseMealPage(text,date);return reply({meals,date,today,school_id:schoolId,source:url.href})}catch{return reply({meals:[],date,today,school_id:schoolId,error:'급식 제공처에서 메뉴를 확인하지 못했어요. 잠시 후 다시 시도해주세요.',code:'MEAL_PROVIDER_ERROR'},502)}
 }
