@@ -1,0 +1,29 @@
+# Standalone web only. Use existing reviewed backend services; this creates no DB.
+services:
+  web:
+    image: ${CBGPU_WEB_IMAGE:?Set a reviewed immutable web image tag or digest}
+    read_only: true
+    init: true
+    user: "65532:65532"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: ${CBGPU_WEB_MEMORY_LIMIT:-2g}
+    cpus: ${CBGPU_WEB_CPUS:-2}
+    stop_grace_period: 30s
+    ports: ["127.0.0.1:${CBGPU_WEB_LOCAL_PORT:-3003}:3000"]
+    env_file: ["${CBGPU_WEB_RUNTIME_ENV:?Point to a private runtime env file}"]
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      NODE_ENV: production
+      CBGPU_ANDROID_RELEASE_PATH: /app/public/downloads/android-release.json
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=256m,mode=1777
+      - /app/.next/cache:rw,nosuid,nodev,size=128m,uid=65532,gid=65532
+    volumes:
+      - type: bind
+        source: ${CBGPU_ANDROID_DOWNLOADS_DIR:?Set the existing published downloads directory}
+        target: /app/public/downloads
+        read_only: true
+    restart: unless-stopped

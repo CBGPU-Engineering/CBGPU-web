@@ -1,3 +1,4 @@
+import {browserEnvironment} from '@/lib/browserEnvironment';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import chromium from '@sparticuz/chromium';
@@ -30,7 +31,8 @@ async function loginAndGetToken(): Promise<string> {
 
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath(),
+    env: browserEnvironment(),
+    executablePath: process.env.CBGPU_CHROMIUM_EXECUTABLE_PATH||await chromium.executablePath(),
     headless: true,
   });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {normalizeWorkspace,workspaceForHost} from './lib/workspaces';
 import { WindowRateLimiter } from './lib/requestSecurity';
 import{isPublicBrowsingPath}from'./lib/publicPaths';
+import {backendProxyTarget} from './lib/backendProxyTarget';
 
 const publicPages = new Set(['/', '/services', '/contact', '/download', '/privacy']);
 const catalogueLimits = new WindowRateLimiter(60, 60_000);
@@ -34,7 +35,7 @@ export function proxy(request: NextRequest) {
     return new NextResponse('Not found',{status:404});
   }
   if(manufacturingHost){
-    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
+    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/schools/memberships'||path==='/api/schools/current-school'||path==='/api/schools/resource-contexts'||path==='/api/schools/resource-access'||/^\/api\/schools\/schools\/[-a-zA-Z0-9_]+\/life-sources$/.test(path)||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
     if(!allowed)return new NextResponse('Not found',{status:404});
     if(path==='/')return NextResponse.redirect(new URL('https://'+host+'/manage/manufacturing'),307);
   }
@@ -60,6 +61,10 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('x-cbgpu-mode',normalizeWorkspace(queryMode)||normalizeWorkspace(savedMode)||'student');
   requestHeaders.set('x-cbgpu-path', path);
   requestHeaders.set('x-cbgpu-site', site || (path === '/docs' || path.startsWith('/docs/') ? 'docs' : path === '/arxiv' || path.startsWith('/arxiv/') ? 'arxiv' : 'main'));
+  if(path.startsWith('/backend/')){
+    try{const backend=backendProxyTarget(path,request.nextUrl.search,process.env.CBGPU_BACKEND_PROXY_URL,process.env.CBGPU_INTERNAL_NETWORK_MODE);if(backend){const response=NextResponse.rewrite(backend,{request:{headers:requestHeaders}});response.headers.set('X-Robots-Tag','noindex, nofollow');if(!path.startsWith('/backend/storage/'))response.headers.set('Cache-Control','private, no-store');return response;}}
+    catch{return NextResponse.json({error:'Backend connection unavailable'},{status:503,headers:{'Cache-Control':'no-store'}})}
+  }
   if (host !== 'admin.cbgpu.com' && (path === '/admin' || path.startsWith('/admin/'))) {
     return new NextResponse('Not found', {status:404,headers:{'Content-Type':'text/plain; charset=utf-8'}});
   }

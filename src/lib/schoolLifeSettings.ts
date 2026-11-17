@@ -79,7 +79,7 @@ export function reviewedLifePayload(
     throw Error(
       "Use 1–10 reviewed public DNS hostnames, without schemes, paths, wildcards or local names.",
     );
-  const urls: Record<string, string | null> = {};
+  const urls: Record<(typeof LIFE_URL_FIELDS)[number], string | null> = {homepage_url:null,news_url:null,letter_url:null,calendar_url:null,meal_url:null};
   for (const key of LIFE_URL_FIELDS) {
     const value = draft[key].trim();
     if (!value) {
