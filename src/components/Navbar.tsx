@@ -1,4 +1,5 @@
 'use client';
+import './navbar-mobile.css';
 import{useSchoolServiceVisibility}from'@/components/schools/SchoolScope';
 import HeaderSchoolSwitcher from '@/components/schools/HeaderSchoolSwitcher';
 
@@ -101,7 +102,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
   return (
     <>
-    <nav aria-label="주 메뉴" className="flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
+    <nav aria-label="주 메뉴" className="cb-main-navbar flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
       <div className="flex items-center gap-4 md:gap-8">
         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
           <CBGPULogo variant="horizontal" width={130} height={30} alt="CBGPU"/>
@@ -147,7 +148,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           <span className="hidden sm:inline">기능 찾기</span>
           <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
-        <HeaderSchoolSwitcher compact/>
+        <div className="hidden sm:block"><HeaderSchoolSwitcher compact/></div>
         <div className="hidden xl:flex items-center gap-2">
           <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Contact
@@ -239,6 +240,8 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
               </div>
 
               {primaryLinks.map(link => <Link key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)} aria-current={isActivePath(pathname, link.href) ? 'page' : undefined} className={`min-h-11 py-3 text-sm font-semibold ${isActivePath(pathname, link.href) ? 'text-primary' : 'text-foreground'}`}>{link.label}</Link>)}
+
+              <div className="sm:hidden py-2"><HeaderSchoolSwitcher/></div>
 
               {groups.map(group => (
                 <div key={group.label} className="mt-3">
