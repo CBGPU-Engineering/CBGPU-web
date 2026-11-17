@@ -68,10 +68,17 @@ try {
     features: ["gpu_compute", "ai", "projects"],
   };
   const expires = new Date(Date.now() + 180_000).toISOString();
+  let holdProof = false, proofReached: (() => void) | null = null, releaseProof: (() => void) | null = null;
+  let proofGate: Promise<void> | null = null;
   await page.route("**/api/schools/**", async (route) => {
     const path = new URL(route.request().url()).pathname.slice(
       "/api/schools/".length,
     );
+    if (path === "schools/cbsh/resource-access" && holdProof) {
+      holdProof = false;
+      proofReached?.();
+      await proofGate;
+    }
     let data: any;
     if (path === "memberships") data = { items: [], current_school_id: "cbsh" };
     else if (path === "resource-contexts")
@@ -326,7 +333,7 @@ try {
     await page.getByRole("button", { name, exact: true }).click();
     assert.equal((await (await deniedScope).json()).resources.ai, false);
     await page.waitForFunction(()=>document.querySelector('[role="region"][aria-label="AI 도구"]')?.getAttribute("aria-busy")==="false");
-    await page.getByRole("alert").waitFor();
+    await page.getByRole("region", { name: "AI 도구" }).getByRole("alert").waitFor();
     assert.equal(jobWrites, 0);
     assert.equal(searchWrites, 0);
     await page.getByRole("button", { name: /Retained work/ }).click();
@@ -355,10 +362,26 @@ try {
         .click();
       assert.equal((await (await deniedRetry).json()).resources.ai, false);
       await page.waitForFunction(()=>document.querySelector('[role="region"][aria-label="AI 도구"]')?.getAttribute("aria-busy")==="false");
-      await page.getByRole("alert").waitFor();
+      await page.getByRole("region", { name: "AI 도구" }).getByRole("alert").waitFor();
       assert.equal(jobWrites, 0);
     }
   }
+  // A verified response arriving after switching tools must not retry an old job.
+  allowed = true;
+  await page.goto(origin + "/ai?tool=prompt", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /Retained work/ }).click();
+  await page.getByText("Retained private result.", { exact: true }).waitFor();
+  await page.waitForFunction(()=>[...document.querySelectorAll("button")].some(button=>button.textContent?.trim()==="다시 실행"&&!button.disabled));
+  const reached = new Promise<void>(resolve => { proofReached = resolve; });
+  proofGate = new Promise<void>(resolve => { releaseProof = resolve; });
+  holdProof = true;
+  await page.getByRole("button", { name: "다시 실행", exact: true }).click();
+  await reached;
+  await page.locator('[data-ai-tool="api"]').first().click();
+  await page.getByText("Retained API key", { exact: true }).waitFor();
+  (releaseProof as unknown as () => void)();
+  await page.waitForLoadState("networkidle");
+  assert.equal(jobWrites, 0, "unmounted tool must not retry even with a late allowed response");
   allowed = false;
   await page.goto(origin + "/ai?tool=api", { waitUntil: "networkidle" });
   await page.getByText("Retained API key", { exact: true }).waitFor();
@@ -398,7 +421,7 @@ try {
   );
   allowed = false;
   await page.getByRole("button", { name: "계획 만들기", exact: true }).click();
-  await page.getByRole("alert").waitFor();
+  await page.locator(".robot-error[role=alert]").waitFor();
   assert.equal(planWrites, 0);
   await page.setViewportSize({ width: 390, height: 844 });
   assert.equal(
