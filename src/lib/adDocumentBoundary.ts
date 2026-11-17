@@ -1,13 +1,13 @@
 /** Executed third-party JavaScript cannot be unloaded by removing its script tag. */
 const touched=new WeakSet<Document>();
 const guarded=new WeakSet<Document>();
-const personal=new WeakSet<Document>();
 const routes=new WeakMap<Document,string>();
-export function markPersonalDocument(){if(typeof document!=='undefined')personal.add(document)}
-export function adDocumentHasPersonalState(){return typeof document!=='undefined'&&personal.has(document)}
+// Transient existing Auth identity, never sent to the SDK or stored in analytics.
+const identities=new WeakMap<Document,string>();
 export function adDocumentHasRun(){return typeof document!=='undefined'&&touched.has(document)}
-export function markAdDocument(document:Document){touched.add(document);routes.set(document,document.defaultView?.location.pathname||'')}
+export function markAdDocument(document:Document,identity='anonymous'){touched.add(document);routes.set(document,document.defaultView?.location.pathname||'');identities.set(document,identity)}
 export function adDocumentRouteChanged(path:string){return typeof document!=='undefined'&&touched.has(document)&&routes.get(document)!==path}
+export function adDocumentIdentityChanged(identity:string){return typeof document!=='undefined'&&touched.has(document)&&identities.get(document)!==identity}
 export function installAdNavigationBoundary(document:Document){
  if(guarded.has(document))return;
  const view=document.defaultView;if(!view)return;guarded.add(document);

@@ -29,10 +29,15 @@ approved school's explicit advertising setting; empty, failed and mixed-policy
 collections do not qualify.
 
 Authentication, personal information, consoles, chat, editors, job execution,
-private files, and unregistered hosts are excluded. Settled anonymous browsing
-is required. Native WebView contexts are disabled pending an independently
-validated supported integration; mobile browser coverage does not prove native
-app advertising compatibility.
+private files, and unregistered hosts are excluded. Public-page eligibility is
+independent of login: both settled signed-in and signed-out readers can receive
+a unit. Loading authentication state does not initialize a unit. Existing first-party CBGPU app WebViews retain their registered web units on
+eligible public web URLs. A genuine app bridge or CBGPU user agent admits the
+non-sensitive `native=1` marker. This does not reuse a web ID in a native SDK.
+The optional native SDK candidate is separate and off by default; it needs an
+actual Android app unit and runtime validation. An explicit unavailable native
+capability preserves the existing web fallback. A configured native surface is
+exclusive, so a page never starts both advertising modes.
 
 The initial SDK request waits until the slot intersects a visible document.
 The script is asynchronous and receives no page referrer. The document takes
@@ -67,7 +72,9 @@ Do not use the Kakao Ad Exchange DSP API as an invented publisher revenue API.
 Keep estimated earnings separate from finalized settlement data.
 
 These two units are shared across placements. Their report totals support
-unit/device comparison, not attribution to a particular page. Page placement
+banner-format comparison, not attribution to a particular page or physical
+device. A narrow desktop container can legitimately use the 320px unit. Actual
+physical-device revenue stays N/A without an official device dimension. Page placement
 revenue remains N/A until independently reported units or a valid isolated
 experiment provide attribution. Register additional real console units before
 testing independently attributable placements; never manufacture unit IDs.
@@ -87,7 +94,7 @@ publish small-school revenue cohorts.
 `tests/ads/public-ad-browser.mts` uses real React, Chromium and a production Next
 fixture, but intercepts every provider request with a synthetic SDK. It checks
 desktop/mobile dimensions, horizontal overflow, duplicate mounts, auth and
-school opt-outs, native exclusion, document navigation, resizing, no-fill,
+school opt-outs, first-party app fallback, document navigation, resizing, no-fill,
 blocked scripts and first-request offscreen deferral. It does not verify fill,
 paid impressions, console settings, actual provider performance or earnings.
 
