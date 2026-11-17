@@ -113,7 +113,7 @@ export default function NewContestPage() {
   return (
     <div className="contest-page mx-auto max-w-3xl space-y-7">
       <Link href="/contests" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4" />교내 대회 목록</Link>
-      <header className="contest-hero"><p className="contest-eyebrow mb-5 flex items-center gap-2"><Trophy className="size-3.5" />CREATE A CHALLENGE</p><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">새로운 도전의 시작.<br /><span className="mt-1 block text-[#cde2b9]">교내 대회 만들기</span></h1><p className="mt-4 text-sm leading-relaxed text-white/65">로고, 참가 신청, 일정과 작품 제출 항목을 구성하고,<br />하나의 링크로 참가자를 초대하세요.</p></header>
+      <header className="contest-hero"><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">대회 만들기</h1><p className="mt-3 text-sm leading-relaxed text-muted-foreground">대회 소개, 참가 방식과 제출 일정을 설정하세요.</p></header>
       <form onSubmit={create} className="space-y-6">
         <fieldset disabled={busy} className="space-y-6">
           <section className="contest-panel space-y-5">
