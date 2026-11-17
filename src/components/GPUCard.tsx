@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { SuccessFeedback } from '@/components/ui/product-motion';
 import { format, isSameDay, parseISO, addDays, startOfDay, endOfDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { TimePicker } from '@/components/ui/time-picker';
@@ -39,12 +40,13 @@ function combineDateTime(day: Date, hhmm: string): Date {
 }
 
 export default function GPUCard({ id, name }: { id: number; name: string }) {
-  const { showAlert, showError, showSuccess } = useAlert();
+  const { showAlert, showError } = useAlert();
   const { isApproved } = useAuth();
   const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
   const [selectedTime, setSelectedTime] = useState(() => format(nowPlusBuffer(), 'HH:mm'));
   const [durationHours, setDurationHours] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedRequest, setCompletedRequest] = useState('');
   const [showSchedule, setShowSchedule] = useState(false);
   const [approvedReservations, setApprovedReservations] = useState<any[]>([]);
 
@@ -73,6 +75,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
   };
 
   const handleRequest = async () => {
+    setCompletedRequest('');
     if (!isApproved) {
       showError('학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
     }
@@ -122,7 +125,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
 
       if (error) throw error;
 
-      showSuccess(`GPU #${id} 예약 신청이 완료되었습니다!`);
+      setCompletedRequest(`${format(start,'M월 d일 HH:mm')}부터 ${durationHours}시간 · 내 예약에서 처리 상태를 확인해 주세요.`);
       setDurationHours(3);
       fetchApprovedReservations();
     } catch (error: any) {
@@ -147,7 +150,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
   };
 
   return (
-    <Card className="tilt-3d overflow-hidden border-border bg-card hover:border-primary group shadow-lg flex flex-col h-full rounded-2xl">
+    <Card className="overflow-hidden border-border bg-card group shadow-sm flex flex-col h-full rounded-2xl">
       <CardHeader className="p-0 overflow-hidden relative">
         <div className="relative w-full h-32">
           <Image
@@ -155,7 +158,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
             alt="GPU"
             fill
             sizes="(max-width: 768px) 100vw, 400px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
           />
         </div>
         <div className="absolute top-2 right-2">
@@ -163,7 +166,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                 variant="secondary" 
                 size="xs" 
                 className="text-xs font-semibold h-6 bg-background/80 backdrop-blur-sm shadow-sm"
-                onClick={() => setShowSchedule(!showSchedule)}
+                aria-expanded={showSchedule} aria-label={showSchedule?`GPU ${id} 예약 입력으로 돌아가기`:`GPU ${id} 예약 일정 보기`} onClick={() => setShowSchedule(!showSchedule)}
             >
                 {showSchedule ? "CLOSE SCHEDULE" : "VIEW CALENDAR"}
             </Button>
@@ -174,10 +177,10 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold">GPU #{id}</h3>
-            <p className="text-xs text-muted-foreground font-semibold">RTX5000</p>
+            <p className="text-xs text-muted-foreground font-semibold">{name}</p>
           </div>
           <div className="flex flex-col items-end">
-            <Badge variant="success">Ready</Badge>
+            <Badge variant="muted">시간 단위 예약</Badge>
           </div>
         </div>
 
@@ -290,6 +293,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
         )}
       </CardContent>
 
+      {completedRequest&&<div className="px-4 pb-4"><SuccessFeedback compact title="예약 신청을 보냈어요" description={completedRequest}><a href="#my-gpu-reservations" className="text-sm font-semibold text-primary">내 예약에서 처리 상태 확인하기</a></SuccessFeedback></div>}
       <CardFooter className="p-4 pt-0">
         <Button 
           onClick={handleRequest} 

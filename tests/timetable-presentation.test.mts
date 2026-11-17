@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{timetableWeekDates}from'../src/lib/timetablePresentation.ts';
+test('uses the actual server school week across months rather than browser today',()=>{assert.deepEqual(timetableWeekDates('2026-11-30').map(d=>d.date),['2026-11-30','2026-12-01','2026-12-02','2026-12-03','2026-12-04']);assert.equal(timetableWeekDates('2026-11-16')[0].label,'11.16')});
+test('does not invent dates for manual, missing, malformed or non-Monday weeks',()=>{for(const value of [null,undefined,'','2026-02-30','2026-11-17','20261116','2026-11-16T00:00:00Z'])assert.deepEqual(timetableWeekDates(value),[])});

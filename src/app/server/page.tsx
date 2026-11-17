@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {motion} from 'motion/react';
+import {ResourceStatus} from '@/components/ui/resource-motion';
+import {EmptyState} from '@/components/ui/product-motion';
 import DeployMcpSetup from '@/components/deploy/DeployMcpSetup';
 import {serverProjectRequest} from '@/lib/deploymentApi';
 import { useAuth } from '@/lib/useAuth';
@@ -17,9 +20,9 @@ import { useRouter } from 'next/navigation';
 type AccessScope = 'private' | 'school' | 'public';
 
 const STATUS_BADGE: Record<string, { variant: any; label: string }> = {
-  pending:  { variant: 'warning',  label: 'Pending'  },
-  approved: { variant: 'success',  label: 'Approved' },
-  rejected: { variant: 'danger',   label: 'Rejected' },
+  pending:  { variant: 'warning',  label: '준비 중'  },
+  approved: { variant: 'success',  label: '배포 준비' },
+  rejected: { variant: 'danger',   label: '배포 실패' },
   deleted:  { variant: 'muted',    label: 'Deleted'  },
 };
 
@@ -88,7 +91,7 @@ export default function ServerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="size-8" onClick={fetchProjects} title="새로고침">
+          <Button variant="ghost" size="icon" className="min-h-11 min-w-11" onClick={fetchProjects} disabled={loading} aria-label="서버 프로젝트 새로고침">
             <RefreshCw className="size-3.5" />
           </Button>
           <Button
@@ -103,26 +106,23 @@ export default function ServerPage() {
       <DeployMcpSetup/>
       {listError&&<div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-4"><p className="text-sm text-destructive">{listError}</p><Button variant="outline" disabled={loading} onClick={fetchProjects}>다시 불러오기</Button></div>}
       {/* 프로젝트 목록 */}
-      {loading ? (
+      {loading && !projects.length ? (
         <div className="py-16 flex items-center justify-center">
           <LoadingSpinner size={48} label="프로젝트 불러오는 중" />
         </div>
       ) : projects.length === 0 && listError ? null : projects.length === 0 ? (
-        <div className="text-center py-24 border border-dashed rounded-2xl text-muted-foreground bg-muted/10 pop-in-3d">
-          <Server className="size-12 mx-auto mb-4 opacity-20" />
-          <p className="font-semibold text-sm opacity-70">배포된 프로젝트가 없습니다</p>
-          <p className="text-xs mt-2 opacity-40">상단 버튼으로 새 프로젝트를 신청하세요</p>
-        </div>
+        <EmptyState kind="project" title="첫 서버 프로젝트를 만들어 보세요" description="저장소나 컨테이너 이미지를 연결해 프로젝트를 시작할 수 있어요." action={<Button onClick={()=>router.push('/server/new')}><Plus className="size-4"/>새 프로젝트</Button>}/>
+
       ) : (
         <div className="grid gap-4">
           {projects.map(proj => {
             const badge = STATUS_BADGE[proj.status] || { variant: 'default', label: proj.status };
             const isRunning = proj.status === 'approved' && proj.deployed_at;
             return (
+              <motion.div layout="position" key={proj.id}>
               <Link
-                key={proj.id}
                 href={`/server/${proj.id}`}
-                className="tilt-3d group flex items-center justify-between p-5 border rounded-2xl bg-card hover:border-primary/50 transition-all duration-300"
+                className="group flex min-w-0 items-center justify-between p-5 border rounded-2xl bg-card hover:bg-muted/25 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <div className="flex items-start gap-4 min-w-0">
                   <div className={`p-2.5 rounded-lg border ${isRunning ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-muted border-border/40 text-muted-foreground'}`}>
@@ -131,11 +131,10 @@ export default function ServerPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm tracking-tight">{proj.name}</span>
-                      <Badge variant={badge.variant as any}>{badge.label}</Badge>
-                      {isRunning && <span className="size-2 rounded-full bg-emerald-500 animate-pulse inline-block" />}
+                      <ResourceStatus value={`${proj.status}:${proj.deployed_at||''}`}><Badge variant={badge.variant as any}>{isRunning?'최근 배포 완료':badge.label}</Badge></ResourceStatus>
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="text-xs font-bold text-muted-foreground opacity-70">
+                      <span className="min-w-0 break-all text-xs font-medium text-muted-foreground">
                         {proj.deploy_type === 'docker' ? proj.docker_image : proj.git_url?.replace('https://', '')}
                       </span>
                       <span className="text-xs font-bold text-muted-foreground opacity-50">
@@ -149,7 +148,7 @@ export default function ServerPage() {
                   </div>
                 </div>
                 <ChevronRight className="size-4 text-muted-foreground opacity-30 group-hover:opacity-70 group-hover:translate-x-0.5 transition-all shrink-0 ml-4" />
-              </Link>
+              </Link></motion.div>
             );
           })}
         </div>

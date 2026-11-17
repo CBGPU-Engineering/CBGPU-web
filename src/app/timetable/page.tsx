@@ -5,7 +5,10 @@ import { useAuth } from '@/lib/useAuth';
 import { Button } from '@/components/ui/button';
 import { useAlert } from '@/lib/alert';
 import { Edit3, Save, X, RotateCcw, RefreshCw, AlertTriangle, Sparkles } from 'lucide-react';
-import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import { ResourceSelection, ResourcePanel, ResourceStatus } from '@/components/ui/resource-motion';
+import { EmptyState, InlineFeedback } from '@/components/ui/product-motion';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { timetableWeekDates } from '@/lib/timetablePresentation';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useCachedAi } from '@/lib/useCachedAi';
 
@@ -53,7 +56,10 @@ export default function TimetablePage() {
   const [draft,   setDraft]   = useState<Record<number, Record<number, string>>>({});
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [justFinished, setJustFinished] = useState(false);
+  const requestRef=useRef(0);
+  const subjectTrigger=useRef<HTMLElement|null>(null);
+  const [gridContext,setGridContext]=useState<{grade:number;cls:number}|null>(null);
+  const [subjectDetail,setSubjectDetail]=useState<{day:number;period:number}|null>(null);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
   const [freshness,setFreshness]=useState<{stale:boolean;fetchedAt:string;weekStart:string|null}|null>(null);
@@ -64,41 +70,43 @@ export default function TimetablePage() {
     ? PERIODS.map(period => grid[todayWd]?.[period]?.subject).filter(Boolean)
     : [];
   const todayDate = new Date().toLocaleDateString('sv-SE');
-  const prepInput = todaySubjects.length >= 2 ? `${todayDate} ${grade}학년 ${cls}반 시간표: ${todaySubjects.join(', ')}` : '';
+  const prepInput = todaySubjects.length >= 2 && gridContext?.grade===grade && gridContext?.cls===cls ? `${todayDate} ${grade}학년 ${cls}반 시간표: ${todaySubjects.join(', ')}` : '';
   const prepTip = useCachedAi('timetable', prepInput, `timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing && !freshness?.stale);
 
   const loadComcigan = useCallback(async (g: number, c: number, refresh = false) => {
-    setLoading(true); setError('');
+    const request=++requestRef.current;setLoading(true); setError('');
     try {
       const res  = await fetch(`/api/timetable?grade=${g}&class=${c}${refresh ? '&refresh=1' : ''}`);
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      setGrid(json.grid ?? {});
+      if(request!==requestRef.current)return;
+      setGrid(json.grid ?? {});setGridContext({grade:g,cls:c});
       if (json.grades?.length)  setGrades(json.grades);
       if (json.classes?.length) setClasses(json.classes);
       setSource('comcigan');
       setFreshness({stale:!!json.stale,fetchedAt:json.fetchedAt||'',weekStart:json.weekStart||null});
     } catch (e: any) {
+      if(request!==requestRef.current)return;
       setError(e.message ?? String(e));
-      await loadManual(g, c);
+      await loadManual(g, c,request);
     } finally {
-      setLoading(false);
-      setJustFinished(true);
-      setTimeout(() => setJustFinished(false), 600);
+      if(request===requestRef.current)setLoading(false);
     }
   }, []); // eslint-disable-line
 
-  const loadManual = useCallback(async (g: number, c: number) => {
+  const loadManual = useCallback(async (g: number, c: number, request:number) => {
     const { data, error: dbErr } = await supabase
       .from('timetable').select('weekday,period,subject')
       .eq('grade', g).eq('class_num', c);
+    if(request!==requestRef.current)return;
     if (dbErr?.message?.includes('does not exist')) { setDbMissing(true); return; }
+    if(dbErr){setError(previous=>previous+' · 수동 시간표도 불러오지 못했어요.');return;}
     const g2: Grid = {};
     for (const r of (data ?? [])) {
       if (!g2[r.weekday]) g2[r.weekday] = {};
       g2[r.weekday][r.period] = { subject: r.subject, teacher: '' };
     }
-    setGrid(g2); setSource('manual');setFreshness(null);
+    setGrid(g2);setGridContext({grade:g,cls:c}); setSource('manual');setFreshness(null);
   }, []);
 
   const didInitRef = useRef(false);
@@ -144,16 +152,9 @@ export default function TimetablePage() {
     setGrid(g2); setEditing(false); showSuccess('저장됐습니다.');
   };
 
-  if (dbMissing) return (
-    <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
-      <p className="text-4xl">⚠️</p>
-      <h2 className="font-semibold text-xl tracking-tight">DB 설정 필요</h2>
-      <p className="text-sm text-muted-foreground">
-        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_timetable_migration.sql</code>을
-        Supabase SQL Editor에서 실행해 주세요.
-      </p>
-    </section>
-  );
+  const weekDates=timetableWeekDates(freshness?.weekStart);
+  const detail=subjectDetail?grid[subjectDetail.day]?.[subjectDetail.period]:null;
+  if (dbMissing) return <section className="cb-page-content px-4 py-10 max-w-lg mx-auto"><EmptyState kind="search" title="시간표를 준비하고 있어요" description="학교 시간표 연결을 확인하고 있어요. 잠시 후 다시 확인하거나 관리자에게 알려 주세요." action={<Button onClick={()=>{setDbMissing(false);void loadComcigan(grade,cls,true)}}>다시 확인하기</Button>}/></section>;
 
   return (
     <section className="cb-page-content px-4 py-8 space-y-5 max-w-4xl mx-auto">
@@ -169,12 +170,12 @@ export default function TimetablePage() {
         </div>
         <div className="flex gap-2 items-center">
           {!editing && (
-            <Button variant="ghost" size="icon" className="size-8" onClick={() => loadComcigan(grade, cls, true)} disabled={loading}>
+            <Button variant="ghost" size="icon" aria-label="시간표 새로고침" className="min-h-11 min-w-11" onClick={() => loadComcigan(grade, cls, true)} disabled={loading}>
               <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           )}
           {isAdmin && !editing && (
-            <Button onClick={startEdit} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
+            <Button onClick={startEdit} disabled={loading} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
               <Edit3 className="size-3.5" /> 직접 편집
             </Button>
           )}
@@ -195,12 +196,12 @@ export default function TimetablePage() {
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        <SegmentedTabs
+        <ResourceSelection label="시간표 학년 선택" disabled={editing}
           items={grades.map(g => ({ value: String(g), label: `${g}학년` }))}
           value={String(grade)}
           onChange={(v) => switchTo(Number(v), cls)}
         />
-        <SegmentedTabs
+        <ResourceSelection label="시간표 반 선택" disabled={editing}
           items={classes.map(c => ({ value: String(c), label: `${c}반` }))}
           value={String(cls)}
           onChange={(v) => switchTo(grade, Number(v))}
@@ -222,19 +223,21 @@ export default function TimetablePage() {
 
       {prepTip && !editing && <p className="flex items-start gap-2 rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
 
-      {loading || justFinished ? (
+      <div className="flex min-h-6 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><ResourceStatus value={`${gridContext?.grade}:${gridContext?.cls}:${freshness?.weekStart}`}><span>{gridContext?`${gridContext.grade}학년 ${gridContext.cls}반`:''}{weekDates.length?` · ${weekDates[0].label}–${weekDates[4].label}`:''}</span></ResourceStatus><span role="status">{loading?'시간표를 확인하고 있어요':editing?'편집 후 저장해 주세요':'수업을 누르면 자세히 볼 수 있어요'}</span></div>
+      {loading && !gridContext ? (
         <div className="py-16 flex items-center justify-center">
-          <LoadingSpinner done={justFinished} size={56} label="시간표 불러오는 중" />
+          <LoadingSpinner size={56} label="시간표 불러오는 중" />
         </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+      ) : !gridContext ? <EmptyState kind="search" title="시간표를 가져오지 못했어요" description="연결을 확인한 뒤 다시 불러와 주세요." action={<Button onClick={()=>void loadComcigan(grade,cls,true)}>다시 불러오기</Button>}/> : (
+        <ResourcePanel value={`${gridContext.grade}:${gridContext.cls}`} className="min-w-0">
+        <div className="overflow-x-auto transition-opacity" aria-busy={loading} style={{opacity:loading?0.55:1}}>
+          <table className="w-full table-fixed border-collapse" aria-label={`${gridContext.grade}학년 ${gridContext.cls}반 주간 시간표`}>
             <thead>
               <tr>
-                <th className="w-10 p-1" />
+                <th className="w-6 sm:w-10 p-1" scope="col"><span className="sr-only">교시</span></th>
                 {DAYS.map((day, i) => (
-                  <th key={day} className={`p-2 text-xs font-semibold text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
-                    {day}{todayWd===i&&<span className="block text-xs text-primary/70">오늘</span>}
+                  <th key={day} scope="col" className={`px-1 py-2 text-xs font-semibold text-center ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
+                    {weekDates[i]&&<span className="block mb-0.5 text-xs font-normal text-muted-foreground">{weekDates[i].label}</span>}{day}{todayWd===i&&<span className="block text-xs text-primary/70">오늘</span>}
                   </th>
                 ))}
               </tr>
@@ -242,7 +245,7 @@ export default function TimetablePage() {
             <tbody>
               {PERIODS.map(p => (
                 <tr key={p}>
-                  <td className="p-1 text-center"><span className="text-xs font-semibold text-muted-foreground">{p}</span></td>
+                  <th scope="row" className="p-1 text-center"><span className="text-xs font-semibold text-muted-foreground">{p}</span></th>
                   {DAYS.map((_, di) => {
                     const cell    = editing ? undefined : grid[di]?.[p];
                     const subject = editing ? (draft[di]?.[p] ?? '') : (cell?.subject ?? '');
@@ -258,13 +261,12 @@ export default function TimetablePage() {
                             className="w-full h-14 px-1.5 text-center text-xs font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
                           />
                         ) : subject ? (
-                          <div title={changed ? '컴시간 실시간 변경' : undefined}
-                            className={`relative h-14 pl-2.5 pr-1.5 rounded-lg border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden tilt-3d transition-all ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
+                          <button type="button" disabled={loading} onClick={event=>{subjectTrigger.current=event.currentTarget;setSubjectDetail({day:di,period:p})}} aria-label={`${DAYS[di]}요일 ${p}교시 ${subject}${teacher?' · '+teacher+' 선생님':''}${changed?' · 변경된 수업':''}`} title={`${subject}${teacher?' · '+teacher:''}${changed?' · 컴시간 실시간 변경':''}`}
+                            className={`relative w-full h-16 sm:h-14 pl-2 pr-1 rounded-xl border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-1 transition-colors ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
                             <span className={`absolute inset-y-0 left-0 w-1 ${subjectColor(subject).bar}`} />
                             {changed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-amber-500" />}
-                            <span className={`text-xs font-semibold leading-tight line-clamp-1 ${subjectColor(subject).text}`}>{subject}</span>
-                            {teacher && <span className="text-xs text-muted-foreground leading-tight">{teacher}</span>}
-                          </div>
+                            <ResourceStatus value={`${subject}:${teacher}`} className="cb-timetable-subject w-full"><span className="flex w-full min-w-0 flex-col items-center gap-0.5"><span className={`text-xs font-semibold leading-tight line-clamp-2 ${subjectColor(subject).text}`}>{subject}</span>{teacher&&<span className="block w-full truncate text-xs text-muted-foreground leading-tight">{teacher}</span>}</span></ResourceStatus>
+                          </button>
                         ) : (
                           <div className="h-14 rounded-lg bg-muted/10 border border-transparent" />
                         )}
@@ -275,9 +277,10 @@ export default function TimetablePage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div></ResourcePanel>
       )}
-
+      {error&&source!=='manual'&&<InlineFeedback kind="info" message={gridContext?'최신 시간표를 확인하지 못했어요. 표시된 학년·반과 마지막 조회 내역을 확인해 주세요.':'시간표 연결을 확인하지 못했어요. 다시 불러와 주세요.'}/>}
+      <Dialog open={!!subjectDetail} onOpenChange={open=>{if(!open)setSubjectDetail(null)}}><DialogContent className="max-w-sm max-h-[85dvh] overflow-y-auto" onCloseAutoFocus={event=>{event.preventDefault();if(subjectTrigger.current?.isConnected)subjectTrigger.current.focus()}}><DialogHeader><DialogTitle>{detail?.subject||'수업 정보'}</DialogTitle><DialogDescription>{subjectDetail&&`${weekDates[subjectDetail.day]?.fullLabel||''} ${DAYS[subjectDetail.day]}요일 · ${subjectDetail.period}교시`}</DialogDescription></DialogHeader><dl className="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-4 py-2 text-sm"><dt className="text-muted-foreground">학년·반</dt><dd>{gridContext?.grade}학년 {gridContext?.cls}반</dd><dt className="text-muted-foreground">담당 교사</dt><dd className="break-words">{detail?.teacher||'등록된 정보가 없어요'}</dd><dt className="text-muted-foreground">시간표</dt><dd>{source==='manual'?'수동 시간표':freshness?.stale?'마지막 조회 내역':'학교 시간표'}</dd></dl>{detail?.changed&&<InlineFeedback kind="info" message="학교 시간표에서 변경된 수업이에요."/>}{freshness?.stale&&<InlineFeedback kind="info" message="최신 확인이 지연되어 수업이 달라졌을 수 있어요."/>}</DialogContent></Dialog>
       <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
         <span>컴시간 알리미 자동 연동 · 실패 시 수동 데이터 표시{isAdmin && ' · 직접 편집 가능'}</span>
         {source === 'comcigan' && (

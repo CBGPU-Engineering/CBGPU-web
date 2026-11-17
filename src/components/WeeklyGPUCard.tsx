@@ -8,16 +8,18 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import { Badge } from '@/components/ui/badge';
+import { SuccessFeedback } from '@/components/ui/product-motion';
 import { startOfWeek, endOfWeek, addWeeks, format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { CalendarDays, Lock, CheckCircle2, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function WeeklyGPUCard({ id, name }: { id: number; name: string }) {
-  const { showError, showSuccess } = useAlert();
+  const { showError } = useAlert();
   const { isApproved } = useAuth();
   const [selectedWeeks, setSelectedWeeks] = useState<Date[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedRequest, setCompletedRequest] = useState('');
   const [approvedReservations, setApprovedReservations] = useState<any[]>([]);
   const [showSchedule, setShowSchedule] = useState(false);
 
@@ -69,6 +71,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
   };
 
   const handleSubmit = async () => {
+    setCompletedRequest('');
     if (!isApproved) {
       showError('학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
     }
@@ -165,7 +168,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
       const { error } = await supabase.from('reservations').insert(records);
       if (error) throw error;
       const totalWeeks = selectedWeeks.length;
-      showSuccess(`GPU #${id} ${totalWeeks}주(${records.length}건) 예약 신청이 완료되었습니다!`);
+      setCompletedRequest(`${totalWeeks}주, ${records.length}건의 신청을 보냈어요. 내 예약에서 처리 상태를 확인해 주세요.`);
       setSelectedWeeks([]);
       fetchApprovedReservations();
     } catch (err: any) {
@@ -176,7 +179,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
   };
 
   return (
-    <Card className="tilt-3d overflow-hidden border-border bg-card hover:border-primary group shadow-lg flex flex-col h-full rounded-2xl">
+    <Card className="overflow-hidden border-border bg-card group shadow-sm flex flex-col h-full rounded-2xl">
       <CardHeader className="p-0 overflow-hidden relative">
         <div className="relative w-full h-32">
           <Image
@@ -184,7 +187,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
             alt="GPU"
             fill
             sizes="(max-width: 768px) 100vw, 400px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover"
           />
         </div>
         <div className="absolute top-2 right-2">
@@ -192,7 +195,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
             variant="secondary"
             size="xs"
             className="text-xs font-semibold h-6 bg-background/80 backdrop-blur-sm shadow-sm"
-            onClick={() => setShowSchedule(!showSchedule)}
+            aria-expanded={showSchedule} aria-label={showSchedule?`GPU ${id} 예약 입력으로 돌아가기`:`GPU ${id} 예약 일정 보기`} onClick={() => setShowSchedule(!showSchedule)}
           >
             {showSchedule ? 'CLOSE SCHEDULE' : 'VIEW CALENDAR'}
           </Button>
@@ -208,10 +211,10 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-bold">GPU #{id}</h3>
-            <p className="text-xs text-muted-foreground font-semibold">RTX5000</p>
+            <p className="text-xs text-muted-foreground font-semibold">{name}</p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <Badge variant="success">Ready</Badge>
+            <Badge variant="muted">주 단위 예약</Badge>
             <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-500/10 text-violet-600 border border-violet-500/20">주 단위 예약</span>
           </div>
         </div>
@@ -252,6 +255,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                 return (
                   <button
                     key={i}
+                    type="button" aria-pressed={isSelected}
                     disabled={taken}
                     onClick={() => !taken && toggleWeek(mon)}
                     className={cn(
@@ -293,6 +297,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
         )}
       </CardContent>
 
+      {completedRequest&&<div className="px-4 pb-4"><SuccessFeedback compact title="예약 신청을 보냈어요" description={completedRequest}><a href="#my-gpu-reservations" className="text-sm font-semibold text-primary">내 예약에서 처리 상태 확인하기</a></SuccessFeedback></div>}
       <CardFooter className="p-4 pt-0">
         <Button
           onClick={handleSubmit}

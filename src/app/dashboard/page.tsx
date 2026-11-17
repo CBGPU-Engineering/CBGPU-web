@@ -1,7 +1,7 @@
 'use client';
 
 import GpuQueueHint from '@/components/ai/GpuQueueHint';
-import { useEffect, useState, Fragment } from 'react';
+import { useEffect, useState, useRef, Fragment } from 'react';
 import { supabase } from '@/lib/supabase';
 import { fetchGpuEndpoints, FALLBACK_GPU_ENDPOINTS, type GpuEndpoint } from '@/lib/gpuEndpoints';
 import GPUCard from '@/components/GPUCard';
@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/useAuth';
 import { useAlert } from '@/lib/alert';
 import { RefreshCw, Trash2, Copy, Key, AlertTriangle, StopCircle, Bell, BellOff, Download, Wifi, WifiOff, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import { ResourceSelection, ResourcePanel, ResourceStatus } from '@/components/ui/resource-motion';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import {
@@ -36,13 +36,16 @@ export default function Dashboard() {
   const [myReservations, setMyReservations] = useState<any[]>([]);
   const [gpuPasswords, setGpuPasswords] = useState<{[key: number]: string}>({});
   const [loading, setLoading] = useState(true);
-  const [justFinished, setJustFinished] = useState(false);
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [selectedRes, setSelectedRes] = useState<any>(null);
   const [cancelTarget, setCancelTarget] = useState<{ id: string; status: string } | null>(null);
   const [endTarget, setEndTarget] = useState<string | null>(null);
   const [endpoints, setEndpoints] = useState<GpuEndpoint[]>(FALLBACK_GPU_ENDPOINTS);
-  const [gpuStatus, setGpuStatus] = useState<Record<number, 'online'|'offline'|'checking'>>({1:'checking',2:'checking',3:'checking',4:'checking'});
+  const [gpuStatus, setGpuStatus] = useState<Record<number, 'online'|'offline'|'checking'|'unknown'>>({1:'checking',2:'checking',3:'checking',4:'checking'});
+  const [statusRefreshing, setStatusRefreshing] = useState(false);
+  const statusRequest = useRef(0);
+  const [statusCheckedAt, setStatusCheckedAt] = useState('');
   const [notifPerm, setNotifPerm] = useState<NotificationPermission>('default');
   const [statsData, setStatsData] = useState<{gpu_id: number; hours: number}[]>([]);
 
@@ -53,7 +56,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [clientToday, setClientToday] = useState<Date | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
-  const [calendarJustFinished, setCalendarJustFinished] = useState(false);
+
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -65,17 +68,18 @@ export default function Dashboard() {
   // 캘린더에 보이는 달(그리드 범위)만 가져온다 — 예약이 쌓일수록 전체를 매번
   // 긁어오면 느려지고, 어차피 화면엔 이 범위 밖 데이터는 쓰이지 않는다.
   useEffect(() => {
+    let current = true;
     const fetchCalendar = async () => {
       setCalendarLoading(true);
       const { data } = await supabase.rpc('get_gpu_reservation_schedule', {
         p_from: gridStart.toISOString(), p_to: gridEnd.toISOString(), p_gpu_id: null,
       });
-      if (data) setCalendarReservations(data);
+      if (!current) return;
+      setCalendarReservations(data ?? []);
       setCalendarLoading(false);
-      setCalendarJustFinished(true);
-      setTimeout(() => setCalendarJustFinished(false), 600);
     };
-    fetchCalendar();
+    void fetchCalendar();
+    return () => { current = false; };
   }, [gridStart.getTime(), gridEnd.getTime()]);
   const calendarDays: Date[] = [];
   for (let cursor = gridStart; cursor <= gridEnd; cursor = addDays(cursor, 1)) calendarDays.push(cursor);
@@ -142,8 +146,6 @@ export default function Dashboard() {
 
     if (!error) setMyReservations(data || []);
     setLoading(false);
-    setJustFinished(true);
-    setTimeout(() => setJustFinished(false), 600);
   };
 
   const handleCancel = async () => {
@@ -181,21 +183,27 @@ export default function Dashboard() {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    showSuccess("클립보드에 복사됐습니다.");
+  const copyToClipboard = async (text: string) => {
+    try { await navigator.clipboard.writeText(text); showSuccess("클립보드에 복사됐습니다."); }
+    catch { showError("복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해주세요."); }
   };
 
   // ── GPU 실시간 상태 ──────────────────────────────────────────────────────────
   const checkGpuStatus = async () => {
-    setGpuStatus({1:'checking',2:'checking',3:'checking',4:'checking'});
+    const request = ++statusRequest.current;
+    setStatusRefreshing(true);
     try {
       const res = await fetch('/api/gpu-status');
+      if (!res.ok) throw new Error('GPU status unavailable');
       const data = await res.json();
-      const map: Record<number, 'online'|'offline'> = {};
-      data.gpus.forEach((g: {id:number;status:'online'|'offline'}) => { map[g.id] = g.status; });
+      if (!Array.isArray(data.gpus)) throw new Error('GPU status unavailable');
+      const map: Record<number, 'online'|'offline'|'unknown'> = {1:'unknown',2:'unknown',3:'unknown',4:'unknown'};
+      for (const gpu of data.gpus) if ([1,2,3,4].includes(gpu.id) && ['online','offline'].includes(gpu.status)) map[gpu.id]=gpu.status;
+      if (request !== statusRequest.current) return;
       setGpuStatus(map);
-    } catch { setGpuStatus({1:'offline',2:'offline',3:'offline',4:'offline'}); }
+      setStatusCheckedAt(typeof data.checkedAt==='string'?data.checkedAt:'');
+    } catch { if (request === statusRequest.current) { setGpuStatus({1:'unknown',2:'unknown',3:'unknown',4:'unknown'});setStatusCheckedAt(''); } }
+    finally { if (request === statusRequest.current) setStatusRefreshing(false); }
   };
 
   // ── iCal 내보내기 ──────────────────────────────────────────────────────────
@@ -290,60 +298,41 @@ export default function Dashboard() {
             {[1,2,3,4].map(id => {
               const st = gpuStatus[id];
               return (
-                <div key={id} className="flex items-center gap-1.5 px-2.5 py-1 bg-muted rounded-lg border border-border/40">
-                  {st === 'checking'
-                    ? <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-                    : st === 'online'
-                    ? <Wifi className="size-3 text-green-500" />
-                    : <WifiOff className="size-3 text-destructive" />
-                  }
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    GPU{id} {st === 'checking' ? '...' : st === 'online' ? 'ON' : 'OFF'}
-                  </span>
-                </div>
+                <ResourceStatus key={id} value={st||'unknown'} className="inline-flex items-center gap-1.5 px-2.5 py-2 bg-muted rounded-xl border border-border/40">
+                  {st === 'online' ? <Wifi className="size-3 text-emerald-600" aria-hidden="true"/> : st === 'offline' ? <WifiOff className="size-3 text-destructive" aria-hidden="true"/> : <span className="size-2 rounded-full bg-muted-foreground/50" aria-hidden="true"/>}
+                  <span className="text-xs font-semibold text-muted-foreground">GPU {id} · {st==='checking'?'확인 중':st==='online'?'연결됨':st==='offline'?'연결 끊김':'확인 불가'}</span>
+                </ResourceStatus>
               );
             })}
-            <Button variant="ghost" size="icon" className="size-7" onClick={checkGpuStatus} title="새로고침">
-              <RefreshCw className="size-3" />
+            <Button variant="ghost" size="icon" className="min-h-11 min-w-11" onClick={checkGpuStatus} disabled={statusRefreshing} aria-label="GPU 연결 상태 새로고침">
+              <RefreshCw className={cn("size-4",statusRefreshing&&"animate-spin motion-reduce:animate-none")} />
             </Button>
           </div>
         </div>
 
+        <p className="mb-5 -mt-3 text-xs text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인하세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
         {/* 전체 GPU 예약 현황 캘린더 — 구 /schedule, 누구나 볼 수 있게 항상 공개 */}
-        {calendarLoading || calendarJustFinished ? (
+        {calendarLoading ? (
           <div className="py-16 flex items-center justify-center">
-            <LoadingSpinner done={calendarJustFinished} size={56} label="예약 현황 불러오는 중" />
+            <LoadingSpinner size={56} label="예약 현황 불러오는 중" />
           </div>
         ) : (
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="w-full md:flex-1 md:min-w-0 border rounded-2xl overflow-hidden bg-card shadow-sm">
               <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b">
-                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                <Button variant="ghost" size="icon" aria-label="이전 달 예약 보기" onClick={() => {setSelectedDay(null);setCurrentMonth(subMonths(currentMonth, 1))}}>
                   <ChevronLeft className="size-4" />
                 </Button>
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <CalendarDays className="size-4 opacity-50" />
                   {format(currentMonth, 'yyyy년 M월', { locale: ko })}
                 </h2>
-                <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                <Button variant="ghost" size="icon" aria-label="다음 달 예약 보기" onClick={() => {setSelectedDay(null);setCurrentMonth(addMonths(currentMonth, 1))}}>
                   <ChevronRight className="size-4" />
                 </Button>
               </div>
 
-              <div className="flex flex-wrap gap-2 px-4 md:px-6 py-2 border-b bg-muted/20">
-                {[1, 2, 3, 4].map(id => (
-                  <button
-                    key={id}
-                    onClick={() => setSelectedGpuId(id)}
-                    className={cn('flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border transition-all',
-                      GPU_COLORS[id].bg, GPU_COLORS[id].text, GPU_COLORS[id].border,
-                      selectedGpuId === id && 'ring-2 ring-offset-1 ring-primary/40')}
-                  >
-                    <span className={cn('size-1.5 rounded-full', GPU_COLORS[id].dot)} />
-                    GPU #{id}
-                  </button>
-                ))}
-              </div>
+              <div className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 border-b bg-muted/20"><span className="text-xs font-medium text-muted-foreground">예약할 GPU</span><ResourceSelection label="캘린더에서 예약할 GPU 선택" value={String(selectedGpuId)} onChange={value=>setSelectedGpuId(Number(value))} items={[1,2,3,4].map(id=>({value:String(id),label:<span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={cn('size-1.5 rounded-full',GPU_COLORS[id].dot)}/>#{id}</span>}))}/></div>
 
               <div className="grid grid-cols-7 border-b">
                 {WEEKDAYS.map(d => (
@@ -448,16 +437,16 @@ export default function Dashboard() {
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">예약하기</h2>
             <p className="text-xs text-muted-foreground font-bold">GPU를 선택하고 예약을 신청하세요</p>
           </div>
-          <SegmentedTabs
+          <ResourceSelection label="GPU 예약 선택"
             items={[1,2,3,4].map(id => ({ value: String(id), label: `GPU #${id}` }))}
             value={String(selectedGpuId)}
             onChange={(v) => setSelectedGpuId(Number(v))}
           />
-          <div>
+          <ResourcePanel value={selectedGpuId}>
             {selectedGpuId === 1
               ? <GPUCard key={1} id={1} name="RTX5000" />
               : <WeeklyGPUCard key={selectedGpuId} id={selectedGpuId} name="RTX5000" />}
-          </div>
+          </ResourcePanel>
         </div>
 
       {!user ? (
@@ -466,7 +455,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Please sign in to view your reservations.</p>
         </div>
       ) : (
-      <div className="flex-1 min-w-0">
+      <div id="my-gpu-reservations" className="flex-1 min-w-0 scroll-mt-24">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex flex-col">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">My Reservations</h2>
@@ -519,9 +508,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {loading || justFinished ? (
+        {loading ? (
           <div className="py-16 flex items-center justify-center">
-            <LoadingSpinner done={justFinished} size={56} label="예약 내역 불러오는 중" />
+            <LoadingSpinner size={56} label="예약 내역 불러오는 중" />
           </div>
         ) : myReservations.length === 0 ? (
           <div className="text-center py-20 border border-dashed rounded-2xl text-muted-foreground transition-colors duration-500 font-medium bg-muted/10 pop-in-3d">

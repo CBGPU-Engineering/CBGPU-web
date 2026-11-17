@@ -16,7 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { SegmentedTabs } from '@/components/ui/segmented-tabs';
+import {ResourceStatus,ResourceSelection} from '@/components/ui/resource-motion';
+import {EmptyState} from '@/components/ui/product-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   ArrowLeft, RotateCcw, Trash2, Globe, School, Lock,
@@ -67,15 +68,17 @@ export default function ServerDetailPage() {
   useEffect(()=>{if(!user||!id)return;let alive=true;void serverDomains().then(data=>{const slug=data.domains?.find(d=>d.project_id===id)?.slug||('server-'+id.slice(0,8));if(alive){setDomainSlug(slug);setDomainDraft(slug)}}).catch(()=>{});return()=>{alive=false}},[id,user]);
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing,setRefreshing]=useState(false),[requestError,setRequestError]=useState('');
   const [redeployOpen, setRedeployOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<RedeployForm | null>(null);
 
   const fetchProject = async () => {
+    setRefreshing(true);setRequestError('');
     const {data,error}=await serverProjectRequest(id);
-    if (error) { showError('프로젝트를 찾을 수 없습니다.'); router.push('/server'); return; }
-    setProject(data);
+    if (error||!data) {setRequestError('프로젝트 정보를 불러오지 못했어요. 연결과 접근 권한을 확인한 뒤 다시 불러와 주세요.');setRefreshing(false);setLoading(false);return;}
+    setProject(data);setRefreshing(false);
     setLoading(false);
   };
 
@@ -185,6 +188,7 @@ export default function ServerDetailPage() {
     );
   }
 
+  if(requestError)return <div className="cb-page-content py-10 max-w-xl mx-auto"><EmptyState kind="project" title="프로젝트를 확인할 수 없어요" description={requestError} action={<div className="flex flex-wrap justify-center gap-2"><Button onClick={()=>void fetchProject()}>다시 불러오기</Button><Button variant="outline" onClick={()=>router.push('/server')}>프로젝트 목록</Button></div>}/></div>;
   if (!project) return null;
 
   const isCompose=project.env_vars?.CBGPU_DEPLOY_ENGINE==='compose';
@@ -205,7 +209,7 @@ export default function ServerDetailPage() {
 
   const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: string }> = {
     pending:  { icon: <Clock className="size-4" />,         variant: 'warning', label: 'Queued — 배포 대기 중' },
-    approved: { icon: <CheckCircle2 className="size-4" />,  variant: 'success', label: isRunning ? '배포 완료' : 'Deploying — 배포 준비 중' },
+    approved: { icon: <CheckCircle2 className="size-4" />,  variant: 'success', label: isRunning ? '최근 배포 완료' : 'Deploying — 배포 준비 중' },
     rejected: { icon: <XCircle className="size-4" />,       variant: 'danger',  label: 'Rejected' },
     deleted:  { icon: <Trash2 className="size-4" />,        variant: 'muted',   label: 'Deleted' },
   };
@@ -228,14 +232,14 @@ export default function ServerDetailPage() {
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
               <h1 className="cb-page-title">{project.name}</h1>
-              <Badge variant={statusInfo.variant as any} icon={statusInfo.icon}>{statusInfo.label}</Badge>
-              {isRunning && <span className="size-2 rounded-full bg-emerald-500 animate-pulse inline-block" />}
+              <ResourceStatus value={`${project.status}:${project.deployed_at||''}`} announce><Badge variant={statusInfo.variant as any} icon={statusInfo.icon}>{statusInfo.label}</Badge></ResourceStatus>
             </div>
             {project.description && (
               <p className="text-sm text-muted-foreground font-bold opacity-70">{project.description}</p>
             )}
           </div>
 
+          <Button variant="ghost" size="icon" className="min-h-11 min-w-11" disabled={refreshing} aria-label="서버 배포 상태 새로고침" onClick={()=>void fetchProject()}><RotateCcw className={refreshing?'size-4 animate-spin motion-reduce:animate-none':'size-4'}/></Button>
           {canManage && project.status !== 'deleted' && (
             <div className="flex items-center gap-2 shrink-0">
               {project.status !== 'deleted' && (
@@ -282,7 +286,7 @@ export default function ServerDetailPage() {
           <p className="text-xs text-muted-foreground mt-2 opacity-60">
             {project.access_scope === 'private' && '※ Tailscale VPN 연결 시에만 접근 가능합니다'}
             {project.access_scope === 'school'  && '※ 교내 네트워크에서 접근 가능합니다'}
-            {project.access_scope === 'public'  && '※ 인터넷 어디서나 접근 가능합니다 (서버가 재시작되면 주소가 바뀔 수 있습니다)'}
+            {project.access_scope === 'public'  && '※ 공개 주소를 통해 인터넷에서 접근할 수 있어요'}
           </p>
         </div>
       )}
@@ -292,7 +296,7 @@ export default function ServerDetailPage() {
         <div className="px-6 py-4 border-b bg-muted/20">
           <p className="font-semibold text-xs">Configuration</p>
         </div>
-        <div className="p-6 grid gap-5">
+        <div className="p-5 sm:p-6 grid min-w-0 gap-5">
           {/* 배포 방식 */}
           <div>
             <label className={labelCls}>Deploy Type</label>
@@ -307,7 +311,7 @@ export default function ServerDetailPage() {
           {project.deploy_type === 'docker' ? (
             <div>
               <label className={labelCls}>Docker Image</label>
-              <code className="font-bold text-sm">{project.docker_image}</code>
+              <code className="block break-all font-medium text-sm">{project.docker_image}</code>
             </div>
           ) : (
             <>
@@ -317,12 +321,12 @@ export default function ServerDetailPage() {
                   href={project.git_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-sm text-primary hover:underline flex items-center gap-1"
+                  className="min-w-0 break-all font-medium text-sm text-primary hover:underline flex items-center gap-1"
                 >
                   {project.git_url} <ExternalLink className="size-3" />
                 </a>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-4">
                 <div>
                   <label className={labelCls}>Branch</label>
                   <span className="font-bold text-sm">{project.git_branch || 'main'}</span>
@@ -333,7 +337,7 @@ export default function ServerDetailPage() {
                 </div>
                 <div>
                   <label className={labelCls}>Root Directory</label><p className="text-sm font-mono mb-4 break-all">{serverRootOf(project)}</p><label className={labelCls}>Run Command</label>
-                  <code className="font-bold text-xs">{project.run_command || '—'}</code>
+                  <code className="block break-all whitespace-pre-wrap font-medium text-xs">{project.run_command || '—'}</code>
                 </div>
               </div>
             </>
@@ -486,7 +490,7 @@ export default function ServerDetailPage() {
 
               <div>
                 <label className={labelCls}>Access Scope</label>
-                <SegmentedTabs
+                <ResourceSelection label="서버 접근 범위 선택"
                   items={[
                     { value: 'private', label: 'Private' },
                     { value: 'school',  label: 'School'  },
