@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useSchoolResourcePermission, useSchoolResourceScope } from '@/components/schools/SchoolResourceScope';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Loader2, Tag, UploadCloud, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -90,6 +91,9 @@ async function putFile(url: string, file: File, onProgress: (ratio: number) => v
 export default function NewMaterialPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const scope = useSchoolResourceScope();
+  const storagePermission = useSchoolResourcePermission('school_storage');
+  const uploadAttempt = useRef<{id:string;fingerprint:string;file:File}|null>(null);
   const { showError, showSuccess } = useAlert();
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -120,22 +124,35 @@ export default function NewMaterialPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('로그인이 필요합니다.');
+      if (session.user.id !== user.id) throw new Error('로그인 계정이 변경됐습니다. 다시 시도해 주세요.');
+      const selectedSchool = scope.current?.school_id;
+      if (storagePermission.enabled && (!selectedSchool || !(await storagePermission.verify()))) throw new Error('선택한 학교의 자료 공유 권한이 없거나 만료됐습니다.');
       // 서버 저장 공간이 부족하면 서버가 본문을 읽기 전에 거절해 브라우저에는 연결 오류로만 보인다. 미리 확인해 이유를 알려준다.
       const quota = await fetchMaterialsJson<MaterialsQuota>('/materials/quota').catch(() => null);
       if (quota && file.size > quota.remaining_bytes) {
         throw new Error(`자료 공유 저장 공간이 부족합니다. (남은 공간 ${fileSize(quota.remaining_bytes)}) 관리자에게 문의해 주세요.`);
       }
-      const { data, error } = await supabase.from('shared_materials').insert({
-        uploader_id: user.id, title: title.trim(), tags, file_name: file.name.slice(0, 255),
-        content_type: file.type || 'application/octet-stream', size_bytes: file.size, status: 'pending',
-      }).select('id').single();
-      if (error) throw error;
-      materialId = data.id;
+      if (storagePermission.enabled) {
+        const fingerprint = JSON.stringify([user.id, selectedSchool, title.trim(), tags, file.name, file.size, file.lastModified]);
+        if (uploadAttempt.current?.fingerprint !== fingerprint || uploadAttempt.current.file !== file) uploadAttempt.current = {id:crypto.randomUUID(), fingerprint, file};
+        const response = await fetch(`${API_BASE}/materials`, {method:'POST', headers:{Authorization:`Bearer ${session.access_token}`, 'Content-Type':'application/json', 'X-CBGPU-School-Id':selectedSchool!}, body:JSON.stringify({upload_id:uploadAttempt.current.id, title:title.trim(), tags, file_name:file.name.slice(0,255), content_type:file.type || 'application/octet-stream', size_bytes:file.size})});
+        const saved = await response.json().catch(()=>null);
+        if (!response.ok) throw new Error(typeof saved?.detail === 'string' ? saved.detail : '업로드 권한을 확인하지 못했습니다.');
+        if (!saved?.id || saved.school_id !== selectedSchool || saved.access_scope !== 'SCHOOL') throw new Error('업로드 학교를 확인하지 못했습니다.');
+        materialId = saved.id;
+      } else {
+        const { data, error } = await supabase.from('shared_materials').insert({
+          uploader_id: user.id, title: title.trim(), tags, file_name: file.name.slice(0, 255),
+          content_type: file.type || 'application/octet-stream', size_bytes: file.size, status: 'pending',
+        }).select('id').single();
+        if (error) throw error;
+        materialId = data.id;
+      }
       await putFile(`${API_BASE}/materials/${materialId}`, file, setProgress);
       showSuccess('자료가 공유됐습니다.');
       router.push('/materials');
     } catch (error) {
-      if (materialId) {
+      if (materialId && !storagePermission.enabled) {
         // The server may finish an upload even if the response is lost.
         const { data } = await supabase.from('shared_materials').select('status').eq('id', materialId).maybeSingle();
         if (data?.status === 'ready') {
@@ -158,6 +175,7 @@ export default function NewMaterialPage() {
   }
 
   return <section className="cb-page-content mx-auto max-w-2xl space-y-8 px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서만 공유됩니다. 임시 권한이 끝나도 본인 업로드 기록은 유지됩니다.' : storagePermission.reason}</p></div>}
     <div className="flex items-center gap-4">
       <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
         <ArrowLeft className="size-4" />
@@ -209,7 +227,7 @@ export default function NewMaterialPage() {
 
       <div className="flex gap-3">
         <Button type="button" variant="outline" className="h-11 flex-1 font-bold" disabled={uploading} onClick={() => router.push('/materials')}>취소</Button>
-        <Button type="submit" className="h-11 flex-1 gap-2 font-bold" disabled={uploading || !title.trim() || !file}>
+        <Button type="submit" className="h-11 flex-1 gap-2 font-bold" disabled={uploading || !title.trim() || !file || (storagePermission.enabled && !storagePermission.allowed)}>
           {uploading ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}{uploading ? `올리는 중 ${Math.round(progress * 100)}%` : '자료 공유하기'}
         </Button>
       </div>
