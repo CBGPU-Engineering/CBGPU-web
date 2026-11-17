@@ -11,9 +11,11 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       // The browser's URL will contain the code if it's a redirect from Supabase
-      const { error } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       if (!error) {
-        router.push('/');
+        const request=data.session?.user.user_metadata;
+        const target=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?(request?.school_setup_request===true?'/schools/new':request?.school_join_request?'/schools':'/'):'/';
+        router.push(target);
       } else {
         console.error('Auth callback error:', error);
         router.push('/auth/login');

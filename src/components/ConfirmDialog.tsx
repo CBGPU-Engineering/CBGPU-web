@@ -4,6 +4,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {managementChromeEnglish} from '@/lib/managementChrome';
 
 interface Props {
   open: boolean;
@@ -26,7 +27,7 @@ export default function ConfirmDialog({
   onCancel,
   onClosed,
 }: Props) {
-  const english = typeof window !== 'undefined' && ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname);
+  const english = managementChromeEnglish();
   return (
     <Dialog open={open} onOpenChange={o => !o && onCancel()}>
       <DialogContent className="max-w-sm" onExitComplete={onClosed}>

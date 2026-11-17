@@ -1,0 +1,3 @@
+/** Styling/language only. Never use this DOM marker as an authorization decision. */
+export function managementChromeEnglish(){return typeof document!=='undefined'&&(!!document.querySelector('.cb-school-scoped-shell')||['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname))}
+export function managementPortalContainer(){if(typeof document==='undefined')return undefined;return document.querySelector<HTMLElement>('.cb-school-scoped-shell')??(managementChromeEnglish()?document.querySelector<HTMLElement>('.admin-developer-shell')??undefined:undefined)}

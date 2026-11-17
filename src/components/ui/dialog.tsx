@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 import {AnimatePresence,motion,useReducedMotion} from "motion/react"
 import {productSpring} from "@/lib/motion"
+import {managementChromeEnglish,managementPortalContainer} from "@/lib/managementChrome"
 const DialogState=React.createContext(false)
 
 function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -25,7 +26,7 @@ function DialogTrigger({
 function DialogPortal({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" container={typeof document!=="undefined"&&['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname)?document.querySelector<HTMLElement>(".admin-developer-shell")??undefined:undefined} {...props} />
+  return <DialogPrimitive.Portal data-slot="dialog-portal" container={managementPortalContainer()} {...props} />
 }
 
 function DialogClose({
@@ -84,7 +85,7 @@ function DialogContent({
             >
               <XIcon
               />
-              <span className="sr-only">{typeof window!=="undefined" && ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname) ? "Close" : "닫기"}</span>
+              <span className="sr-only">{managementChromeEnglish() ? "Close" : "닫기"}</span>
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -125,7 +126,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">{typeof window!=="undefined" && ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname) ? "Close" : "닫기"}</Button>
+          <Button variant="outline">{managementChromeEnglish() ? "Close" : "닫기"}</Button>
         </DialogPrimitive.Close>
       )}
     </div>

@@ -10,6 +10,7 @@ import './globals.css';
 // system-ui가 고정폭 글꼴인 환경에서는 사이트 전체가 고정폭으로 보인다. (SIL OFL 1.1 — fonts/PRETENDARD-OFL.txt)
 const pretendard = localFont({ src: './fonts/PretendardVariable.woff2', variable: '--font-pretendard', weight: '45 920', display: 'swap', fallback: ['Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', 'Roboto', 'sans-serif'] });
 import AdminShell from '@/components/AdminShell';
+import ScopedSchoolAdminShell from '@/components/schools/ScopedSchoolAdminShell';
 import ManufacturingShell from '@/components/manufacturing/ManufacturingShell';
 import MainSiteFrame from '@/components/workspaces/MainSiteFrame';
 import WorkspaceShell from '@/components/workspaces/WorkspaceShell';
@@ -91,6 +92,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const savedMode=requestHeaders.get('x-cbgpu-mode');
   const appSite=host==='app.cbgpu.com'||requestHeaders.get('x-cbgpu-app')==='1';
 
+  const schoolAdminPage=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&/^\/schools\/[A-Za-z0-9_-]{1,100}\/admin$/.test(requestHeaders.get('x-cbgpu-path')||'');
   const adminSite = host === 'admin.cbgpu.com';
   const appWebView=/;\s*wv\)/.test(requestHeaders.get('user-agent')||'');
   const manufacturingSite=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host||'');
@@ -99,7 +101,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publicSite = section === 'docs' || section === 'arxiv' || host === 'docs.cbgpu.com' || host === 'arxiv.cbgpu.com';
 
   return (
-    <html lang={adminSite||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
+    <html lang={adminSite||schoolAdminPage||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
       <head>
         {portalGate&&<script dangerouslySetInnerHTML={{ __html: 'window.__CBGPU_PORTAL_GATE=true' }} />}
         {process.env.CBGPU_DEMO!=='1'&&<link rel="preconnect" href="https://cdn.jsdelivr.net" />}
@@ -113,15 +115,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-3 focus:text-primary-foreground">본문으로 건너뛰기</a>
         <ThemeProvider
           attribute="class"
-          storageKey={adminSite||manufacturingSite?"cbgpu-developer-theme":"theme"}
+          storageKey={adminSite||schoolAdminPage||manufacturingSite?"cbgpu-developer-theme":"theme"}
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
-            <ProductExperienceProvider><AlertProvider english={adminSite||manufacturingSite}>
-              {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
+            <ProductExperienceProvider><AlertProvider english={adminSite||schoolAdminPage||manufacturingSite}>
+              {schoolAdminPage ? <ScopedSchoolAdminShell><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}

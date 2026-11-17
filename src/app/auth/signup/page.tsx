@@ -12,7 +12,9 @@ import {Eye,EyeOff} from 'lucide-react';
 import {AuthFrame,AuthSubmit} from '@/components/auth/AuthFrame';
 import {InlineFeedback,SuccessFeedback} from '@/components/ui/product-motion';
 import {authErrorMessage} from '@/lib/authCopy';
-export default function Signup(){
+import MultiSchoolSignup from '@/components/schools/MultiSchoolSignup';
+export default function Signup(){return process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?<MultiSchoolSignup/>:<LegacySignup/>}
+function LegacySignup(){
  const[email,setEmail]=useState(''),[password,setPassword]=useState(''),[studentId,setStudentId]=useState(''),[fullName,setFullName]=useState(''),[showPassword,setShowPassword]=useState(false),[busy,setBusy]=useState(false),[sent,setSent]=useState(false),[error,setError]=useState(''),[studentTouched,setStudentTouched]=useState(false);
  const{showSuccess}=useAlert(),router=useRouter();const studentError=studentTouched&&!isValidStudentId(studentId);
  async function signup(event:React.FormEvent<HTMLFormElement>){event.preventDefault();if(busy)return;setStudentTouched(true);if(!isValidStudentId(studentId)){document.getElementById('signup-student')?.focus();return}setBusy(true);setError('');try{const result=await supabase.auth.signUp({email:email.trim(),password,options:{data:{full_name:fullName.trim(),student_id:studentId},emailRedirectTo:getURL()+'auth/callback'}});if(result.error){setError(authErrorMessage(result.error,'signup'));return}if(result.data.session){showSuccess('계정을 만들었어요. CBGPU를 시작해 보세요.');router.push('/')}else setSent(true)}catch{setError('연결을 확인하고 다시 시도해 주세요. 입력한 내용은 그대로 두었어요.')}finally{setBusy(false)}}
