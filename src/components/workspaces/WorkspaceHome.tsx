@@ -17,7 +17,6 @@ import {serverProjectRequest,deploymentApi} from '@/lib/deploymentApi';
 import DailyBriefing from '@/components/DailyBriefing';
 import ServiceDirectory from '@/components/services/ServiceDirectory';
 import HomeAiSearch from './HomeAiSearch';
-import KakaoHomeAd from '@/components/ads/KakaoHomeAd';
 import './discovery-home.css';
 type Reservation={id:string;gpu_id:number;start_time:string;end_time:string;status:string};
 type Project={id:string;name:string;phase:string};
@@ -25,7 +24,7 @@ const services=serviceGroups.flatMap(g=>g.services);
 function subscribeFavorites(callback:()=>void){window.addEventListener('storage',callback);window.addEventListener('cbgpu:favorites',callback);return()=>{window.removeEventListener('storage',callback);window.removeEventListener('cbgpu:favorites',callback)}}
 function savedList(key:string):string[]{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value.filter((item:unknown):item is string=>typeof item==='string').map(item=>item==='/manufacturing'?'/manufacturing/print':item):[]}catch{return[]}}
 export default function WorkspaceHome(){
- const schoolScope=useSchoolScope(),canShow=useSchoolServiceVisibility(),hasGpu=canShow('/dashboard'),schoolKey=schoolScope.status==='legacy'?'legacy':schoolScope.school?.id||'none',showSchoolAds=schoolScope.status==='legacy'||schoolScope.status==='ready'&&schoolScope.school?.ads_enabled===true;
+ const schoolScope=useSchoolScope(),canShow=useSchoolServiceVisibility(),hasGpu=canShow('/dashboard'),schoolKey=schoolScope.status==='legacy'?'legacy':schoolScope.school?.id||'none';
  const greeting=useHomeGreeting(),isApp=useIsAppWorkspace(),mode=useWorkspace(),workspace=workspaces[mode],{user,profile}=useAuth(),owner=user?.id||'guest';
  const [editing,setEditing]=useState(false),[notice,setNotice]=useState('');
  const [work,setWork]=useState<{owner:string;school:string;reservations:Reservation[]|null;projects:Project[]|null;gpuError:boolean;serverError:boolean}|null>(null);
@@ -46,7 +45,6 @@ export default function WorkspaceHome(){
  return <div className="cb-overview cb-refreshed-home cb-audience-design cb-discovery-home">
   <section className="cb-home-hero"><div className="cb-discovery-greeting"><div><p className="cb-home-greeting">{workspace.label}</p><h1>{profile?.full_name?`${profile.full_name}님, ${greeting}`:greeting}</h1><p>{mode==='student'?'오늘 필요한 학교생활, 여기서 바로 시작하세요.':'실험하고, 만들고, 배포하는 일을 한곳에서.'}</p></div>{!isApp&&<AccountEntry/>}</div>{!isApp&&<Link href="/download" data-app-download-link className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-semibold"><Smartphone size={18}/>Android 앱 다운로드<ArrowRight size={15}/></Link>}</section>
   <ServiceDirectory key={mode} audience={mode} isApp={isApp} home searchSlot={<HomeAiSearch/>}/>
-  {showSchoolAds&&<KakaoHomeAd/>}
 
   <section className="cb-home-pins" aria-label="즐겨찾기"><div className="cb-section-heading"><h2><Star size={17}/>즐겨찾기</h2><button onClick={()=>setEditing(value=>!value)} aria-label="즐겨찾기 편집" aria-expanded={editing}>{editing?'편집 완료':'편집'}</button></div><p className="cb-favorites-feedback" role="status" aria-live="polite">{notice}</p>{editing&&<div className="cb-favorites-editor"><p>자주 쓰는 기능을 최대 8개 선택하세요. <strong>{selected.length}/8</strong></p><div>{services.filter(service=>canShow(service.href)&&workspaceServicePaths[mode].includes(service.href)).map(service=><button key={service.href} onClick={()=>toggle(service.href)} aria-pressed={favorites.includes(service.href)} disabled={!favorites.includes(service.href)&&favorites.length>=8}><Star size={14} fill={favorites.includes(service.href)?'currentColor':'none'}/>{service.label}</button>)}</div></div>}<div className="cb-pinned-links">{selected.map(service=><Link key={service.href} href={href(service.href)}><service.icon size={17}/>{service.label}<ArrowRight size={13}/></Link>)}{!selected.length&&<button onClick={()=>setEditing(true)}><Plus size={17}/>즐겨찾기 추가</button>}</div></section>
   {recent.length>0&&<section className="cb-home-recents" aria-label="최근 사용한 기능"><div className="cb-section-heading"><h2><History size={17}/>최근 사용</h2></div><div>{recent.filter(service=>canShow(service.href)&&workspaceServicePaths[mode].includes(service.href)).map(service=><Link key={service.href} href={href(service.href)}><service.icon size={17}/><span>{service.label}</span><ArrowRight size={14}/></Link>)}</div></section>}
