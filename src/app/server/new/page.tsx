@@ -1,4 +1,5 @@
 'use client';
+import{useDeploymentCompute}from'@/lib/useDeploymentCompute';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -84,6 +85,7 @@ const SCOPE_OPTS: { value: AccessScope; label: string; icon: React.ReactNode; de
 
 export default function NewServerPage() {
   const { user, profile, isApproved, isLoading: authLoading } = useAuth();
+  const permission=useDeploymentCompute(),[draftOnly,setDraftOnly]=useState(true);const saveDraft=permission.enabled&&(draftOnly||!permission.canExecute);
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
 
@@ -102,7 +104,7 @@ export default function NewServerPage() {
   const handleSubmit = async () => {
     if (!user) return;
     if (!profile || profile.id !== user.id) { showError('계정 프로필을 확인할 수 없습니다. 새로고침 후 다시 시도하고, 계속되면 관리자에게 문의해 주세요.'); return; }
-    if (!isApproved) { showError('학번 또는 이름 확인이 필요해 배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if (!permission.enabled&&!isApproved) { showError('학번 또는 이름 확인이 필요해 배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
     if (domainName&&!/^[a-z][a-z0-9-]{2,34}$/.test(domainName)) {showError('도메인 이름은 영문 소문자로 시작하는 3~35자 영문·숫자·하이픈으로 입력하세요.');return;}
     if (!form.name.trim())                                         { showError('프로젝트 이름을 입력해주세요.'); return; }
     if (form.deployType === 'docker' && !form.dockerImage.trim()) { showError('Docker 이미지를 입력해주세요.'); return; }
@@ -123,6 +125,7 @@ export default function NewServerPage() {
     if(form.deployType==='compose'){const {CBGPU_RUNTIME_PRESET:unused,...values}=deploymentEnvironment;void unused;deploymentEnvironment={...values,CBGPU_DEPLOY_ENGINE:'compose',CBGPU_COMPOSE_FILE:form.composeFile,CBGPU_GATEWAY_SERVICE:form.gatewayService,CBGPU_STORAGE_GB:form.storageGB};}
     setSubmitting(true);
     const { data:created, error } = await serverProjectRequest(undefined,{
+      ...(permission.enabled?{draft:saveDraft}:{}),
       user_id:        user.id,
       user_email:     user.email,
       name:           form.name.trim(),
@@ -147,8 +150,8 @@ export default function NewServerPage() {
       else if (error.code === '42501') showError('프로젝트 생성 권한을 확인할 수 없습니다. 프로필 승인 상태를 확인해 주세요.');
       else showError('프로젝트 생성 실패: ' + error.message);
     } else {
-      if(domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
-      showSuccess('프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.');
+      if(!saveDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
+      showSuccess(saveDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.');
       router.push('/server');
     }
   };
@@ -182,6 +185,7 @@ export default function NewServerPage() {
 
   return (
     <div className="cb-page-content animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+      {permission.enabled&&<label className="flex items-start gap-3 rounded-2xl border bg-card p-4 text-sm"><input type="checkbox" checked={saveDraft} disabled={!permission.canExecute} onChange={e=>setDraftOnly(e.target.checked)}/><span>프로젝트 초안만 저장<small className="mt-1 block text-muted-foreground">초안은 실행 권한 없이 보관할 수 있어요. 배포에는 충북과학고 서버 실행 권한이 필요해요.</small></span></label>}
       {/* 상단 헤더 */}
       <div className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
@@ -194,7 +198,7 @@ export default function NewServerPage() {
           <div>
             <h1 className="cb-page-title">New Server Project</h1>
             <p className="cb-page-sub mt-1">
-              저장하면 승인 없이 자동 배포를 시작합니다
+              {saveDraft?'초안은 저장하고, 학교 실행 권한이 있을 때 배포할 수 있어요.':'배포를 시작하기 전에 현재 학교 실행 권한을 확인합니다.'}
             </p>
           </div>
         </div>
@@ -212,7 +216,7 @@ export default function NewServerPage() {
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? '생성 중…' : '배포 시작'}
+            {submitting ? '생성 중…' : saveDraft?'프로젝트 초안 저장':'배포 시작'}
           </Button>
         </div>
       </div>
@@ -490,7 +494,7 @@ export default function NewServerPage() {
               취소
             </Button>
             <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? '생성 중…' : '배포 시작'}
+              {submitting ? '생성 중…' : saveDraft?'프로젝트 초안 저장':'배포 시작'}
             </Button>
           </div>
         </div>
