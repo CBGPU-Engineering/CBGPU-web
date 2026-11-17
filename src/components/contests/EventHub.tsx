@@ -1,5 +1,7 @@
 'use client';
 
+import {AnimatePresence,motion,useReducedMotion} from 'motion/react';
+import {useProductFunnel} from '@/lib/useProductFunnel';
 import {Dropdown} from '@/components/ui/dropdown';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {ContestTeamRoster,ContestTeamSettingsEditor} from './ContestTeams';
@@ -24,6 +26,10 @@ const statusClass: Record<EventRegistrationStatus, string> = {
 
 function RegistrationForm({ contest, existing, onSaved, onCancelEdit,now }: { now:number|null;contest: Contest; existing?: EventRegistration | null; onSaved: (entry: EventRegistration) => void; onCancelEdit?: () => void }) {
   const { user, profile } = useAuth();
+  const reduced=useReducedMotion();
+  const funnel=useProductFunnel<{identity:Record<string,never>;questions:Record<string,never>}>({id:`contest-registration-${contest.id}`,initial:{step:'identity',context:{}}});
+  const hasQuestions=contest.registration_questions.length>0;
+
   const { showError, showSuccess } = useAlert();
   const [name, setName] = useState(existing?.attendee_name || profile?.full_name || '');
   const [answers, setAnswers] = useState<Record<string, RegistrationAnswer>>(existing?.answers || {});
@@ -37,6 +43,12 @@ function RegistrationForm({ contest, existing, onSaved, onCancelEdit,now }: { no
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!user || busy || registrationPhase!=='open') return;
+    if(hasQuestions&&funnel.step==='identity'){
+      if(!name.trim())return showError('참가자 이름을 입력해 주세요.');
+      if(!activeExisting&&kind==='team_create'&&!teamName.trim())return showError('팀 이름을 입력해 주세요.');
+      if(!activeExisting&&kind==='team_join'&&!contestTeamJoinCode(joinCode))return showError('올바른 팀 초대 링크 또는 코드를 입력해 주세요.');
+      await funnel.history.push('questions',{});return;
+    }
     for (const question of contest.registration_questions) {
       const answer = answers[question.id];
       if (question.required && (answer === undefined || answer === '' || answer === false || (Array.isArray(answer) && !answer.length))) return showError(`${question.label} 항목에 답해 주세요.`);
@@ -54,13 +66,19 @@ function RegistrationForm({ contest, existing, onSaved, onCancelEdit,now }: { no
       onSaved(data); showSuccess(existing && !['cancelled','declined'].includes(existing.status) ? '참가 신청 정보를 수정했어요.' : data.status === 'confirmed' ? '참가가 확정되었어요!' : data.status === 'pending' ? '참가 신청을 보냈어요.' : '대기 명단에 등록되었어요.');
     } catch (error) { showError(eventError(error)); } finally { setBusy(false); }
   }
-  return <form onSubmit={submit} className="contest-panel space-y-5"><fieldset disabled={busy||registrationPhase!=='open'} className="space-y-5"><div><p className="contest-eyebrow mb-2 text-primary">REGISTRATION</p><h2 className="text-xl font-bold">참가 신청</h2></div>
-    {contest.participation_mode==='team'&&!activeExisting&&<fieldset className="space-y-3 rounded-2xl border p-4"><legend className="px-1 text-sm font-bold">팀 참가 방식 · {contest.team_min_size}–{contest.team_max_size}명</legend><div className="flex flex-wrap gap-3">{([['team_create','새 팀 만들기'],['team_join','초대받은 팀 합류'],...(contest.allow_individual_entries?[['individual','개인 신청 · 랜덤 배정']]:[])] as ['individual'|'team_create'|'team_join',string][]).map(([value,label])=><label key={value} className="flex min-h-10 items-center gap-2 text-sm"><input type="radio" checked={kind===value} onChange={()=>setKind(value)}/>{label}</label>)}</div>{kind==='team_create'&&<label className="block space-y-2 text-sm font-semibold">팀 이름<Input required maxLength={80} value={teamName} onChange={e=>setTeamName(e.target.value)} placeholder="예: 과학하는 친구들"/></label>}{kind==='team_join'&&<label className="block space-y-2 text-sm font-semibold">팀 초대 링크 또는 코드<Input required value={joinCode} onChange={e=>setJoinCode(e.target.value)} placeholder="팀장이 공유한 링크를 붙여 넣으세요"/></label>}<p className="text-xs leading-relaxed text-muted-foreground">{kind==='individual'?'참가 확정 후 신청 마감 시점에 설정된 인원 범위에 맞춰 랜덤 팀에 배정돼요. 인원이 부족하면 배정 대기로 남아요.':'각 팀원이 CBGPU에 로그인하고 직접 신청해야 팀에 포함돼요. 팀 생성 후 내 참가 팀에서 초대 링크를 복사할 수 있어요.'}</p></fieldset>}
+  return <form id="contest-registration" onSubmit={submit} className="contest-panel space-y-5"><fieldset disabled={busy||registrationPhase!=='open'} className="space-y-5"><div><p className="contest-eyebrow mb-2 text-primary">REGISTRATION</p><h2 className="text-xl font-bold">참가 신청</h2></div>
+    {hasQuestions&&<div className="contest-registration-progress" aria-label="신청 단계"><span aria-current={funnel.step==='identity'?'step':undefined}><b>01</b>참가 정보</span><i/><span aria-current={funnel.step==='questions'?'step':undefined}><b>02</b>신청서 작성</span></div>}
+    <AnimatePresence mode="wait" initial={false}><motion.div key={funnel.step} initial={{opacity:0,x:reduced?0:12}} animate={{opacity:1,x:0}} exit={{opacity:0,x:reduced?0:-10}} transition={{duration:reduced?0:.18}} className="space-y-5" onAnimationComplete={()=>{if(funnel.step==='questions')document.querySelector<HTMLElement>('#contest-registration [data-registration-question] :is(textarea,input,select,button)')?.focus({preventScroll:true});}}>
+    {funnel.step==='identity'&&<div className="space-y-5">
+    {contest.participation_mode==='team'&&!activeExisting&&<fieldset className="space-y-3 rounded-2xl border p-4"><legend className="px-1 text-sm font-bold">팀 참가 방식 · {contest.team_min_size}–{contest.team_max_size}명</legend><div className="flex flex-wrap gap-3">{([['team_create','새 팀 만들기'],['team_join','초대받은 팀 합류'],...(contest.allow_individual_entries?[['individual','개인 신청 · 랜덤 배정']]:[])] as ['individual'|'team_create'|'team_join',string][]).map(([value,label])=><label key={value} className="flex min-h-10 items-center gap-2 text-sm"><input type="radio" name={`contest-team-entry-${contest.id}`} checked={kind===value} onChange={()=>setKind(value)}/>{label}</label>)}</div>{kind==='team_create'&&<label className="block space-y-2 text-sm font-semibold">팀 이름<Input required maxLength={80} value={teamName} onChange={e=>setTeamName(e.target.value)} placeholder="예: 과학하는 친구들"/></label>}{kind==='team_join'&&<label className="block space-y-2 text-sm font-semibold">팀 초대 링크 또는 코드<Input required value={joinCode} onChange={e=>setJoinCode(e.target.value)} placeholder="팀장이 공유한 링크를 붙여 넣으세요"/></label>}<p className="text-xs leading-relaxed text-muted-foreground">{kind==='individual'?'참가 확정 후 신청 마감 시점에 설정된 인원 범위에 맞춰 랜덤 팀에 배정돼요. 인원이 부족하면 배정 대기로 남아요.':'각 팀원이 CBGPU에 로그인하고 직접 신청해야 팀에 포함돼요. 팀 생성 후 내 참가 팀에서 초대 링크를 복사할 수 있어요.'}</p></fieldset>}
     <label className="block space-y-2 text-sm font-bold"><span>참가자 이름</span><Input required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>
-    {contest.registration_questions.map(question => <fieldset key={question.id} className="space-y-2"><legend className="mb-2 text-sm font-bold">{question.label}{question.required && <span className="ml-1 text-destructive">*</span>}</legend>
+    </div>}
+    {funnel.step==='questions'&&<div className="contest-registration-summary"><span>참가자</span><strong>{name}</strong><button type="button" onClick={()=>void funnel.history.back()}>수정</button></div>}
+    {funnel.step==='questions'&&contest.registration_questions.map(question => <fieldset data-registration-question key={question.id} className="space-y-2"><legend className="mb-2 text-sm font-bold">{question.label}{question.required && <span className="ml-1 text-destructive">*</span>}</legend>
       {question.type === 'paragraph' ? <textarea className={textareaClass} rows={4} maxLength={2000} required={question.required} value={String(answers[question.id] || '')} onChange={e => update(question.id, e.target.value)} /> : question.type === 'choice' ? <div className="space-y-2">{question.options.map(option => <label key={option} className="flex items-center gap-2 text-sm"><input type="radio" name={question.id} required={question.required} checked={answers[question.id] === option} onChange={() => update(question.id, option)} />{option}</label>)}</div> : question.type === 'checkbox' ? <div className="space-y-2">{question.options.map(option => { const values = Array.isArray(answers[question.id]) ? answers[question.id] as string[] : []; return <label key={option} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={values.includes(option)} onChange={e => update(question.id, e.target.checked ? [...values, option] : values.filter(value => value !== option))} />{option}</label>; })}</div> : question.type === 'terms' ? <label className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm"><input type="checkbox" required={question.required} checked={answers[question.id] === true} onChange={e => update(question.id, e.target.checked)} />{question.label}</label> : <Input required={question.required} maxLength={500} value={String(answers[question.id] || '')} onChange={e => update(question.id, e.target.value)} />}
     </fieldset>)}
-    <div className="flex gap-2">{onCancelEdit && <Button type="button" variant="outline" className="flex-1" onClick={onCancelEdit}>취소</Button>}<Button type="submit" size="lg" className="flex-1" disabled={busy || !name.trim() || registrationPhase!=='open'}><Send />{busy ? '저장 중…' : existing ? ['cancelled','declined'].includes(existing.status) ? '다시 신청하기' : '신청 정보 저장' : contest.approval_required ? '참가 승인 요청하기' : '참가 신청하기'}</Button></div>
+    </motion.div></AnimatePresence>
+    <div className="contest-registration-actions flex gap-2">{funnel.step==='questions'&&<Button type="button" variant="outline" onClick={()=>void funnel.history.back()}>이전</Button>}{onCancelEdit && <Button type="button" variant="outline" className="flex-1" onClick={onCancelEdit}>취소</Button>}<Button type="submit" size="lg" className="flex-1" disabled={busy || !name.trim() || registrationPhase!=='open'}><Send />{busy ? '저장 중…' : hasQuestions&&funnel.step==='identity'?'다음 · 신청서 작성':existing ? ['cancelled','declined'].includes(existing.status) ? '다시 신청하기' : '신청 정보 저장' : contest.approval_required ? '참가 승인 요청하기' : '참가 신청하기'}</Button></div>
   </fieldset></form>;
 }
 
@@ -68,14 +86,14 @@ function GuestTicket({ contest, registration, access, onCancelled, onEdit }: { c
   const { showError, showSuccess, confirm } = useAlert();
   const [busy, setBusy] = useState(false);
   const confirmed = registration.status === 'confirmed';
-  return <section className="contest-panel space-y-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="contest-eyebrow mb-2 text-primary">MY REGISTRATION</p><h2 className="text-xl font-bold">{registration.attendee_name}</h2></div><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${statusClass[registration.status]}`}>{REGISTRATION_STATUS_LABELS[registration.status]}</span></div>
+  return <motion.section initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:260,damping:27}} className="contest-panel contest-ticket-panel space-y-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="contest-eyebrow mb-2 text-primary">MY REGISTRATION</p><h2 className="text-xl font-bold">{registration.attendee_name}</h2></div><span className={`rounded-full px-3 py-1.5 text-xs font-bold ${statusClass[registration.status]}`}>{REGISTRATION_STATUS_LABELS[registration.status]}</span></div>
     {registration.status === 'pending' && <p className="text-sm text-muted-foreground">호스트가 신청 내용을 확인하고 있어요. 승인되면 QR 티켓과 온라인 접속 링크가 열립니다.</p>}
     {registration.status === 'waitlisted' && <p className="text-sm text-muted-foreground">정원이 차서 대기 명단에 등록됐어요. 자리가 생기면 호스트가 참가를 확정할 수 있어요.</p>}
     {confirmed && <div className="grid gap-5 sm:grid-cols-[180px_1fr] sm:items-center"><div className="mx-auto rounded-2xl border bg-white p-3"><QRCodeSVG value={`cbgpu:event:${contest.id}:${registration.ticket_code}`} size={150} level="M" /></div><div className="space-y-3"><h3 className="flex items-center gap-2 font-bold"><TicketCheck className="size-5 text-primary" />체크인 QR 티켓</h3><p className="text-sm text-muted-foreground">행사 입장 시 운영진에게 이 QR을 보여주세요.</p>{registration.checked_in_at && <p className="text-sm font-semibold text-emerald-600">{formatContestDate(registration.checked_in_at)} 체크인 완료</p>}</div></div>}
     {confirmed && access?.meeting_url && <a href={access.meeting_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-2xl border bg-primary/5 p-4 text-sm font-bold text-primary">온라인 행사 입장하기<ExternalLink className="size-4" /></a>}
     {confirmed && access?.access_note && <p className="whitespace-pre-wrap rounded-lg bg-muted/50 p-4 text-sm">{access.access_note}</p>}
     <div className="flex flex-wrap gap-2"><Button type="button" variant="outline" onClick={onEdit}>{['declined','cancelled'].includes(registration.status) ? '다시 신청' : '신청 정보 수정'}</Button>{!['declined', 'cancelled'].includes(registration.status) && <Button type="button" variant="ghost" disabled={busy} onClick={async () => { if (!await confirm({ title: '참가 신청을 취소할까요?', message: '취소하면 다시 신청해야 해요.', confirmLabel: '신청 취소', cancelLabel: '닫기' })) return; setBusy(true); try { const { error } = await supabase.from('event_registrations').update({ status: 'cancelled' }).eq('id', registration.id); if (error) throw error;window.dispatchEvent(new Event('cbgpu:contest-registration')); showSuccess('참가 신청을 취소했어요.'); onCancelled(); } catch (error) { showError(eventError(error)); } finally { setBusy(false); } }}><CircleX />신청 취소</Button>}</div>
-  </section>;
+  </motion.section>;
 }
 
 function exportGuests(contest: Contest, registrations: EventRegistration[]) {

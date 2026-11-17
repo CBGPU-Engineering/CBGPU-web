@@ -1,7 +1,7 @@
 'use client';
 import ContestMarkdown from '@/components/contests/ContestMarkdown';
 import ContestPresentationEditor from '@/components/contests/ContestPresentationEditor';
-import {contestImageUrl} from '@/lib/contestPresentation';
+import {ContestArtwork} from '@/components/contests/ContestArtwork';
 
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -270,7 +270,10 @@ export default function ContestDetailPage() {
   const ownSubmission = submissions.find(entry => ownTeam?entry.team_id===ownTeam.id:entry.user_id===user?.id) || null;
   return <div className="contest-page mx-auto max-w-6xl space-y-7">
     <Link href="/contests" className="inline-flex items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4" />대회 목록</Link>
-    {contest.banner_path&&<img src={contestImageUrl(contest.banner_path)!} alt={`${contest.title} 배너`} className="aspect-[16/5] w-full rounded-2xl border object-cover"/>}<header className="contest-hero"><div className="flex flex-col gap-6 sm:flex-row sm:items-center"><ContestLogo path={contest.logo_path} title={contest.title} className="contest-logo-large" /><div className="min-w-0 flex-1"><p className="contest-eyebrow mb-3">{isHost ? '호스트 · 대회 관리' : '참가자 · 제출하기'}</p><h1 className="break-words text-3xl font-bold tracking-tight sm:text-4xl">{contest.title}</h1><div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-white/60"><span className="flex items-center gap-1.5"><Layers3 className="size-3.5" />제출 항목 {contest.fields.length}개</span><span className="flex items-center gap-1.5"><ShieldCheck className="size-3.5" />{contest.participation_mode==='team'?'팀원과 호스트에게만 공개':'본인과 호스트에게만 공개'}</span></div></div></div></header>
+    <header className="contest-detail-hero">
+      <div className="contest-detail-art" data-contest-detail-art={contest.id}><ContestArtwork id={contest.id} banner={contest.banner_path}/></div>
+      <div className="contest-detail-hero-body"><div className="contest-detail-identity"><ContestLogo path={contest.logo_path} title={contest.title} className="contest-logo-large"/><div className="min-w-0"><p className="contest-eyebrow">{isHost?'HOST WORKSPACE':'YOUR NEXT CHALLENGE'}</p><h1>{contest.title}</h1></div></div><div className="contest-detail-tags"><span><Layers3 className="size-3.5"/>제출 항목 {contest.fields.length}개</span><span><Users className="size-3.5"/>{contest.participation_mode==='team'?`팀 ${contest.team_min_size}–${contest.team_max_size}명`:'개인 참가'}</span><span><ShieldCheck className="size-3.5"/>{contest.participation_mode==='team'?'팀원과 호스트에게만 제출물 공개':'본인과 호스트에게만 제출물 공개'}</span></div></div>
+    </header>
     {contest.description&&<section className="contest-panel"><ContestMarkdown>{contest.description}</ContestMarkdown></section>}
     {canManage&&<ContestPresentationEditor contest={contest} onUpdated={setContest}/>}
     <div className="contest-detail-layout">

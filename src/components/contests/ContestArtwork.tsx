@@ -1,0 +1,11 @@
+'use client';
+import Image from 'next/image';
+import { useState } from 'react';
+import { contestImageUrl } from '@/lib/contestPresentation';
+/** Original scalable artwork, not a remote stock image or placeholder network request. */
+export function ContestArtwork({id,banner,className=''}:{id:string;banner?:string|null;className?:string}){
+ const [failed,setFailed]=useState<string|null>(null);const image=contestImageUrl(banner||null);
+ const variant=Array.from(id).reduce((sum,c)=>sum+c.charCodeAt(0),0)%3;
+ if(image&&failed!==image)return <Image unoptimized width={640} height={320} src={image} alt="" loading="lazy" onError={()=>setFailed(image)} className={`contest-artwork ${className}`}/>;
+ return <div className={`contest-artwork contest-artwork-original ${className}`} data-variant={variant} aria-hidden="true"><svg viewBox="0 0 640 320" fill="none" preserveAspectRatio="xMidYMid slice"><defs><pattern id={`grid-${id}`} width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="currentColor" strokeOpacity=".1"/></pattern></defs><path fill="currentColor" fillOpacity=".06" d="M0 0h640v320H0z"/><path fill={`url(#grid-${id})`} d="M0 0h640v320H0z"/><g className="contest-art-orbit"><ellipse cx="320" cy="168" rx="191" ry="67" stroke="currentColor" strokeOpacity=".22" transform="rotate(-24 320 168)"/><ellipse cx="320" cy="168" rx="191" ry="67" stroke="currentColor" strokeOpacity=".22" transform="rotate(24 320 168)"/><circle cx="493" cy="90" r="9" fill="currentColor"/><circle cx="146" cy="245" r="5" fill="currentColor" fillOpacity=".5"/></g><g className="contest-art-core"><path d="m320 63 86 50v100l-86 50-86-50V113l86-50Z" fill="var(--art-core)" stroke="currentColor" strokeWidth="2"/><path d="m234 113 86 50 86-50M320 163v100" stroke="currentColor" strokeOpacity=".55" strokeWidth="2"/><path d="m320 94 60 35-60 35-60-35 60-35Z" fill="currentColor" fillOpacity=".18"/><path d="m301 130 13 13 27-29" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/></g><path d="M69 58h21m-10-10v21M538 244h21m-10-10v21" stroke="currentColor" strokeOpacity=".4"/><text x="26" y="296" fill="currentColor" fillOpacity=".45" fontFamily="monospace" fontSize="10" letterSpacing="3">CBGPU / BUILD WHAT COMES NEXT</text></svg></div>;
+}
