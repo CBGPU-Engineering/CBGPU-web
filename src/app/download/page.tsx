@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
+import KakaoPageAd from '@/components/ads/KakaoPageAd';
 import {
   Cpu, Printer, Server, CalendarDays, UtensilsCrossed, LayoutGrid, Smartphone, ShieldCheck,
 } from 'lucide-react';
@@ -122,6 +123,7 @@ export default function DownloadPage() {
           </Link>
         </div>
       </div>
+      <KakaoPageAd placement="platform" contentReady/>
     </section>
   );
 }

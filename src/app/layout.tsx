@@ -1,4 +1,5 @@
 import {ProductExperienceProvider} from '@/components/ui/product-motion';
+import AdIdentityBoundary from '@/components/ads/AdIdentityBoundary';
 import AppUpdateNotice from '@/components/AppUpdateNotice';
 import DemoBanner from '@/components/DemoBanner';
 import { headers } from 'next/headers';
@@ -132,12 +133,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
-            <SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||schoolAdminPage||manufacturingSite}>
+            <AdIdentityBoundary><SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||schoolAdminPage||manufacturingSite}>
               {schoolAdminPage ? <ScopedSchoolAdminShell><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : publicBrowsingPage ? <PublicShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite} sessionHint={sessionHint}><AuthGate workspaceSite>{children}</AuthGate></PublicShell> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}
-            </AlertProvider></ProductExperienceProvider></SchoolScopeProvider>
+            </AlertProvider></ProductExperienceProvider></SchoolScopeProvider></AdIdentityBoundary>
           </AuthProvider>
         </ThemeProvider>
       </body>
