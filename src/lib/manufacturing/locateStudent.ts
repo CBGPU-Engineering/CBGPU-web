@@ -1,4 +1,6 @@
 import { searchSelfStudy, localDateStr } from '@/lib/eduset';
+import {supabase} from '@/lib/supabase';
+import {selectedSchoolContext,scopedSchoolPath} from '@/lib/schoolContext';
 
 export interface StudentIdentity { grade: number; classNo: number; number: number }
 
@@ -83,6 +85,19 @@ export async function locateStudentNow(studentId: string | null | undefined): Pr
   const identity = parseStudentId(studentId);
   if (!identity) return null;
 
+  let authorization: Record<string,string> = {};
+  let schoolId: string|null = null;
+  if(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'){
+    const session=(await supabase.auth.getSession()).data.session;
+    if(!session)return null;
+    authorization={Authorization:'Bearer '+session.access_token};
+    const response=await fetch('/api/schools/memberships',{headers:authorization,cache:'no-store',redirect:'error'});
+    if(!response.ok)return null;
+    const selected=selectedSchoolContext(await response.json());
+    // This location service uses CBsh's bell schedule and student-number policy only.
+    if(selected?.id!=='cbsh')return null;
+    schoolId=selected.id;
+  }
   const now = new Date();
   const jsDay = now.getDay(); // 0 Sun .. 6 Sat
   const gridDay = jsDay - 1;  // 0 Mon .. 4 Fri, matching comcigan's grid convention
@@ -106,7 +121,7 @@ export async function locateStudentNow(studentId: string | null | undefined): Pr
 
   if (gridDay >= 0 && gridDay <= 4) {
     try {
-      const res = await fetch(`/api/timetable?grade=${identity.grade}&class=${identity.classNo}`);
+      const res = await fetch(scopedSchoolPath(`/api/timetable?grade=${identity.grade}&class=${identity.classNo}`,schoolId),{headers:authorization,cache:'no-store',redirect:'error'});
       if (res.ok) {
         const data = await res.json();
         const periods = parseClassTimes(data.times || []);

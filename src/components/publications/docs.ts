@@ -37,6 +37,29 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'school-messages',title:'학교와 전국 대화 이용하기',description:'학교 안의 대화와 전국 대화를 구분해서 이용합니다.',category:'school',features:['/messages'],sections:[
+    {title:'학교 대화',body:'로그인한 뒤 인증된 학교 소속으로 학교 대화를 엽니다. 선택한 학교의 대화만 표시되며 다른 학교의 내부 대화를 볼 수는 없습니다. 학교를 바꾸면 이전 대화 내용이 그대로 유지되지 않습니다.'},
+    {title:'전국 대화와 공개 게시',body:'전국 대화는 직접 선택해 들어갑니다. 전국 대화 참여와 로그인 없이 누구나 읽는 공개 게시 여부는 별개입니다. 공개로 올리려면 공개 범위를 확인하세요. 학번·연락처·학교 내부 자료 등 다른 사람의 개인정보는 올리지 마세요.'},
+    {title:'삭제·신고·차단',body:'본인이 쓴 대화는 삭제할 수 있습니다. 문제가 있는 글은 신고하고, 보고 싶지 않은 작성자는 차단할 수 있습니다. 이 화면은 개인 메시지나 파일 전송 기능이 아닙니다.'}
+  ],related:['public-discovery','schools']},
+
+  {slug:'public-discovery',title:'로그인 없이 CBGPU 둘러보기',description:'공개된 프로젝트·대회·학교 정보를 둘러보고, 필요한 동작에서 로그인합니다.',category:'start',features:['/projects','/explore/contests','/community','/explore/schools'],sections:[
+    {title:'공개된 내용만 표시해요',body:'공개 탐색 기능은 단계적으로 제공됩니다. 공개로 지정된 프로젝트와 대회, 공개 게시글과 학교 소개는 로그인 없이 읽을 수 있습니다. 학교 내부 자료나 기존 비공개 프로젝트가 자동으로 공개되는 것은 아닙니다. 공개된 항목이 없으면 빈 목록이 표시됩니다.'},
+    {title:'참가와 작성에는 로그인이 필요해요',body:'대회 참가·팀 등록·제출·투표, 프로젝트 작성과 학교 가입을 진행하려면 해당 버튼에서 로그인하세요. 로그인 후 원래 화면으로 돌아오며, 신청이나 제출은 본인이 다시 확인한 뒤 진행합니다. 로그인만으로 참가 자격이나 학교 자원 권한이 생기지는 않습니다.'},
+    {title:'학교 내부 기능은 소속을 확인해요',body:'시간표·학교 내부 대화·GPU 예약 같은 기능은 학교별 정책을 따릅니다. 다른 학교의 공개 콘텐츠는 볼 수 있지만, 그 학교의 내부 자료나 비공개 프로젝트를 볼 수 있는 것은 아닙니다.'},
+    {title:'연결이 안 되거나 내용이 없을 때',body:'일시적인 조회 오류와 공개된 항목이 없는 상태는 구분해 안내합니다. 오류가 있으면 다시 조회하고, 필요한 기능은 기존 개인 메뉴에서 확인하세요. 검색 결과에 비공개 항목의 내용이나 설정이 대신 표시되지는 않습니다.'}
+  ],related:['public-projects','schools']},
+  {slug:'public-projects',title:'프로젝트 소개 공개하기',description:'본인의 프로젝트 소개를 작성하고 공개 여부를 직접 선택합니다.',category:'research',features:['/publications'],sections:[
+    {title:'공개 소개와 실행 환경은 달라요',body:'프로젝트 공개 화면에서는 제목·소개·본문처럼 공개할 내용을 직접 작성합니다. 서버의 환경변수, 배포 설정, 비공개 저장소 주소와 파일이 자동으로 공개되지 않습니다. 기존 프로젝트의 소유권과 공동 작업 권한도 바뀌지 않습니다.'},
+    {title:'저장하고 공개하기',body:'로그인한 뒤 프로젝트 공개 관리에서 내용을 작성합니다. 공개 전에는 본문에 비밀번호·토큰·개인정보나 학교 내부 자료가 없는지 확인하세요. 공개 설정을 확인한 경우에만 공개 목록에 표시됩니다. 저장 버튼을 눌렀다는 이유만으로 공개 완료로 간주하지 않습니다.'},
+    {title:'공개를 중단할 때',body:'공개 설정을 비공개로 바꾸면 새로운 공개 조회에서 소개가 표시되지 않습니다. 이미 다른 사람이 저장하거나 공유한 사본까지 회수되는 것은 아닙니다. 공개 소개를 내리는 것은 원래 프로젝트나 배포 데이터를 삭제하는 작업이 아닙니다.'},
+    {title:'졸업하거나 학교 소속이 바뀌어도',body:'프로젝트 소유권은 학교 자원 사용 권한과 별개로 유지합니다. 본인 프로젝트를 확인하고 소개를 관리하는 권한과 GPU·학교 서버를 실행하는 권한은 다를 수 있습니다.'}
+  ],related:['public-discovery','school-setup']},
+  {slug:'school-custom-features',title:'우리 학교 전용 기능 요청하기',description:'학교에 맞는 기능을 요청하고 검토 상태를 확인합니다.',category:'school',features:['/schools/[id]/features'],sections:[
+    {title:'어디에서 요청하나요?',body:'학교 소속을 확인한 뒤 학교 화면의 전용 기능 추가하기에서 요청을 작성하세요. 해결하고 싶은 일, 현재 처리 방법과 필요한 동작을 구체적으로 적으면 검토에 도움이 됩니다. 비밀번호·학교 로그인 토큰이나 학생 명단은 적지 마세요.'},
+    {title:'접수와 이메일 알림',body:'요청을 접수하면 학교별 요청 목록에 저장되고 운영팀 알림이 대기열에 들어갑니다. 알림 대기 상태는 이메일 전달 완료를 뜻하지 않습니다. 요청 접수도 기능 승인이나 개발 완료를 의미하지 않습니다.'},
+    {title:'학교별로 사용할 수 있는 기능',body:'공통 기능과 특정 학교에만 제공되는 기능은 구분됩니다. 예를 들어 충북과학고의 EduSet 자습신청을 다른 학교에서 켜는 방식은 지원하지 않습니다. 학교에 맞는 연결과 권한 정책을 확인한 뒤 별도 기능으로 검토합니다.'}
+  ],related:['schools','school-administration']},
   {slug:'schools',title:'학교 찾기와 학교별 가입',description:'등록된 학교를 찾고, 승인된 학교에 소속 확인을 요청합니다.',category:'start',features:['/schools'],sections:[
     {title:'사용 가능 여부',body:'학교별 가입 기능은 단계적으로 공개됩니다. 아직 기능을 사용할 수 없다는 화면이 나오면 기존 CBGPU 로그인과 학교생활 기능을 그대로 이용하세요.'},
     {title:'학교 선택과 소속 확인',body:'학교 이름을 검색한 뒤 지역과 공식 학교 정보를 확인하세요. 운영 승인이 완료된 학교에는 학생·교사·외부 협업자 유형으로 가입을 요청할 수 있습니다. 학생 번호나 교사 정보를 입력하는 것만으로 소속이 인증되지는 않습니다.'},

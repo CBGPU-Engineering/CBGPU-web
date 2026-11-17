@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
+import * as schoolContext from '../src/lib/schoolContext.ts';
 
-function fixture({stale=false,dated=false}={}){
+function fixture({stale=false,dated=false,multi=false,school='school-b',verified=true}={}){
  const reads=[],requests=[];
  let status='pending';
  const client={from(table){
@@ -17,7 +18,7 @@ function fixture({stale=false,dated=false}={}){
  const code=ts.transpileModule(fs.readFileSync(new URL('../src/lib/cbgpuKnowledge.ts',import.meta.url),'utf8'),
   {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
  const exports: Record<string, any> = {};
- vm.runInNewContext(code,{exports,URL,Date,Intl,AbortSignal,process:{env:{PORT:'3000'}},
+ vm.runInNewContext(code,{exports,URL,Date,Intl,AbortSignal,process:{env:{PORT:'3000',CBGPU_MULTISCHOOL_V1:multi?'1':'0'}},
   fetch:async(url,options)=>{
    assert.equal(new URL(url).hostname,'127.0.0.1');
    assert.equal(options.headers.Authorization,'Bearer owner-token');
@@ -25,12 +26,14 @@ function fixture({stale=false,dated=false}={}){
    assert.equal(options.headers['x-cbgpu-public-host'],'app.cbgpu.com');
    assert.equal(options.headers['x-forwarded-host'],'app.cbgpu.com');
    requests.push(url);
+   if(url.includes('/schools/memberships'))return Response.json({current_school_id:school,items:[{school_id:school,status:'ACTIVE',verified,student_number:'2309',school:{id:school,status:'APPROVED'}}]});
    return Response.json(url.includes('/timetable')?{stale,fetchedAt:dated?new Date(Date.now()-3600000).toISOString():undefined,grid:{0:{1:{subject:'OLD-SUBJECT'}}}}:
     url.includes('/servers/projects')?{projects:[{name:'Own project',status:'approved',env_vars:{SECRET:'MUST-NOT-LEAK'}}]}:
     {projects:[],gpus:[],checkedAt:new Date().toISOString()});
   },
   require(name){
    if(name==='server-only')return {};
+   if(name==='./schoolContext')return schoolContext;
    if(name==='./aiServer')return {aiUserClient:token=>{assert.equal(token,'owner-token');return client}};
    if(name==='./aiSources')return {aiSources:async()=>[]};
    if(name==='./studentId')return {parseStudentGradeClass:()=>({grade:2,cls:3})};
@@ -95,4 +98,21 @@ test('a dated recent timetable fallback is shown with its freshness caveat',asyn
  assert.equal(value.stale,true);
  assert.equal(value.조회,'마지막 정상 조회 자료');
  assert.ok(value.freshness.includes('변경은 확인되지 않았습니다'));
+});
+
+
+test('AI school queries use fresh selected membership and never primary-school class inference',async()=>{
+ const f=fixture({multi:true});
+ await f.api.cbgpuKnowledge('owner-token','owner-id','오늘 시간표');
+ assert.equal(f.requests.filter(url=>url.includes('/timetable')).length,0);
+ assert.equal(f.reads.filter(row=>row.table==='profiles').length,0);
+ await f.api.cbgpuKnowledge('owner-token','owner-id','2학년 3반 시간표');
+ assert.ok(f.requests.some(url=>url.includes('/api/timetable?grade=2&class=3&school_id=school-b')));
+ await f.api.cbgpuKnowledge('owner-token','owner-id','오늘 급식');
+ assert.ok(f.requests.some(url=>url.includes('/api/meal?date=')&&url.endsWith('&school_id=school-b')));
+});
+test('revoked school membership never triggers cached timetable or meal reads',async()=>{
+ const f=fixture({multi:true,verified:false});
+ await f.api.cbgpuKnowledge('owner-token','owner-id','2학년 3반 시간표와 급식');
+ assert.ok(f.requests.every(url=>url.includes('/schools/memberships')));
 });

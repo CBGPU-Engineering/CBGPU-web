@@ -4,6 +4,7 @@ import {aiSources} from './aiSources';
 import {guides} from '@/components/publications/docs';
 import {serviceSearchPages} from './serviceNavigation';
 import {parseStudentGradeClass} from './studentId';
+import {selectedSchoolContext,scopedSchoolPath} from './schoolContext';
 
 export type SiteSource={title:string;url:string;text:string};
 export type SiteContext={checked_at:string;sources:SiteSource[]};
@@ -54,6 +55,12 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
   if(value.error)throw Error('Source unavailable');
   return value;
  }
+ let schoolPromise:Promise<{id:string;studentNumber:string|null}>|undefined;
+ async function school(){
+  if(process.env.CBGPU_MULTISCHOOL_V1!=='1')return null;
+  return schoolPromise??=(async()=>{const selected=selectedSchoolContext(await local('/api/schools/memberships'));if(!selected)throw Error('Verified school membership required');return selected;})();
+ }
+ async function schoolLocal(path:string){return local(scopedSchoolPath(path,(await school())?.id??null));}
  async function rows(table:string,fields:string,own=false){
   let query=client.from(table).select(fields).order('created_at',{ascending:false}).limit(10);
   if(own)query=query.eq('user_id',owner);
@@ -64,7 +71,7 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  const addTask=(title:string,href:string,load:()=>Promise<unknown>)=>tasks.push(collect(title,href,load));
  if(/급식|식단|점심|저녁|아침|중식|석식|조식|밥|meal/i.test(question)){
   addTask(date+' 급식','/meal',async()=>{
-   const value=await local('/api/meal?date='+date.replaceAll('-',''));
+   const value=await schoolLocal('/api/meal?date='+date.replaceAll('-',''));
    const meals=Array.isArray(value.meals)?value.meals:[];
    const type=/점심|중식/.test(question)?'중식':/아침|조식/.test(question)?'조식':/저녁|석식/.test(question)?'석식':null;
    return {조회:'성공',date,meals:type?meals.filter((meal:{type:string})=>meal.type===type):meals,source_cache:'학교 식단은 최대 30분 캐시될 수 있습니다. 빈 목록은 식단 미등록일 수 있습니다.'};
@@ -72,12 +79,14 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  }
  if(/시간표|수업|교시|timetable/i.test(question)){
   addTask('시간표','/timetable',async()=>{
-   const explicit=question.match(/([1-3])학년\s*([1-9])반/);
-   const {data,error}=await client.from('profiles').select('student_id').eq('id',owner).maybeSingle();
+   const explicit=question.match(/(\d{1,2})학년\s*(\d{1,3})반/);
+   const scope=await school();
+   const {data,error}=scope?{data:null,error:null}:await client.from('profiles').select('student_id').eq('id',owner).maybeSingle();
    if(error)throw error;
-   const own=explicit?{grade:Number(explicit[1]),cls:Number(explicit[2])}:parseStudentGradeClass(data?.student_id);
+   if(explicit&&(Number(explicit[1])>12||Number(explicit[2])>100))return '학년과 반을 다시 확인해 주세요.';
+   const own=explicit?{grade:Number(explicit[1]),cls:Number(explicit[2])}:scope?(scope.id==='cbsh'?parseStudentGradeClass(scope.studentNumber):null):parseStudentGradeClass(data?.student_id);
    if(!own)return '학년과 반을 확인할 수 없습니다. 몇 학년 몇 반인지 질문에 적어 주세요.';
-   const value=await local('/api/timetable?grade='+own.grade+'&class='+own.cls);
+   const value=await schoolLocal('/api/timetable?grade='+own.grade+'&class='+own.cls);
    if(value.stale&&(!value.fetchedAt||Date.now()-Date.parse(value.fetchedAt)>48*3600000||!Number.isFinite(Date.parse(value.fetchedAt))))throw Error('No dated fallback');
    const weekday=(new Date(date+'T00:00:00Z').getUTCDay()+6)%7;
    const grid=value.grid||{};
@@ -136,7 +145,7 @@ export async function cbgpuKnowledge(token:string,owner:string,question:string):
  }
  if(/공지|소식|학사|news/i.test(question)){
   addTask('학교 공지','/feed',async()=>{
-   const value=await local('/api/school-news?type=notice');
+   const value=await schoolLocal('/api/school-news?type=notice');
    return {items:(value.items||[]).slice(0,5).map((item:Record<string,unknown>)=>({title:item.title,published:item.pubDate})),
     note:'학교 공지 제목과 게시일이며 본문은 포함되지 않습니다. 최대 10분 캐시될 수 있습니다.'};
   });

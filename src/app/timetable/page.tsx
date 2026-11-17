@@ -50,7 +50,7 @@ export default function TimetablePage() {
   const { isAdmin, user, profile, isLoading: authLoading } = useAuth();
   const schoolScope=useSchoolScope();
   const activeSchool=schoolScope.status==='legacy'?'cbsh':schoolScope.status==='ready'?schoolScope.school?.id:null;
-  const scopeKey=schoolScope.status==='legacy'?'legacy':schoolScope.status+':'+(activeSchool||'none')+':'+(user?.id||'none');
+  const scopeKey=schoolScope.status==='legacy'?'legacy:'+(user?.id||'anonymous'):schoolScope.status+':'+(activeSchool||'none')+':'+(user?.id||'none');
   const scopeRef=useRef(scopeKey);scopeRef.current=scopeKey;
   const manualAllowed=schoolScope.status==='legacy'||schoolScope.status==='ready'&&activeSchool==='cbsh';
   const canEditManual=isAdmin&&schoolScope.status==='legacy';
@@ -95,6 +95,9 @@ export default function TimetablePage() {
       if (json.error){verifiedManualFallback ||=res.status===502&&json.code==='TIMETABLE_PROVIDER_ERROR'&&json.school_id==='cbsh';throw new Error(json.error);}
       if(request!==requestRef.current||scopeRef.current!==requestScope)return;
       setGrid(json.grid ?? {});setGridContext({grade:g,cls:c,school:requestScope});
+      const native=(window as Window&{CBGPUNative?:{setTimetableSelection?:(value:{school_id:string;grade:number;class_num:number;expected_user_id:string})=>Promise<unknown>}}).CBGPUNative;
+      const preference=native?.setTimetableSelection?.({school_id:activeSchool,grade:g,class_num:c,expected_user_id:user?.id||''});if(preference)void preference.catch(()=>{});
+
       if (json.grades?.length)  setGrades(json.grades);
       if (json.classes?.length) setClasses(json.classes);
       setSource('comcigan');
@@ -123,17 +126,19 @@ export default function TimetablePage() {
     setGrid(g2);setGridContext({grade:g,cls:c,school:requestScope}); setSource('manual');setFreshness(null);
   }, []);
 
+  const ownStudentNumber=schoolScope.status==='legacy'?profile?.student_id:schoolScope.memberships.find(member=>member.school_id===activeSchool&&member.membership_type==='STUDENT')?.student_number;
+  const initScopeKey=scopeKey+':'+(ownStudentNumber||'');
   const didInitRef = useRef<string|null>(null);
   useEffect(() => {
     if(authLoading||user&&!profile)return;
-    if(didInitRef.current===scopeKey)return;
+    if(didInitRef.current===initScopeKey)return;
     requestRef.current++;setGrid({});setGridContext(null);setFreshness(null);setSubjectDetail(null);setEditing(false);setDbMissing(false);setError('');setLoading(false);
-    didInitRef.current=scopeKey;
+    didInitRef.current=initScopeKey;
     if(!activeSchool)return;
     setGrades(schoolScope.status==='legacy'?[1,2,3]:[1]);setClasses(schoolScope.status==='legacy'?[1,2,3,4]:[1]);
-    const own=activeSchool==='cbsh'?parseStudentGradeClass(profile?.student_id):null;
+    const own=activeSchool==='cbsh'?parseStudentGradeClass(ownStudentNumber):null;
     const nextGrade=own?.grade||1,nextClass=own?.cls||1;setGrade(nextGrade);setCls(nextClass);void loadComcigan(nextGrade,nextClass);
-  },[authLoading,user,profile,scopeKey,activeSchool,loadComcigan]);
+  },[authLoading,user,profile,scopeKey,initScopeKey,ownStudentNumber,activeSchool,loadComcigan]);
 
   useEffect(()=>{
     if(!freshness?.stale||editing)return;
