@@ -1,4 +1,5 @@
 'use client';
+import{manufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -62,20 +63,17 @@ export default function NewPrintJobPage() {
 
   // 프린터를 고르면 그 프린터의 담당자만 골라서 지정할 수 있게 다시 불러온다.
   useEffect(() => {
-    setManagerId('');
+    setManagerId('');setManagers([]);let active=true;
     if (printerId == null) { setManagers([]); return; }
     const fetchManagers = async () => {
       const { data: pm, error: pmError } = await supabase.from('printer_managers').select('user_id').eq('printer_id', printerId);
+      if(!active)return;
       if (pmError || !pm || pm.length === 0) { setManagers([]); return; }
       const ids = [...new Set(pm.map(r => r.user_id))];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, student_id')
-        .in('id', ids)
-        .order('student_id');
-      if (!error) setManagers(data || []);
+      const { data, error } = await manufacturingManagers(supabase,'print',ids,printerId);
+      if(!active)return;setManagers(error?[]:data||[]);if(error)showError('담당자 목록을 확인하지 못했어요.');
     };
-    fetchManagers();
+    fetchManagers();return()=>{active=false};
   }, [printerId]);
 
   const addFiles = async (list: FileList | null) => {

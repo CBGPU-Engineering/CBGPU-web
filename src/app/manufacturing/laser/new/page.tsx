@@ -1,4 +1,5 @@
 'use client';
+import{manufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -38,12 +39,8 @@ export default function NewLaserJobPage() {
       if (!error) setCatalog(data || []);
     };
     const fetchManagers = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, student_id')
-        .eq('is_laser_cut_manager', true)
-        .order('student_id');
-      if (!error) setManagers(data || []);
+      const { data, error } = await manufacturingManagers(supabase,'laser',null);
+      setManagers(error?[]:data||[]);if(error)showError('담당자 목록을 확인하지 못했어요.');
     };
     fetchCatalog();
     fetchManagers();

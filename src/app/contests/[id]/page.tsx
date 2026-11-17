@@ -1,4 +1,5 @@
 'use client';
+import{scopedProfilesEnabled,initialContestStudentNumber,canShareContestStudentNumber}from'@/lib/scopedProfiles';
 import {ScrollSection} from '@/components/ui/product-motion';
 import ContestMarkdown from '@/components/contests/ContestMarkdown';
 import ContestPresentationEditor from '@/components/contests/ContestPresentationEditor';
@@ -56,7 +57,8 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
   const { user, profile } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [name, setName] = useState(team?.name || submission?.participant_name || profile?.full_name || '');
-  const [studentId, setStudentId] = useState(submission?.student_id || profile?.student_id || '');
+  const [studentId, setStudentId] = useState(initialContestStudentNumber(submission?.student_id,profile?.student_id));
+  const [shareStudentNumber,setShareStudentNumber]=useState(false);
   const [answers, setAnswers] = useState<ContestAnswers>(submission?.answers || {});
   const [files, setFiles] = useState<Record<string, File>>({});
   const [busy, setBusy] = useState(false);
@@ -69,6 +71,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
     if (!user || submitting.current || closed || pending || !clockReady) return;
     if(contest.participation_mode==='team'&&!team)return showError('팀에 참가한 뒤 공동 제출물을 등록해 주세요.');
     if (!name.trim()) return showError('제출자 이름 또는 팀명을 입력해 주세요.');
+    if(!canShareContestStudentNumber(studentId,shareStudentNumber,!!team))return showError('학번을 주최자에게 전달하는 데 동의하거나 학번을 지워주세요.');
     const validation = validateAnswers(contest.fields, answers, files);
     if (validation) return showError(validation);
     submitting.current = true;
@@ -95,7 +98,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
         nextAnswers[field.id] = { path, name: file.name, size: file.size };
       }
       setProgress('제출 내용 저장 중…');
-      const payload={participant_name:team?.name||name.trim(),student_id:team?'':String(studentId).trim(),answers:nextAnswers};
+      const payload={participant_name:team?.name||name.trim(),student_id:team?(scopedProfilesEnabled()?submission?.student_id||'':''):String(studentId).trim(),...(scopedProfilesEnabled()?{student_id_consent:team?!!submission?.student_id_consent:!!studentId.trim()&&shareStudentNumber}:{}),answers:nextAnswers};
       const query=team
        ?submission?supabase.from('contest_submissions').update(payload).eq('contest_id',contest.id).eq('team_id',team.id).eq('user_id',submission.user_id)
         :supabase.from('contest_submissions').insert({...payload,contest_id:contest.id,user_id:user.id,team_id:team.id})
@@ -127,7 +130,8 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
           <div className="contest-panel-heading"><span className="contest-step"><Users className="size-4" /></span><div><h2 className="font-bold">참가자 정보</h2><p className="mt-1 text-xs text-muted-foreground">제출물을 확인할 수 있도록 알려주세요.</p></div></div>
           <div className="grid gap-4 sm:grid-cols-2">
           <label className="space-y-2 text-sm font-bold"><span>제출자 이름 / 팀명 <span className="text-destructive">*</span></span><Input readOnly={!!team} required maxLength={100} value={name} onChange={e => setName(e.target.value)} /></label>
-          {!team&&<label className="space-y-2 text-sm font-bold"><span>학번 (선택)</span><Input maxLength={30} value={studentId} onChange={e => setStudentId(e.target.value)} /></label>}
+          {!team&&<label className="space-y-2 text-sm font-bold"><span>학번 (선택)</span><Input maxLength={30} value={studentId} onChange={e => {setStudentId(e.target.value);setShareStudentNumber(false)}} />{scopedProfilesEnabled()&&<small className="block text-xs font-normal text-muted-foreground">학번 없이도 제출할 수 있어요. 다른 학교의 계정 학번은 자동으로 가져오지 않아요.</small>}</label>}
+          {scopedProfilesEnabled()&&!team&&studentId.trim()&&<label className="flex items-start gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={shareStudentNumber} onChange={e=>setShareStudentNumber(e.target.checked)}/><span>입력한 학번을 이 대회 주최자·확정 팀원에게 제출 정보로 전달하는 데 동의해요. 원하지 않으면 학번을 지워주세요.</span></label>}
           </div>
         </section>
         {contest.fields.map((field, index) => {

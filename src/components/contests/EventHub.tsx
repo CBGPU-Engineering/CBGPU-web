@@ -1,4 +1,5 @@
 'use client';
+import{contestOperatorProfiles,scopedProfilesEnabled}from'@/lib/scopedProfiles';
 
 import {AnimatePresence,motion,useReducedMotion} from 'motion/react';
 import {useProductFunnel} from '@/lib/useProductFunnel';
@@ -130,20 +131,20 @@ function HostTeam({ contest }: { contest: Contest }) {
   const load = useCallback(async () => {
     const { data, error } = await supabase.from('event_hosts').select('*').eq('contest_id', contest.id).order('created_at');
     if (error) return showError(eventError(error));
-    const entries = (data || []) as EventHost[]; setHosts(entries);
-    if (entries.length) { const { data: people } = await supabase.from('profiles').select('id,full_name,student_id').in('id', entries.map(item => item.user_id)); setProfiles(Object.fromEntries((people || []).map(person => [person.id, person]))); }
+    const entries = (data || []) as EventHost[]; setHosts(entries);setProfiles({});
+    if (entries.length) { const { data: people,error } = await contestOperatorProfiles(supabase,contest.id,entries.map(item => item.user_id)); if(error){setProfiles({});showError(eventError(error));return;} setProfiles(Object.fromEntries((people || []).map(person => [person.id, person]))); }
   }, [contest.id, showError]);
   useEffect(() => { void load(); }, [load]);
   async function addHost(event: React.FormEvent) {
     event.preventDefault(); setBusy(true);
     try {
-      const { data: person, error } = await supabase.from('profiles').select('id,full_name,student_id').eq('student_id', studentId.trim()).maybeSingle();
+      const { data: people, error } = await contestOperatorProfiles(supabase,contest.id,null,studentId.trim()); const person=people?.[0];
       if (error) throw error; if (!person) throw new Error('해당 학번의 사용자를 찾지 못했어요.'); if (person.id === contest.host_id) throw new Error('대회 생성자는 이미 최고 관리자예요.');
       const { error: insertError } = await supabase.from('event_hosts').upsert({ contest_id: contest.id, user_id: person.id, role }, { onConflict: 'contest_id,user_id' });
       if (insertError) throw insertError; setStudentId(''); await load(); showSuccess('공동 운영자를 추가했어요.');
     } catch (error) { showError(eventError(error)); } finally { setBusy(false); }
   }
-  return <section className="contest-panel space-y-4"><div><p className="contest-eyebrow mb-2 text-primary">TEAM</p><h2 className="flex items-center gap-2 text-lg font-bold"><Users className="size-5" />공동 운영자</h2></div><p className="text-xs text-muted-foreground">관리자는 참가자·일정·공지를 관리하고, 체크인 담당자는 출석만 처리할 수 있어요.</p><form onSubmit={addHost} className="flex flex-col gap-2 sm:flex-row"><Input required value={studentId} onChange={e => setStudentId(e.target.value)} placeholder="학번으로 사용자 찾기" /><Dropdown className={textareaClass} value={role} onChange={e => setRole(e.target.value as typeof role)}><option value="manager">관리자</option><option value="checkin">체크인 담당</option></Dropdown><Button type="submit" disabled={busy}><UserPlus />추가</Button></form>{hosts.map(host => <div key={host.user_id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3"><div><strong className="text-sm">{profiles[host.user_id]?.full_name || '사용자'}</strong><p className="text-xs text-muted-foreground">{profiles[host.user_id]?.student_id || host.user_id} · {host.role === 'manager' ? '관리자' : '체크인 담당'}</p></div><Button size="sm" variant="ghost" onClick={async () => { const { error } = await supabase.from('event_hosts').delete().eq('contest_id', contest.id).eq('user_id', host.user_id); if (error) showError(eventError(error)); else { await load(); showSuccess('공동 운영자를 제거했어요.'); } }}><CircleX />제거</Button></div>)}</section>;
+  return <section className="contest-panel space-y-4"><div><p className="contest-eyebrow mb-2 text-primary">TEAM</p><h2 className="flex items-center gap-2 text-lg font-bold"><Users className="size-5" />공동 운영자</h2></div><p className="text-xs text-muted-foreground">관리자는 참가자·일정·공지를 관리하고, 체크인 담당자는 출석만 처리할 수 있어요.</p><form onSubmit={addHost} className="flex flex-col gap-2 sm:flex-row"><Input required value={studentId} onChange={e => setStudentId(e.target.value)} placeholder={scopedProfilesEnabled()?"이 대회 학교의 학번으로 찾기":"학번으로 사용자 찾기"} /><Dropdown className={textareaClass} value={role} onChange={e => setRole(e.target.value as typeof role)}><option value="manager">관리자</option><option value="checkin">체크인 담당</option></Dropdown><Button type="submit" disabled={busy}><UserPlus />추가</Button></form>{hosts.map(host => <div key={host.user_id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3"><div><strong className="text-sm">{profiles[host.user_id]?.full_name || '사용자'}</strong><p className="text-xs text-muted-foreground">{profiles[host.user_id]?.student_id || host.user_id} · {host.role === 'manager' ? '관리자' : '체크인 담당'}</p></div><Button size="sm" variant="ghost" onClick={async () => { const { error } = await supabase.from('event_hosts').delete().eq('contest_id', contest.id).eq('user_id', host.user_id); if (error) showError(eventError(error)); else { await load(); showSuccess('공동 운영자를 제거했어요.'); } }}><CircleX />제거</Button></div>)}</section>;
 }
 
 function EventLifecycle({ contest, sessions, access, onUpdated }: { contest: Contest; sessions: EventSession[]; access: EventAccessDetails | null; onUpdated: (contest: Contest) => void }) {

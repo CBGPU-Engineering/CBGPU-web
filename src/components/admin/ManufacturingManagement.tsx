@@ -1,4 +1,5 @@
 'use client';
+import{manufacturingProfiles,manufacturingJobSelect,scopedProfilesEnabled,attachManufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {ArrowUpRight,ListChecks,Printer as PrinterIcon} from 'lucide-react';
@@ -87,10 +88,10 @@ export default function ManufacturingPage() {
     if (!user) return;
     const { data, error } = await supabase
       .from('print_jobs')
-      .select('*, manager:manager_id(full_name, student_id)')
+      .select(manufacturingJobSelect())
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
-    if (!error) setMyPrintJobs(data || []);
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'print',data||[]);setMyPrintJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');}
   };
 
   const [printQueueLength, setPrintQueueLength] = useState<number | null>(null);
@@ -125,10 +126,10 @@ export default function ManufacturingPage() {
     if (!user) return;
     setLaserLoading(true);
     const [{ data, error }, { data: qlen, error: qlenError }] = await Promise.all([
-      supabase.from('laser_jobs').select('*, manager:manager_id(full_name, student_id)').eq('user_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('laser_jobs').select(manufacturingJobSelect()).eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.rpc('laser_queue_length'),
     ]);
-    if (!error) setMyLaserJobs(data || []);
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setMyLaserJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');}
     if (!qlenError) setLaserQueueLength(qlen);
     setLaserLoading(false);
   };
@@ -152,12 +153,13 @@ export default function ManufacturingPage() {
   // directly) — fetch it separately and key it by user_id for lookup in the tables below.
   const [requesterProfiles, setRequesterProfiles] = useState<Record<string, { full_name: string | null; student_id: string | null }>>({});
 
-  async function fetchRequesterProfiles(userIds: string[]) {
+  async function fetchRequesterProfiles(userIds: string[], kind: 'print'|'laser') {
     const uniqueIds = [...new Set(userIds)];
     if (uniqueIds.length === 0) return;
-    const { data } = await supabase.from('profiles').select('id, full_name, student_id').in('id', uniqueIds);
+    const { data,error } = await manufacturingProfiles(supabase,kind,uniqueIds);
+    if(error){setRequesterProfiles({});showError('신청자 표시 정보를 확인하지 못했어요.');return;}
     setRequesterProfiles(prev => {
-      const next = { ...prev };
+      const next:Record<string,{full_name:string|null;student_id:string|null}> = scopedProfilesEnabled()?{}:{ ...prev };
       for (const p of data || []) next[p.id] = { full_name: p.full_name, student_id: p.student_id };
       return next;
     });
@@ -174,14 +176,14 @@ export default function ManufacturingPage() {
     if(equipmentKind==='print'&&!managedPrinterIds.length){setAllPrintJobs([]);setManagerPrintLoading(false);return}
     let query = supabase
       .from('print_jobs')
-      .select('*, manager:manager_id(full_name, student_id)')
+      .select(manufacturingJobSelect())
       .order('created_at', { ascending: false })
       .limit(500);
     if(equipmentKind==='print'){const ids=managedPrinterIds.join(',');query=query.or(`preferred_printer_id.in.(${ids}),printer_id.in.(${ids})`)}
     const {data,error}=await query;
     if (!error) {
-      setAllPrintJobs(data || []);
-      fetchRequesterProfiles((data || []).map(j => j.user_id));
+      const labels=await attachManufacturingManagers(supabase,'print',data||[]);setAllPrintJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
+      fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'print');
     }
     setManagerPrintLoading(false);
   };
@@ -374,12 +376,12 @@ export default function ManufacturingPage() {
     setManagerLaserLoading(true);
     const { data, error } = await supabase
       .from('laser_jobs')
-      .select('*, manager:manager_id(full_name, student_id)')
+      .select(manufacturingJobSelect())
       .order('created_at', { ascending: false })
       .limit(500);
     if (!error) {
-      setAllLaserJobs(data || []);
-      fetchRequesterProfiles((data || []).map(j => j.user_id));
+      const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setAllLaserJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
+      fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'laser');
     }
     setManagerLaserLoading(false);
   };

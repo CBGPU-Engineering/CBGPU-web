@@ -77,6 +77,8 @@ export type ContestSubmission = {
   user_id: string;
   participant_name: string;
   student_id: string;
+  student_id_consent?: boolean;
+  student_id_consented_at?: string|null;
   answers: ContestAnswers;
   submitted_at: string;
 };

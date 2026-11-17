@@ -1,4 +1,5 @@
 'use client';
+import{manufacturingProfiles,manufacturingJobSelect,attachManufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -40,9 +41,9 @@ export default function LaserJobDetailPage() {
   const [cancelOpen, setCancelOpen] = useState(false);
 
   const fetchJob = async () => {
-    const { data, error } = await supabase.from('laser_jobs').select('*, manager:manager_id(full_name, student_id)').eq('id', id).single();
+    const { data, error } = await supabase.from('laser_jobs').select(manufacturingJobSelect('')).eq('id', id).single().returns<any>();
     if (error) { showError("Request not found."); router.push(managementBase); return; }
-    setJob(data);
+    const labels=await attachManufacturingManagers(supabase,'laser',[data]);setJob(labels.data[0]);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
     setLoading(false);
     if (data.file_path) {
       const { data: signed } = await supabase.storage.from('manufacturing').createSignedUrl(data.file_path, 3600);
@@ -51,8 +52,8 @@ export default function LaserJobDetailPage() {
       setDownloadUrl(null);
     }
     if (data.user_id !== user?.id) {
-      const { data: profile } = await supabase.from('profiles').select('full_name, student_id').eq('id', data.user_id).maybeSingle();
-      setRequester(profile);
+      const { data: profiles,error:profileError } = await manufacturingProfiles(supabase,'laser',[data.user_id]);
+      setRequester(profiles?.[0]||null);if(profileError)showError('Requester details are unavailable.');
     }
   };
 
