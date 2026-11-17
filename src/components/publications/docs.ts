@@ -37,8 +37,14 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'student-reverification',title:'새 학년도 학번 확인하기',description:'학년도 전환 뒤 새 학번으로 학교 소속을 다시 확인합니다.',category:'school',features:['/schools/[id]/verification'],sections:[
+    {title:'로그인은 계속 할 수 있어요',body:'학교에서 학년도 전환을 실행하면 일부 학생은 새 학번 확인이 필요해요. 학교 목록에서 새 학번으로 재인증하기를 누르세요. 이 과정에서 계정과 개인 프로젝트가 삭제되지는 않습니다.'},
+    {title:'학번 입력과 승인',body:'학교에서 안내한 새 학번을 입력하세요. 지원되는 학교의 학번 형식과 학년을 검사하고, 관리자 확인 대기 상태로 저장합니다. 번호를 입력했다는 이유만으로 학교 GPU나 내부 자원 권한이 즉시 복구되지는 않습니다. 잘못 입력했으면 화면의 안내에 따라 다시 확인하세요.'},
+    {title:'확인 전 이용 범위',body:'본인 계정과 프로젝트는 유지됩니다. 학교 자원은 소속 확인이 끝날 때까지 제한될 수 있어요. 다른 학교의 학생 번호 규칙을 충북과학고 규칙으로 추측해서 처리하지 않습니다.'}
+  ],related:['schools','school-administration']},
+
   {slug:'guest-school-access',title:'외부 협업자 학교 자원 이용 요청',description:'프로젝트 협업에 필요한 학교 자원을 기간과 범위를 정해 요청합니다.',category:'school',features:['/schools/[id]/access'],sections:[
-    {title:'인증된 학교 구성원이 요청해요',body:'학교 목록의 외부 협업자 이용 요청에서 협업자의 CBGPU 계정 ID, 프로젝트나 대회 이름, 이용 목적, 필요한 자원과 시작·종료 시각을 입력합니다. 계정 ID는 협업자에게 직접 확인하세요. 비밀번호를 받거나 입력할 필요는 없습니다.'},
+    {title:'인증된 학교 구성원이 요청해요',body:'학교 목록의 외부 협업자 이용 요청에서 협업자의 CBGPU 이메일, 프로젝트나 대회 이름, 이용 목적, 필요한 자원과 시작·종료 시각을 입력합니다. 가입한 이메일은 협업자에게 직접 확인하세요. 비밀번호를 받거나 입력할 필요는 없습니다.'},
     {title:'승인 전에는 사용할 수 없어요',body:'학교 관리자가 요청을 검토합니다. 본인이 요청한 권한을 스스로 승인할 수 없습니다. 승인이 나더라도 허용된 기간과 자원 범위에서만 이용할 수 있고, 학교에서 조기에 회수할 수도 있습니다.'},
     {title:'기간이 끝나도 프로젝트는 유지돼요',body:'임시 이용 기간이 종료되면 학교 자원 접근은 차단됩니다. 외부 협업자가 학생 계정으로 바뀌거나 본인 프로젝트와 공동 작업 기록이 삭제되는 것은 아닙니다. 요청 화면에서 진행 상태를 확인하세요.'}
   ],related:['schools','school-administration']},
@@ -81,6 +87,7 @@ export const guides:Guide[] = [
   {slug:'school-administration',title:'학교 등록 심사와 학교 관리',description:'플랫폼 등록 심사와 학교별 구성원·기능 관리의 권한을 구분합니다.',category:'operations',features:['/admin/schools'],sections:[
     {title:'플랫폼 학교 등록 심사',body:'플랫폼 관리자는 학교 등록 신청의 학교 정보, 신청자 관계와 중복 여부를 검토합니다. 확인 없이 학교 운영 권한을 승인하지 마세요. 일반 사용자와 학교 관리자는 플랫폼 심사 기능을 사용할 수 없습니다.'},
     {title:'학교별 관리',body:'승인된 학교의 관리 화면에서는 해당 학교 구성원의 소속 확인 요청과 학교 설정을 관리합니다. 교사라는 이유만으로 학교 관리자 권한이 생기지는 않습니다. 학교 관리 권한으로 다른 학교를 관리할 수 없습니다.'},
+    {title:'학년도 전환',body:'학교별 관리의 Academic year에서 지원 여부를 확인하고 대상 학년도와 계정을 미리 봅니다. 대상 학교·학년도·인원과 백업 준비를 확인한 뒤 최종 실행하세요. 대상 정보가 달라지면 다시 조회해야 하며, 같은 학교·학년도는 중복 실행할 수 없습니다. 충북과학고는 1·2학년이 새 학번 확인 대기로, 3학년은 외부 소속 유형으로 바뀝니다. 다른 학교의 학번 규칙은 별도 지원 여부를 먼저 확인하세요. 개인 프로젝트와 계정은 삭제하지 않습니다.'},
     {title:'기능과 GPU',body:'사용할 수 있는 공통 기능과 해당 학교에 허용된 전용 기능만 설정할 수 있습니다. 기능을 끄는 것은 기존 데이터를 삭제하는 작업이 아닙니다. GPU 미연결은 정상 상태이며, 서버 연결만으로 외부 GPU 공유가 켜지지 않습니다.'}
   ],related:['schools','school-setup']},
   {slug:'contest-api',title:'외부 서비스 대회 참가 API',description:'외부 앱과 에이전트에서 본인 계정으로 대회 신청 양식을 조회하고 참가 신청·조회·취소를 처리합니다.',category:'community',features:['/contests/api'],keywords:['api','zero','자동 신청','contest','외부 서비스'],sections:[
