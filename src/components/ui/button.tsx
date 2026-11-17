@@ -1,3 +1,6 @@
+'use client';
+import {animate,useReducedMotion} from 'motion/react';
+import {pressSpring} from '@/lib/motion';
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
@@ -5,7 +8,7 @@ import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[background-color,border-color,box-shadow,opacity] duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -52,6 +55,9 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot.Root : "button"
+  const reduce=useReducedMotion();
+  const press=(element:HTMLElement,scale:number)=>{if(!reduce&&!props.disabled)animate(element,{scale},{...pressSpring})};
+
 
   return (
     <Comp
@@ -60,6 +66,13 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
+      onPointerDown={event=>{props.onPointerDown?.(event);if(!event.defaultPrevented&&event.button===0)press(event.currentTarget,.975)}}
+      onPointerUp={event=>{props.onPointerUp?.(event);press(event.currentTarget,1)}}
+      onPointerCancel={event=>{props.onPointerCancel?.(event);press(event.currentTarget,1)}}
+      onPointerLeave={event=>{props.onPointerLeave?.(event);press(event.currentTarget,1)}}
+      onKeyDown={event=>{props.onKeyDown?.(event);if(!event.defaultPrevented&&['Enter',' '].includes(event.key))press(event.currentTarget,.975)}}
+      onKeyUp={event=>{props.onKeyUp?.(event);if(['Enter',' '].includes(event.key))press(event.currentTarget,1)}}
+      onBlur={event=>{props.onBlur?.(event);press(event.currentTarget,1)}}
     />
   )
 }

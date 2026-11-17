@@ -16,3 +16,13 @@ relicensed by this repository.
 Original character PNGs under `public/characters/chiikawa/` come from the official
 anime website. Copyright © ナガノ / ちいかわ製作委員会. These images are not
 Apache-2.0-licensed; see that directory's `SOURCES.md` for exact source URLs.
+
+## Product interaction libraries
+
+- Motion14.14.0 — MIT, https://github.com/motiondivision/motion.
+- overlay-kit1.9.0 — MIT, https://github.com/toss/overlay-kit.
+- @use-funnel/core0.1.0 — MIT, https://github.com/toss/use-funnel.
+- Lucide (existing) — ISC, https://github.com/lucide-icons/lucide.
+
+Original feedback/empty-state SVG scenes remain CBGPU Apache-2.0 code; they do
+not reuse Toss/Apple illustrations or third-party animation marketplace assets.

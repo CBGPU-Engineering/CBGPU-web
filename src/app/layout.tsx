@@ -1,3 +1,4 @@
+import {ProductExperienceProvider} from '@/components/ui/product-motion';
 import AppUpdateNotice from '@/components/AppUpdateNotice';
 import DemoBanner from '@/components/DemoBanner';
 import { headers } from 'next/headers';
@@ -119,12 +120,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
-            <AlertProvider english={adminSite||manufacturingSite}>
+            <ProductExperienceProvider><AlertProvider english={adminSite||manufacturingSite}>
               {manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite>{children}</AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}
-            </AlertProvider>
+            </AlertProvider></ProductExperienceProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

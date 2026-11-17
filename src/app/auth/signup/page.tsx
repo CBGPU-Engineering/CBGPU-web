@@ -1,139 +1,21 @@
 'use client';
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {useState} from 'react';
+import {supabase} from '@/lib/supabase';
+import {useRouter} from 'next/navigation';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
 import Link from 'next/link';
-import { useAlert } from '@/lib/alert';
-import { getURL } from '@/lib/utils';
-import { MailCheck } from 'lucide-react';
-import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
-
-export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [studentId, setStudentId] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmEmailSent, setConfirmEmailSent] = useState(false);
-  const { showError, showSuccess } = useAlert();
-  const router = useRouter();
-
-  const handleSignup = async (e: any) => {
-    e.preventDefault();
-
-    if (!isValidStudentId(studentId)) {
-      showError(`학번 형식이 올바르지 않습니다. ${STUDENT_ID_HINT}`);
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // The profiles row is created server-side by a trigger on auth.users
-      // (see supabase_account_management_migration.sql) so it works even
-      // when email confirmation delays the session — full_name/student_id
-      // travel in as user metadata for the trigger to read.
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName, student_id: studentId },
-          emailRedirectTo: getURL() + 'auth/callback',
-        }
-      });
-
-      if (error) {
-        showError('회원가입에 실패했습니다. 이미 가입한 학번이라면 기존 계정으로 로그인하거나 비밀번호를 재설정해주세요. (' + error.message + ')');
-        return;
-      }
-
-      if (data.session) {
-        // Email confirmation is off (or already auto-confirmed) — the user is signed in now.
-        showSuccess('회원가입 완료!');
-        router.push('/');
-      } else {
-        setConfirmEmailSent(true);
-      }
-    } catch (err: any) {
-        showError("회원가입 중 오류가 발생했습니다.");
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
-
-  if (confirmEmailSent) {
-    return (
-      <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg text-center space-y-4">
-        <MailCheck className="size-12 mx-auto text-primary" />
-        <h1 className="cb-page-title">이메일을 확인해주세요</h1>
-        <p className="text-sm text-muted-foreground font-medium">
-          <span className="font-bold text-foreground">{email}</span>로 인증 메일을 보냈습니다. 메일의 링크를 눌러야 로그인할 수 있습니다.
-        </p>
-        <Link href="/auth/login" className="inline-block text-primary font-bold hover:underline text-sm">로그인으로 이동</Link>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-md mx-auto mt-10 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg">
-      <h1 className="cb-page-title mb-6 text-center">Join CBGPU</h1>
-      <form onSubmit={handleSignup} className="space-y-4">
-        <div className="space-y-1">
-          <label className="text-sm font-semibold text-foreground">이름 (Name)</label>
-          <Input
-            placeholder="Name"
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
-            onChange={(e: any) => setFullName(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-semibold text-foreground">학번 (Student ID)</label>
-          <Input
-            placeholder="2309"
-            inputMode="numeric"
-            maxLength={4}
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
-            value={studentId}
-            onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
-            required
-          />
-          <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
-          <p className="text-xs text-muted-foreground font-medium ml-1">같은 학년도에는 한 학번으로 한 계정만 사용할 수 있습니다.</p>
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-semibold text-foreground">Email</label>
-          <Input
-            type="email"
-            placeholder="이메일 주소를 입력하세요"
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
-            onChange={(e: any) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-sm font-semibold text-foreground">Password</label>
-          <Input
-            type="password"
-            placeholder="••••••••"
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
-            onChange={(e: any) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button
-          disabled={isSubmitting}
-          className="w-full bg-primary h-12 text-sm font-semibold transition-all active:scale-95 mt-2"
-        >
-          {isSubmitting ? "Creating..." : "Sign Up"}
-        </Button>
-      </form>
-      <p className="mt-6 text-center text-sm text-muted-foreground font-medium">
-        Already have an account? <Link href="/auth/login" className="text-primary font-bold hover:underline ml-1">Log In</Link>
-      </p>
-      <p className="mt-2 text-center text-sm"><Link href="/auth/forgot-password" className="text-primary font-bold hover:underline">비밀번호 재설정</Link></p>
-    </div>
-    );
+import {useAlert} from '@/lib/alert';
+import {getURL} from '@/lib/utils';
+import {isValidStudentId,STUDENT_ID_HINT} from '@/lib/studentId';
+import {Eye,EyeOff} from 'lucide-react';
+import {AuthFrame,AuthSubmit} from '@/components/auth/AuthFrame';
+import {InlineFeedback,SuccessFeedback} from '@/components/ui/product-motion';
+import {authErrorMessage} from '@/lib/authCopy';
+export default function Signup(){
+ const[email,setEmail]=useState(''),[password,setPassword]=useState(''),[studentId,setStudentId]=useState(''),[fullName,setFullName]=useState(''),[showPassword,setShowPassword]=useState(false),[busy,setBusy]=useState(false),[sent,setSent]=useState(false),[error,setError]=useState(''),[studentTouched,setStudentTouched]=useState(false);
+ const{showSuccess}=useAlert(),router=useRouter();const studentError=studentTouched&&!isValidStudentId(studentId);
+ async function signup(event:React.FormEvent<HTMLFormElement>){event.preventDefault();if(busy)return;setStudentTouched(true);if(!isValidStudentId(studentId)){document.getElementById('signup-student')?.focus();return}setBusy(true);setError('');try{const result=await supabase.auth.signUp({email:email.trim(),password,options:{data:{full_name:fullName.trim(),student_id:studentId},emailRedirectTo:getURL()+'auth/callback'}});if(result.error){setError(authErrorMessage(result.error,'signup'));return}if(result.data.session){showSuccess('계정을 만들었어요. CBGPU를 시작해 보세요.');router.push('/')}else setSent(true)}catch{setError('연결을 확인하고 다시 시도해 주세요. 입력한 내용은 그대로 두었어요.')}finally{setBusy(false)}}
+ if(sent)return <AuthFrame title="마지막으로 이메일을 확인해 주세요"><SuccessFeedback title="인증 메일을 요청했어요" description={<>아래 이메일의 받은편지함에서 인증 링크를 눌러 주세요.<span className="cb-auth-email">{email}</span>메일이 보이지 않으면 스팸함도 확인해 주세요.</>}><Button asChild><Link href="/auth/login">로그인으로 이동</Link></Button><Button variant="outline" onClick={()=>setSent(false)}>이메일 주소 확인하기</Button></SuccessFeedback></AuthFrame>;
+ return <AuthFrame title="CBGPU 계정 만들기" description="학교생활과 프로젝트에 쓸 계정을 만들어요." footer={<>이미 계정이 있나요?<Link href="/auth/login" className="cb-auth-link">로그인하기</Link></>}><form className="cb-auth-form" onSubmit={signup} aria-busy={busy} aria-describedby={error?'signup-feedback':undefined}><div className="cb-auth-pair"><div className="cb-auth-field"><label htmlFor="signup-name">이름</label><Input id="signup-name" name="name" autoComplete="name" placeholder="이름 입력" value={fullName} onChange={e=>setFullName(e.target.value)} required maxLength={100} readOnly={busy}/></div><div className="cb-auth-field"><label htmlFor="signup-student">학번</label><Input id="signup-student" name="student-number" inputMode="numeric" placeholder="예: 2309" maxLength={4} value={studentId} onBlur={()=>setStudentTouched(true)} onChange={e=>setStudentId(e.target.value.replace(/\D/g,'').slice(0,4))} required readOnly={busy} aria-invalid={studentError} aria-describedby="signup-student-help"/></div></div><p id="signup-student-help" className="cb-auth-help">{studentError?'학년·반·번호로 된 학번 4자리를 확인해 주세요.':STUDENT_ID_HINT}<br/>학번은 교내 계정을 확인하는 데 사용해요. 같은 학년도에는 하나의 계정만 만들 수 있어요.</p><div className="cb-auth-field"><label htmlFor="signup-email">이메일</label><Input id="signup-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="인증 메일을 받을 이메일" value={email} onChange={e=>setEmail(e.target.value)} required readOnly={busy}/></div><div className="cb-auth-field"><label htmlFor="signup-password">비밀번호</label><div className="cb-auth-password"><Input id="signup-password" name="password" autoComplete="new-password" type={showPassword?'text':'password'} placeholder="6자 이상 입력" minLength={6} value={password} onChange={e=>setPassword(e.target.value)} required readOnly={busy} aria-describedby="signup-password-help"/><button type="button" className="cb-auth-password-toggle" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></div><p id="signup-password-help" className="cb-auth-help">다른 서비스에서 쓰지 않는 긴 비밀번호를 추천해요.</p></div><InlineFeedback id="signup-feedback" message={error}/><AuthSubmit busy={busy} busyLabel="계정 만드는 중…">계정 만들기</AuthSubmit></form></AuthFrame>;
 }

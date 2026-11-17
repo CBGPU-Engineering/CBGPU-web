@@ -1,81 +1,18 @@
 'use client';
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {useState} from 'react';
+import {supabase} from '@/lib/supabase';
+import {useRouter} from 'next/navigation';
+import {Input} from '@/components/ui/input';
 import Link from 'next/link';
-import { useAlert } from '@/lib/alert';
+import {useAlert} from '@/lib/alert';
 import {safeWorkspacePath} from '@/lib/workspaces';
 import {Eye,EyeOff} from 'lucide-react';
-
-export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword,setShowPassword]=useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { showError } = useAlert();
-  const router = useRouter();
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      if (error) {
-        showError("로그인 실패: " + error.message);
-      } else {
-        const next = new URLSearchParams(window.location.search).get('next');
-        router.replace(safeWorkspacePath(next||'/'));
-      }
-    } catch {
-      showError("오류가 발생했습니다.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="max-w-md mx-auto mt-20 p-8 bg-card ring-1 ring-foreground/5 rounded-2xl shadow-lg">
-      <h1 className="cb-page-title mb-6 text-center">로그인</h1>
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div className="space-y-1">
-          <label htmlFor="login-email" className="text-sm font-semibold text-foreground">이메일</label>
-          <Input
-            id="login-email" name="email" autoComplete="username" autoCapitalize="none" spellCheck={false} inputMode="email" type="email"
-            placeholder="이메일 주소를 입력하세요"
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1">
-          <div className="flex items-center justify-between">
-            <label htmlFor="login-password" className="text-sm font-semibold text-foreground">비밀번호</label>
-            <Link href="/auth/forgot-password" className="text-sm font-semibold text-primary hover:underline">비밀번호 찾기</Link>
-          </div>
-          <div className="relative"><Input
-            id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'}
-            placeholder="••••••••"
-            className="h-12 rounded-lg border-border bg-background px-3.5 text-[15px] font-medium text-foreground dark:bg-background pr-12"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-            required
-          /><button type="button" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(v=>!v)} className="absolute right-1 top-1/2 -translate-y-1/2 size-10 min-h-0 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted">{showPassword?<EyeOff size={18}/>:<Eye size={18}/>}</button></div>
-        </div>
-        <Button
-          type="submit" disabled={isSubmitting}
-          className="w-full h-12 bg-primary px-4 text-sm font-semibold transition-all active:scale-95"
-        >
-          {isSubmitting ? "로그인 중…" : "로그인"}
-        </Button>
-      </form>
-      <p className="mt-6 text-center text-sm text-muted-foreground font-medium">
-        처음 이용하시나요? <Link href="/auth/signup" className="text-primary font-bold hover:underline ml-1">계정 만들기</Link>
-      </p>
-    </div>
-  );
+import {AuthFrame,AuthSubmit} from '@/components/auth/AuthFrame';
+import {InlineFeedback} from '@/components/ui/product-motion';
+import {authErrorMessage} from '@/lib/authCopy';
+export default function Login(){
+ const[email,setEmail]=useState(''),[password,setPassword]=useState(''),[showPassword,setShowPassword]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const{showSuccess}=useAlert(),router=useRouter();
+ async function login(event:React.FormEvent<HTMLFormElement>){event.preventDefault();if(busy)return;setBusy(true);setError('');try{const result=await supabase.auth.signInWithPassword({email:email.trim(),password});if(result.error){setError(authErrorMessage(result.error,'login'));return}showSuccess('로그인됐어요. 하던 일을 이어가세요.');const next=new URLSearchParams(window.location.search).get('next');router.replace(safeWorkspacePath(next||'/'))}catch{setError('연결을 확인한 뒤 다시 로그인해 주세요. 입력한 내용은 그대로 두었어요.')}finally{setBusy(false)}}
+ return <AuthFrame title="로그인하고 이어가세요" description="CBGPU 계정으로 하던 일을 이어가세요." footer={<>처음 이용하나요?<Link className="cb-auth-link" href="/auth/signup">계정 만들기</Link></>}><form className="cb-auth-form" onSubmit={login} aria-busy={busy} aria-describedby={error?'login-feedback':undefined}><div className="cb-auth-field"><label htmlFor="login-email">이메일</label><Input id="login-email" name="email" type="email" inputMode="email" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="가입한 이메일 주소" value={email} onChange={e=>setEmail(e.target.value)} required readOnly={busy}/></div><div className="cb-auth-field"><div className="cb-auth-field-label"><label htmlFor="login-password">비밀번호</label><Link href="/auth/forgot-password" className="cb-auth-link">비밀번호 찾기</Link></div><div className="cb-auth-password"><Input id="login-password" name="password" autoComplete="current-password" type={showPassword?'text':'password'} placeholder="비밀번호 입력" value={password} onChange={e=>setPassword(e.target.value)} required readOnly={busy}/><button className="cb-auth-password-toggle" type="button" aria-label={showPassword?'비밀번호 숨기기':'비밀번호 표시'} aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?<EyeOff size={19}/>:<Eye size={19}/>}</button></div></div><InlineFeedback id="login-feedback" message={error}/><AuthSubmit busy={busy} busyLabel="로그인 중…">로그인하기</AuthSubmit></form></AuthFrame>;
 }

@@ -1,8 +1,11 @@
 'use client';
-import { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2,X } from 'lucide-react';
+import {overlay} from 'overlay-kit';
+import {AnimatePresence,motion,useReducedMotion} from 'motion/react';
+import {productSpring} from '@/lib/motion';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { Input } from '@/components/ui/input';
 
@@ -41,14 +44,17 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
   const [s, setS] = useState<AlertState>({ open: false, title: '', message: '', type: 'info' });
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
-  const [ask, setAsk] = useState<{ open: boolean } & ConfirmOptions>({ open: false, message: '' });
   const resolver = useRef<((ok: boolean) => void) | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions | string) => new Promise<boolean>(resolve => {
-    resolver.current?.(false); // a newer question replaces an unanswered one
-    resolver.current = resolve;
-    setAsk({ open: true, ...(typeof options === 'string' ? { message: options } : options) });
-  }), []);
+    resolver.current?.(false);
+    const settings=typeof options==='string'?{message:options}:options;
+    let finished=false,id='';
+    const settle=(ok:boolean)=>{if(finished)return;finished=true;resolve(ok);if(resolver.current===settle)resolver.current=null;if(id){overlay.close(id);setTimeout(()=>overlay.unmount(id),280)}};
+    resolver.current=settle;
+    id=overlay.open(({isOpen})=><ConfirmDialog open={isOpen} title={settings.title??(english?'Continue?':'계속할까요?')} description={settings.message} confirmLabel={settings.confirmLabel??(english?'Continue':'계속하기')} cancelLabel={settings.cancelLabel??(english?'Cancel':'취소')} onConfirm={()=>settle(true)} onCancel={()=>settle(false)}/>);
+  }), [english]);
+  useEffect(()=>()=>{resolver.current?.(false);resolver2.current?.(null)},[]);
   const [ask2, setAsk2] = useState<{ open: boolean; value: string } & PromptOptions>({ open: false, value: '' });
   const resolver2 = useRef<((value: string | null) => void) | null>(null);
   const prompt = useCallback((options: PromptOptions | string) => new Promise<string | null>(resolve => {
@@ -58,7 +64,6 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
     setAsk2({ open: true, value: o.defaultValue ?? '', ...o });
   }), []);
   const settle2 = (value: string | null) => { resolver2.current?.(value); resolver2.current = null; setAsk2(prev => ({ ...prev, open: false })); };
-  const settle = (ok: boolean) => { resolver.current?.(ok); resolver.current = null; setAsk(prev => ({ ...prev, open: false })); };
 
   const showAlert = useCallback((msg: string, type: AlertType = 'info', title?: string) => {
     const titles = english ? {success:'Done',error:'Error',info:'Notice'} : { success: '완료', error: '오류', info: '알림' };
@@ -71,22 +76,12 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
 
   const showSuccess = useCallback((msg: string) => {
     const id = ++toastId.current;
-    setToasts(prev => [...prev, { id, message: msg }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 2500);
+    setToasts(prev => [...prev.slice(-2), { id, message: msg }]);
   }, []);
 
   return (
     <Ctx.Provider value={{ showAlert, showError, showSuccess, confirm, prompt }}>
       {children}
-      <ConfirmDialog
-        open={ask.open}
-        title={ask.title}
-        description={ask.message}
-        confirmLabel={ask.confirmLabel ?? (english ? 'Confirm' : '확인')}
-        cancelLabel={ask.cancelLabel ?? (english ? 'Cancel' : '취소')}
-        onConfirm={() => settle(true)}
-        onCancel={() => settle(false)}
-      />
       <Dialog open={ask2.open} onOpenChange={o => !o && settle2(null)}>
         <DialogContent className="max-w-sm" showCloseButton={false}>
           <form onSubmit={e => { e.preventDefault(); settle2(ask2.value); }} className="space-y-4">
@@ -125,19 +120,17 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
         </DialogContent>
       </Dialog>
 
-      <div className="fixed bottom-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none sm:items-end sm:right-4 sm:left-auto">
-        {toasts.map(t => (
-          <div
-            key={t.id}
-            className="flex items-center gap-2 rounded-xl bg-foreground/90 backdrop-blur-xl saturate-150 text-background px-4 py-2.5 text-sm font-bold shadow-lg ring-1 ring-background/10 animate-in fade-in slide-in-from-bottom-4 duration-200 ease-[var(--ease-spring)]"
-          >
-            <CheckCircle2 className="size-4 text-success shrink-0" />
-            {t.message}
-          </div>
-        ))}
+      <div className="cb-toast-stack" role="region" aria-label={english?'Notifications':'알림'}>
+        <AnimatePresence initial={false}>{toasts.map(t=><FeedbackToast key={t.id} toast={t} english={english} dismiss={()=>setToasts(items=>items.filter(item=>item.id!==t.id))}/>)}</AnimatePresence>
       </div>
     </Ctx.Provider>
   );
+}
+
+function FeedbackToast({toast,english,dismiss}:{toast:Toast;english:boolean;dismiss:()=>void}){
+ const reduce=useReducedMotion(),[paused,setPaused]=useState(false),dismissRef=useRef(dismiss);dismissRef.current=dismiss;
+ useEffect(()=>{if(paused)return;const timer=setTimeout(()=>dismissRef.current(),6000);return()=>clearTimeout(timer)},[paused]);
+ return <motion.div layout role="status" className="cb-feedback-toast" initial={{opacity:0,y:reduce?0:18,scale:reduce?1:.96}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,x:reduce?0:16}} transition={reduce?{duration:0}:productSpring} onPointerEnter={()=>setPaused(true)} onPointerLeave={()=>setPaused(false)} onFocusCapture={()=>setPaused(true)} onBlurCapture={event=>{if(!event.currentTarget.contains(event.relatedTarget))setPaused(false)}}><span className="cb-toast-icon"><CheckCircle2 size={21} strokeWidth={1.8} aria-hidden="true"/></span><span>{toast.message}</span><button type="button" aria-label={english?'Dismiss notification':'알림 닫기'} onClick={dismiss}><X size={17}/></button></motion.div>;
 }
 
 export function useAlert() {
