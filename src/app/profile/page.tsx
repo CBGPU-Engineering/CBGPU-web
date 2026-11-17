@@ -12,6 +12,7 @@ import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldA
 import { LoadingSpinner } from '@/components/ui/spinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
+import {multiSchoolEnabled} from '@/lib/schoolsClient';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -42,6 +43,7 @@ const NOTIF_PREFS = [
 type NotifPrefKey = typeof NOTIF_PREFS[number]['key'];
 
 export default function Profile() {
+  const scopedIdentity=multiSchoolEnabled||['1','true'].includes(process.env.NEXT_PUBLIC_CBGPU_ACCOUNT_V2||'');
   const { user, profile, refreshProfile, isLoading: authLoading, isAdmin, is3DPrintManager, isLaserCutManager } = useAuth();
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
@@ -151,16 +153,13 @@ export default function Profile() {
 
   async function updateProfile() {
     if (!user) return;
-    if (!isValidStudentId(studentId)) {
+    if (!scopedIdentity && !isValidStudentId(studentId)) {
       showError(`학번 형식이 올바르지 않습니다. ${STUDENT_ID_HINT}`);
       return;
     }
     setIsUpdating(true);
     try {
-      const { error } = await supabase.from('profiles').update({
-        student_id: studentId,
-        full_name: fullName,
-      }).eq('id', user.id);
+      const { error } = await supabase.from('profiles').update(scopedIdentity?{full_name:fullName}:{student_id:studentId,full_name:fullName}).eq('id', user.id);
 
       if (error) throw error;
       await refreshProfile();
@@ -343,12 +342,14 @@ export default function Profile() {
               autoComplete="off"
               inputMode="numeric"
               maxLength={4}
+              disabled={scopedIdentity}
               value={studentId}
               onChange={(e: any) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 4))}
               className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
               placeholder="2309"
             />
-            <p className="text-xs text-muted-foreground font-medium ml-1">{STUDENT_ID_HINT}</p>
+            <p className="text-xs text-muted-foreground font-medium ml-1">{scopedIdentity?'학번은 학교별 소속 정보에서 확인하고 인증해요. 교사와 외부 계정은 학번 없이 프로필을 저장할 수 있어요.':STUDENT_ID_HINT}</p>
+            {scopedIdentity&&<Button asChild variant="link" size="sm"><a href="/schools">학교 소속 확인하기</a></Button>}
           </div>
         </div>
 
@@ -361,6 +362,12 @@ export default function Profile() {
           {isUpdating ? "Saving Changes..." : "Save Profile"}
         </Button>
       </form>
+
+      <section className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl space-y-3">
+        <h2 className="text-lg font-semibold">내 제작 신청 내역</h2>
+        <p className="text-sm text-muted-foreground">학교 장비 이용 권한이 바뀌어도 내 신청과 첨부파일은 확인할 수 있어요. 새 신청에는 현재 이용 권한이 필요해요.</p>
+        <div className="flex flex-wrap gap-3"><Button asChild variant="outline"><a href="/manufacturing/print">3D 프린팅 신청 내역</a></Button><Button asChild variant="outline"><a href="/manufacturing/laser">레이저 커팅 신청 내역</a></Button></div>
+      </section>
 
       <form
         onSubmit={(e) => { e.preventDefault(); changePassword(); }}
