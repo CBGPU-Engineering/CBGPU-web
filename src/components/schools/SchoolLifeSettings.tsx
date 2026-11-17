@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import SchoolLifeReadiness from "./SchoolLifeReadiness";
 import { useAuth } from "@/lib/useAuth";
 import { schoolsRequest } from "@/lib/schoolsClient";
 import {
@@ -170,6 +171,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
         </p>
       ) : (
         <>
+          {!editor&&<SchoolLifeReadiness source={source}/>}
           <dl className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
             <div>
               <dt className="text-xs text-muted-foreground">School</dt>
@@ -179,7 +181,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
             </div>
             <div>
               <dt className="text-xs text-muted-foreground">
-                Configuration version
+                Configuration version (not provider health)
               </dt>
               <dd>
                 {source.version} · {source.status}

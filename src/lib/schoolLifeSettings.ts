@@ -1,5 +1,7 @@
 export type SchoolLifeSources = {
   school_id: string;
+  official_id?: string|null;
+  education_office_code?: string|null;
   status: "READY" | "NOT_CONFIGURED" | "DISABLED";
   school_name: string;
   region: string;
