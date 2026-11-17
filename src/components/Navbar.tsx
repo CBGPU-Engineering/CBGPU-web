@@ -32,6 +32,7 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: '/meal', label: '급식' },
   { href: '/wakeup', label: '기상송' },
   { href: '/dashboard', label: 'GPU' },
+  { href: '/messages', label: '대화' },
 ];
 
 const GROUPS: NavGroup[] = serviceGroups.map(group=>({label:group.title,links:group.services.map(({href,label})=>({href,label}))}));

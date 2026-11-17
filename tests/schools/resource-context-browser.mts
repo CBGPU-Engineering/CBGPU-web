@@ -12,6 +12,7 @@ const browser = await chromium.launch({
 try {
   const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
+      extraHTTPHeaders:{"x-cbgpu-public-host":"researcher.cbgpu.com"},
     }),
     page = await context.newPage(),
     errors: string[] = [];
@@ -48,6 +49,15 @@ try {
       }),
     }),
   );
+  // Owned deployment reads are independent of guest school grants. Keep the
+  // fixture self-contained instead of contacting an operating deployment worker.
+  for (const path of ['/api/deploy/projects','/api/deploy/servers/projects']) {
+    await page.route('**'+path, route => {
+      assert.equal(route.request().method(), 'GET');
+      assert.equal(route.request().headers().authorization, 'Bearer '+session.access_token);
+      return route.fulfill({contentType:'application/json',body:'{"projects":[]}'});
+    });
+  }
   let allowed = true,
     aiEnabled = true,
     current = "cbsh",
@@ -296,6 +306,7 @@ try {
   delay = true;
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await started;
+  await page.getByRole("button", { name: "메뉴 열기", exact:true }).click();
   await page.getByRole("button", { name: /학교 바꾸기/ }).click();
   await page
     .getByRole("dialog")
@@ -306,6 +317,7 @@ try {
       name: /학교 바꾸기 · Synthetic Other School · 임시 자원 이용/,
     })
     .waitFor();
+  await page.getByRole("button",{name:"메뉴 닫기",exact:true}).click();
   const before = gpuReads;
   release();
   await page.waitForTimeout(300);
