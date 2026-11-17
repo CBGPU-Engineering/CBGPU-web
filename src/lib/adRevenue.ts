@@ -2,7 +2,10 @@
 export const revenueFields=['date','device','requests','impressions','clicks','estimated_revenue','confirmed_revenue'] as const;
 export type RevenueField=typeof revenueFields[number];
 export type RevenueMapping=Partial<Record<RevenueField,string>>;
+// Historical API `device` keys identify supplied banner formats, not physical visitor devices.
 export type ReportDevice='MOBILE'|'DESKTOP'|'UNKNOWN';
+export type RevenueAttribution={device_basis?:'AD_UNIT_FORMAT';physical_device_revenue?:null;physical_device_reason?:'NO_OFFICIAL_DEVICE_DIMENSION'};
+export function adFormatLabel(format:ReportDevice){return format==='MOBILE'?'Mobile banner format':format==='DESKTOP'?'Desktop banner format':'Unmapped banner units'}
 export type DeviceMetrics={device:ReportDevice;requests:number|null;impressions:number|null;clicks:number|null;estimated_revenue:number|null;confirmed_revenue:number|null};
 export function ratio(numerator:number|null,denominator:number|null,multiplier=1){return numerator===null||denominator===null||denominator<=0?null:numerator/denominator*multiplier}
 export function displayMetric(value:number|null|undefined,style:'count'|'money'|'percent'='count',currency='KRW'){if(value===null||value===undefined||!Number.isFinite(value))return 'N/A';return style==='money'?new Intl.NumberFormat('en-US',{style:'currency',currency,maximumFractionDigits:2}).format(value):style==='percent'?value.toFixed(2)+'%':new Intl.NumberFormat('en-US',{maximumFractionDigits:2}).format(value)}
@@ -25,9 +28,9 @@ export function csvPreview(text:string,delimiter=','){
 export function initialRevenueMapping(headers:string[]):RevenueMapping{const mapping:RevenueMapping={};for(const key of revenueFields)if(headers.includes(key))mapping[key]=key;return mapping}
 export type ImportColumns={date?:string;unit_id:string;revenue:string;impressions?:string;clicks?:string;requests?:string};
 export type RevenueImport={csv:string;granularity:'DAY'|'PERIOD';period_start:string;period_end:string;currency:'KRW';timezone:'Asia/Seoul'|'UTC';kind:'ESTIMATED'|'CONFIRMED';columns:ImportColumns;format:{delimiter:','|';'|'\t';date_format:'YYYY-MM-DD'|'YYYY.MM.DD'|'YYYY/MM/DD';decimal_separator:'.'|',';group_separator:','|'.'|' '|''}};
-export type RevenueDevice={device:ReportDevice;revenue_krw:string;impressions:string|number|null;clicks:string|number|null;requests:string|number|null;ecpm_krw:string|null;ctr_percent:string|null};
-export type RevenuePreview={preview_hash:string;rows_count:number;period_start:string;period_end:string;kind:'ESTIMATED'|'CONFIRMED';currency:'KRW';devices:RevenueDevice[];warnings:string[];conflicts:number};
+export type RevenueDevice=RevenueAttribution&{device:ReportDevice;revenue_krw:string;impressions:string|number|null;clicks:string|number|null;requests:string|number|null;ecpm_krw:string|null;ctr_percent:string|null};
+export type RevenuePreview=RevenueAttribution&{preview_hash:string;rows_count:number;period_start:string;period_end:string;kind:'ESTIMATED'|'CONFIRMED';currency:'KRW';devices:RevenueDevice[];warnings:string[];conflicts:number};
 export function reportedMetric(value:string|number|null|undefined,style:'count'|'money'|'percent'='count'){if(value===null||value===undefined||value==='')return 'N/A';if(style==='count'&&typeof value==='string'&&/^\d+$/.test(value))return new Intl.NumberFormat('en-US').format(BigInt(value));const number=Number(value);return displayMetric(Number.isFinite(number)?number:null,style)}
-export type RevenueDay={date:string;device:ReportDevice;revenue_krw:string;coverage_verified:boolean};
-export type RevenueMonth={month:string;device:ReportDevice;revenue_krw:string;coverage_verified:boolean};
-export type RevenueAnalytics={kind:'ESTIMATED'|'CONFIRMED';currency:'KRW';timezone:'Asia/Seoul'|'UTC';period_start:string;period_end:string;devices:RevenueDevice[];warnings:string[];reports_count:number;daily?:RevenueDay[];monthly?:RevenueMonth[]};
+export type RevenueDay=RevenueAttribution&{date:string;device:ReportDevice;revenue_krw:string;coverage_verified:boolean};
+export type RevenueMonth=RevenueAttribution&{month:string;device:ReportDevice;revenue_krw:string;coverage_verified:boolean};
+export type RevenueAnalytics=RevenueAttribution&{kind:'ESTIMATED'|'CONFIRMED';currency:'KRW';timezone:'Asia/Seoul'|'UTC';period_start:string;period_end:string;devices:RevenueDevice[];warnings:string[];reports_count:number;daily?:RevenueDay[];monthly?:RevenueMonth[]};
