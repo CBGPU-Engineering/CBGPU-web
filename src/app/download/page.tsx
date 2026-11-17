@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { QRCodeSVG } from 'qrcode.react';
 import Link from 'next/link';
+import KakaoPageAd from '@/components/ads/KakaoPageAd';
 import {
   Cpu, Printer, Server, CalendarDays, UtensilsCrossed, LayoutGrid, Smartphone, ShieldCheck,
 } from 'lucide-react';
@@ -44,6 +45,7 @@ export default function DownloadPage() {
   }, [router]);
 
   return (
+    <>
     <section className="cb-page-content max-w-3xl mx-auto px-6 py-16 space-y-16">
       <div className="text-center space-y-6">
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
@@ -123,5 +125,7 @@ export default function DownloadPage() {
         </div>
       </div>
     </section>
+    <KakaoPageAd placement="platform" contentReady/>
+    </>
   );
 }
