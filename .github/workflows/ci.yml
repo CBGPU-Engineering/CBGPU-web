@@ -20,6 +20,7 @@ jobs:
           node-version: 22
       - run: npm ci --no-audit --no-fund
       - run: npm run check:source
+      - run: npm audit --omit=dev --audit-level=high
       - run: npm run check:tooling
       - run: npm run check:extensions
       - run: npm test
