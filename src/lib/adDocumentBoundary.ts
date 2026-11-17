@@ -2,10 +2,12 @@
 const touched=new WeakSet<Document>();
 const guarded=new WeakSet<Document>();
 const personal=new WeakSet<Document>();
+const routes=new WeakMap<Document,string>();
 export function markPersonalDocument(){if(typeof document!=='undefined')personal.add(document)}
 export function adDocumentHasPersonalState(){return typeof document!=='undefined'&&personal.has(document)}
 export function adDocumentHasRun(){return typeof document!=='undefined'&&touched.has(document)}
-export function markAdDocument(document:Document){touched.add(document)}
+export function markAdDocument(document:Document){touched.add(document);routes.set(document,document.defaultView?.location.pathname||'')}
+export function adDocumentRouteChanged(path:string){return typeof document!=='undefined'&&touched.has(document)&&routes.get(document)!==path}
 export function installAdNavigationBoundary(document:Document){
  if(guarded.has(document))return;
  const view=document.defaultView;if(!view)return;guarded.add(document);
