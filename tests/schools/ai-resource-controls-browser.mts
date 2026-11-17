@@ -322,7 +322,10 @@ try {
       await page.getByRole("button", { name: /Retained work/ }).waitFor();
     }
     allowed = false;
+    const deniedScope = page.waitForResponse(response => new URL(response.url()).pathname === "/api/schools/schools/cbsh/resource-access");
     await page.getByRole("button", { name, exact: true }).click();
+    assert.equal((await (await deniedScope).json()).resources.ai, false);
+    await page.waitForFunction(()=>document.querySelector('[role="region"][aria-label="AI 도구"]')?.getAttribute("aria-busy")==="false");
     await page.getByRole("alert").waitFor();
     assert.equal(jobWrites, 0);
     assert.equal(searchWrites, 0);
@@ -344,9 +347,14 @@ try {
         ),
       );
       allowed = false;
+      // The earlier prompt's alert may still exist. It is not a completion
+      // signal for this retry; await its own fresh proof and settled action.
+      const deniedRetry = page.waitForResponse(response => new URL(response.url()).pathname === "/api/schools/schools/cbsh/resource-access");
       await page
         .getByRole("button", { name: "다시 실행", exact: true })
         .click();
+      assert.equal((await (await deniedRetry).json()).resources.ai, false);
+      await page.waitForFunction(()=>document.querySelector('[role="region"][aria-label="AI 도구"]')?.getAttribute("aria-busy")==="false");
       await page.getByRole("alert").waitFor();
       assert.equal(jobWrites, 0);
     }
