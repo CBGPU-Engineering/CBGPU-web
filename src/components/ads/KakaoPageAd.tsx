@@ -20,20 +20,24 @@ function PublicAd(props:KakaoPageAdProps){
  return <AdUnit key={path+'?'+search}/>;
 }
 function AdUnit(){
- const host=useRef<HTMLElement|null>(null),slot=useRef<HTMLDivElement|null>(null),format=useRef<keyof typeof kakaoAdUnits|null>(null),attempted=useRef(false);
+ const host=useRef<HTMLElement|null>(null),slot=useRef<HTMLDivElement|null>(null),format=useRef<keyof typeof kakaoAdUnits|null>(null),attempted=useRef(false),intersecting=useRef(false),teardown=useRef<(()=>void)|null>(null);
  const [mode,setMode]=useState<keyof typeof kakaoAdUnits|null>(null),[fits,setFits]=useState(false),[unavailable,setUnavailable]=useState(false),[canStart,setCanStart]=useState(false);
  const measure=useCallback((element:HTMLElement|null)=>{host.current=element;if(!element)return;const width=element.getBoundingClientRect().width;if(width<320)return;const initial=width>=728?'desktop':'mobile';format.current=initial;setMode(initial);setFits(true)},[]);
  useEffect(()=>{const element=host.current;if(!element)return;const observer=new ResizeObserver(()=>{const width=element.getBoundingClientRect().width;if(!format.current&&width>=320){format.current=width>=728?'desktop':'mobile';setMode(format.current)}setFits(!!format.current&&width>=kakaoAdUnits[format.current].width)});observer.observe(element);return()=>observer.disconnect()},[]);
  useEffect(()=>{
-  const element=host.current;if(!element)return;let intersecting=false,started=false;
-  const activate=()=>{if(!started&&intersecting&&document.visibilityState==='visible'){started=true;setCanStart(true)}};
+  const element=host.current;if(!element)return;
+  const activate=()=>{if(!attempted.current)setCanStart(intersecting.current&&document.visibilityState==='visible')};
   // Only defer the first request. Never drive provider refreshes from visibility events.
-  const observer=new IntersectionObserver(entries=>{intersecting=entries.some(entry=>entry.isIntersecting&&entry.intersectionRatio>0);activate()},{threshold:0});
+  const observer=new IntersectionObserver(entries=>{intersecting.current=entries.some(entry=>entry.isIntersecting&&entry.intersectionRatio>0);activate()},{threshold:0});
   observer.observe(element);document.addEventListener('visibilitychange',activate);
   return()=>{observer.disconnect();document.removeEventListener('visibilitychange',activate)};
  },[]);
+ // Fit changes hide the original unit; they must never tear it down or request another.
+ useEffect(()=>()=>{teardown.current?.();teardown.current=null},[]);
  useEffect(()=>{
   const target=slot.current;if(!mode||!fits||!canStart||!target||attempted.current||adDocumentHasRun()||leases.has(document))return;
+  const element=host.current;if(!element||!intersecting.current||document.visibilityState!=='visible')return;
+  const rect=element.getBoundingClientRect();if(rect.width<kakaoAdUnits[mode].width||rect.height<=0||rect.bottom<=0||rect.right<=0||rect.top>=innerHeight||rect.left>=innerWidth||getComputedStyle(element).visibility!=='visible')return;
   attempted.current=true;
   const lease=Symbol('public-ad');leases.set(document,lease);
   const unit=kakaoAdUnits[mode],ins=document.createElement('ins'),script=document.createElement('script');
@@ -49,7 +53,7 @@ function AdUnit(){
   script.onerror=()=>setUnavailable(true);
   markAdDocument(document);installAdNavigationBoundary(document);
   target.append(ins,script);
-  return()=>{script.onerror=null;if(callbacks[callbackName]===noFill)delete callbacks[callbackName];target.replaceChildren();if(leases.get(document)===lease)leases.delete(document)};
+  teardown.current=()=>{script.onerror=null;if(callbacks[callbackName]===noFill)delete callbacks[callbackName];target.replaceChildren();if(leases.get(document)===lease)leases.delete(document)};
  },[mode,fits,canStart]);
  return <aside ref={measure} className="cb-kakao-page-ad" aria-label="광고" data-ad-placement="public" data-ad-unavailable={unavailable||undefined} style={{visibility:mode&&fits?'visible':'hidden'}}><span className="cb-kakao-ad-label">광고</span><div ref={slot} className="cb-kakao-ad-slot" data-ad-format={mode||'pending'}/></aside>;
 }
