@@ -16,6 +16,7 @@ const links=[
  {href:'/admin/gpu',key:'gpu',label:'GPU reservations',Icon:Cpu},
  {href:'/admin/server',key:'server',label:'Server deployments',Icon:Server},
  {href:'/admin/accounts',key:'accounts',label:'Accounts',Icon:Users},
+ ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{href:'/admin/schools',key:'schools',label:'School applications',Icon:Users}]:[]),
  {href:'/admin/careers',key:'careers',label:'Careers',Icon:Users},
  {href:'/admin/manufacture',key:'manufacture',label:'Equipment managers',Icon:Printer},
  {href:'/admin/materials',key:'materials',label:'File storage',Icon:Files},
