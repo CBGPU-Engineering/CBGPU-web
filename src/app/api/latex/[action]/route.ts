@@ -10,7 +10,7 @@ export async function POST(req:NextRequest,ctx:{params:Promise<{action:string}>}
 async function handle(req:NextRequest,ctx:{params:Promise<{action:string}>}){
  const error=(message:string,status:number)=>NextResponse.json({error:message},{status});
  try{
-  const {action}=await ctx.params;if(!['projects','inspect','import','open','new','upload-begin','upload-chunk','upload-finish','upload-cancel','trash'].includes(action))return error('Not found',404);
+  const {action}=await ctx.params;if(!['projects','inspect','import','open','new','upload-begin','upload-chunk','upload-finish','upload-cancel','trash','allocate'].includes(action))return error('Not found',404);
   const raw=req.headers.get('host')?.split(':')[0]||'';const forwarded=req.headers.get('x-cbgpu-public-host')||'';
   const host=['127.0.0.1','localhost'].includes(raw)?forwarded:raw;
   if(!hosts.has(host))return error('Not found',404);
