@@ -1,6 +1,6 @@
+import CBGPULogo from '@/components/CBGPULogo';
 import {siteHref} from '@/lib/siteHref';
 import Link from 'next/link';
-import Image from 'next/image';
 import { headers } from 'next/headers';
 import { ArrowUpRight, ChevronRight } from 'lucide-react';
 import {WorkspaceTheme,WorkspaceThemeControl} from './WorkspaceTheme';
@@ -24,7 +24,7 @@ export default async function SiteShell({ site, children }: { site: 'docs' | 'ar
     : [{ href: home, internalPath: '/arxiv', label: '연구 프리프린트', kind: 'papers' as const }, { href: `${base}/submit`, internalPath: '/arxiv/submit', label: '연구 제출', kind: 'submit' as const }];
   return <WorkspaceTheme><div className="portal">
     <aside className="sidebar">
-      <Link href={home} className="brand"><Image src="/img/cbgpu-logo.png" width={30} height={30} alt="" /><span className="brand-word">CBGPU<small>{title}</small></span></Link>
+      <Link href={home} className="brand"><CBGPULogo  width={30} height={30} alt="" /><span className="brand-word">CBGPU<small>{title}</small></span></Link>
       <p className="nav-caption">Workspace</p>
       <PublicationNav items={items} />
       <div className="sidebar-bottom"><a href={siteHref(site === 'docs' ? 'https://arxiv.cbgpu.com' : 'https://docs.cbgpu.com')}>{site === 'docs' ? '연구 프리프린트' : '사용 문서'}<ArrowUpRight aria-hidden="true" /></a><a href={siteHref('https://cbgpu.com')}>CBGPU 열기<ArrowUpRight aria-hidden="true" /></a></div>

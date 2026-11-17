@@ -1,7 +1,7 @@
 'use client';
+import CBGPULogo from '@/components/CBGPULogo';
 import {usePathname} from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import SiteBanner from '@/components/SiteBanner';
 import ApprovalNotice from '@/components/ApprovalNotice';
@@ -16,8 +16,8 @@ export default function MainSiteFrame({children}:{children:React.ReactNode}){con
               <footer className="hidden xl:block border-t py-12 bg-muted/20 text-center text-sm text-muted-foreground transition-all">
                 <div className="flex flex-col items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <Image width={24} height={24}
-                      src="/img/cbgpu-logo.png"
+                    <CBGPULogo width={24} height={24}
+
                       alt=""
                       className="w-6 h-6 object-contain"
                     />

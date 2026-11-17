@@ -1,5 +1,6 @@
 'use client';
 
+import CBGPULogo from '@/components/CBGPULogo';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -100,16 +101,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
     <nav aria-label="주 메뉴" className="flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
       <div className="flex items-center gap-4 md:gap-8">
         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
-          <img
-            src="/img/cbgpu-logo.png"
-            alt=""
-            width={30}
-            height={30}
-            className="size-[30px] object-contain"
-          />
-          <span className="text-xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
-            CBGPU
-          </span>
+          <CBGPULogo variant="horizontal" width={130} height={30} alt="CBGPU"/>
         </Link>
 
         {brandSuffix}

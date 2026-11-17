@@ -1,7 +1,7 @@
 'use client';
+import CBGPULogo from '@/components/CBGPULogo';
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {DropdownMenu as ModeMenu} from 'radix-ui';
 import {useTheme} from 'next-themes';
 import {Check,ChevronDown,RefreshCw,GraduationCap,FlaskConical,ShieldCheck,Printer,Music,Moon,Sun} from 'lucide-react';
@@ -30,7 +30,7 @@ export default function AppSpaceFrame({current,nav,activeId,children}:{current:S
  return <div className="cb-workspace cb-app" style={{'--workspace-accent':'var(--primary)'} as React.CSSProperties}>
   <div className="cb-workspace-body">
    <header className="cb-workspace-header cb-app-header">
-    <a href={appHome('student')} className="cb-app-brand" aria-label="CBGPU 앱 홈"><Image src="/img/cbgpu-logo.png" width={34} height={34} alt="CBGPU"/></a>
+    <a href={appHome('student')} className="cb-app-brand" aria-label="CBGPU 앱 홈"><CBGPULogo  width={34} height={34} alt="CBGPU"/></a>
     <ModeMenu.Root>
      <ModeMenu.Trigger asChild><button className="cb-app-mode-trigger" aria-label="CBGPU 공간 선택" data-current-mode={current}><span><small>CBGPU</small><strong>{currentLabel}</strong></span><ChevronDown size={14}/></button></ModeMenu.Trigger>
      <ModeMenu.Portal><ModeMenu.Content className="cb-app-mode-menu" align="center" sideOffset={12} collisionPadding={12}>

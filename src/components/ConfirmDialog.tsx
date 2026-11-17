@@ -39,7 +39,7 @@ export default function ConfirmDialog({
           <Button variant="outline" onClick={onCancel} className="font-semibold text-xs">
             {cancelLabel ?? (english ? 'Cancel' : '취소')}
           </Button>
-          <Button variant="destructive" onClick={onConfirm} className="font-semibold text-xs">
+          <Button variant="destructive" onClick={onConfirm} data-confirm-action="accept" className="font-semibold text-xs">
             {confirmLabel ?? (english ? 'Delete' : '삭제')}
           </Button>
         </DialogFooter>

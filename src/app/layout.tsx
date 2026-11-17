@@ -28,7 +28,7 @@ import SiteBanner from '@/components/SiteBanner';
 export const viewport:Viewport={width:'device-width',initialScale:1,viewportFit:'cover',interactiveWidget:'resizes-content'};
 
 const siteUrl = 'https://cbgpu.com';
-const schoolLogo = '/img/cbgpu-logo.png';
+const schoolLogo = '/brand/v1/icon_light_512.png';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName: 'CBGPU',
     title: 'CBGPU | 학교생활·연구·개발을 하나로',
     description: '충북과학고등학교 학생을 위한 올인원 플랫폼. GPU 대여, 자습신청, 시간표, 급식, 투표, 연구노트, 스터디 매칭까지.',
-    images: [{ url: schoolLogo, width: 512, height: 512, alt: '충북과학고등학교 로고' }],
+    images: [{ url: schoolLogo, width: 512, height: 512, alt: 'CBGPU 로고' }],
   },
   twitter: {
     card: 'summary',
@@ -66,9 +66,9 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true },
   },
   icons: {
-    icon: [{ url: schoolLogo, href: schoolLogo }],
-    shortcut: schoolLogo,
-    apple: schoolLogo,
+    icon: [{url:'/brand/v1/favicon.ico',type:'image/x-icon'},{url:'/brand/v1/icon_light_192.png',sizes:'192x192',type:'image/png'}],
+    shortcut: '/brand/v1/favicon.ico',
+    apple: '/brand/v1/icon_light_180.png',
   },
 };
 

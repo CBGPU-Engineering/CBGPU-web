@@ -1,6 +1,6 @@
 'use client';
+import CBGPULogo from '@/components/CBGPULogo';
 import Link from 'next/link';
-import Image from 'next/image';
 import {WorkspaceThemeControl} from '@/components/publications/WorkspaceTheme';
 import {usePathname,useRouter,useSearchParams} from 'next/navigation';
 import {useEffect,useState} from 'react';
@@ -33,7 +33,7 @@ export default function AdminShell({children,appWebView=false}:{children:React.R
  if(appFrame||pathname==='/admin/m'||pathname.startsWith('/admin/m/'))return <AppAdminFrame>{children}</AppAdminFrame>;
  return <div className="admin-developer-shell" data-theme={mounted?resolvedTheme:undefined}>
   <div className="portal">
-   <aside className="sidebar" aria-label="Admin sidebar"><Link href="/admin" className="brand" aria-label="CBGPU Admin overview"><Image src="/img/cbgpu-logo.png" alt="" width={30} height={30}/><span className="brand-word">CBGPU<small>Admin</small></span></Link>
+   <aside className="sidebar" aria-label="Admin sidebar"><Link href="/admin" className="brand" aria-label="CBGPU Admin overview"><CBGPULogo  alt="" width={30} height={30}/><span className="brand-word">CBGPU<small>Admin</small></span></Link>
     <p className="nav-caption">Workspace</p><nav className="navigation" aria-label="Admin tools">{links.map(({href,key,label,Icon})=><Link key={key} href={href} aria-current={section===key?'page':undefined} className={'nav-item'+(section===key?' active':'')}><Icon className="icon" strokeWidth={1.6}/>{label}</Link>)}</nav>
     <div className="sidebar-bottom"><div className="account-summary"><p>{profile?.full_name||user?.email||'Administrator'}</p><p className="meta">{user?.email}</p></div><a href="https://cbgpu.com" target="_blank" rel="noopener noreferrer">Open cbgpu.com<ArrowUpRight className="icon"/></a><button type="button" className="button ghost" onClick={logout} disabled={busy}>{busy?'Signing out…':'Sign out'}</button></div>
    </aside>

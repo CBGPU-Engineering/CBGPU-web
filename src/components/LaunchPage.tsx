@@ -1,5 +1,6 @@
 'use client';
 
+import CBGPULogo from '@/components/CBGPULogo';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -48,7 +49,7 @@ export default function LaunchPage() {
     <ScrollReveal className="-mx-4 md:-mx-6 -my-10">
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="px-6 pt-20 pb-24 md:pt-32 md:pb-36 text-center space-y-8 max-w-3xl mx-auto">
-        <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={72} height={72} className="mx-auto" />
+        <CBGPULogo  alt="CBGPU" width={72} height={72} className="mx-auto" />
         <div className="space-y-3">
           <p className="text-sm font-semibold tracking-normal text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight leading-[1.15]">
