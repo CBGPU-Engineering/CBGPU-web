@@ -150,3 +150,17 @@ test('AI is a derived module capability, never inferred from GPU permission',()=
  assert.equal(resourceAllowed(withAi,{...access,resources:{...access.resources,ai:true}},'ai',now),true);
  assert.equal(resourceAllowed(guest,access,'ai',now),false,'older API without module capability fails closed for AI only');
 });
+
+test('explicit guest study and fabrication scopes reveal only their approved CBsh modules',()=>{
+ const current:ResourceContext={...guest,resources:['study','fabrication']};
+ const proof:ResourceAccess={...access,resources:{...access.resources,study:true,fabrication:true}};
+ const scope={status:'none' as const,school:null,resource:{status:'ready',current,access:proof,serverNow:now}};
+ for(const path of ['/study','/manufacturing/print/new','/manufacturing/laser/new']){
+  assert.equal(schoolServiceVisible(scope,path),true);
+  assert.equal(schoolServiceVisible({...scope,resource:{...scope.resource,serverNow:Date.parse(end)}},path),false);
+ }
+ for(const path of ['/wakeup','/timetable','/meal','/match','/polls','/dashboard'])assert.equal(schoolServiceVisible(scope,path),false);
+ assert.equal(schoolServiceVisible({...scope,resource:{...scope.resource,access:{...proof,resources:{...proof.resources,fabrication:false}}}},'/manufacturing/laser/new'),false);
+ const foreign={...current,school_id:'foreign',school:{...current.school,id:'foreign'}};
+ assert.equal(schoolServiceVisible({...scope,resource:{...scope.resource,current:foreign,access:{...proof,school_id:'foreign'}}},'/study'),false);
+});
