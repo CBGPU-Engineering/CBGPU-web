@@ -335,6 +335,7 @@ try {
   const beforeDeadline=otherProofReads;
   await page.waitForTimeout(1500);
   assert.ok(otherProofReads>beforeDeadline,'earliest grant expiry triggers a fresh permission read');
+  await page.getByRole('button',{name:'메뉴 열기',exact:true}).click();
   await page.getByRole('button',{name:/학교 바꾸기 · Synthetic Other School · 임시 자원 이용/}).waitFor();
   continuedB=false;
   expiresB = Date.now() + 1500;
@@ -342,6 +343,7 @@ try {
   await page
     .getByRole("button", { name: "학교 바꾸기 · 학교 선택", exact: true })
     .waitFor({ timeout: 6000 });
+  await page.getByRole("button",{name:"메뉴 닫기",exact:true}).click();
   await page.goto(origin + "/notes?mode=researcher", {
     waitUntil: "networkidle",
   });
