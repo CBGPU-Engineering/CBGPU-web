@@ -49,10 +49,10 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
   const confirm = useCallback((options: ConfirmOptions | string) => new Promise<boolean>(resolve => {
     resolver.current?.(false);
     const settings=typeof options==='string'?{message:options}:options;
-    let finished=false,id='';
-    const settle=(ok:boolean)=>{if(finished)return;finished=true;resolve(ok);if(resolver.current===settle)resolver.current=null;if(id){overlay.close(id);setTimeout(()=>overlay.unmount(id),280)}};
+    let finished=false,rendered=false,id='';
+    const settle=(ok:boolean)=>{if(finished)return;finished=true;resolve(ok);if(resolver.current===settle)resolver.current=null;if(id){overlay.close(id);if(!rendered)overlay.unmount(id)}};
     resolver.current=settle;
-    id=overlay.open(({isOpen})=><ConfirmDialog open={isOpen} title={settings.title??(english?'Continue?':'계속할까요?')} description={settings.message} confirmLabel={settings.confirmLabel??(english?'Continue':'계속하기')} cancelLabel={settings.cancelLabel??(english?'Cancel':'취소')} onConfirm={()=>settle(true)} onCancel={()=>settle(false)}/>);
+    id=overlay.open(({isOpen,unmount})=>{rendered=true;return <ConfirmDialog open={isOpen} title={settings.title??(english?'Continue?':'계속할까요?')} description={settings.message} confirmLabel={settings.confirmLabel??(english?'Continue':'계속하기')} cancelLabel={settings.cancelLabel??(english?'Cancel':'취소')} onConfirm={()=>settle(true)} onCancel={()=>settle(false)} onClosed={unmount}/>});
   }), [english]);
   useEffect(()=>()=>{resolver.current?.(false);resolver2.current?.(null)},[]);
   const [ask2, setAsk2] = useState<{ open: boolean; value: string } & PromptOptions>({ open: false, value: '' });

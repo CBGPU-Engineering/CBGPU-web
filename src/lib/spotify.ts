@@ -21,6 +21,8 @@ export async function getSpotifyAppToken() {
     },
     body: 'grant_type=client_credentials',
     cache: 'no-store',
+    signal: AbortSignal.timeout(10_000),
+    redirect: 'error',
   });
   if (!response.ok) throw new Error('Spotify token request failed.');
   const token = await response.json() as SpotifyToken;
@@ -33,5 +35,7 @@ export async function spotifyApi(path: string, accessToken: string, init: Reques
     ...init,
     headers: { Authorization: `Bearer ${accessToken}`, ...init.headers },
     cache: 'no-store',
+    signal: init.signal ?? AbortSignal.timeout(10_000),
+    redirect: 'error',
   });
 }

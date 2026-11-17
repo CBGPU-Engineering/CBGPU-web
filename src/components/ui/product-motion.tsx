@@ -1,6 +1,6 @@
 'use client';
-import type {ReactNode} from 'react';
-import {AnimatePresence,LayoutGroup,MotionConfig,motion,useReducedMotion} from 'motion/react';
+import {useRef,type ReactNode} from 'react';
+import {AnimatePresence,LayoutGroup,MotionConfig,motion,useReducedMotion,useScroll,useSpring,useTransform,useInView} from 'motion/react';
 import {OverlayProvider} from 'overlay-kit';
 import {AlertCircle,CheckCircle2,Info,Search,Users,FolderOpen,Trophy,ShieldCheck} from 'lucide-react';
 import {productSpring,settleEase} from '@/lib/motion';
@@ -27,4 +27,14 @@ export function EmptyStateIllustration({kind='search'}:{kind?:'search'|'team'|'p
 }
 export function EmptyState({title,description,action,kind='search'}:{title:string;description:string;action?:ReactNode;kind?:'search'|'team'|'project'|'competition'|'permission'}){
  return <div className="cb-empty-state"><EmptyStateIllustration kind={kind}/><h3>{title}</h3><p>{description}</p>{action&&<div className="cb-empty-state-action">{action}</div>}</div>;
+}
+
+/** Scroll communicates section position; it never invents task-completion progress. */
+export function ScrollSection({children,className='',title}:{children:ReactNode;className?:string;title?:string}){
+ const ref=useRef<HTMLElement>(null),reduce=useReducedMotion(),visible=useInView(ref,{margin:'80px'});
+ const{scrollYProgress}=useScroll({target:ref,offset:['start end','end start']});
+ const position=useTransform(scrollYProgress,[0,.25,.8,1],[12,0,0,-6]);
+ const y=useSpring(position,{stiffness:260,damping:32});
+ const reading=useTransform(scrollYProgress,[.15,.85],[0,1]);
+ return <motion.section ref={ref} className={'cb-scroll-section '+className} style={!reduce&&visible?{y}:undefined} data-scroll-section><span aria-hidden="true" className="cb-scroll-rail"><motion.i style={!reduce&&visible?{scaleY:reading}:undefined}/></span>{title&&<h2 className="cb-scroll-title">{title}</h2>}{children}</motion.section>;
 }

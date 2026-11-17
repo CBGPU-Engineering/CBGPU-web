@@ -31,6 +31,6 @@ export async function GET(req: NextRequest) {
     }));
     return NextResponse.json({ items });
   } catch {
-    return NextResponse.json({ message: 'Spotify 검색 설정이 필요해요.' }, { status: 503 });
+    return NextResponse.json({ message: '지금 노래 검색에 연결하지 못했어요. 잠시 뒤 다시 시도해 주세요.' }, { status: 503 });
   }
 }

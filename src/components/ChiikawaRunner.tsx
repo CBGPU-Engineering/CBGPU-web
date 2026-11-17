@@ -60,6 +60,11 @@ export default function ChiikawaRunner() {
     };
     const platforms = (): Platform[] => {
       const b = bounds(), result: Platform[] = [];
+      // Sensitive forms have an explicit little shelf: characters remain present
+      // without ever landing over labels, typed values or password controls.
+      const reserved=document.querySelector<HTMLElement>('[data-companion-platform="reserved"]');
+      if(reserved){const r=reserved.getBoundingClientRect();if(r.width>=width&&r.bottom>b.top&&r.bottom<b.bottom)return [{element:reserved,left:r.left+4,right:r.right-width-4,top:r.bottom}];}
+      const protectedRects=[...document.querySelectorAll<HTMLElement>('main h1,main h2,main h3,main p,main label,main input,main textarea,main select,main [role="alert"]')].filter(e=>!e.closest('[aria-hidden="true"]')).map(e=>e.getBoundingClientRect()).filter(r=>r.width&&r.height&&r.bottom>b.top&&r.top<b.bottom);
       // Read the real geometry, never assume a fixed grid or a footer "floor".
       for (const element of document.querySelectorAll<HTMLElement>('main a[href], main button, main article, main section, main textarea, main [class*="rounded"][class*="border"], [data-companion-platform]')) {
         if (element.closest('nav, header, [role="dialog"], [aria-hidden="true"], [data-chiikawa-runner]')) continue;
@@ -67,7 +72,12 @@ export default function ChiikawaRunner() {
         if (r.width < width + 18 || r.height < 30 || r.width > innerWidth * .96 || r.top < b.top + 48 || r.top > b.bottom - 12) continue;
         if (r.right < b.left + width || r.left > b.right) continue;
         if (result.some(p => Math.abs(p.top - r.top) < 5 && Math.abs(p.left - r.left) < 12)) continue;
-        result.push({element, left: Math.max(b.left, r.left + 6), right: Math.min(b.right, r.right - width - 6), top: r.top});
+        const left=Math.max(b.left,r.left+6),right=Math.min(b.right,r.right-width-6),height=54;
+        const safe=(x:number)=>!protectedRects.some(box=>x<box.right+3&&x+width>box.left-3&&r.top-height<box.bottom+3&&r.top>box.top-3);
+        let safeLeft:number|undefined,safeRight=left;
+        for(let x=left;x<=right;x+=6){if(safe(x)){safeLeft??=x;safeRight=x}else if(safeLeft!==undefined)break}
+        if(safeLeft===undefined)continue;
+        result.push({element,left:safeLeft,right:safeRight,top:r.top});
         if (result.length >= 55) break;
       }
       const valid = result.filter(p => p.right >= p.left);

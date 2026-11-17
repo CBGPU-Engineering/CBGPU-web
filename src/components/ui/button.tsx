@@ -56,7 +56,9 @@ function Button({
   }) {
   const Comp = asChild ? Slot.Root : "button"
   const reduce=useReducedMotion();
-  const press=(element:HTMLElement,scale:number)=>{if(!reduce&&!props.disabled)animate(element,{scale},{...pressSpring})};
+  const pressed=React.useRef<HTMLElement|null>(null);
+  const press=(element:HTMLElement,scale:number)=>{if(!reduce&&(!props.disabled||scale===1)){pressed.current=scale<1?element:null;animate(element,{scale},{...pressSpring})}};
+  React.useEffect(()=>{if((props.disabled||reduce)&&pressed.current){animate(pressed.current,{scale:1},{duration:reduce?0:.12});pressed.current=null}},[props.disabled,reduce]);
 
 
   return (

@@ -271,7 +271,7 @@
 50%{opacity:.5}
 }
 
-@media(hover:hover)and(pointer:fine){.contest-discovery-card:hover{box-shadow:0 14px 30px #173d3010;border-color:color-mix(in srgb,var(--contest-green) 35%,var(--border))}
+@media(hover:hover) and (pointer:fine){.contest-discovery-card:hover{box-shadow:0 14px 30px #173d3010;border-color:color-mix(in srgb,var(--contest-green) 35%,var(--border))}
 .contest-discovery-card:hover .contest-card-visual>.contest-artwork{transform:scale(1.055)}
 .contest-discovery-card:hover .contest-card-open-icon{opacity:1;transform:translate(0,0)}
 }
@@ -319,7 +319,7 @@
 
 .contest-card-motion{display:flex;min-width:0}
 .contest-card-motion>.contest-discovery-card{width:100%}
-.contest-shared-flight{position:fixed;z-index:100;pointer-events:none;overflow:hidden;box-shadow:0 18px 65px #102c3520;will-change:top,left,width,height}
+.contest-shared-flight{position:fixed;z-index:100;pointer-events:none;overflow:hidden;box-shadow:0 18px 65px #102c3520;will-change:transform,opacity}
 .contest-shared-flight .contest-artwork{height:100%;width:100%}
 
 .contest-detail-hero{overflow:hidden;border:1px solid var(--border);border-radius:24px;background:var(--card)}

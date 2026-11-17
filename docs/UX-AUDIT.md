@@ -151,3 +151,9 @@ permission checks are audited separately; this redesign does not replace them.
 - `/tools`
 - `/wakeup`
 - `/workspace`
+
+## Verified integration — 17 November 2026
+
+The combined authentication, contest, GPU, timetable and deployment UI passed an optimized Next build and TypeScript checks. Local Chromium verified authentication at 320, 390, 768 and 1440 pixels, input preservation after failure, password visibility, real demo-confirmed success notifications and reduced motion. Axe found no violations in the tested authentication panel in light and dark themes; this is not a whole-site WCAG certification. Contest tests verified one registration mutation, answers preserved when returning a step, measured card-to-detail continuity, mobile overflow and reduced motion. Resource tests checked keyboard GPU selection, timetable details/focus return and actual deployment phase transitions. All data was synthetic; no production registration, email, deployment or reservation was created by these tests.
+
+Shared dialogs now keep Radix focus management while Motion handles entry/exit; overlay-kit promises resolve on the real user decision and cleanup follows exit completion. Original SVG feedback has no third-party asset attribution requirement. The existing contest lint baseline still contains eight pre-existing effect-state errors; these have not been represented as passing. Physical Android behavior, representative user task timing and whole-site accessibility remain unverified.

@@ -6,11 +6,14 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import {AnimatePresence,motion,useReducedMotion} from "motion/react"
+import {productSpring} from "@/lib/motion"
+const DialogState=React.createContext(false)
 
-function Dialog({
-  ...props
-}: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />
+function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const [internal,setInternal]=React.useState(props.defaultOpen??false);
+  const open=props.open??internal;
+  return <DialogState.Provider value={open}><DialogPrimitive.Root data-slot="dialog" {...props} open={open} onOpenChange={value=>{if(props.open===undefined)setInternal(value);props.onOpenChange?.(value)}}/></DialogState.Provider>
 }
 
 function DialogTrigger({
@@ -51,14 +54,18 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onExitComplete,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  onExitComplete?:()=>void
 }) {
+  const open=React.useContext(DialogState),reduce=useReducedMotion();
   return (
-    <DialogPortal>
-      <DialogOverlay />
-      <DialogPrimitive.Content
+    <AnimatePresence onExitComplete={onExitComplete}>
+    {open&&<DialogPortal forceMount>
+      <DialogOverlay forceMount asChild><motion.div data-motion-dialog initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:reduce?0:.18}}/></DialogOverlay>
+      <DialogPrimitive.Content forceMount asChild
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-card border p-4 text-sm shadow-xl duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
@@ -66,6 +73,7 @@ function DialogContent({
         )}
         {...props}
       >
+       <motion.div data-motion-dialog initial={{opacity:0,y:reduce?0:14,scale:reduce?1:.975}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:reduce?0:8,scale:reduce?1:.985}} transition={reduce?{duration:0}:productSpring}>
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close data-slot="dialog-close" asChild>
@@ -80,8 +88,10 @@ function DialogContent({
             </Button>
           </DialogPrimitive.Close>
         )}
+       </motion.div>
       </DialogPrimitive.Content>
-    </DialogPortal>
+    </DialogPortal>}
+    </AnimatePresence>
   )
 }
 

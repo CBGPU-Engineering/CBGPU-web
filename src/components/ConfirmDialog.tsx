@@ -13,6 +13,7 @@ interface Props {
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onClosed?:()=>void;
 }
 
 export default function ConfirmDialog({
@@ -23,11 +24,12 @@ export default function ConfirmDialog({
   cancelLabel,
   onConfirm,
   onCancel,
+  onClosed,
 }: Props) {
   const english = typeof window !== 'undefined' && ['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname);
   return (
     <Dialog open={open} onOpenChange={o => !o && onCancel()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm" onExitComplete={onClosed}>
         <DialogHeader>
           <DialogTitle className="font-semibold tracking-tight">{title ?? (english ? 'Delete this item?' : '삭제하시겠습니까?')}</DialogTitle>
           <DialogDescription className="text-sm">{description ?? (english ? 'This action cannot be undone.' : '이 작업은 되돌릴 수 없습니다.')}</DialogDescription>

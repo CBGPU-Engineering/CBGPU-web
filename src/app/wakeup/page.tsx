@@ -102,19 +102,22 @@ export default function WakeupSongPage() {
   // 신청곡과 재생목록 모두 Spotify 카탈로그를 기준으로 한다.
   useEffect(() => {
     const q = searchQuery.trim();
-    if (!q) { setSearchResults([]); setSearchError(''); return; }
+    if (!q) { setSearchResults([]); setSearchError(''); setSearching(false); return; }
+    let current = true;
+    const controller = new AbortController();
     setSearching(true);
     const timer = setTimeout(() => {
-      fetch(`/api/wakeup/spotify/search?q=${encodeURIComponent(q)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data?.items) { setSearchResults(data.items); setSearchError(''); }
-          else { setSearchResults([]); setSearchError(data?.message || '검색에 실패했어요.'); }
+      fetch(`/api/wakeup/spotify/search?q=${encodeURIComponent(q)}`, {signal:controller.signal})
+        .then(async res => ({ok:res.ok,data:await res.json()}))
+        .then(({ok,data}) => {
+          if(!current)return;
+          if (ok&&Array.isArray(data?.items)) { setSearchResults(data.items); setSearchError(''); }
+          else { setSearchResults([]); setSearchError(data?.message || '검색하지 못했어요. 잠시 뒤 다시 시도해 주세요.'); }
         })
-        .catch(() => { setSearchResults([]); setSearchError('검색 중 오류가 발생했어요.'); })
-        .finally(() => setSearching(false));
+        .catch(() => { if(current){setSearchResults([]);setSearchError('연결을 확인하고 다시 검색해 주세요.');} })
+        .finally(() => {if(current)setSearching(false)});
     }, 400);
-    return () => clearTimeout(timer);
+    return () => {current=false;clearTimeout(timer);controller.abort()};
   }, [searchQuery]);
 
   const [deleteTarget, setDeleteTarget] = useState<WakeupSong | null>(null);
@@ -239,26 +242,27 @@ export default function WakeupSongPage() {
           </div>
         ) : (
           <div className="space-y-1.5 relative">
-            <label className="text-xs font-semibold text-muted-foreground ml-1">Spotify에서 노래 검색</label>
+            <label htmlFor="wakeup-spotify-query" className="text-xs font-semibold text-muted-foreground ml-1">Spotify에서 노래 검색</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
+                id="wakeup-spotify-query" type="search" aria-describedby="wakeup-search-status"
                 placeholder="Spotify의 노래 제목이나 가수 이름으로 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"
               />
             </div>
-            {searching && <p className="text-xs text-muted-foreground">검색 중...</p>}
-            {searchError && <p className="text-xs text-destructive">{searchError}</p>}
+            <div id="wakeup-search-status" aria-live="polite">{searching && <p role="status" className="text-xs text-muted-foreground">노래를 찾고 있어요…</p>}{!searching&&!searchError&&searchQuery.trim()&&searchResults.length===0&&<p className="text-xs text-muted-foreground">다른 곡명이나 가수 이름으로 검색해 보세요.</p>}</div>
+            {searchError && <p role="alert" className="text-xs text-destructive">{searchError}</p>}
             {searchResults.length > 0 && (
               <ul className="space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar">
                 {searchResults.map((result) => (
                   <li key={result.id}>
                     <button
                       type="button"
-                      onClick={() => selectResult(result)}
-                      className="flex items-center gap-3 w-full text-left rounded-2xl bg-muted/50 hover:bg-muted p-2 transition-colors"
+                      onClick={() => selectResult(result)} disabled={searching}
+                      className="disabled:opacity-50 flex items-center gap-3 w-full text-left rounded-2xl bg-muted/50 hover:bg-muted p-2 transition-colors"
                     >
                       {result.thumbnailUrl && <Image src={result.thumbnailUrl} alt={result.title} width={64} height={48} className="rounded-lg object-cover shrink-0" />}
                       <div className="min-w-0">

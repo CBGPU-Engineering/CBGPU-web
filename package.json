@@ -57,6 +57,7 @@
     "@types/react-dom": "^19",
     "@types/tampermonkey": "5.5.0",
     "@types/three": "^0.185.4",
+    "axe-core": "4.11.0",
     "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
