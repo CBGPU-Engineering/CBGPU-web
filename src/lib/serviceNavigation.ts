@@ -28,8 +28,8 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     {href:'/manufacturing/print',label:'3D 프린팅',description:'프린터 현황 확인과 출력 신청',icon:Printer,keywords:'제작 3d printing 프린트 프린터 출력 인쇄'},
     {href:'/manufacturing/laser',label:'레이저 커팅',description:'재료 선택과 레이저 가공 신청',icon:Scissors,keywords:'제작 레이저 커팅 가공 자르기 절단 laser'},
   ]},
-  { id:'community', title: '대화·대회·소식', services: [
-    { href: '/messages', label: '학교·전국 대화', description: '학교 채팅·전국 대화·동의한 개인 메시지', icon: MessageCircle, keywords: '메신저 메시지 친구 채팅 대화 쪽지 DM messenger chat 학교 전국 개인' },
+  { id:'community', title: '커뮤니티·대회·소식', services: [
+    { href: '/community', label: '커뮤니티', description: '공개 글과 학교·전국 이야기, 개인 메시지', icon: MessageCircle, keywords: '메신저 메시지 친구 채팅 대화 쪽지 DM messenger chat 학교 전국 개인' },
     { href: '/contests', label: '교내 대회', description: '행사 개설부터 참가·운영·작품 제출까지', icon: Trophy, keywords: '대회 행사 공모전 참가 신청 체크인 제출 파일 호스트' },
     { href: '/match', label: '스터디 매칭', description: '함께 공부할 친구 찾기', icon: Users, keywords: '모임 스터디 매칭' },
     { href: '/polls', label: '투표', description: '진행 중인 투표 참여', icon: Vote, keywords: '설문 의견 투표' },
@@ -49,3 +49,6 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
 export const dailyServices = serviceGroups[0].services;
 
 export const serviceSearchPages = serviceGroups.flatMap(group=>group.services.map(service=>({title:service.label,description:service.description,href:service.href,keywords:`${service.keywords||''} ${service.href}`})));
+
+/** Existing saved messenger shortcuts retain the single community entry. URLs remain compatible. */
+export function canonicalServicePath(path:string){return path==='/messages'?'/community':path}

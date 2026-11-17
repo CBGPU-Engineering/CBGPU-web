@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useState, useRef, useEffect, useLayoutEffect, type ReactNode } from 'react';
 
-import {serviceGroups} from '@/lib/serviceNavigation';
+import {serviceGroups,canonicalServicePath} from '@/lib/serviceNavigation';
 
 interface NavLink { href: string; label: string; }
 interface NavGroup { label: string; links: NavLink[]; }
@@ -32,13 +32,13 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: '/meal', label: '급식' },
   { href: '/wakeup', label: '기상송' },
   { href: '/dashboard', label: 'GPU' },
-  { href: '/messages', label: '대화' },
+  { href: '/community', label: '커뮤니티' },
 ];
 
 const GROUPS: NavGroup[] = serviceGroups.map(group=>({label:group.title,links:group.services.map(({href,label})=>({href,label}))}));
 
 const PILL = 'relative z-10 inline-flex min-h-11 items-center shrink-0 text-sm font-semibold px-3 py-2 transition-colors focus-visible:outline-2 focus-visible:outline-ring';
-const isActivePath = (pathname: string, href: string) => pathname === href || pathname.startsWith(`${href}/`);
+const isActivePath = (pathname: string, href: string) => canonicalServicePath(pathname) === href || pathname.startsWith(`${href}/`);
 
 const BOTTOM_LINKS = [
   { href: '/', label: '홈', Icon: Home },
