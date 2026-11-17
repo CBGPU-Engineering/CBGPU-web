@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
@@ -26,28 +26,30 @@ export default function SchoolNews() {
   const [tab, setTab] = useState<TabId>('notice');
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
-  const [justFinished, setJustFinished] = useState(false);
+  const sequence=useRef(0);
+  const [month,setMonth]=useState(()=>new Date(Date.now()+9*3600000).toISOString().slice(0,7));
+  const [sourceUrl,setSourceUrl]=useState('https://school.cbe.go.kr/cbs-h/M010401');
   const [error, setError] = useState('');
   const [updated, setUpdated] = useState<Date | null>(null);
 
   const load = useCallback(async (t: TabId) => {
-    setLoading(true); setError('');
+    const request=++sequence.current;setLoading(true); setError('');setSourceUrl(t==='schedule'?`https://school.cbe.go.kr/cbs-h/M010407/list?y=${month.slice(0,4)}&m=${Number(month.slice(5))}`:t==='letter'?'https://school.cbe.go.kr/cbs-h/M010403':'https://school.cbe.go.kr/cbs-h/M010401');
     try {
-      const res = await fetch(`/api/school-news?type=${t}`);
+      const res = await fetch(`/api/school-news?type=${t}&month=${month}`);
       const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setItems(data.items);
+      if(request!==sequence.current)return;
+      if (!res.ok||data.error) throw new Error(data.error||'조회 실패');
+      setItems(Array.isArray(data.items)?data.items:[]);
+      if(typeof data.sourceUrl==='string'&&data.sourceUrl.startsWith('https://school.cbe.go.kr/'))setSourceUrl(data.sourceUrl);
       setUpdated(new Date());
     } catch (e) {
-      setError('공지를 불러오지 못했습니다.');
+      if(request===sequence.current)setError(t==='schedule'?'학사일정을 불러오지 못했어요. 다시 시도해주세요.':'학교 소식을 불러오지 못했어요. 다시 시도해주세요.');
     } finally {
-      setLoading(false);
-      setJustFinished(true);
-      setTimeout(() => setJustFinished(false), 600);
+      if(request===sequence.current)setLoading(false);
     }
-  }, []);
+  }, [month]);
 
-  useEffect(() => { load(tab); }, [tab, load]);
+  useEffect(() => { void load(tab);return()=>{sequence.current++}; }, [tab, load]);
 
   return (
     <div className="w-full space-y-4">
@@ -58,27 +60,28 @@ export default function SchoolNews() {
           onChange={(v) => setTab(v as TabId)}
         />
         <div className="flex items-center gap-2">
+          {tab==='schedule'&&<label className="text-xs text-muted-foreground">조회 월 <input type="month" aria-label="학사일정 조회 월" value={month} min="2019-01" max="2099-12" onChange={e=>{if(/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))setMonth(e.target.value)}} className="rounded-md border border-border bg-background px-2 py-1"/></label>}
           {updated && <span className="text-xs text-muted-foreground">{updated.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })}</span>}
-          <Button variant="ghost" size="icon" className="size-7" onClick={() => load(tab)} disabled={loading}>
+          <Button variant="ghost" size="icon" aria-label="학교 소식 새로고침" className="size-7" onClick={() => load(tab)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-          <a href={`https://school.cbe.go.kr/cbs-h/M010401`} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="icon" className="size-7"><ExternalLink className="size-3" /></Button>
+          <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+            <Button variant="ghost" size="icon" aria-label="학교 홈페이지에서 원문 보기" className="size-7"><ExternalLink className="size-3" /></Button>
           </a>
         </div>
       </div>
 
       {error && <p className="text-destructive text-xs font-bold p-3 bg-destructive/10 rounded-lg">{error}</p>}
 
-      {(loading || justFinished) && (
+      {loading && (
         <div className="py-10 flex items-center justify-center">
-          <LoadingSpinner done={justFinished} size={48} label="공지사항 불러오는 중" />
+          <LoadingSpinner size={48} label={tab==='schedule'?'학사일정 불러오는 중':'학교 소식 불러오는 중'} />
         </div>
       )}
 
-      {!loading && !justFinished && !error && <HeadlineTrend titles={items.map(item => item.title)} scope={`school:${tab}`} />}
+      {!loading && !error && <HeadlineTrend titles={items.map(item => item.title)} scope={`school:${tab}`} />}
 
-      <div className={`space-y-1.5 ${loading || justFinished ? 'hidden' : ''}`}>
+      <div className={`space-y-1.5 ${loading||error ? 'hidden' : ''}`}>
         {items.map((item, i) => (
           <a key={i} href={item.link} target="_blank" rel="noopener noreferrer"
             className="flex gap-3 items-start p-3 rounded-lg border border-border/40 hover:bg-muted/40 hover:border-border transition-all group">
@@ -95,6 +98,7 @@ export default function SchoolNews() {
         ))}
       </div>
 
+      {!loading&&!error&&items.length===0&&<p className="rounded-lg border border-border p-5 text-sm text-muted-foreground">{tab==='schedule'?'이 달에 등록된 학사일정이 없어요.':'등록된 소식이 없어요.'}</p>}
       {items.length > 0 && (
         <p className="text-center text-xs text-muted-foreground pt-1">
           출처:{' '}
