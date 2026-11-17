@@ -11,8 +11,9 @@ export const preferredRegion = 'icn1';
 const BASE_URL = 'https://api.cbsh.edu-set.com';
 
 const supabaseUrl = process.env.SUPABASE_INTERNAL_URL||'http://127.0.0.1:54321';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey,{auth:{persistSession:false,autoRefreshToken:false}});
+// Server-only credential read; caller authority is checked separately before any cache read.
+const sharedReaderKey=process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase=sharedReaderKey&&sharedReaderKey!==process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY&&!/[\r\n]/.test(sharedReaderKey)?createClient(supabaseUrl,sharedReaderKey,{auth:{persistSession:false,autoRefreshToken:false}}):null;
 
 /**
  * 이 프록시는 관리자가 등록해둔 조회용 공유 토큰으로 학교 API를 대신 호출한다.
@@ -59,6 +60,7 @@ function getResponseContentType(headers: Headers): string {
 
 /** 관리자가 등록해둔 자습신청 토큰을 가져온다. 모든 방문자가 이 토큰으로 조회한다. */
 async function getSharedToken(forceRefresh = false): Promise<string | null> {
+  if(!supabase)return null;
   if (!forceRefresh && cachedToken && Date.now() - cachedToken.fetchedAt < TOKEN_CACHE_TTL_MS) {
     return cachedToken.value;
   }
@@ -108,7 +110,7 @@ function ttlFor(pathname: string) {
 async function callUpstream(request: NextRequest, targetUrl: URL, body: string | undefined): Promise<UpstreamResult> {
   const token = await getSharedToken();
   if (!token) {
-    return { status: 503, body: JSON.stringify({ message: '관리자가 아직 자습신청 토큰을 등록하지 않았습니다.' }), contentType: 'application/json' };
+    return { status: 503, body: JSON.stringify({ message: '학교 조회 연결을 확인하지 못했어요. 관리자에게 연결 상태 확인을 요청해주세요.' }), contentType: 'application/json' };
   }
 
   const send=(accessToken:string)=>readQueue(async()=>{
