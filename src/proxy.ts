@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import {normalizeWorkspace,workspaceForHost} from './lib/workspaces';
 import { WindowRateLimiter } from './lib/requestSecurity';
 import{isPublicBrowsingPath}from'./lib/publicPaths';
+import {scopedAccountMode} from './lib/deployAccess';
+import {manufacturingStorageReadPath} from './lib/manufacturingStoragePath';
 import {backendProxyTarget} from './lib/backendProxyTarget';
 
 const publicPages = new Set(['/', '/services', '/contact', '/download', '/privacy']);
@@ -36,7 +38,7 @@ export function proxy(request: NextRequest) {
     return new NextResponse('Not found',{status:404});
   }
   if(manufacturingHost){
-    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/schools/memberships'||path==='/api/schools/current-school'||path==='/api/schools/resource-contexts'||/^\/api\/schools\/schools\/[-a-zA-Z0-9_]+\/(?:life-sources|resource-access)$/.test(path)||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
+    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/manufacturing/file-read'||path==='/api/schools/memberships'||path==='/api/schools/current-school'||path==='/api/schools/resource-contexts'||/^\/api\/schools\/schools\/[-a-zA-Z0-9_]+\/(?:life-sources|resource-access)$/.test(path)||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
     if(!allowed)return new NextResponse('Not found',{status:404});
     if(path==='/')return NextResponse.redirect(new URL('https://'+host+'/manage/manufacturing'),307);
   }
@@ -63,6 +65,7 @@ export function proxy(request: NextRequest) {
   requestHeaders.set('x-cbgpu-path', path);
   requestHeaders.set('x-cbgpu-site', site || (path === '/docs' || path.startsWith('/docs/') ? 'docs' : path === '/arxiv' || path.startsWith('/arxiv/') ? 'arxiv' : 'main'));
   if(path.startsWith('/backend/')){
+    try{if(['GET','HEAD'].includes(request.method)&&scopedAccountMode()){const file=manufacturingStorageReadPath(path);if(file){const destination=request.nextUrl.clone();destination.pathname='/api/manufacturing/file-read';destination.search='';destination.searchParams.set('key',file.key);if(file.metadata)destination.searchParams.set('metadata','1');const response=NextResponse.rewrite(destination,{request:{headers:requestHeaders}});response.headers.set('Cache-Control','private, no-store');response.headers.set('X-Robots-Tag','noindex, nofollow');return response}}}catch{return NextResponse.json({error:'File authority unavailable'},{status:503,headers:{'Cache-Control':'no-store'}})}
     try{const backend=backendProxyTarget(path,request.nextUrl.search,process.env.CBGPU_BACKEND_PROXY_URL,process.env.CBGPU_INTERNAL_NETWORK_MODE);if(backend){const response=NextResponse.rewrite(backend,{request:{headers:requestHeaders}});response.headers.set('X-Robots-Tag','noindex, nofollow');if(!path.startsWith('/backend/storage/'))response.headers.set('Cache-Control','private, no-store');return response;}}
     catch{return NextResponse.json({error:'Backend connection unavailable'},{status:503,headers:{'Cache-Control':'no-store'}})}
   }
