@@ -7,10 +7,11 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest, extractComciganCellKey, decodeComciganCell } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest, extractComciganCellKey, decodeComciganCell,extractComciganWeekField } from './comciganSource';
 import {decodeComciganPayload} from './comciganPayload';
 import {createTimetableLoader} from './timetableCache';
-import {fileTimetableStore} from './timetableStore';
+import {fileTimetableStore,schoolTimetableStore} from './timetableStore';
+import{LEGACY_COMCIGAN_SCHOOL,comciganTargetKey,selectComciganSchool,timetableChoices,validateComciganTarget,validateComciganWeek,type ComciganSchoolTarget}from'./comciganSchool';
 
 const ENTRY_URL = 'http://컴시간학생.kr';
 const SCHOOL_KEYWORD = '충북과학고';
@@ -23,6 +24,7 @@ const META_TTL = 5 * 60 * 1000; // 제공처 조회 정보도 데이터 갱신�
 interface SiteMeta {
   baseUrl: string;
   cellKey:number[]|null;
+  weekField:string|null;
   request: ReturnType<typeof extractComciganRequest>;
   transport: ReturnType<typeof extractComciganTransport>;
   extractCode: string; // e.g. "/36179?17384l"
@@ -55,13 +57,17 @@ export interface TimetableResult {
 type RawData = Record<string, any>;
 
 let metaCache: { meta: SiteMeta; at: number } | null = null;
-let schoolCodeCache: number | null = null;
+
 
 
 async function fetchBuffer(url: string, token?:string|null): Promise<Buffer> {
   const res = await fetch(url, { headers: { 'User-Agent': UA,...(token?{'X-Hour-Token':token}:{}) }, signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`HTTP ${res.status} (${url})`);
-  return Buffer.from(await res.arrayBuffer());
+  if(Number(res.headers.get('content-length')||0)>8_000_000)throw Error('시간표 제공처 응답이 너무 큽니다');
+  if(!res.body)return Buffer.alloc(0);
+  const reader=res.body.getReader(),chunks:Uint8Array[]=[];let total=0;
+  try{while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>8_000_000){await reader.cancel();throw Error('시간표 제공처 응답이 너무 큽니다')}chunks.push(value)}}finally{reader.releaseLock()}
+  return Buffer.concat(chunks,total);
 }
 
 async function fetchEucKr(url: string): Promise<string> {
@@ -85,7 +91,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin, cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
+  return { baseUrl: frameUrl.origin,weekField:extractComciganWeekField(pageSource), cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -105,13 +111,10 @@ async function searchSchool(meta: SiteMeta, keyword: string) {
   return extractComciganSchools(list,meta.transport.schoolCodeDivisor,meta.cellKey);
 }
 
-async function resolveSchoolCode(meta: SiteMeta): Promise<number> {
-  if (schoolCodeCache != null) return schoolCodeCache;
-  const schools = await searchSchool(meta, SCHOOL_KEYWORD);
-  const school = schools.find(item => item.name === SCHOOL_DISPLAY_NAME || item.name === SCHOOL_KEYWORD);
-  if (!school) throw new Error('학교 검색 결과에서 충북과학고를 찾지 못했습니다');
-  schoolCodeCache = school.code;
-  return schoolCodeCache;
+async function resolveSchoolCode(meta: SiteMeta,target:ComciganSchoolTarget): Promise<number> {
+  if(target.code!==undefined)return target.code;
+  const keyword=target.id==='cbsh'&&target.name===SCHOOL_DISPLAY_NAME?SCHOOL_KEYWORD:target.name;
+  return selectComciganSchool(await searchSchool(meta,keyword),target);
 }
 
 async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData> {
@@ -128,17 +131,28 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
       ? raw[field].map((value:unknown)=>typeof value==='string'?decodeComciganCell(value,meta.cellKey):value)
       : raw[field];
   }
-  if(meta.cellKey&&typeof raw['시작일']==='string')raw['시작일']=decodeComciganCell(raw['시작일'],meta.cellKey);
+  const week=meta.weekField?raw[meta.weekField]:raw['시작일'];
+  raw['시작일']=validateComciganWeek(typeof week==='string'?decodeComciganCell(week,meta.cellKey):week);
   return raw;
 }
 
-const timetableLoader=createTimetableLoader(async()=>{
- try{const meta=await getMeta();return await fetchRawData(meta,await resolveSchoolCode(meta))}
- catch{
-  metaCache=null;schoolCodeCache=null;
-  const meta=await getMeta(true);return await fetchRawData(meta,await resolveSchoolCode(meta));
- }
-},fileTimetableStore());
+function makeLoader(target:ComciganSchoolTarget,legacy=false){
+ let code:number|null=null;
+ return createTimetableLoader(async()=>{
+  try{const meta=await getMeta();code??=await resolveSchoolCode(meta,target);return await fetchRawData(meta,code)}
+  catch{metaCache=null;code=null;const meta=await getMeta(true);code=await resolveSchoolCode(meta,target);return await fetchRawData(meta,code)}
+ },legacy?fileTimetableStore():schoolTimetableStore(comciganTargetKey(target)));
+}
+const timetableLoader=makeLoader(LEGACY_COMCIGAN_SCHOOL,true);
+const schoolLoaders=new Map<string,ReturnType<typeof makeLoader>>();
+function loaderFor(target?:ComciganSchoolTarget){
+ if(!target)return timetableLoader;
+ const key=comciganTargetKey(target),existing=schoolLoaders.get(key);
+ if(existing){schoolLoaders.delete(key);schoolLoaders.set(key,existing);return existing}
+ const loader=makeLoader(validateComciganTarget(target));schoolLoaders.set(key,loader);
+ if(schoolLoaders.size>64)schoolLoaders.delete(schoolLoaders.keys().next().value!);
+ return loader;
+}
 
 // ---- 컴시간 웹뷰어 디코딩 로직 포팅 ----
 
@@ -180,7 +194,7 @@ function cleanTeacherName(name?: string): string {
   return name.replace('*', '');
 }
 
-function decodeGrid(raw: RawData, grade: number, cls: number): Grid {
+function decodeGrid(raw: RawData, grade: number, cls: number,maxPeriod=MAX_PERIOD): Grid {
   const separator: number = raw?.['분리'] ?? 100;
   const changeNotify: number = raw?.['변경알림'] ?? 0;
   const defaultData = raw?.['자료481']?.[grade]?.[cls];
@@ -196,7 +210,7 @@ function decodeGrid(raw: RawData, grade: number, cls: number): Grid {
     if (!dailyDay) continue;
     const defaultDay = defaultData?.[weekday];
 
-    for (let period = 1; period <= MAX_PERIOD; period++) {
+    for (let period = 1; period <= maxPeriod; period++) {
       const dailyRaw = dailyDay[period] ?? 0;
       const defaultRaw = defaultDay?.[period] ?? 0;
       const { teacherIdx, subjectRaw, changed } = splitDaily(dailyRaw, defaultRaw, changeNotify);
@@ -219,23 +233,19 @@ function decodeGrid(raw: RawData, grade: number, cls: number): Grid {
   return grid;
 }
 
-export async function getTimetable(grade: number, cls: number, opts?: { forceRefresh?: boolean }): Promise<TimetableResult> {
-  const {raw,at,stale} = await timetableLoader.get(opts?.forceRefresh);
+export async function getTimetable(grade: number, cls: number, opts?: { forceRefresh?: boolean;school?:ComciganSchoolTarget }): Promise<TimetableResult> {
+  const {raw,at,stale} = await loaderFor(opts?.school).get(opts?.forceRefresh);
 
-  const classCounts: number[] = raw?.['학급수'] ?? [];
-  const maxGrade = Math.max(0, classCounts.length - 1);
-  const grades = Array.from({ length: maxGrade }, (_, i) => i + 1);
-  const classCount = classCounts[grade] ?? 0;
-  const classes = Array.from({ length: classCount }, (_, i) => i + 1);
+  const {grades,classes}=timetableChoices(raw?.['학급수'],grade,cls);
 
-  const grid = decodeGrid(raw, grade, cls);
+  const grid = decodeGrid(raw, grade, cls,opts?.school?12:MAX_PERIOD);
   if (!Object.keys(grid).length) throw new Error('해당 학년·반의 시간표가 제공되지 않습니다');
   return {
     grid,
     classTimes: raw?.['일과시간'] ?? [],
     grades,
     classes,
-    schoolName: SCHOOL_DISPLAY_NAME,
+    schoolName: opts?.school?.name??SCHOOL_DISPLAY_NAME,
     stale,fetchedAt:new Date(at).toISOString(),weekStart:typeof raw["시작일"]==="string"?raw["시작일"]:null,
   };
 }
