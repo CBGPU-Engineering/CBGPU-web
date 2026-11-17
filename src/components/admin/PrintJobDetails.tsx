@@ -1,6 +1,8 @@
 'use client';
 import{manufacturingProfiles,manufacturingJobSelect,attachManufacturingManagers}from'@/lib/scopedProfiles';
-import { useEffect, useState } from 'react';
+import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
+import {useManufacturingFile} from '@/lib/manufacturing/useManufacturingFile';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -35,30 +37,37 @@ export default function PrintJobDetailPage() {
   const router = useRouter();
   const managementBase=typeof window!=='undefined'&&['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname)?'/manage/manufacturing':'/admin/manufacturing';
 
-  const [job, setJob] = useState<any>(null);
+  const [jobState,setJobState]=useState<{viewer:string|undefined;id:string;value:any}|null>(null);
+  const job=jobState?.viewer===user?.id&&jobState?.id===id?jobState.value:null;
   const [requester, setRequester] = useState<{ full_name: string | null; student_id: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const scopedFiles=scopedManufacturingFilesEnabled(),currentViewer=useRef(user?.id),generation=useRef(0);
+  const file=useManufacturingFile(scopedFiles?user?.id:undefined,scopedFiles?job?.file_path:null);
+  const previewUrl=scopedFiles?file.url:downloadUrl;
 
   const fetchJob = async () => {
+    const expected=user?.id,request=++generation.current;
+    const current=()=>request===generation.current&&expected===currentViewer.current;
     const { data, error } = await supabase.from('print_jobs').select(manufacturingJobSelect(', preferred_printer:preferred_printer_id(name)')).eq('id', id).single().returns<any>();
+    if(!current())return;
     if (error) { showError("Request not found."); router.push(managementBase); return; }
-    const labels=await attachManufacturingManagers(supabase,'print',[data]);setJob(labels.data[0]);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
+    const labels=await attachManufacturingManagers(supabase,'print',[data]);if(!current())return;setJobState({viewer:expected,id,value:labels.data[0]});setRequester(null);if(labels.error)showError('Manager display details are unavailable.');
     setLoading(false);
-    if (data.file_path) {
+    if (!scopedFiles&&data.file_path) {
       const { data: signed } = await supabase.storage.from('manufacturing').createSignedUrl(data.file_path, 3600);
-      setDownloadUrl(signed?.signedUrl || null);
+      if(current())setDownloadUrl(signed?.signedUrl || null);
     } else {
       setDownloadUrl(null);
     }
     if (data.user_id !== user?.id) {
       const { data: profiles,error:profileError } = await manufacturingProfiles(supabase,'print',[data.user_id]);
-      setRequester(profiles?.[0]||null);if(profileError)showError('Requester details are unavailable.');
+      if(!current())return;setRequester(profiles?.[0]||null);if(profileError)showError('Requester details are unavailable.');
     }
   };
 
-  useEffect(() => { if (id) fetchJob(); }, [id]);
+  useEffect(() => {currentViewer.current=user?.id;if(id&&user)void fetchJob();return()=>{generation.current++;currentViewer.current=undefined};}, [id,user?.id]);
 
   const handleCancel = async () => {
     const { error } = await supabase.from('print_jobs').update({ status: 'canceled' }).eq('id', job.id);
@@ -76,7 +85,7 @@ export default function PrintJobDetailPage() {
     fetchJob();
   };
 
-  if (loading) {
+  if (loading||!job) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <LoadingSpinner size={56} label="Loading" />
@@ -127,8 +136,9 @@ export default function PrintJobDetailPage() {
         </div>
       </div>
 
-      {downloadUrl && job.file_name?.toLowerCase().endsWith('.3mf') && (
-        <Model3MFViewer src={downloadUrl} english />
+      {scopedFiles&&file.error&&<div role="alert" className="rounded-xl border p-4 text-sm space-y-2"><p>Current file access could not be verified. The request is preserved; sign in again or check your equipment permissions.</p><Button type="button" variant="outline" size="sm" onClick={file.reload}>Retry file access</Button></div>}
+      {previewUrl && job.file_name?.toLowerCase().endsWith('.3mf') && (
+        <Model3MFViewer src={previewUrl} english />
       )}
 
       <div className="border-2 rounded-3xl overflow-hidden bg-card">
@@ -190,12 +200,12 @@ export default function PrintJobDetailPage() {
               <p className="text-sm font-bold text-destructive whitespace-pre-wrap">{job.reject_reason}</p>
             </div>
           )}
-          {downloadUrl && (
+          {(scopedFiles?job.file_path:downloadUrl) && (
             <div>
               <label className={labelCls}>Model file</label>
-              <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+              {scopedFiles?<Button type="button" variant="link" className="h-auto p-0 text-sm" disabled={file.downloading||file.loading} onClick={()=>void file.download(job.file_name||'manufacturing-file')}><Download className="size-3.5"/>{file.downloading?'Downloading…':job.file_name}</Button>:<a href={downloadUrl||undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
                 <Download className="size-3.5" /> {job.file_name}
-              </a>
+              </a>}
             </div>
           )}
           {job.notes && (
