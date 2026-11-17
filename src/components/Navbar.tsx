@@ -1,4 +1,5 @@
 'use client';
+import './navbar-mobile.css';
 
 import CBGPULogo from '@/components/CBGPULogo';
 import Image from 'next/image';

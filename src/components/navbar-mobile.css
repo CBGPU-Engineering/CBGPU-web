@@ -1,0 +1,15 @@
+/* Keep the mobile web controls reachable on narrow phones. The app has its own header. */
+@media(max-width:359px){
+ .cb-user-workspace>nav[aria-label="주 메뉴"]{padding-inline:8px;gap:4px}
+ .cb-user-workspace>nav[aria-label="주 메뉴"]>div:first-child{min-width:0;gap:6px}
+ .cb-user-workspace>nav[aria-label="주 메뉴"]>div:last-child{flex-shrink:0;gap:4px}
+ .cb-user-workspace>nav[aria-label="주 메뉴"]>div:first-child>a:first-child .cb-brand-art{width:88px!important}
+ .cb-user-workspace>nav[aria-label="주 메뉴"] .cb-user-version>summary{max-width:64px;font-size:11px;gap:2px;padding-inline:2px}
+}
+
+@media(max-width:379px){.cb-user-workspace>nav[aria-label="주 메뉴"] a[aria-label="앱 다운로드"]{display:none}}
+@media(max-width:479px){
+ .cb-user-workspace>nav[aria-label="주 메뉴"] button[aria-label="기능 찾기"]{min-width:44px;width:44px}
+ .cb-user-workspace>nav[aria-label="주 메뉴"] .cb-user-version>summary{min-height:44px;align-items:center}
+ .cb-user-workspace>nav[aria-label="주 메뉴"]>div:first-child>a:first-child{min-height:44px;align-items:center}
+}
