@@ -1,6 +1,9 @@
 'use client';
+import{useSchoolScope}from'@/components/schools/SchoolScope';
+import{useAuth}from'@/lib/useAuth';
+import{fetchSchoolMeal}from'@/lib/mealClient';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback,useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sunrise, Sun, Moon, UtensilsCrossed, Bell, BellOff } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { getNativeBridge, onNativeBridgeReady } from '@/lib/nativeBridge';
@@ -63,7 +66,9 @@ function todayAt(hhmm: string): string {
   return d.toISOString();
 }
 
-export default function MealPage() {
+function MealPageContent() {
+  const scope=useSchoolScope(),{user}=useAuth();const schoolId=scope.status==='legacy'?'cbsh':scope.status==='ready'?scope.school!.id:null;
+  const requestGeneration=useRef(0);
   const [date, setDate] = useState(() => fmtDate(new Date()));
   const [data, setData] = useState<MealData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,19 +136,18 @@ export default function MealPage() {
   }
 
   const load = useCallback(async (d: string) => {
-    setLoading(true);
+    const generation=++requestGeneration.current;setLoading(true);
     setJustLoaded(false);
     try {
-      const res = await fetch(`/api/meal?date=${d}`);
-      setData(await res.json());
-    } catch {
-      setData({ meals: [], date: d, today: fmtDate(new Date()), error: '불러오기 실패' });
+      const result=await fetchSchoolMeal(d,schoolId);if(generation===requestGeneration.current)setData(result);
+    } catch (error) {
+      if(generation===requestGeneration.current)setData({ meals: [], date: d, today: fmtDate(new Date()), error: error instanceof Error?error.message:'불러오기 실패' });
     } finally {
-      setLoading(false);
+      if(generation!==requestGeneration.current)return;setLoading(false);
       setJustLoaded(true);
       setTimeout(() => setJustLoaded(false), 600);
     }
-  }, []);
+  }, [schoolId,user?.id]);
 
   useEffect(() => { load(date); }, [date, load]);
 
@@ -158,7 +162,7 @@ export default function MealPage() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground">충북과학고 학교급식</p>
+        <p className="text-xs font-semibold text-muted-foreground">{scope.status==='legacy'?'충북과학고 학교급식':(scope.school?.official_name||'선택한 학교')+' 학교급식'}</p>
         <h1 className="cb-page-title">오늘 뭐 나와요?</h1>
       </div>
 
@@ -272,3 +276,5 @@ function Empty({ icon, title, sub }: { icon: React.ReactNode; title: string; sub
     </div>
   );
 }
+
+export default function MealPage(){const scope=useSchoolScope(),{user}=useAuth();return <MealPageContent key={`${user?.id||'anon'}:${scope.status}:${scope.school?.id||'none'}`}/>;}

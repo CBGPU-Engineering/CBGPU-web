@@ -1,4 +1,5 @@
 'use client';
+import{useDeploymentCompute}from'@/lib/useDeploymentCompute';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -61,6 +62,7 @@ interface RedeployForm {
 export default function ServerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, isApproved, isLoading: authLoading } = useAuth();
+  const permission=useDeploymentCompute();
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
 
@@ -122,7 +124,7 @@ export default function ServerDetailPage() {
   const handleRedeploy = async (redeploy = true) => {
     if (!form || !project) return;
     if(!form.name.trim()){showError('프로젝트 이름을 입력해 주세요.');return;}
-    if (!isApproved) { showError('학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&!permission.canExecute)) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
     const hostPort = parseInt(form.hostPort);
     const containerPort = parseInt(form.containerPort);
     if (isNaN(hostPort)) { showError('포트는 숫자여야 합니다.'); return; }
@@ -552,7 +554,7 @@ export default function ServerDetailPage() {
           <DialogFooter className="gap-2">
             <Button variant="outline" className="font-semibold text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
             <Button variant="outline" className="font-semibold text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
-            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting}>
+            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting||permission.enabled&&!permission.canExecute}>
               {submitting ? '요청 중...' : '저장 후 재배포'}
             </Button>
           </DialogFooter>

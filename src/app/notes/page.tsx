@@ -148,7 +148,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
     return (
       <div className="flex flex-col h-screen max-h-screen">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
-          <Button variant="ghost" size="icon" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
           <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
           <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-muted shrink-0">
             <Share2 className="size-3" />공개 노트
@@ -170,7 +170,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
     <div className="flex flex-col h-screen max-h-screen">
       {/* header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0 flex-wrap gap-y-2">
-        <Button variant="ghost" size="icon" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
         <Input value={title} onChange={e => { setTitle(e.target.value); scheduleAutoSave(); }}
           placeholder="제목 없음" className="flex-1 min-w-32 font-semibold text-base border-none shadow-none focus-visible:ring-0 px-2" />
         <div className="flex gap-1 items-center ml-auto flex-wrap">
@@ -335,13 +335,13 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {shown.map((n, i) => (
-            <div key={n.id} onClick={() => onOpen(n)}
+            <div key={n.id}
               style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
-              className="p-4 border border-border/50 rounded-2xl bg-card hover:bg-muted/20 tilt-3d cursor-pointer transition-all group space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards">
+              className="relative p-4 border border-border/50 rounded-2xl bg-card hover:bg-muted/20 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 tilt-3d cursor-pointer transition-all group space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300 fill-mode-backwards">
               <div className="flex items-start justify-between gap-2">
-                <h3 className="font-semibold text-sm leading-tight line-clamp-1">{n.title}</h3>
+                <h3 aria-label={n.title} className="min-w-0 font-semibold text-sm leading-tight"><button type="button" onClick={()=>onOpen(n)} aria-label={`노트 열기: ${n.title}`} className="line-clamp-1 text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none">{n.title}</button></h3>
                 {tab==='mine' && (
-                  <button onClick={e=>{e.stopPropagation();setConfirmDeleteId(n.id);}} className="opacity-0 group-hover:opacity-100 text-muted-foreground/40 hover:text-destructive active:scale-90 transition-all">
+                  <button type="button" aria-label={`노트 삭제: ${n.title}`} onClick={e=>{e.stopPropagation();setConfirmDeleteId(n.id);}} className="relative z-10 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-ring active:scale-95 transition-all sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                     <Trash2 className="size-3.5" />
                   </button>
                 )}

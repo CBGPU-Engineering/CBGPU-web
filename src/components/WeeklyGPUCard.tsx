@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
+import {useSchoolResourcePermission} from '@/components/schools/SchoolResourceScope';
 import { Badge } from '@/components/ui/badge';
 import { SuccessFeedback } from '@/components/ui/product-motion';
 import { startOfWeek, endOfWeek, addWeeks, format, parseISO } from 'date-fns';
@@ -17,6 +18,8 @@ import { cn } from '@/lib/utils';
 export default function WeeklyGPUCard({ id, name }: { id: number; name: string }) {
   const { showError } = useAlert();
   const { isApproved } = useAuth();
+  const gpuPermission=useSchoolResourcePermission('gpu',isApproved);
+  const requestInProgress=useRef(false);
   const [selectedWeeks, setSelectedWeeks] = useState<Date[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedRequest, setCompletedRequest] = useState('');
@@ -71,9 +74,14 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
   };
 
   const handleSubmit = async () => {
+    if(requestInProgress.current)return;
+    requestInProgress.current=true;setIsSubmitting(true);
+    try{await submitRequest()}finally{requestInProgress.current=false;setIsSubmitting(false)}
+  };
+  const submitRequest = async () => {
     setCompletedRequest('');
-    if (!isApproved) {
-      showError('학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
+    if (!await gpuPermission.verify()) {
+      showError(gpuPermission.enabled?gpuPermission.reason:'학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
     }
     if (selectedWeeks.length === 0) { showError('주차를 선택해 주세요.'); return; }
 
@@ -301,7 +309,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
       <CardFooter className="p-4 pt-0">
         <Button
           onClick={handleSubmit}
-          disabled={isSubmitting || selectedWeeks.length === 0 || showSchedule}
+          disabled={isSubmitting || !gpuPermission.allowed || selectedWeeks.length === 0 || showSchedule}
           className="w-full font-bold py-5 transition-all active:scale-95 text-xs"
         >
           {isSubmitting

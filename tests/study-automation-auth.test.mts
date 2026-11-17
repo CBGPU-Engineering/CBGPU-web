@@ -9,6 +9,7 @@ function fixture({user={id:'owner'},session=true}={}){
  const mocks={
   '@/lib/preprintsServer':{publicationUser:async()=>user,preprintsClient:()=>({from:()=>query})},
   '@/lib/deployAuth':{activeDeploymentSession:async()=>session},
+  '@/lib/studyAuth':{requireStudyUser:async()=>{if(!user||!session){const e=Error('Session invalid');Object.assign(e,{status:401});throw e}return user}},
   '@/lib/requestSecurity':{WindowRateLimiter:class{allow(){return true}},readJsonBody:r=>r.json()},
   '@/lib/studyAutomation':{validateAutomation(){throw Error('invalid settings')},nextAutomaticStudyDate(){return '2026-11-05'}},
   '@/lib/studyAutomationServer':{automationRuns:async id=>{owners.push(['history',id]);return []}},

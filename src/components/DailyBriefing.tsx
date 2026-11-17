@@ -1,4 +1,6 @@
 'use client';
+import{useSchoolScope}from'@/components/schools/SchoolScope';
+import{fetchSchoolMeal}from'@/lib/mealClient';
 
 import { useEffect, useState } from 'react';
 import { Sparkles } from 'lucide-react';
@@ -26,7 +28,8 @@ const LASER_LABEL: Record<string, string> = {
   pending: '접수 대기', accepted: '접수됨', in_progress: '작업 중',
 };
 
-export default function DailyBriefing() {
+function DailyBriefingContent() {
+  const scope=useSchoolScope(),schoolId=scope.status==='legacy'?'cbsh':scope.status==='ready'?scope.school!.id:null;const activeMembership=scope.memberships.find(m=>m.school_id===schoolId&&m.verified&&m.status==='ACTIVE');
   const { user, profile } = useAuth();
   const [date] = useState(localYmd);
   const [lunch, setLunch] = useState<string[]>([]);
@@ -39,10 +42,11 @@ export default function DailyBriefing() {
   const [makingStatus, setMakingStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    const controller = new AbortController();
-    Promise.allSettled([
-      fetch(`/api/meal?date=${date}`, { signal: controller.signal }).then(response => response.json()),
-      fetch('/api/school-news?type=notice', { signal: controller.signal }).then(response => response.json()),
+    if(!schoolId)return;const controller = new AbortController();
+    void(async()=>{const session=scope.status==='legacy'?null:(await supabase.auth.getSession()).data.session;if(controller.signal.aborted)return;
+    await Promise.allSettled([
+      fetchSchoolMeal(date,schoolId,controller.signal),
+      fetch('/api/school-news?type=notice'+(scope.status==='legacy'?'':'&school_id='+encodeURIComponent(schoolId)), {headers:session?{Authorization:'Bearer '+session.access_token}:{},cache:'no-store',signal:controller.signal}).then(async response=>{const json=await response.json();if(!response.ok)throw Error('SCHOOL_NEWS_UNAVAILABLE');return json}),
     ]).then(([mealResult, newsResult]) => {
       if (controller.signal.aborted) return;
       if (mealResult.status === 'fulfilled') {
@@ -54,16 +58,16 @@ export default function DailyBriefing() {
       }
       setLoaded(true);
     });
-    return () => controller.abort();
-  }, [date]);
+    })().catch(()=>{});return () => controller.abort();
+  }, [date,schoolId,user?.id]);
 
   // 오늘 시간표: 본인 학년/반의 오늘 요일 과목만 뽑는다. 주말(-1)이거나 학번이 없으면 건너뜀.
   useEffect(() => {
-    const own = parseStudentGradeClass(profile?.student_id);
+    const own = parseStudentGradeClass(scope.status==='legacy'?profile?.student_id:schoolId==='cbsh'?activeMembership?.student_number:null);
     const todayWd = (() => { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; })();
     if (!own || todayWd < 0 || todayWd > 4) { setTimetableSubjects(own ? [] : null); return; }
     const controller = new AbortController();
-    fetch(`/api/timetable?grade=${own.grade}&class=${own.cls}`, { signal: controller.signal })
+    (async()=>{const session=scope.status==='legacy'?null:(await supabase.auth.getSession()).data.session;return fetch(`/api/timetable?grade=${own.grade}&class=${own.cls}`+(scope.status==='legacy'?'':'&school_id='+encodeURIComponent(schoolId!)), {headers:session?{Authorization:'Bearer '+session.access_token}:{},cache:'no-store',signal:controller.signal})})()
       .then(res => res.json())
       .then(json => {
         if (controller.signal.aborted) return;
@@ -75,7 +79,7 @@ export default function DailyBriefing() {
       })
       .catch(() => setTimetableSubjects([]));
     return () => controller.abort();
-  }, [profile?.student_id]);
+  }, [profile?.student_id,activeMembership?.student_number,schoolId,user?.id]);
 
   // 오늘 GPU 예약(있을 때만) — 승인됐거나 승인 대기 중인 것 중 오늘과 겹치는 가장 이른 것.
   useEffect(() => {
@@ -124,7 +128,7 @@ export default function DailyBriefing() {
   }, [user]);
 
   const inputParts = [
-    `날짜: ${date}`,
+    `날짜: ${date}`,`학교: ${scope.school?.official_name||'충북과학고등학교'}`,
     `오늘 중식: ${lunch.join(', ') || '정보 없음'}`,
     `최근 공지 제목: ${notices.join(' / ') || '정보 없음'}`,
   ];
@@ -134,7 +138,7 @@ export default function DailyBriefing() {
   if (gpuStatus) inputParts.push(`GPU 예약: ${gpuStatus}`);
   if (makingStatus) inputParts.push(`제작 현황: ${makingStatus}`);
   const input = loaded ? inputParts.join('\n') : '';
-  const insight = useCachedAi('daily', input, `home:${date}`, !!input);
+  const insight = useCachedAi('daily', input, `home:${schoolId}:${date}`, !!input&&!!schoolId);
   if (!loaded || !input) return null;
 
   return (
@@ -150,3 +154,5 @@ export default function DailyBriefing() {
     </section>
   );
 }
+
+export default function DailyBriefing(){const scope=useSchoolScope(),{user}=useAuth();return <DailyBriefingContent key={`${user?.id||'anon'}:${scope.status}:${scope.school?.id||'none'}`}/>;}

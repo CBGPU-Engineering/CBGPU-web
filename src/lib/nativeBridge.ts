@@ -41,6 +41,8 @@ export interface NativeNavigationOptions {
 export interface NativeBridge {
   readonly isNative: true;
   readonly platform: string;
+  /** Optional default-off Android native public banner context; no web SDK or unit IDs. */
+  setPublicAdContext?(options:{lease:string;placement:'platform'|'school';contentReady:boolean;schoolAdsEnabled:boolean;audience:'loading'|'anonymous'|'authenticated'}):Promise<{ok:true;configured?:boolean}>;
   setNavigation?(options:NativeNavigationOptions):Promise<{ok:true}>;
   getAppInfo?():Promise<{version:string;buildNumber:number;platform:string}>;
   /** Official school login, available in Android 1.0.7+. Never exposes the CBGPU bridge to EduSet. */

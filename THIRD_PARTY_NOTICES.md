@@ -20,3 +20,20 @@ relicensed by this repository.
 
 Original feedback/empty-state SVG scenes remain CBGPU Apache-2.0 code; they do
 not reuse Toss/Apple illustrations or third-party animation marketplace assets.
+
+## Optional browser automation
+
+- @sparticuz/chromium149.0.0 wrapper — MIT, https://github.com/Sparticuz/chromium.
+- Chromium and its bundled NSS/NSPR, Expat and graphics libraries retain their
+  upstream licenses and source notices; they are not relicensed as CBGPU code.
+  See https://chromium.googlesource.com/chromium/src/+/main/LICENSE and the
+  Chromium third-party credits for the exact browser build.
+- Bundled Open Sans — Copyright 2020 The Open Sans Project Authors
+  (https://github.com/googlefonts/opensans), SIL Open Font License1.1 as recorded
+  in the font's name table; see https://github.com/googlefonts/opensans/blob/main/OFL.txt.
+
+The container includes a hashed browser asset manifest and the wrapper's LICENSE
+in /opt/cbgpu-browser. Browser assets are extracted only from the integrity-locked
+npm package during build; runtime extraction into executable upload/temp storage
+is not required. Review upstream browser component advisories separately from
+the OS/npm vulnerability report before distributing a production image.

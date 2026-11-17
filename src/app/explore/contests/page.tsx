@@ -1,0 +1,3 @@
+import{publicList,publicBrowsingEnabled}from'@/lib/publicContentServer';import{publicMetadata}from'@/lib/publicMetadata';import{PublicCollection}from'@/components/public-browsing/PublicViews';import{notFound}from'next/navigation';
+export const dynamic='force-dynamic';export const metadata=publicMetadata('공개 대회 · CBGPU','직접 공개한 대회의 일정과 참가 대상을 로그인 없이 확인하세요. 신청과 제출은 계정으로 진행합니다.','/explore/contests');
+export default async function Page({searchParams}:{searchParams:Promise<{query?:string}>}){if(!publicBrowsingEnabled)notFound();const query=(await searchParams).query||'',result=await publicList('contests',24,query);return <PublicCollection kind="contests" result={result} query={query}/>}

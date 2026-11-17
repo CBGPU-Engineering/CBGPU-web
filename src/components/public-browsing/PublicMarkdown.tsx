@@ -1,0 +1,4 @@
+import ReactMarkdown from'react-markdown';
+import remarkGfm from'remark-gfm';
+/** Public text never loads private/owner-prefix assets or user-controlled URLs on the server. */
+export default function PublicMarkdown({children}:{children:string}){return <div className="cb-public-markdown"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{img:({alt})=>alt?<span className="cb-public-image-caption">{alt}</span>:null,a:({href,children})=>{let safe:string|undefined;try{if(href?.startsWith('https://')||href?.startsWith('http://')){const url=new URL(href);if(!url.username&&!url.password)safe=url.href}else if(href?.startsWith('/')&&!href.startsWith('//')&&!/^\/(api|backend|auth)\b/.test(href)&&!/[\\\u0000-\u001f]/.test(href))safe=href}catch{}return safe?<a href={safe} rel="noopener noreferrer nofollow" target={safe.startsWith('http')?'_blank':undefined}>{children}</a>:<span>{children}</span>}}}>{children}</ReactMarkdown></div>}

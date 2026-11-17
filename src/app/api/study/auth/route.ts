@@ -1,3 +1,4 @@
+import {requireStudyUser,studyScopedMode} from '@/lib/studyAuth';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -15,9 +16,8 @@ async function requireCbgpuUser(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await requireCbgpuUser(request))) {
-    return NextResponse.json({ message: '로그인이 필요합니다.' }, { status: 401 });
-  }
+  try{if(studyScopedMode())await requireStudyUser(request);else if(!(await requireCbgpuUser(request)))return NextResponse.json({message:'로그인이 필요합니다.'},{status:401});}
+  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'권한 확인 서버에 연결하지 못했습니다.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
 
   try {
     const body = await request.json().catch(() => ({}));

@@ -5,21 +5,26 @@ import {useAuth} from '@/lib/useAuth';
 import {getNativeBridge} from '@/lib/nativeBridge';
 import {adFitEligible,kakaoAdUnits,type AdPlacement} from '@/lib/adPlacement';
 import {adDocumentHasRun,markAdDocument,installAdNavigationBoundary} from '@/lib/adDocumentBoundary';
+import NativePublicAdContext from './NativePublicAdContext';
 import './kakao-page-ad.css';
 export type KakaoPageAdProps={placement:AdPlacement;contentReady:boolean;schoolAdsEnabled?:boolean};
 const leases=new WeakMap<Document,symbol>();
 const subscribeLocation=(update:()=>void)=>{window.addEventListener('hashchange',update);window.addEventListener('popstate',update);window.addEventListener('cbgpu-native-ready',update);return()=>{window.removeEventListener('hashchange',update);window.removeEventListener('popstate',update);window.removeEventListener('cbgpu-native-ready',update)}};
-const locationSnapshot=()=>window.location.hostname+'|'+window.location.hash+'|'+(getNativeBridge()?.isNative===true||/NativeAndroid|CBGPU\//i.test(navigator.userAgent)?'native':'web');
+const locationSnapshot=()=>window.location.hostname+'|'+window.location.hash+'|'+(getNativeBridge()?.isNative===true||/NativeAndroid|CBGPU\//i.test(navigator.userAgent)?'native':'web')+'|'+(getNativeBridge()?.isNative===true?'bridge':'pending');
 /** One supplied unit for a confirmed public page; never refreshes on a timer or data poll. */
 export default function KakaoPageAd(props:KakaoPageAdProps){return <Suspense fallback={null}><PublicAd {...props}/></Suspense>}
 function PublicAd(props:KakaoPageAdProps){
  const {user,isLoading}=useAuth(),path=usePathname(),search=useSearchParams().toString();
  const browser=useSyncExternalStore(subscribeLocation,locationSnapshot,()=>'');
  const [hostname,hash,client]=browser.split('|');
- if(!adFitEligible({...props,hostname:hostname||'',path,search,hash,nativeApp:client==='native',audience:isLoading?'loading':user?'authenticated':'anonymous'}))return null;
- return <AdUnit key={path+'?'+search}/>;
+ const audience=isLoading?'loading':user?'authenticated':'anonymous';
+ const genuineNative=client==='native'&&(typeof window!=='undefined'&&window.CBGPUNative?.isNative===true||typeof navigator!=='undefined'&&/CBGPU\/[0-9.]+\s+NativeAndroid/i.test(navigator.userAgent));
+ const nativeSearch=new URLSearchParams(search);if(genuineNative&&nativeSearch.getAll('native').length===1&&nativeSearch.get('native')==='1')nativeSearch.delete('native');
+ if(client==='native'){const eligible=adFitEligible({...props,hostname:hostname||'',path,hash,search:nativeSearch.toString(),nativeApp:false,audience});return <NativePublicAdContext placement={props.placement} schoolAdsEnabled={props.schoolAdsEnabled} audience={audience} route={path+'?'+search+'#'+hash} eligible={eligible} fallback={eligible?<AdUnit key={path+'?'+search} identity={user?.id||'anonymous'}/>:null}/>;}
+ if(!adFitEligible({...props,hostname:hostname||'',path,search,hash,nativeApp:false,audience}))return null;
+ return <AdUnit key={path+'?'+search} identity={user?.id||'anonymous'}/>;
 }
-function AdUnit(){
+function AdUnit({identity}:{identity:string}){
  const host=useRef<HTMLElement|null>(null),slot=useRef<HTMLDivElement|null>(null),format=useRef<keyof typeof kakaoAdUnits|null>(null),attempted=useRef(false),intersecting=useRef(false),teardown=useRef<(()=>void)|null>(null);
  const [mode,setMode]=useState<keyof typeof kakaoAdUnits|null>(null),[fits,setFits]=useState(false),[unavailable,setUnavailable]=useState(false),[canStart,setCanStart]=useState(false);
  const measure=useCallback((element:HTMLElement|null)=>{host.current=element;if(!element)return;const width=element.getBoundingClientRect().width;if(width<320)return;const initial=width>=728?'desktop':'mobile';format.current=initial;setMode(initial);setFits(true)},[]);
@@ -51,9 +56,9 @@ function AdUnit(){
   ins.dataset.adOnfail=callbackName;
   script.type='text/javascript';script.src='https://t1.kakaocdn.net/kas/static/ba.min.js';script.async=true;script.referrerPolicy='no-referrer';
   script.onerror=()=>setUnavailable(true);
-  markAdDocument(document);installAdNavigationBoundary(document);
+  markAdDocument(document,identity);installAdNavigationBoundary(document);
   target.append(ins,script);
   teardown.current=()=>{script.onerror=null;if(callbacks[callbackName]===noFill)delete callbacks[callbackName];target.replaceChildren();if(leases.get(document)===lease)leases.delete(document)};
- },[mode,fits,canStart]);
+ },[mode,fits,canStart,identity]);
  return <aside ref={measure} className="cb-kakao-page-ad" aria-label="광고" data-ad-placement="public" data-ad-unavailable={unavailable||undefined} style={{visibility:mode&&fits?'visible':'hidden'}}><span className="cb-kakao-ad-label">광고</span><div ref={slot} className="cb-kakao-ad-slot" data-ad-format={mode||'pending'}/></aside>;
 }

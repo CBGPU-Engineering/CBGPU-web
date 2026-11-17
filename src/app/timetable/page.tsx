@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { timetableWeekDates } from '@/lib/timetablePresentation';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useCachedAi } from '@/lib/useCachedAi';
+import {useSchoolScope}from'@/components/schools/SchoolScope';
 
 const DAYS    = ['월', '화', '수', '목', '금'];
 const MAX_P   = 7;
@@ -47,6 +48,13 @@ type Grid = Record<number, Record<number, Cell>>;
 
 export default function TimetablePage() {
   const { isAdmin, user, profile, isLoading: authLoading } = useAuth();
+  const schoolScope=useSchoolScope();
+  const activeSchool=schoolScope.status==='legacy'?'cbsh':schoolScope.status==='ready'?schoolScope.school?.id:null;
+  const scopeKey=schoolScope.status==='legacy'?'legacy:'+(user?.id||'anonymous'):schoolScope.status+':'+(activeSchool||'none')+':'+(user?.id||'none');
+  const scopeRef=useRef(scopeKey);scopeRef.current=scopeKey;
+  const manualAllowed=schoolScope.status==='legacy'||schoolScope.status==='ready'&&activeSchool==='cbsh';
+  const canEditManual=isAdmin&&schoolScope.status==='legacy';
+
   const { showAlert, showError, showSuccess } = useAlert();
   const [grade,   setGrade]   = useState(1);
   const [cls,     setCls]     = useState(1);
@@ -58,47 +66,56 @@ export default function TimetablePage() {
   const [loading, setLoading] = useState(false);
   const requestRef=useRef(0);
   const subjectTrigger=useRef<HTMLElement|null>(null);
-  const [gridContext,setGridContext]=useState<{grade:number;cls:number}|null>(null);
+  const [gridContext,setGridContext]=useState<{grade:number;cls:number;school:string}|null>(null);
   const [subjectDetail,setSubjectDetail]=useState<{day:number;period:number}|null>(null);
   const [saving,  setSaving]  = useState(false);
   const [error,   setError]   = useState('');
   const [freshness,setFreshness]=useState<{stale:boolean;fetchedAt:string;weekStart:string|null}|null>(null);
   const [source,  setSource]  = useState<'comcigan' | 'manual'>('comcigan');
   const [dbMissing, setDbMissing] = useState(false);
+  const visibleGrid=gridContext?.school===scopeKey?grid:{};
+  const displayPeriods=schoolScope.status==='legacy'?PERIODS:Array.from({length:Math.min(12,Math.max(7,...Object.values(visibleGrid).flatMap(day=>Object.keys(day).map(Number))))},(_,i)=>i+1);
   const todayWd = (() => { const d = new Date().getDay(); return d === 0 ? -1 : d - 1; })();
   const todaySubjects = todayWd >= 0 && todayWd < 5
-    ? PERIODS.map(period => grid[todayWd]?.[period]?.subject).filter(Boolean)
+    ? displayPeriods.map(period => visibleGrid[todayWd]?.[period]?.subject).filter(Boolean)
     : [];
   const todayDate = new Date().toLocaleDateString('sv-SE');
-  const prepInput = todaySubjects.length >= 2 && gridContext?.grade===grade && gridContext?.cls===cls ? `${todayDate} ${grade}학년 ${cls}반 시간표: ${todaySubjects.join(', ')}` : '';
-  const prepTip = useCachedAi('timetable', prepInput, `timetable:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing && !freshness?.stale);
+  const prepInput = todaySubjects.length >= 2 && gridContext?.school===scopeKey && gridContext?.grade===grade && gridContext?.cls===cls ? `${activeSchool} ${todayDate} ${grade}학년 ${cls}반 시간표: ${todaySubjects.join(', ')}` : '';
+  const prepTip = useCachedAi('timetable', prepInput, `timetable:${activeSchool}:${grade}:${cls}:${todayDate}`, !!prepInput && !loading && !editing && !freshness?.stale);
 
   const loadComcigan = useCallback(async (g: number, c: number, refresh = false) => {
-    const request=++requestRef.current;setLoading(true); setError('');
+    const request=++requestRef.current,requestScope=scopeKey;setLoading(true); setError('');
+    if(!activeSchool){setLoading(false);setGrid({});return;}
+    let verifiedManualFallback=schoolScope.status==='legacy';
     try {
-      const res  = await fetch(`/api/timetable?grade=${g}&class=${c}${refresh ? '&refresh=1' : ''}`);
+      const session=schoolScope.status==='legacy'?null:(await supabase.auth.getSession()).data.session;
+      if(schoolScope.status!=='legacy'&&!session)throw Error('로그인 후 학교 소속을 확인해주세요.');
+      const res=await fetch(`/api/timetable?grade=${g}&class=${c}${refresh?'&refresh=1':''}${schoolScope.status==='legacy'?'':'&school_id='+encodeURIComponent(activeSchool)}`,{headers:session?{Authorization:'Bearer '+session.access_token}:{},cache:'no-store'});
       const json = await res.json();
-      if (json.error) throw new Error(json.error);
-      if(request!==requestRef.current)return;
-      setGrid(json.grid ?? {});setGridContext({grade:g,cls:c});
+      if (json.error){verifiedManualFallback ||=res.status===502&&json.code==='TIMETABLE_PROVIDER_ERROR'&&json.school_id==='cbsh';throw new Error(json.error);}
+      if(request!==requestRef.current||scopeRef.current!==requestScope)return;
+      setGrid(json.grid ?? {});setGridContext({grade:g,cls:c,school:requestScope});
+      const native=(window as Window&{CBGPUNative?:{setTimetableSelection?:(value:{school_id:string;grade:number;class_num:number;expected_user_id:string})=>Promise<unknown>}}).CBGPUNative;
+      const preference=native?.setTimetableSelection?.({school_id:activeSchool,grade:g,class_num:c,expected_user_id:user?.id||''});if(preference)void preference.catch(()=>{});
+
       if (json.grades?.length)  setGrades(json.grades);
       if (json.classes?.length) setClasses(json.classes);
       setSource('comcigan');
       setFreshness({stale:!!json.stale,fetchedAt:json.fetchedAt||'',weekStart:json.weekStart||null});
     } catch (e: any) {
-      if(request!==requestRef.current)return;
+      if(request!==requestRef.current||scopeRef.current!==requestScope)return;
       setError(e.message ?? String(e));
-      await loadManual(g, c,request);
+      if(manualAllowed&&verifiedManualFallback)await loadManual(g,c,request,requestScope);else{setGrid({});setGridContext(null);setFreshness(null);}
     } finally {
-      if(request===requestRef.current)setLoading(false);
+      if(request===requestRef.current&&scopeRef.current===requestScope)setLoading(false);
     }
-  }, []); // eslint-disable-line
+  }, [scopeKey,activeSchool,manualAllowed]); // eslint-disable-line
 
-  const loadManual = useCallback(async (g: number, c: number, request:number) => {
+  const loadManual = useCallback(async (g: number, c: number, request:number,requestScope:string) => {
     const { data, error: dbErr } = await supabase
       .from('timetable').select('weekday,period,subject')
       .eq('grade', g).eq('class_num', c);
-    if(request!==requestRef.current)return;
+    if(request!==requestRef.current||scopeRef.current!==requestScope)return;
     if (dbErr?.message?.includes('does not exist')) { setDbMissing(true); return; }
     if(dbErr){setError(previous=>previous+' · 수동 시간표도 불러오지 못했어요.');return;}
     const g2: Grid = {};
@@ -106,19 +123,22 @@ export default function TimetablePage() {
       if (!g2[r.weekday]) g2[r.weekday] = {};
       g2[r.weekday][r.period] = { subject: r.subject, teacher: '' };
     }
-    setGrid(g2);setGridContext({grade:g,cls:c}); setSource('manual');setFreshness(null);
+    setGrid(g2);setGridContext({grade:g,cls:c,school:requestScope}); setSource('manual');setFreshness(null);
   }, []);
 
-  const didInitRef = useRef(false);
+  const ownStudentNumber=schoolScope.status==='legacy'?profile?.student_id:schoolScope.memberships.find(member=>member.school_id===activeSchool&&member.membership_type==='STUDENT')?.student_number;
+  const initScopeKey=scopeKey+':'+(ownStudentNumber||'');
+  const didInitRef = useRef<string|null>(null);
   useEffect(() => {
-    if (didInitRef.current) return;
-    if (authLoading) return;
-    if (user && !profile) return; // 로그인은 됐는데 프로필이 아직 백그라운드에서 로딩 중 — 기다린다
-    didInitRef.current = true;
-    const own = parseStudentGradeClass(profile?.student_id);
-    if (own) { setGrade(own.grade); setCls(own.cls); loadComcigan(own.grade, own.cls); }
-    else loadComcigan(1, 1);
-  }, [authLoading, user, profile]); // eslint-disable-line
+    if(authLoading||user&&!profile)return;
+    if(didInitRef.current===initScopeKey)return;
+    requestRef.current++;setGrid({});setGridContext(null);setFreshness(null);setSubjectDetail(null);setEditing(false);setDbMissing(false);setError('');setLoading(false);
+    didInitRef.current=initScopeKey;
+    if(!activeSchool)return;
+    setGrades(schoolScope.status==='legacy'?[1,2,3]:[1]);setClasses(schoolScope.status==='legacy'?[1,2,3,4]:[1]);
+    const own=activeSchool==='cbsh'?parseStudentGradeClass(ownStudentNumber):null;
+    const nextGrade=own?.grade||1,nextClass=own?.cls||1;setGrade(nextGrade);setCls(nextClass);void loadComcigan(nextGrade,nextClass);
+  },[authLoading,user,profile,scopeKey,initScopeKey,ownStudentNumber,activeSchool,loadComcigan]);
 
   useEffect(()=>{
     if(!freshness?.stale||editing)return;
@@ -132,20 +152,22 @@ export default function TimetablePage() {
   };
 
   const startEdit = () => {
+    if(!canEditManual||gridContext?.school!==scopeKey)return;
     const d: typeof draft = {};
     for (const wd in grid) { d[+wd] = {}; for (const p in grid[+wd]) d[+wd][+p] = grid[+wd][+p].subject; }
     setDraft(d); setEditing(true);
   };
 
   const save = async () => {
-    setSaving(true);
+    if(!canEditManual||gridContext?.school!==scopeKey)return;
+    const savingScope=scopeKey;setSaving(true);
     const rows = [];
     for (let wd = 0; wd < 5; wd++)
       for (const p of PERIODS)
         rows.push({ grade, class_num: cls, weekday: wd, period: p, subject: draft[wd]?.[p] ?? '' });
     const { error: dbErr } = await supabase.from('timetable')
       .upsert(rows, { onConflict: 'grade,class_num,weekday,period' });
-    setSaving(false);
+    setSaving(false);if(scopeRef.current!==savingScope)return;
     if (dbErr) { showError(dbErr.message); return; }
     const g2: Grid = {};
     for (let wd = 0; wd < 5; wd++) { g2[wd] = {}; for (const p of PERIODS) { const s = draft[wd]?.[p] ?? ''; if (s) g2[wd][p] = { subject: s, teacher: '' }; } }
@@ -153,7 +175,8 @@ export default function TimetablePage() {
   };
 
   const weekDates=timetableWeekDates(freshness?.weekStart);
-  const detail=subjectDetail?grid[subjectDetail.day]?.[subjectDetail.period]:null;
+  const detail=subjectDetail?visibleGrid[subjectDetail.day]?.[subjectDetail.period]:null;
+  if(schoolScope.status!=='legacy'&&schoolScope.status!=='ready')return <section className="cb-page-content px-4 py-10 max-w-lg mx-auto">{schoolScope.status==='loading'?<LoadingSpinner/>:<EmptyState kind="search" title="학교를 먼저 확인해주세요" description={schoolScope.status==='unavailable'?schoolScope.error:'인증된 학교를 선택하면 해당 학교 시간표를 볼 수 있어요.'} action={<Button onClick={()=>void schoolScope.refresh()}>학교 소속 다시 확인</Button>}/>}</section>;
   if (dbMissing) return <section className="cb-page-content px-4 py-10 max-w-lg mx-auto"><EmptyState kind="search" title="시간표를 준비하고 있어요" description="학교 시간표 연결을 확인하고 있어요. 잠시 후 다시 확인하거나 관리자에게 알려 주세요." action={<Button onClick={()=>{setDbMissing(false);void loadComcigan(grade,cls,true)}}>다시 확인하기</Button>}/></section>;
 
   return (
@@ -162,7 +185,7 @@ export default function TimetablePage() {
         <div>
           <h1 className="cb-page-title">시간표</h1>
           <p className="cb-page-sub mt-1">
-            충북과학고등학교 ·{' '}
+            {schoolScope.status==='legacy'?'충북과학고등학교':schoolScope.school?.official_name} ·{' '}
             <span className={source === 'comcigan' ? 'text-green-500' : 'text-amber-500'}>
               {source === 'comcigan' ? '컴시간 알리미' : '수동 데이터'}
             </span>
@@ -174,12 +197,12 @@ export default function TimetablePage() {
               <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           )}
-          {isAdmin && !editing && (
+          {canEditManual && !editing && (
             <Button onClick={startEdit} disabled={loading} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
               <Edit3 className="size-3.5" /> 직접 편집
             </Button>
           )}
-          {isAdmin && editing && (
+          {canEditManual && editing && (
             <div className="flex gap-2">
               <Button onClick={() => setDraft({})} variant="ghost" size="sm" className="font-semibold text-xs gap-1.5 text-muted-foreground active:scale-95 transition-transform">
                 <RotateCcw className="size-3" />
@@ -199,7 +222,7 @@ export default function TimetablePage() {
         <ResourceSelection label="시간표 학년 선택" disabled={editing}
           items={grades.map(g => ({ value: String(g), label: `${g}학년` }))}
           value={String(grade)}
-          onChange={(v) => switchTo(Number(v), cls)}
+          onChange={(v) => switchTo(Number(v), 1)}
         />
         <ResourceSelection label="시간표 반 선택" disabled={editing}
           items={classes.map(c => ({ value: String(c), label: `${c}반` }))}
@@ -243,11 +266,11 @@ export default function TimetablePage() {
               </tr>
             </thead>
             <tbody>
-              {PERIODS.map(p => (
+              {displayPeriods.map(p => (
                 <tr key={p}>
                   <th scope="row" className="p-1 text-center"><span className="text-xs font-semibold text-muted-foreground">{p}</span></th>
                   {DAYS.map((_, di) => {
-                    const cell    = editing ? undefined : grid[di]?.[p];
+                    const cell    = editing ? undefined : visibleGrid[di]?.[p];
                     const subject = editing ? (draft[di]?.[p] ?? '') : (cell?.subject ?? '');
                     const teacher = editing ? '' : (cell?.teacher ?? '');
                     const changed = !editing && !!cell?.changed;
@@ -282,7 +305,7 @@ export default function TimetablePage() {
       {error&&source!=='manual'&&<InlineFeedback kind="info" message={gridContext?'최신 시간표를 확인하지 못했어요. 표시된 학년·반과 마지막 조회 내역을 확인해 주세요.':'시간표 연결을 확인하지 못했어요. 다시 불러와 주세요.'}/>}
       <Dialog open={!!subjectDetail} onOpenChange={open=>{if(!open)setSubjectDetail(null)}}><DialogContent className="max-w-sm max-h-[85dvh] overflow-y-auto" onCloseAutoFocus={event=>{event.preventDefault();if(subjectTrigger.current?.isConnected)subjectTrigger.current.focus()}}><DialogHeader><DialogTitle>{detail?.subject||'수업 정보'}</DialogTitle><DialogDescription>{subjectDetail&&`${weekDates[subjectDetail.day]?.fullLabel||''} ${DAYS[subjectDetail.day]}요일 · ${subjectDetail.period}교시`}</DialogDescription></DialogHeader><dl className="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-4 py-2 text-sm"><dt className="text-muted-foreground">학년·반</dt><dd>{gridContext?.grade}학년 {gridContext?.cls}반</dd><dt className="text-muted-foreground">담당 교사</dt><dd className="break-words">{detail?.teacher||'등록된 정보가 없어요'}</dd><dt className="text-muted-foreground">시간표</dt><dd>{source==='manual'?'수동 시간표':freshness?.stale?'마지막 조회 내역':'학교 시간표'}</dd></dl>{detail?.changed&&<InlineFeedback kind="info" message="학교 시간표에서 변경된 수업이에요."/>}{freshness?.stale&&<InlineFeedback kind="info" message="최신 확인이 지연되어 수업이 달라졌을 수 있어요."/>}</DialogContent></Dialog>
       <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
-        <span>컴시간 알리미 자동 연동 · 실패 시 수동 데이터 표시{isAdmin && ' · 직접 편집 가능'}</span>
+        <span>컴시간 알리미 자동 연동{manualAllowed&&' · 제공처 오류 시 교내 수동 데이터 표시'}{canEditManual&&' · 직접 편집 가능'}</span>
         {source === 'comcigan' && (
           <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" />실시간 보강/결강 변경</span>
         )}

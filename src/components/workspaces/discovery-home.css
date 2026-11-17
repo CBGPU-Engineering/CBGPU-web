@@ -46,3 +46,13 @@
  .cb-home-answer { padding:14px; }
 }
 .cb-home-ask form>a { display:flex; flex-shrink:0; color:var(--primary); }
+/* The account entry is school-aware; keep its avatar and school switcher within a phone. */
+@media(max-width:640px){
+ .cb-discovery-greeting{flex-direction:column;align-items:stretch}
+ .cb-discovery-greeting>.cb-account-with-school{width:100%;min-width:0;gap:8px}
+ .cb-discovery-greeting>.cb-account-with-school>.cb-account-entry{flex:none;min-width:44px;padding:0}
+ .cb-discovery-greeting>.cb-account-with-school>.cb-account-entry .cb-account-copy,
+ .cb-discovery-greeting>.cb-account-with-school>.cb-account-entry>svg{display:none}
+ .cb-discovery-greeting>.cb-account-with-school>.cb-header-school{flex:1;min-width:0;max-width:calc(100% - 52px);justify-content:flex-start}
+ .cb-discovery-greeting>.cb-account-with-school>.cb-header-school>svg{flex:none}
+}

@@ -75,6 +75,16 @@ SQL migrations and database test fixtures belong to the [backend schema](https:/
 `FrontEnd/cbgpu` alongside the backend, app and resource services. Changes to this
 component are reviewed here before the platform pin is updated.
 
+## Advertising reports
+
+The optional platform-admin report dashboard groups the registered **Mobile banner
+format** (320 × 50) and **Desktop banner format** (728 × 90) units. These are ad-unit
+formats, not measured visitor devices: a narrow desktop window can use the smaller
+unit. Actual physical-device revenue remains **N/A** without an official device
+dimension. Report tooling defaults off until its reviewed backend is configured;
+estimated and confirmed revenue are never combined. See the
+[advertising operations guide](docs/advertising/adfit-operations.md).
+
 ## License
 
 Original code is [Apache-2.0](LICENSE). See [NOTICE](NOTICE),

@@ -157,3 +157,34 @@ permission checks are audited separately; this redesign does not replace them.
 The combined authentication, contest, GPU, timetable and deployment UI passed an optimized Next build and TypeScript checks. Local Chromium verified authentication at 320, 390, 768 and 1440 pixels, input preservation after failure, password visibility, real demo-confirmed success notifications and reduced motion. Axe found no violations in the tested authentication panel in light and dark themes; this is not a whole-site WCAG certification. Contest tests verified one registration mutation, answers preserved when returning a step, measured card-to-detail continuity, mobile overflow and reduced motion. Resource tests checked keyboard GPU selection, timetable details/focus return and actual deployment phase transitions. All data was synthetic; no production registration, email, deployment or reservation was created by these tests.
 
 Shared dialogs now keep Radix focus management while Motion handles entry/exit; overlay-kit promises resolve on the real user decision and cleanup follows exit completion. Original SVG feedback has no third-party asset attribution requirement. The existing contest lint baseline still contains eight pre-existing effect-state errors; these have not been represented as passing. Physical Android behavior, representative user task timing and whole-site accessibility remain unverified.
+
+## Scoped-access regression review — 17 November 2026
+
+Further rendered checks use synthetic accounts and intercepted provider APIs:
+
+- **High, temporary collaborators:** the old profile approval boolean hid valid
+  resource access. A separate resource context now identifies an approved guest
+  without representing them as a student. Fresh per-action checks prevent stale
+  menus from authorizing writes; history and owned projects remain accessible.
+- **High, study recovery:** a CBGPU session error could erase the independently
+  valid EduSet connection. Errors now distinguish the two identities. The mobile
+  study fixture verifies that session expiry preserves the connection and that
+  resource revocation clears stale room data without submitting anything.
+- **High, asynchronous actions:** an AI request could continue after leaving its
+  tool. Owner, mounted-component and selected-job checks discard stale intents.
+  A production browser fixture holds a permission response, navigates away and
+  releases a late approval; no job is created. Existing errors are not used as
+  evidence that a new action settled; the test waits for its actual response.
+- **Medium, note discoverability and keyboard access:** clickable containers did
+  not expose a keyboard action, while delete required hover. Notes now have a
+  named native button, named return action and a visible 44px touch delete target.
+  A real 320px browser test opens a note with Enter, returns without a write and
+  checks target size and horizontal overflow. Destructive confirmation remains.
+- **High, material upload recovery:** scoped upload failures retain the form and
+  retry the same upload identity. The mobile fixture verifies no direct unscoped
+  metadata write or file transfer after an authorization failure.
+
+These changes apply recognition over recall, accessible target sizing and error
+recovery. Their effect on real student task time remains a hypothesis until
+measured with users. Browser coverage is specific to the fixtures above; it does
+not certify every route, every screen reader or physical devices.

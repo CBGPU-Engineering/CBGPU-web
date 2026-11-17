@@ -1,4 +1,5 @@
 'use client';
+import{useSchoolServiceVisibility}from'@/components/schools/SchoolScope';
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {workspaceServicePaths,workspaces,type WorkspaceId} from '@/lib/workspaces';
@@ -8,11 +9,12 @@ import WorkspaceLink from '@/components/workspaces/WorkspaceLink';
 import {Search,ArrowRight} from 'lucide-react';
 const PAGES=[...serviceSearchPages,{title:'전체 기능',description:'필요한 기능을 분류별로 찾아보기',href:'/services',keywords:'전체 메뉴 기능 서비스'},{title:'내 프로필',description:'계정 정보 확인',href:'/profile',keywords:'계정 개인정보'},{title:'문의하기',description:'문제와 제안 보내기',href:'/contact',keywords:'문의 지원'}];
 export default function SiteSearch({open,onOpenChange,audience,isApp=false}:{open:boolean;onOpenChange:(open:boolean)=>void;audience?:WorkspaceId;isApp?:boolean}){
+ const canShow=useSchoolServiceVisibility();
  const dialogRef=useRef<HTMLDialogElement>(null),inputRef=useRef<HTMLInputElement>(null),resultsRef=useRef<HTMLDivElement>(null);
  const [query,setQuery]=useState(''),[selected,setSelected]=useState(0);
  const isService=(href:string)=>serviceSearchPages.some(page=>page.href===href);
  const relevant=(href:string)=>!audience||!isService(href)||workspaceServicePaths[audience].includes(href);
- const results=query.trim()?PAGES.filter(page=>matchesService(query,`${page.title} ${page.description} ${page.keywords}`)).sort((a,b)=>Number(relevant(b.href))-Number(relevant(a.href))):PAGES.filter(page=>relevant(page.href));
+ const results=query.trim()?PAGES.filter(page=>canShow(page.href)&&matchesService(query,`${page.title} ${page.description} ${page.keywords}`)).sort((a,b)=>Number(relevant(b.href))-Number(relevant(a.href))):PAGES.filter(page=>canShow(page.href)&&relevant(page.href));
  useEffect(()=>{const dialog=dialogRef.current;if(!dialog)return;if(open&&!dialog.open){dialog.showModal();requestAnimationFrame(()=>inputRef.current?.focus())}else if(!open&&dialog.open)dialog.close()},[open]);
  useEffect(()=>{const shortcut=(event:KeyboardEvent)=>{if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'&&!event.repeat){event.preventDefault();onOpenChange(!dialogRef.current?.open)}};window.addEventListener('keydown',shortcut);return()=>window.removeEventListener('keydown',shortcut)},[open,onOpenChange]);
  function close(){onOpenChange(false);setQuery('');setSelected(0)}

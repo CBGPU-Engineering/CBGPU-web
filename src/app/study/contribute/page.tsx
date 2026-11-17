@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, CheckCircle2, ExternalLink, Puzzle, RefreshCw, Settings, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
 
+const scopedContributorUi=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'||['1','true'].includes(process.env.NEXT_PUBLIC_CBGPU_ACCOUNT_V2||'');
 const VIOLENTMONKEY_ID = 'jinjaccalgkegednnccohejagnlnfdag';
 type Browser = 'Brave' | 'Edge' | 'Chrome';
 type ContributorDevice = { id: string; name: string; created_at: string; last_used_at: string | null };
@@ -26,6 +27,13 @@ function extensionDetailsUrl(browser: Browser): string {
 
 export default function StudyContributorPage() {
   const { user, isApproved, isLoading } = useAuth();
+  const owner=useRef(user?.id);owner.current=user?.id;
+  const [eligibility,setEligibility]=useState<boolean|null>(null),[eligibilityMessage,setEligibilityMessage]=useState('');
+  const canContribute=scopedContributorUi?eligibility===true:isApproved;
+  useEffect(()=>{if(!scopedContributorUi)return;let live=true;const expected=user?.id;setEligibility(null);setEligibilityMessage('');
+   const check=async()=>{if(!expected||isLoading)return;try{const {data:{session}}=await supabase.auth.getSession();if(!session||session.user.id!==expected)throw Error('CBGPU에 다시 로그인해 주세요.');const response=await fetch('/api/study/contributor/device',{headers:{Authorization:'Bearer '+session.access_token},cache:'no-store'});const body=await response.json();if(!live||expected!==owner.current)return;setEligibility(response.ok&&body.allowed===true);setEligibilityMessage(response.ok?'':body.message||'기여자 권한을 확인하지 못했습니다.');}catch{if(live&&expected===owner.current){setEligibility(false);setEligibilityMessage('기여자 권한 확인에 실패했습니다. 잠시 후 다시 확인해 주세요.');}}};
+   void check();window.addEventListener('focus',check);return()=>{live=false;window.removeEventListener('focus',check)};
+  },[user?.id,isLoading]);
   const { showError, showSuccess, confirm } = useAlert();
   const [devices, setDevices] = useState<ContributorDevice[]>([]);
   const [devicesLoading, setDevicesLoading] = useState(true);
@@ -40,20 +48,23 @@ export default function StudyContributorPage() {
 
   const loadDevices = async () => {
     if (!user) return;
+    const expected=user.id;
     const { data, error } = await supabase.from('eduset_contributor_devices')
-      .select('id, name, created_at, last_used_at').is('revoked_at', null).order('created_at', { ascending: false });
+      .select('id, name, created_at, last_used_at').eq('user_id',expected).is('revoked_at', null).order('created_at', { ascending: false });
+    if(expected!==owner.current)return;
     if (error) showError('연결 상태를 확인하지 못했습니다. 잠시 후 새로고침해 주세요.');
     else setDevices(data ?? []);
     setDevicesLoading(false);
   };
 
-  useEffect(() => { void loadDevices(); }, [user]);
+  useEffect(() => { setDevices([]);setPendingDeviceId(null);setPendingSince(null);setWaitingTooLong(false);setDevicesLoading(!!user);void loadDevices(); }, [user?.id]);
 
   useEffect(() => {
-    if (!pendingDeviceId) return;
+    if (!pendingDeviceId||!user) return;const expected=user.id;
     const check = async () => {
       const { data } = await supabase.from('eduset_contributor_devices')
-        .select('id, name, created_at, last_used_at').eq('id', pendingDeviceId).maybeSingle();
+        .select('id, name, created_at, last_used_at').eq('user_id',user?.id||'').eq('id', pendingDeviceId).maybeSingle();
+      if(expected!==owner.current)return;
       if (data?.last_used_at) {
         await loadDevices();
         setPendingDeviceId(null);
@@ -68,9 +79,10 @@ export default function StudyContributorPage() {
     void check();
     const timer = window.setInterval(() => { void check(); }, 4000);
     return () => window.clearInterval(timer);
-  }, [pendingDeviceId, pendingSince]);
+  }, [pendingDeviceId, pendingSince,user?.id]);
 
   const connectAndOpen = async () => {
+    if(!canContribute||!user)return;const expected=user.id;
     // Open synchronously on the click so popup blockers do not discard the tab
     // while the connection key is being created.
     const studyTab = window.open('about:blank', '_blank');
@@ -79,6 +91,7 @@ export default function StudyContributorPage() {
     setCreating(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if(!session||session.user.id!==expected)throw Error('CBGPU 계정이 변경됐습니다. 다시 확인해 주세요.');
       const res = await fetch('/api/study/contributor/device', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
@@ -86,6 +99,7 @@ export default function StudyContributorPage() {
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.message ?? '연결 키 발급에 실패했습니다.');
+      if(expected!==owner.current)throw Error('CBGPU 계정이 변경됐습니다. 다시 확인해 주세요.');
       setPendingDeviceId(body.deviceId);
       setPendingSince(Date.now());
       setWaitingTooLong(false);
@@ -109,8 +123,10 @@ export default function StudyContributorPage() {
   };
 
   const revoke = async (id: string) => {
+    const expected=user?.id;if(!expected)return;
     if (!await confirm({ title: '브라우저 연결을 해제할까요?', message: '해제하면 이 브라우저에서는 더 이상 자동 동기화되지 않아요.', confirmLabel: '연결 해제' })) return;
-    const { error } = await supabase.from('eduset_contributor_devices').delete().eq('id', id);
+    const {data:{session}}=await supabase.auth.getSession();if(expected!==owner.current||session?.user.id!==expected){showError('CBGPU 계정이 변경됐습니다. 다시 확인해 주세요.');return;}
+    const { error } = await supabase.from('eduset_contributor_devices').delete().eq('user_id',expected).eq('id', id);
     if (error) showError(error.message);
     else { showSuccess('기기 연결을 해제했습니다.'); await loadDevices(); }
   };
@@ -132,6 +148,7 @@ export default function StudyContributorPage() {
         <p className="text-sm text-muted-foreground">한 번 연결하면 데스크톱 브라우저에서 자습신청 사이트에 로그인할 때 자동으로 CBGPU가 갱신됩니다. 비밀번호는 가져오지 않습니다.</p>
       </div>
 
+      {scopedContributorUi&&<p role={eligibilityMessage?'alert':'status'} className="text-sm text-muted-foreground">{eligibilityMessage||(eligibility===null?'기여자 소속을 확인하고 있어요.':'기여자 연결은 현재 소속이 확인된 충북과학고 재학생·교사에게만 제공됩니다. 임시 자습 이용 권한과는 별도입니다.')}</p>}
       {devicesLoading ? (
         <div className="rounded-2xl border bg-card p-5 text-sm text-muted-foreground">연결 상태 확인 중...</div>
       ) : syncedDevices.length > 0 && (
@@ -181,7 +198,7 @@ export default function StudyContributorPage() {
         <div className="rounded-2xl bg-muted/30 p-3 space-y-2">
           <p className="text-sm font-semibold">3. 연결하고 자습신청 로그인</p>
           <p className="text-xs text-muted-foreground">버튼을 누르면 CBGPU가 자동으로 연결되고 자습신청 사이트가 새 탭에 열립니다. 평소처럼 로그인하세요. 키를 복사하거나 입력할 필요가 없습니다.</p>
-          <Button type="button" onClick={connectAndOpen} disabled={creating || !isApproved || (!!pendingDeviceId && !waitingTooLong)} className="w-full gap-2">
+          <Button type="button" onClick={connectAndOpen} disabled={creating || !canContribute || (!!pendingDeviceId && !waitingTooLong)} className="w-full gap-2">
             <ExternalLink className="size-4" /> {creating ? '연결 중...' : '연결하고 자습신청 열기'}
           </Button>
           {pendingDeviceId && !waitingTooLong && <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><RefreshCw className="size-3 animate-spin" /> 자습신청 로그인을 기다리는 중입니다. 성공하면 이 화면이 자동으로 바뀝니다.</p>}

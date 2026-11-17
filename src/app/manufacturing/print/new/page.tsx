@@ -1,8 +1,10 @@
 'use client';
+import{manufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
+import { useSchoolResourcePermission } from '@/components/schools/SchoolResourceScope';
 import { useAlert } from '@/lib/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +24,7 @@ const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 export default function NewPrintJobPage() {
   const { user, isApproved, isLoading: authLoading } = useAuth();
+  const fabricationPermission = useSchoolResourcePermission('fabrication', isApproved);
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
 
@@ -62,20 +65,17 @@ export default function NewPrintJobPage() {
 
   // 프린터를 고르면 그 프린터의 담당자만 골라서 지정할 수 있게 다시 불러온다.
   useEffect(() => {
-    setManagerId('');
+    setManagerId('');setManagers([]);let active=true;
     if (printerId == null) { setManagers([]); return; }
     const fetchManagers = async () => {
       const { data: pm, error: pmError } = await supabase.from('printer_managers').select('user_id').eq('printer_id', printerId);
+      if(!active)return;
       if (pmError || !pm || pm.length === 0) { setManagers([]); return; }
       const ids = [...new Set(pm.map(r => r.user_id))];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, student_id')
-        .in('id', ids)
-        .order('student_id');
-      if (!error) setManagers(data || []);
+      const { data, error } = await manufacturingManagers(supabase,'print',ids,printerId);
+      if(!active)return;setManagers(error?[]:data||[]);if(error)showError('담당자 목록을 확인하지 못했어요.');
     };
-    fetchManagers();
+    fetchManagers();return()=>{active=false};
   }, [printerId]);
 
   const addFiles = async (list: FileList | null) => {
@@ -109,7 +109,7 @@ export default function NewPrintJobPage() {
 
   const handleSubmit = async () => {
     if (!user) return;
-    if (!isApproved) { showError('학번 또는 이름 확인이 필요해 신청할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if (!await fabricationPermission.verify()) { showError(fabricationPermission.reason || '제작 장비 이용 권한을 확인해 주세요.'); return; }
     if (fileEntries.length === 0) { showError('3mf 파일을 한 개 이상 업로드해주세요.'); return; }
     if (fileEntries.some(e => !e.file.name.toLowerCase().endsWith('.3mf'))) { showError('3mf 파일만 업로드할 수 있습니다.'); return; }
     if (printerId == null) { showError('사용할 프린터를 선택해주세요.'); return; }

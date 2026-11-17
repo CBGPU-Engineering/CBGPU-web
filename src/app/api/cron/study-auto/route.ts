@@ -1,7 +1,8 @@
+import {studyScopedMode} from '@/lib/studyAuth';
 import {timingSafeEqual} from 'node:crypto';
 import {preprintsClient} from '@/lib/preprintsServer';
 import {automationDue,koreaClock,runAutomaticStudy,type StudyAutomationSettings} from '@/lib/studyAutomation';
-import {automaticStudyContext,automaticSchoolRequest,personalSchoolRead} from '@/lib/studyAutomationServer';
+import {automaticStudyContext,automaticSchoolRequest,personalSchoolRead,requireAutomaticStudyOwner} from '@/lib/studyAutomationServer';
 import type {StudyId} from '@/lib/edusetStudent';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=120;
 let busy=false;
@@ -20,10 +21,12 @@ export async function POST(req:Request){
   for(const row of settings||[]){
    const config={...row,run_time:row.run_time.slice(0,5)} as StudyAutomationSettings;
    if(!automationDue(config,now))continue;
+   if(studyScopedMode()){try{await requireAutomaticStudyOwner(row.user_id)}catch{continue}}
    const {data:runs}=await db.from('study_auto_runs').select('period,status,started_at').eq('user_id',row.user_id).eq('study_date',clock.date);
    const stale=(runs||[]).filter(r=>r.status==='running'&&Date.parse(r.started_at)<Date.now()-5*60_000);
    if(stale.length){
     const fresh=await automaticStudyContext(row.user_id).catch(()=>null);
+    if(studyScopedMode()&&!fresh)continue; // Unknown results remain pending; never cancel or infer failure on authority outage.
     for(const old of stale){const found=fresh?.entries.some(e=>e.period===old.period);await db.from('study_auto_runs').update({status:found?'already_applied':'uncertain',message:found?'공식 명단에서 신청을 확인했어요.':'이전 실행이 중단되어 결과 확인이 필요해요. 중복 신청하지 않았어요.',finished_at:new Date().toISOString()}).eq('user_id',row.user_id).eq('study_date',clock.date).eq('period',old.period).eq('status','running')}
    }
    if(config.periods.every(p=>runs?.some(r=>r.period===p)))continue;
@@ -34,11 +37,13 @@ export async function POST(req:Request){
   await Promise.all(Array.from({length:Math.min(3,jobs.length)},async()=>{
    while(next<jobs.length){
     const {row,config}=jobs[next++];
+    if(studyScopedMode()){try{await requireAutomaticStudyOwner(row.user_id)}catch{continue}}else{
     const {data:profile}=await db.from('profiles').select('is_approved').eq('id',row.user_id).maybeSingle();
     if(!profile||profile.is_approved===false)continue;
     const {data:account,error:accountError}=await db.auth.admin.getUserById(row.user_id);
     const identity=account?.user as {deleted_at?:string;banned_until?:string}|null;
     if(accountError||!identity||identity.deleted_at||identity.banned_until&&Date.parse(identity.banned_until)>Date.now())continue;
+    }
     try{
      await runAutomaticStudy(config,now,{
       context:()=>automaticStudyContext(row.user_id),

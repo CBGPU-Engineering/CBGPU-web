@@ -45,8 +45,7 @@ export default function DownloadPage() {
   }, [router]);
 
   return (
-    <>
-    <section className="cb-page-content max-w-3xl mx-auto px-6 py-16 space-y-16">
+    <><section className="cb-page-content max-w-3xl mx-auto px-6 py-16 space-y-16">
       <div className="text-center space-y-6">
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
         <div className="space-y-2">
@@ -125,7 +124,6 @@ export default function DownloadPage() {
         </div>
       </div>
     </section>
-    <KakaoPageAd placement="platform" contentReady/>
-    </>
+    <KakaoPageAd placement="platform" contentReady/></>
   );
 }

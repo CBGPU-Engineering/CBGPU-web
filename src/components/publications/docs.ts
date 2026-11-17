@@ -37,6 +37,45 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'student-reverification',title:'새 학년도 학번 확인하기',description:'학년도 전환 뒤 새 학번으로 학교 소속을 다시 확인합니다.',category:'school',features:['/schools/[id]/verification'],sections:[
+    {title:'로그인은 계속 할 수 있어요',body:'학교에서 학년도 전환을 실행하면 일부 학생은 새 학번 확인이 필요해요. 학교 목록에서 새 학번으로 재인증하기를 누르세요. 이 과정에서 계정과 개인 프로젝트가 삭제되지는 않습니다.'},
+    {title:'학번 입력과 승인',body:'학교에서 안내한 새 학번을 입력하세요. 지원되는 학교의 학번 형식과 학년을 검사하고, 관리자 확인 대기 상태로 저장합니다. 번호를 입력했다는 이유만으로 학교 GPU나 내부 자원 권한이 즉시 복구되지는 않습니다. 잘못 입력했으면 화면의 안내에 따라 다시 확인하세요.'},
+    {title:'확인 전 이용 범위',body:'본인 계정과 프로젝트는 유지됩니다. 학교 자원은 소속 확인이 끝날 때까지 제한될 수 있어요. 다른 학교의 학생 번호 규칙을 충북과학고 규칙으로 추측해서 처리하지 않습니다.'}
+  ],related:['schools','school-administration']},
+
+  {slug:'guest-school-access',title:'외부 협업자 학교 자원 이용 요청',description:'프로젝트 협업에 필요한 학교 자원을 기간과 범위를 정해 요청합니다.',category:'school',features:['/schools/[id]/access'],sections:[
+    {title:'인증된 학교 구성원이 요청해요',body:'학교 목록의 외부 협업자 이용 요청에서 협업자의 CBGPU 이메일, 프로젝트나 대회 이름, 이용 목적, 필요한 자원과 시작·종료 시각을 입력합니다. 가입한 이메일은 협업자에게 직접 확인하세요. 비밀번호를 받거나 입력할 필요는 없습니다.'},
+    {title:'승인 전에는 사용할 수 없어요',body:'학교 관리자가 요청을 검토합니다. 본인이 요청한 권한을 스스로 승인할 수 없습니다. 승인이 나더라도 허용된 기간과 자원 범위에서만 이용할 수 있고, 학교에서 조기에 회수할 수도 있습니다.'},
+    {title:'기간이 끝나도 프로젝트는 유지돼요',body:'임시 이용 기간이 종료되면 학교 자원 접근은 차단됩니다. 외부 협업자가 학생 계정으로 바뀌거나 본인 프로젝트와 공동 작업 기록이 삭제되는 것은 아닙니다. 요청 화면에서 진행 상태를 확인하세요.'}
+  ],related:['schools','school-administration']},
+
+  {slug:'school-messages',title:'학교와 전국 대화 이용하기',description:'학교 안의 대화와 전국 대화를 구분해서 이용합니다.',category:'school',features:['/messages'],sections:[
+    {title:'학교 대화',body:'로그인한 뒤 인증된 학교 소속으로 학교 대화를 엽니다. 선택한 학교의 대화만 표시되며 다른 학교의 내부 대화를 볼 수는 없습니다. 학교를 바꾸면 이전 대화 내용이 그대로 유지되지 않습니다.'},
+    {title:'전국 대화와 공개 게시',body:'전국 대화는 직접 선택해 들어갑니다. 전국 대화 참여와 로그인 없이 누구나 읽는 공개 게시 여부는 별개입니다. 공개로 올리려면 공개 범위를 확인하세요. 학번·연락처·학교 내부 자료 등 다른 사람의 개인정보는 올리지 마세요.'},
+    {title:'동의한 참여자와 개인 대화',body:'개인 대화 탭에서 표시할 이름을 확인하고 개인 대화 허용을 직접 켭니다. 같은 학교의 인증된 참여자나 전국 대화에서 확인할 수 있는 참여자 중 상대방도 허용한 사람만 선택할 수 있습니다. 이메일·학번으로 다른 학교 명단을 검색하지 않습니다. 개인 대화는 공개 게시글에 표시되지 않으며 광고나 파일 첨부를 제공하지 않습니다. 학교 소속·기능 정책·차단 상태가 바뀌면 대화 이용이 제한될 수 있습니다.'},
+    {title:'삭제·신고·숨기기',body:'본인이 쓴 메시지는 삭제하고 문제가 있는 메시지는 신고할 수 있습니다. 참여자를 숨기면 해당 작성자의 메시지와 개인 대화 연결을 제한합니다. 숨긴 참여자 관리에서 직접 해제할 수 있으며 해제만으로 메시지가 전송되지는 않습니다. 전송 실패 시 작성한 내용은 유지되므로 오류를 확인한 뒤 다시 시도하세요.'}
+  ],related:['public-discovery','schools']},
+
+  {slug:'public-discovery',title:'로그인 없이 CBGPU 둘러보기',description:'공개된 프로젝트·대회·학교 정보를 둘러보고, 필요한 동작에서 로그인합니다.',category:'start',features:['/projects','/explore/contests','/community','/explore/schools'],sections:[
+    {title:'공개된 내용만 표시해요',body:'공개 탐색 기능은 단계적으로 제공됩니다. 공개로 지정된 프로젝트와 대회, 공개 게시글과 학교 소개는 로그인 없이 읽을 수 있습니다. 학교 내부 자료나 기존 비공개 프로젝트가 자동으로 공개되는 것은 아닙니다. 공개된 항목이 없으면 빈 목록이 표시됩니다.'},
+    {title:'참가와 작성에는 로그인이 필요해요',body:'대회 참가·팀 등록·제출·투표, 프로젝트 작성과 학교 가입을 진행하려면 해당 버튼에서 로그인하세요. 로그인 후 원래 화면으로 돌아오며, 신청이나 제출은 본인이 다시 확인한 뒤 진행합니다. 로그인만으로 참가 자격이나 학교 자원 권한이 생기지는 않습니다.'},
+    {title:'학교 내부 기능은 소속을 확인해요',body:'시간표·학교 내부 대화·GPU 예약 같은 기능은 학교별 정책을 따릅니다. 다른 학교의 공개 콘텐츠는 볼 수 있지만, 그 학교의 내부 자료나 비공개 프로젝트를 볼 수 있는 것은 아닙니다.'},
+    {title:'연결이 안 되거나 내용이 없을 때',body:'일시적인 조회 오류와 공개된 항목이 없는 상태는 구분해 안내합니다. 오류가 있으면 다시 조회하고, 필요한 기능은 기존 개인 메뉴에서 확인하세요. 검색 결과에 비공개 항목의 내용이나 설정이 대신 표시되지는 않습니다.'}
+  ],related:['public-projects','schools']},
+  {slug:'public-projects',title:'프로젝트 소개 공개하기',description:'본인의 프로젝트 소개를 작성하고 공개 여부를 직접 선택합니다.',category:'research',features:['/publications'],sections:[
+    {title:'공개 소개와 실행 환경은 달라요',body:'프로젝트 공개 화면에서는 제목·소개·본문처럼 공개할 내용을 직접 작성합니다. 서버의 환경변수, 배포 설정, 비공개 저장소 주소와 파일이 자동으로 공개되지 않습니다. 기존 프로젝트의 소유권과 공동 작업 권한도 바뀌지 않습니다.'},
+    {title:'저장하고 공개하기',body:'로그인한 뒤 프로젝트 공개 관리에서 내용을 작성합니다. 공개 전에는 본문에 비밀번호·토큰·개인정보나 학교 내부 자료가 없는지 확인하세요. 공개 설정을 확인한 경우에만 공개 목록에 표시됩니다. 저장 버튼을 눌렀다는 이유만으로 공개 완료로 간주하지 않습니다.'},
+    {title:'공개를 중단할 때',body:'공개 설정을 비공개로 바꾸면 새로운 공개 조회에서 소개가 표시되지 않습니다. 이미 다른 사람이 저장하거나 공유한 사본까지 회수되는 것은 아닙니다. 공개 소개를 내리는 것은 원래 프로젝트나 배포 데이터를 삭제하는 작업이 아닙니다.'},
+    {title:'졸업하거나 학교 소속이 바뀌어도',body:'프로젝트 소유권은 학교 자원 사용 권한과 별개로 유지합니다. 본인 프로젝트를 확인하고 소개를 관리하는 권한과 GPU·학교 서버를 실행하는 권한은 다를 수 있습니다.'}
+  ],related:['public-discovery','school-setup']},
+  {slug:'message-report-review',title:'Message report moderation',description:'Review reports within your current school or platform moderation authority.',category:'operations',features:['/admin/message-reports'],sections:[{title:'Scope and privacy',body:'School moderators review reports for their own school. Nationwide and direct-message reports require platform administrator permission. A direct-message report contains only the reported excerpt, never the complete private conversation. Every request checks the current account and permission; opening a management page does not grant access to member rosters or another school.'},{title:'Record an independent review',body:'Open a report, inspect its reason and reported excerpt, and enter a review note. Reports can be marked reviewing, resolved or dismissed. Changes include the exact report revision. If another reviewer changed the report, refresh and inspect the current version before submitting again; the draft note remains available. Losing review permission clears the private list and open report.'},{title:'Hide with explicit confirmation',body:'Hiding a reported message requires a separate confirmation and records the review decision. This is a soft hide from the conversation, not deletion of a conversation, account or audit history. Closing or cancelling the confirmation does not hide the message. Closed reports retain their recorded decision.'}],related:['school-messages','school-administration']},
+  {slug:'ad-revenue',title:'광고 공식 보고서 확인',description:'관리자가 AdFit 공식 CSV를 검증하고 기기별 수익을 확인합니다.',category:'operations',features:['/admin/ad-revenue'],sections:[{title:'공식 보고서 가져오기',body:'플랫폼 관리자만 공식 CSV의 날짜·광고 단위·수익 열과 숫자 형식을 직접 지정할 수 있습니다. 서버 미리보기 검증과 명시적 확인 이후에만 가져옵니다. 추정 수익과 확정 수익은 별도로 가져오며 합산하지 않습니다.'},{title:'지표 해석',body:'모바일·데스크톱은 실제 광고 단위 ID로 분류합니다. 없는 요청·노출·클릭 수나 분모는 N/A로 표시합니다. 일별·월별 표는 실제 가져온 관측 행만 표시하며 빈 날짜를 0원으로 채우거나 여러 달의 합계를 임의 배분하지 않습니다. 충족률은 공식 요청 수의 의미가 확인되기 전까지 N/A입니다. 공유 광고 단위로 개별 화면 수익을 추정하지 않으며 관리자 화면에는 광고가 없습니다.'},{title:'설정과 운영 확인',body:'가져오기 기능은 기본적으로 꺼져 있습니다. 공식 콘솔의 광고 단위와 보고서 시간대를 운영자가 확인해야 합니다. 기기·기간·60초 또는 120초 설정 계획을 서버 기록으로 저장하고 수정할 수 있습니다. 콘솔 확인은 관리자의 직접 확인 기록이며 공급자 API 검증을 뜻하지 않습니다. 기록 저장은 광고 설정이나 SDK 새로고침을 실행하지 않으며 실제 개선을 보장하지 않습니다.'} ],related:['school-administration']},
+  {slug:'school-feature-review',title:'학교 기능 요청 검토',description:'플랫폼 관리자가 학교별 기능 요청에 답변하고 처리 상태를 기록합니다.',category:'operations',features:['/admin/feature-requests'],sections:[{title:'플랫폼 운영팀의 검토',body:'플랫폼 관리자만 학교별 기능 요청 목록을 확인하고 검토할 수 있습니다. 학교 운영 권한만으로 다른 학교의 요청을 처리할 수는 없습니다.'},{title:'답변과 상태',body:'검토 중·진행 예정·반려·제공 완료 상태와 요청자에게 공개되는 메시지를 저장합니다. 검토 승인만으로 기능 코드나 권한이 자동 생성되지는 않으며, 완료 표시는 실제 제공 여부를 확인한 뒤 처리합니다.'},{title:'알림과 저장 결과',body:'요청과 답변은 서버에 저장됩니다. 이메일 제공업체 접수는 받은편지함 전달 완료를 보장하지 않습니다. 수정 버전이 충돌하면 최신 내용을 다시 확인하며, 실패한 요청을 성공으로 표시하거나 자동 재시도하지 않습니다.'}],related:['school-custom-features','school-administration']},
+  {slug:'school-custom-features',title:'우리 학교 전용 기능 요청하기',description:'학교에 맞는 기능을 요청하고 검토 상태를 확인합니다.',category:'school',features:['/schools/[id]/features'],sections:[
+    {title:'어디에서 요청하나요?',body:'학교 소속을 확인한 뒤 학교 화면의 전용 기능 추가하기에서 요청을 작성하세요. 해결하고 싶은 일, 현재 처리 방법과 필요한 동작을 구체적으로 적으면 검토에 도움이 됩니다. 비밀번호·학교 로그인 토큰이나 학생 명단은 적지 마세요.'},
+    {title:'접수와 이메일 알림',body:'요청을 접수하면 학교별 요청 목록에 저장되고 운영팀 알림이 대기열에 들어갑니다. 알림 대기 상태는 이메일 전달 완료를 뜻하지 않습니다. 요청 접수도 기능 승인이나 개발 완료를 의미하지 않습니다.'},
+    {title:'학교별로 사용할 수 있는 기능',body:'공통 기능과 특정 학교에만 제공되는 기능은 구분됩니다. 예를 들어 충북과학고의 EduSet 자습신청을 다른 학교에서 켜는 방식은 지원하지 않습니다. 학교에 맞는 연결과 권한 정책을 확인한 뒤 별도 기능으로 검토합니다.'}
+  ],related:['schools','school-administration']},
   {slug:'schools',title:'학교 찾기와 학교별 가입',description:'등록된 학교를 찾고, 승인된 학교에 소속 확인을 요청합니다.',category:'start',features:['/schools'],sections:[
     {title:'사용 가능 여부',body:'학교별 가입 기능은 단계적으로 공개됩니다. 아직 기능을 사용할 수 없다는 화면이 나오면 기존 CBGPU 로그인과 학교생활 기능을 그대로 이용하세요.'},
     {title:'학교 선택과 소속 확인',body:'학교 이름을 검색한 뒤 지역과 공식 학교 정보를 확인하세요. 운영 승인이 완료된 학교에는 학생·교사·외부 협업자 유형으로 가입을 요청할 수 있습니다. 학생 번호나 교사 정보를 입력하는 것만으로 소속이 인증되지는 않습니다.'},
@@ -52,6 +91,7 @@ export const guides:Guide[] = [
   {slug:'school-administration',title:'학교 등록 심사와 학교 관리',description:'플랫폼 등록 심사와 학교별 구성원·기능 관리의 권한을 구분합니다.',category:'operations',features:['/admin/schools'],sections:[
     {title:'플랫폼 학교 등록 심사',body:'플랫폼 관리자는 학교 등록 신청의 학교 정보, 신청자 관계와 중복 여부를 검토합니다. 확인 없이 학교 운영 권한을 승인하지 마세요. 일반 사용자와 학교 관리자는 플랫폼 심사 기능을 사용할 수 없습니다.'},
     {title:'학교별 관리',body:'승인된 학교의 관리 화면에서는 해당 학교 구성원의 소속 확인 요청과 학교 설정을 관리합니다. 교사라는 이유만으로 학교 관리자 권한이 생기지는 않습니다. 학교 관리 권한으로 다른 학교를 관리할 수 없습니다.'},
+    {title:'학년도 전환',body:'학교별 관리의 Academic year에서 지원 여부를 확인하고 대상 학년도와 계정을 미리 봅니다. 대상 학교·학년도·인원과 백업 준비를 확인한 뒤 최종 실행하세요. 대상 정보가 달라지면 다시 조회해야 하며, 같은 학교·학년도는 중복 실행할 수 없습니다. 충북과학고는 1·2학년이 새 학번 확인 대기로, 3학년은 외부 소속 유형으로 바뀝니다. 다른 학교의 학번 규칙은 별도 지원 여부를 먼저 확인하세요. 개인 프로젝트와 계정은 삭제하지 않습니다.'},
     {title:'기능과 GPU',body:'사용할 수 있는 공통 기능과 해당 학교에 허용된 전용 기능만 설정할 수 있습니다. 기능을 끄는 것은 기존 데이터를 삭제하는 작업이 아닙니다. GPU 미연결은 정상 상태이며, 서버 연결만으로 외부 GPU 공유가 켜지지 않습니다.'}
   ],related:['schools','school-setup']},
   {slug:'contest-api',title:'외부 서비스 대회 참가 API',description:'외부 앱과 에이전트에서 본인 계정으로 대회 신청 양식을 조회하고 참가 신청·조회·취소를 처리합니다.',category:'community',features:['/contests/api'],keywords:['api','zero','자동 신청','contest','외부 서비스'],sections:[

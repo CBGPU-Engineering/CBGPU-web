@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import {aiRequest} from '@/lib/aiClient';
 import {watchChat} from '@/lib/aiChatStream';
 import {useAuth} from '@/lib/useAuth';
+import {useSchoolResourcePermission} from '@/components/schools/SchoolResourceScope';
 import {serviceDestination} from '@/lib/serviceDiscovery';
 import {useWorkspace,useIsAppWorkspace} from './WorkspaceShell';
 
@@ -21,6 +22,7 @@ const examples=['오늘 점심 뭐야?','내 프린팅 신청 상태','서버 �
 
 export default function HomeAiSearch(){
  const {user,isApproved}=useAuth();
+ const aiPermission=useSchoolResourcePermission('ai',isApproved);
  const mode=useWorkspace(),isApp=useIsAppWorkspace();
  const [question,setQuestion]=useState('');
  const [asked,setAsked]=useState('');
@@ -73,11 +75,12 @@ export default function HomeAiSearch(){
  },[chat?.id,pending,user?.id]);
 
  async function ask(value=question){
-  if(!value.trim()||busy||pending||!user||!isApproved)return;
+  if(!value.trim()||busy||pending||!user)return;
   const expected=user.id,current=++version.current,controller=new AbortController();
   abort.current?.abort();abort.current=controller;
   setBusy(true);setError('');
   try{
+   if(!await aiPermission.verify()){if(owner.current===expected&&current===version.current)setError(aiPermission.reason);return;}
    const result=await aiRequest('/site-ask','POST',{question:value.trim(),chat_id:chat?.id},controller.signal,expected);
    if(owner.current!==expected||current!==version.current)return;
    setChat(result.chat);setAsked(value.trim());setQuestion('');setChecked(result.checked_at);
@@ -113,12 +116,13 @@ export default function HomeAiSearch(){
   <form onSubmit={event=>{event.preventDefault();void ask()}}>
    <Link href={serviceDestination('/ai',mode,isApp)} aria-label="CBGPU AI에게 물어보기" title="CBGPU AI 열기"><Sparkles size={20} aria-hidden="true"/></Link>
    <input ref={input} data-no-focus-ring type="search" aria-label="CBGPU 정보 질문" placeholder="CBGPU에 궁금한 걸 물어보세요" value={question}
-    maxLength={1000} onChange={event=>setQuestion(event.target.value)} disabled={!user||!isApproved}/>
+    maxLength={1000} onChange={event=>setQuestion(event.target.value)} disabled={!user||!aiPermission.allowed}/>
    {busy||pending?<button type="button" aria-label="홈 AI 답변 중지" onClick={()=>void stop()}><Square size={15}/></button>:
-    <button type="submit" aria-label="CBGPU에 질문하기" disabled={!question.trim()||!user||!isApproved}><ArrowUp size={19}/></button>}
+    <button type="submit" aria-label="CBGPU에 질문하기" disabled={!question.trim()||!user||!aiPermission.allowed}><ArrowUp size={19}/></button>}
   </form>
+  {user&&aiPermission.enabled&&!aiPermission.allowed&&!busy&&!pending&&<p className="cb-home-ask-progress" role="status">{aiPermission.reason}</p>}
   {!asked&&!busy&&<div className="cb-home-ask-examples">{examples.map(example=>
-   <button key={example} type="button" disabled={!user||!isApproved} onClick={()=>void ask(example)}>{example}<ArrowUpRight size={11}/></button>
+   <button key={example} type="button" disabled={!user||!aiPermission.allowed} onClick={()=>void ask(example)}>{example}<ArrowUpRight size={11}/></button>
   )}</div>}
   {busy&&<p className="cb-home-ask-progress" role="status"><Loader2 size={15} className="animate-spin"/>관련된 CBGPU 정보를 확인하고 있어요…</p>}
   {error&&<p className="cb-home-ask-error" role="alert">{error}</p>}

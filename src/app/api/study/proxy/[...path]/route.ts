@@ -145,9 +145,8 @@ async function proxyRequest(request: NextRequest) {
     return NextResponse.json({ message: '지원하지 않는 요청입니다.' }, { status: 403 });
   }
 
-  if (!(await requireApprovedUser(request))) {
-    return NextResponse.json({ message: '로그인 후 승인된 계정만 조회할 수 있습니다.' }, { status: 401 });
-  }
+  try {if (!(await requireApprovedUser(request))) return NextResponse.json({message:'로그인 후 승인된 계정만 조회할 수 있습니다.'},{status:401});}
+  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'권한 확인 서버에 연결하지 못했습니다.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
 
   const targetUrl = new URL(`${pathname}${request.nextUrl.search}`, BASE_URL);
   const body = request.method === 'GET' ? undefined : await request.text();

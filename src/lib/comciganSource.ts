@@ -111,3 +111,13 @@ export function extractComciganSchools(value:unknown,divisor:number|null,key:rea
   return {region:decodeComciganCell(row[1],key),name:decodeComciganCell(row[2],key),code:code as number};
  });
 }
+
+/** The provider's weekday renderer defines the selected week's first date. Data only. */
+export function extractComciganWeekField(html:string):string|null{
+ const source=decodeComciganSource(html),fields=new Set<string>();
+ const identifier='[A-Za-z_$가-힣][\\w$가-힣]*',value='(?:'+identifier+'\\s*\\(\\s*)?(?:자료|H시간표)\\.(자료\\d{1,4}|시작일)\\s*\\)?';
+ for(const expression of [new RegExp('(?:var|let|const)\\s+시작일\\s*=\\s*new\\s+Date\\s*\\(\\s*'+value+'\\s*\\)','g'),new RegExp('요일출력하기\\s*\\(\\s*'+value+'\\s*\\)','g')]){
+  for(const match of source.matchAll(expression)){fields.add(match[1]);if(fields.size>1)throw Error('시간표의 주간 날짜 정의가 일치하지 않습니다');}
+ }
+ return fields.values().next().value??null;
+}

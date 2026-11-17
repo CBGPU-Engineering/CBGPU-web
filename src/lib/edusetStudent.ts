@@ -127,6 +127,7 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
  }catch(e){
   if(lease){const state=!submitted?'released':e instanceof StudyFailure&&e.status>=400&&e.status<500?'rejected':'uncertain';await lease.mark(state).catch(()=>{});lease=null}
   if(e instanceof StudyFailure){
+   if(e.code==='cbgpu_session_expired')return reply({message:e.message,code:e.code},e.status);
    if(e.status===401&&schoolOwner){
     if(schoolIdentityVerified)return reply({message:'학교 로그인은 확인됐지만 신청 정보를 조회하지 못했어요. 연결은 유지돼요. 잠시 후 다시 확인해 주세요.',code:'school_lookup_unavailable'},502);
     if(deps.disconnect)await deps.disconnect(schoolOwner).catch(()=>{});

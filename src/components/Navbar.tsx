@@ -1,5 +1,7 @@
 'use client';
 import './navbar-mobile.css';
+import{useSchoolServiceVisibility}from'@/components/schools/SchoolScope';
+import HeaderSchoolSwitcher from '@/components/schools/HeaderSchoolSwitcher';
 
 import CBGPULogo from '@/components/CBGPULogo';
 import Image from 'next/image';
@@ -30,6 +32,7 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: '/meal', label: '급식' },
   { href: '/wakeup', label: '기상송' },
   { href: '/dashboard', label: 'GPU' },
+  { href: '/messages', label: '대화' },
 ];
 
 const GROUPS: NavGroup[] = serviceGroups.map(group=>({label:group.title,links:group.services.map(({href,label})=>({href,label}))}));
@@ -46,7 +49,8 @@ const BOTTOM_LINKS = [
 ];
 
 export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,searchAudience}:{brandSuffix?:ReactNode;navigationLinks?:NavLink[];hideBottomNav?:boolean;searchAudience?:WorkspaceId}={}) {
-  const primaryLinks=navigationLinks||PRIMARY_LINKS;
+  const canShow=useSchoolServiceVisibility();const groups=GROUPS.map(group=>({...group,links:group.links.filter(link=>canShow(link.href))})).filter(group=>group.links.length);
+  const primaryLinks=(navigationLinks||PRIMARY_LINKS).filter(link=>canShow(link.href));
   const { user, profile, isLoading } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -99,7 +103,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
   return (
     <>
-    <nav aria-label="주 메뉴" className="flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
+    <nav aria-label="주 메뉴" className="cb-main-navbar flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
       <div className="flex items-center gap-4 md:gap-8">
         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
           <CBGPULogo variant="horizontal" width={130} height={30} alt="CBGPU"/>
@@ -145,6 +149,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           <span className="hidden sm:inline">기능 찾기</span>
           <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
+        <div className="hidden sm:block"><HeaderSchoolSwitcher compact/></div>
         <div className="hidden xl:flex items-center gap-2">
           <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Contact
@@ -237,7 +242,9 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
               {primaryLinks.map(link => <Link key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)} aria-current={isActivePath(pathname, link.href) ? 'page' : undefined} className={`min-h-11 py-3 text-sm font-semibold ${isActivePath(pathname, link.href) ? 'text-primary' : 'text-foreground'}`}>{link.label}</Link>)}
 
-              {GROUPS.map(group => (
+              <div className="sm:hidden py-2"><HeaderSchoolSwitcher/></div>
+
+              {groups.map(group => (
                 <div key={group.label} className="mt-3">
                   <p className="text-xs font-semibold text-muted-foreground mb-1">{group.label}</p>
                   <div className="flex flex-col">

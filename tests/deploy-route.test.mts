@@ -5,13 +5,15 @@ import vm from 'node:vm';
 import ts from 'typescript';
 import {NextRequest,NextResponse} from 'next/server.js';
 import {WindowRateLimiter} from '../src/lib/requestSecurity.ts';
+import * as deployAccess from '../src/lib/deployAccess.ts';
 const code=ts.transpileModule(fs.readFileSync(new URL('../src/app/api/deploy/[...path]/route.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const owner='11111111-1111-4111-8111-111111111111';
-function fixture({approved=true,active=true}={}){
+function fixture({approved=true,active=true,v2=false,compute=false,accountStatus='ACTIVE'}={}){
  const exports: Record<string, any> = {},backendCalls=[],filters=[],writes=[];
  const rows=[{id:'22222222-2222-4222-8222-222222222222',user_id:owner,name:'Existing server',deploy_type:'docker',status:'approved',created_at:'2026-11-01'}];
- const client={from(table){assert.equal(table,'cpu_projects');const query={insert(v){writes.push(v);this.saved=v;return this},update(v){writes.push(v);return this},single(){return Promise.resolve({data:{id:rows[0].id,...this.saved},error:null})},maybeSingle(){return Promise.resolve({data:rows[0],error:null})},select(){return this},eq(key,value){filters.push([key,value]);return this},neq(){return this},order(){return this},then(resolve){return Promise.resolve({data:rows,error:null}).then(resolve)}};return query}};
+ const client={auth:{getUser:async()=>({data:{user:{id:owner,email:'owner@example.invalid',email_confirmed_at:'2026-01-01'}},error:null})},rpc:async()=>({data:compute,error:null}),from(table){if(table==='profiles'){const q={select(){return this},eq(){return this},maybeSingle:async()=>({data:{id:owner,is_approved:approved,account_status:accountStatus},error:null})};return q}assert.equal(table,'cpu_projects');const query={insert(v){writes.push(v);this.saved=v;return this},update(v){writes.push(v);return this},single(){return Promise.resolve({data:{id:rows[0].id,...this.saved},error:null})},maybeSingle(){return Promise.resolve({data:rows[0],error:null})},select(){return this},eq(key,value){filters.push([key,value]);return this},neq(){return this},order(){return this},then(resolve){return Promise.resolve({data:rows,error:null}).then(resolve)}};return query}};
  vm.runInNewContext(code,{exports,URL,Date,Map,Buffer,AbortSignal,process:{env:{}},fetch:async(url,options)=>{assert.equal(options.headers['x-cbgpu-owner'],owner);backendCalls.push(url);return Response.json(url.endsWith('/servers')?{shared_project_ids:[]}:url.includes('/teams/')?{my_role:'owner'}:{projects:[{id:'existing-frontend',collaboration_role:'owner'}]})},require(name){
+  if(name==='@/lib/deployAccess')return {...deployAccess,deploymentAccessV2:()=>v2};
   if(name==='next/server')return {NextResponse};if(name==='node:net')return {};
   if(name==='node:fs/promises')return {readFile:async()=>Buffer.from('synthetic-key')};
   if(name==='@/lib/preprintsServer')return {publicationUser:async()=>approved?{id:owner}:null,preprintsClient:()=>client};
@@ -37,4 +39,28 @@ test('server create and settings accept 8/16 GB but reject values above the 16 G
   const edit=fixture();const saved=await edit.request('servers/projects/22222222-2222-4222-8222-222222222222',{method:'PATCH',origin:'https://researcher.cbgpu.com',body:{memory_limit:memory}});assert.equal(saved.status,200);assert.equal(edit.writes[0].memory_limit,memory);
  }
  for(const memory of ['32g','0g','unlimited']){const h=fixture();const response=await h.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{name:'Invalid memory',deploy_type:'docker',docker_image:'nginx:alpine',host_port:18080,memory_limit:memory}});assert.equal(response.status,400);assert.equal(h.writes.length,0)}
+});
+
+test('V1 external identity keeps draft and settings access while execution requires fresh resource permission',async()=>{
+ const f=fixture({v2:true,approved:false});
+ assert.equal((await f.request('servers/projects')).status,200);
+ const body={name:'Preserved project',draft:true,deploy_type:'docker',docker_image:'nginx:alpine',container_port:80,host_port:18080,memory_limit:'4g'};
+ assert.equal((await f.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body})).status,201);
+ assert.equal(f.writes[0].status,'pending');assert.equal(f.writes[0].deploy_requested_at,null);assert.equal(f.writes[0].deploy_requested_by,undefined);
+ assert.equal((await f.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{...body,draft:false}})).status,403);
+ const path='servers/projects/22222222-2222-4222-8222-222222222222';
+ assert.equal((await f.request(path,{method:'PATCH',origin:'https://researcher.cbgpu.com',body:{description:'Owner can retain settings'}})).status,200);
+ assert.equal((await f.request(path,{method:'PATCH',origin:'https://researcher.cbgpu.com',body:{deploy_requested_at:'now'}})).status,403);
+ assert.equal(f.writes.length,2);
+});
+test('V1 execution stamps the authenticated actor and revoked sessions cannot write drafts',async()=>{
+ const body={name:'Scoped project',deploy_type:'docker',docker_image:'nginx:alpine',container_port:80,host_port:18080};
+ const f=fixture({v2:true,approved:false,compute:true});
+ assert.equal((await f.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{...body,deploy_requested_by:'spoofed'}})).status,201);
+ assert.equal(f.writes[0].deploy_requested_by,owner);
+ for(const options of [{active:false},{accountStatus:'SUSPENDED'}]){
+  const denied=fixture({v2:true,approved:false,...options});
+  assert.equal((await denied.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{...body,draft:true}})).status,401);
+  assert.equal(denied.writes.length,0);
+ }
 });

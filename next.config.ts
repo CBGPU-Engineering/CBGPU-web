@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  output: process.env.CBGPU_WEB_STANDALONE==='1'?'standalone':undefined,
   experimental: { proxyClientMaxBodySize: '220mb' },
   distDir: process.env.NEXT_BUILD_DIR || '.next',
   // @sparticuz/chromium ships a large native binary that Next.js's bundler

@@ -1,4 +1,5 @@
 'use client';
+import{studyMemberProfiles}from'@/lib/scopedProfiles';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -219,8 +220,10 @@ export default function MatchPage() {
     // 등장하는 user_id들 + 글쓴이들의 프로필을 따로 가져와서 클라이언트에서 매칭한다
     const ids = [...new Set([...(m ?? []).map((x: any) => x.user_id), ...(p ?? []).map((x: any) => x.user_id)])];
     if (ids.length > 0) {
-      const { data: profs } = await supabase.from('profiles').select('id, full_name, student_id, avatar_url').in('id', ids);
+      const { data: profs,error:profileError } = await studyMemberProfiles(supabase,ids);
+      if(profileError)showError('참여자 표시 정보를 확인하지 못했어요.');
       setProfileMap(new Map((profs ?? []).map((pr: any) => [pr.id, pr as Profile])));
+    }else{setProfileMap(new Map());
     }
 
     setLoading(false);

@@ -1,0 +1,3 @@
+import{publicList,publicBrowsingEnabled}from'@/lib/publicContentServer';import{publicMetadata}from'@/lib/publicMetadata';import{PublicCollection}from'@/components/public-browsing/PublicViews';import{notFound}from'next/navigation';
+export const dynamic='force-dynamic';export const metadata=publicMetadata('학교 둘러보기 · CBGPU','학교의 공개 소개와 공식 학교 정보를 확인하세요. 목록에 있다는 사실은 운영 승인이나 소속 인증을 의미하지 않습니다.','/explore/schools');
+export default async function Page({searchParams}:{searchParams:Promise<{query?:string}>}){if(!publicBrowsingEnabled)notFound();const query=(await searchParams).query||'',result=await publicList('schools',24,query);return <PublicCollection kind="schools" result={result} query={query}/>}
