@@ -1,4 +1,7 @@
 'use client';
+import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
+import {useManufacturingDownloader} from '@/lib/manufacturing/useManufacturingFile';
+import {useSchoolResourcePermission} from '@/components/schools/SchoolResourceScope';
 import{manufacturingProfiles,manufacturingJobSelect,scopedProfilesEnabled,attachManufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -57,9 +60,13 @@ const LASER_STATUS_INFO: Record<string, { variant: any; icon: React.ReactNode; l
 
 export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}) {
   const { user, isAdmin, is3DPrintManager, managedPrinterIds, isLaserCutManager, isLoading: authLoading } = useAuth();
+  const freshFileDownload=useManufacturingDownloader(user?.id);
+  const fabrication=useSchoolResourcePermission('fabrication',true),scopedRequests=scopedManufacturingFilesEnabled();
+  const canCreateRequest=!scopedRequests||fabrication.enabled&&fabrication.allowed;
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
   const tab = view as Tab;
+  async function newRequest(kind:'print'|'laser'){if(scopedRequests){try{if(!fabrication.enabled||!await fabrication.verify()){showError('이전 신청은 볼 수 있어요. 새 신청에는 현재 학교의 제작 장비 이용 권한이 필요해요.');return;}}catch{showError('제작 장비 이용 권한을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');return;}}router.push('/manufacturing/'+kind+'/new');}
 
   // ── 3D printing (requester) ───────────────────────────────────────────
   const [printers, setPrinters] = useState<any[]>([]);
@@ -129,7 +136,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
   const [startingPrint,setStartingPrint]=useState(false);
   const [queueHours, setQueueHours] = useState(4);
 
-  async function downloadFile(path: string) {
+  async function downloadFile(path: string,name?:string) {
+    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError(error instanceof Error?error.message:'파일 다운로드 권한을 확인하지 못했습니다.')}return;}
     const { data, error } = await supabase.storage.from('manufacturing').createSignedUrl(path, 3600);
     if (error || !data) { showError('다운로드 링크 생성 실패'); return; }
     window.open(data.signedUrl, '_blank');
@@ -478,6 +486,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {scopedRequests&&!canCreateRequest&&(tab==='print'||tab==='laser')&&<p role="status" className="rounded-xl border p-4 text-sm text-muted-foreground">이전 신청은 볼 수 있어요. 새 신청에는 현재 학교의 제작 장비 이용 권한이 필요해요.</p>}
       {/* ── 3D printing (requester) ── */}
       {tab === 'print' && (
         <div className="space-y-6">
@@ -488,7 +497,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <Badge variant="warning" icon={<Clock className="size-3" />}>대기열 {printQueueLength}건</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-xs uppercase gap-1.5 h-9">
+            <Button onClick={() => void newRequest('print')} disabled={!canCreateRequest} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" /> 신청하기
             </Button>
           </div>
@@ -570,7 +579,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <Badge variant="warning" icon={<Clock className="size-3" />}>대기열 {laserQueueLength}건</Badge>
               )}
             </div>
-            <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-xs uppercase gap-1.5 h-9">
+            <Button onClick={() => void newRequest('laser')} disabled={!canCreateRequest} className="font-black text-xs uppercase gap-1.5 h-9">
               <Plus className="size-3.5" /> 신청하기
             </Button>
           </div>
@@ -792,7 +801,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                                   상세 보기 <ExternalLink className="size-3" />
                                 </Link>
                                 {j.file_path && (
-                                  <button onClick={() => downloadFile(j.file_path)} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
+                                  <button onClick={() => downloadFile(j.file_path,j.file_name)} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
                                     <Download className="size-3" /> {j.file_name}{j.mode === 'advanced' ? ' (슬라이싱 완료 — 출력용)' : ' (슬라이싱 필요)'}
                                   </button>
                                 )}

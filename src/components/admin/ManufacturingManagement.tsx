@@ -1,4 +1,6 @@
 'use client';
+import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
+import {useManufacturingDownloader} from '@/lib/manufacturing/useManufacturingFile';
 import{manufacturingProfiles,manufacturingJobSelect,scopedProfilesEnabled,attachManufacturingManagers}from'@/lib/scopedProfiles';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -60,6 +62,7 @@ const LASER_STATUS_INFO: Record<string, { variant: any; icon: React.ReactNode; l
 
 export default function ManufacturingPage() {
   const { user, isAdmin: accountIsAdmin, is3DPrintManager, managedPrinterIds, isLaserCutManager, isLoading: authLoading } = useAuth();
+  const freshFileDownload=useManufacturingDownloader(user?.id);
   const equipmentKind=useEquipmentKind();
   // Admin oversight is available on the admin site; staff portals require an explicit equipment assignment.
   const isAdmin=!equipmentKind&&accountIsAdmin;
@@ -142,7 +145,8 @@ export default function ManufacturingPage() {
   const [startingPrint,setStartingPrint]=useState(false);
   const [queueHours, setQueueHours] = useState(4);
 
-  async function downloadFile(path: string) {
+  async function downloadFile(path: string,name?:string) {
+    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError((error as {status?:number}).status===401?'Sign in to CBGPU again before downloading this file.':'Current file access could not be verified. The request is preserved; check your permissions and try again.')}return;}
     const { data, error } = await supabase.storage.from('manufacturing').createSignedUrl(path, 3600);
     if (error || !data) { showError("Could not create a download link"); return; }
     window.open(data.signedUrl, '_blank');
@@ -832,7 +836,7 @@ export default function ManufacturingPage() {
                                   View details <ExternalLink className="size-3" />
                                 </Link>
                                 {j.file_path && (
-                                  <button onClick={() => downloadFile(j.file_path)} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
+                                  <button onClick={() => downloadFile(j.file_path,j.file_name)} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
                                     <Download className="size-3" /> {j.file_name}{j.mode === 'advanced' ? " (Sliced · ready to print)" : " (Slicing required)"}
                                   </button>
                                 )}
