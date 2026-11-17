@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <div className="space-y-2">
         <p className="text-xs font-semibold text-muted-foreground">CBGPU</p>
         <h1 className="cb-page-title">개인정보처리방침</h1>
-        <p className="text-sm text-muted-foreground">시행일: 2026년 9월 10일</p>
+        <p className="text-sm text-muted-foreground">최종 수정일: 2026년 11월 17일</p>
       </div>
 
       <p className="text-sm leading-relaxed text-foreground/90">
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
         <p>
           데이터는 <b>Supabase</b>(데이터베이스·인증)와 <b>Firebase Cloud Messaging</b>(안드로이드 푸시 알림 발송)를 통해
           처리·저장됩니다. 두 서비스 모두 해당 업체의 자체 보안 정책에 따라 데이터를 보호합니다. 이 두 곳 외의
-          제3자에게 개인정보를 판매하거나 광고 목적으로 제공하지 않습니다.
+          제3자에게 계정 정보를 판매하지 않습니다. 광고 스크립트에는 이름·학번·이메일이나 비공개 프로젝트 내용을 전달하지 않습니다.
         </p>
       </Section>
 
@@ -65,7 +65,12 @@ export default function PrivacyPage() {
         <p>방문 수와 서비스 상태를 확인하기 위해 임의의 브라우저 식별자를 최대 30일 동안 쿠키에 저장합니다. 방문 통계에는 이메일 주소, IP 주소, 페이지 내용이 저장되지 않으며, 일별로 변환된 식별자와 방문 횟수만 최대 30일 보관합니다. 브라우저의 추적 거부 설정을 지원합니다.</p>
       </Section>
 
-      <Section title="7. 문의처">
+      <Section title="7. 카카오 애드핏 광고">
+        <p>홈 화면에는 카카오 애드핏 배너 광고가 표시될 수 있습니다. 광고가 표시되는 화면에서 카카오의 외부 스크립트를 불러오며, 광고 요청 과정에서 IP 주소·브라우저 정보·광고 식별 및 쿠키 등은 카카오의 정책에 따라 처리될 수 있습니다. 광고 차단으로 배너가 표시되지 않아도 CBGPU의 기능은 이용할 수 있습니다.</p>
+        <p><a className="underline underline-offset-4" href="https://privacy.kakao.com/" target="_blank" rel="noopener noreferrer">카카오 개인정보처리방침 보기</a></p>
+      </Section>
+
+      <Section title="8. 문의처">
         <p className="text-muted-foreground">
           <a className="underline underline-offset-4" href="mailto:info@cbgpu.com">info@cbgpu.com</a>
         </p>
