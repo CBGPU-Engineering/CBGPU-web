@@ -1,7 +1,7 @@
 export const publicKinds=['projects','contests','community','schools']as const;
 export type PublicKind=typeof publicKinds[number];
 export type PublicItem={id:string;[key:string]:string|number|boolean|null};
-const fields:Record<PublicKind,readonly string[]>={projects:['id','ads_enabled','slug','title','summary','body_markdown','description','school_id','school_name','updated_at','created_at'],contests:['id','ads_enabled','banner_url','title','description','organizer','school_id','school_name','event_start_at','event_end_at','registration_opens_at','registration_closes_at','starts_at','ends_at','created_at','location_type','location_name','participation_mode','team_min_size','team_max_size','allow_individual_entries','registration_open','lifecycle_status','eligibility'],community:['id','ads_enabled','title','body','created_at','updated_at','school_name','board_id','board_name','display_name'],schools:['id','official_name','display_name','type','region','status','brand_color','public_description','ads_enabled']};
+const fields:Record<PublicKind,readonly string[]>={projects:['id','ads_enabled','slug','title','summary','body_markdown','description','school_id','school_name','updated_at','created_at'],contests:['id','ads_enabled','banner_url','title','description','organizer','organizer_school_names','school_id','school_name','event_start_at','event_end_at','registration_opens_at','registration_closes_at','starts_at','ends_at','created_at','location_type','location_name','participation_mode','team_min_size','team_max_size','allow_individual_entries','registration_open','lifecycle_status','eligibility'],community:['id','ads_enabled','title','body','created_at','updated_at','school_name','board_id','board_name','display_name'],schools:['id','official_name','display_name','type','region','status','brand_color','public_description','ads_enabled']};
 /** Deliberately excludes asset keys (may contain owner UUIDs), private file paths and user/profile IDs. */
 export function publicText(value:string){return value.replace(/!\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/<img\b[^>]*>/gi,'').replace(/https?:\/\/[^\s<>"')]*\/storage\/v1\/object\/(?:public|sign)\/[^/\s]+\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[^\s<>"')]*/gi,'[공개 이미지 준비 중]')}
 export function publicItem(kind:PublicKind,value:unknown):PublicItem|null {
@@ -11,6 +11,7 @@ export function publicItem(kind:PublicKind,value:unknown):PublicItem|null {
  const output:PublicItem={id:input.id};
  for(const key of fields[kind]){
   const field=input[key];
+  if(key==='organizer_school_names'&&field!==null&&(typeof field!=='string'||field.length>20000||/[\u0000-\u001f\u007f]/.test(field)))continue;
   if(key==='ads_enabled'&&typeof field!=='boolean')continue;
   if(field===null){output[key]=null;continue;}
   if(key==='banner_url'&&(kind!=='contests'||field!==publicContestBannerPath(input.id)))continue;

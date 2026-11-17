@@ -1,0 +1,13 @@
+'use client';
+import {supabase} from './supabase';
+export type OrganizerInvitation={id:string;contest_id:string;contest_title:string;school_id:string;school_name:string;status:'INVITED'|'ACCEPTED'|'DECLINED'|'REVOKED';revision:number;created_at:string;updated_at:string};
+export type OrganizerAudit={action:string;previous_status:string|null;status:string;revision:number;created_at:string};
+export class OrganizerError extends Error{constructor(readonly code:string,message:string){super(message)}}
+const errors:Record<string,string>={ORGANIZER_REVISION_CONFLICT:'다른 담당자가 먼저 변경했어요. 새로고침한 뒤 내용을 확인해주세요.',CONTEST_OWNER_REQUIRED:'대회를 만든 계정만 공동 주최 학교를 초대할 수 있어요.',TARGET_SCHOOL_ADMIN_REQUIRED:'초대받은 학교의 인증된 관리자만 수락할 수 있어요.',APPROVED_CONTEST_SCHOOL_REQUIRED:'대회 기능을 사용하는 승인된 학교만 연결할 수 있어요.',FRESH_IDENTITY_REQUIRED:'현재 로그인 상태를 다시 확인해주세요.',ORGANIZER_ALREADY_INVITED:'이미 초대했거나 공동 주최를 수락한 학교예요.'};
+export async function contestOrganizerRequest<T>(owner:string,action:string,payload:Record<string,unknown>):Promise<T>{
+ const session=(await supabase.auth.getSession()).data.session;if(!session||session.user.id!==owner)throw Error('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');
+ // Freeze the initiating identity even if another account signs in while the request is pending.
+ const {data,error}=await supabase.rpc('cbgpu_contest_organizer_schools',{p_action:action,p_payload:payload}).setHeader('Authorization','Bearer '+session.access_token);
+ if((await supabase.auth.getSession()).data.session?.user.id!==owner)throw Error('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');
+ if(error)throw new OrganizerError(error.message,errors[error.message]||'공동 주최 학교 정보를 처리하지 못했어요. 학교 소속과 현재 권한을 확인해주세요.');return data as T;
+}
