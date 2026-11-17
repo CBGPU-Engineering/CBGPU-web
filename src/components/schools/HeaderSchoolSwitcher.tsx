@@ -17,6 +17,7 @@ import "./schools.css";
 const resourceLabel: Record<string, string> = {
   gpu: "GPU",
   ai: "CBGPU AI",
+  central_cpu: "중앙 CPU 할당",
   school_compute: "서버·프론트엔드 실행",
   school_storage: "학교 저장소",
   contests: "대회",

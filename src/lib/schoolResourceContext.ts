@@ -6,6 +6,7 @@ export const RESOURCE_IDS = [
   "school_compute",
   "contests",
   "ai",
+  "central_cpu",
 ] as const;
 export type SchoolResource = (typeof RESOURCE_IDS)[number];
 export type ResourceSchool = {
@@ -33,7 +34,7 @@ export type ResourceAccess = {
   context_type: "MEMBERSHIP" | "GUEST" | null;
   expires_at: string | null;
   server_time: string;
-  resources: Record<Exclude<SchoolResource, "ai">, boolean> & { ai?: boolean };
+  resources: Record<Exclude<SchoolResource, "ai" | "central_cpu">, boolean> & { ai?: boolean; central_cpu?: boolean };
   reasons: Partial<Record<SchoolResource, string>>;
 };
 export type ResourceContexts = {

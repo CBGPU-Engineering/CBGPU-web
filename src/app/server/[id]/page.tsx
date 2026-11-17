@@ -1,4 +1,6 @@
 'use client';
+import{centralCPUEnabled}from'@/lib/centralCPU';
+import CentralCPUProject from '@/components/deploy/CentralCPUProject';
 import{useDeploymentCompute}from'@/lib/useDeploymentCompute';
 
 import { useEffect, useState } from 'react';
@@ -124,7 +126,7 @@ export default function ServerDetailPage() {
   const handleRedeploy = async (redeploy = true) => {
     if (!form || !project) return;
     if(!form.name.trim()){showError('프로젝트 이름을 입력해 주세요.');return;}
-    if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&!permission.canExecute)) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&(project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:!permission.canExecute)))) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
     const hostPort = parseInt(form.hostPort);
     const containerPort = parseInt(form.containerPort);
     if (isNaN(hostPort)) { showError('포트는 숫자여야 합니다.'); return; }
@@ -265,7 +267,7 @@ export default function ServerDetailPage() {
         </div>
       </div>
 
-      {isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">Server Domain</h2><p className="text-xs text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-xs text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
+      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">Server Domain</h2><p className="text-xs text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-xs text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
       {isCompose&&<ComposeStatus id={project.id}/>}
       <ProjectTeam kind="server" id={project.id}/><ProjectDomains kind="server" id={project.id}/>
       {/* 접근 정보 — 실행 중일 때만 */}
@@ -554,7 +556,7 @@ export default function ServerDetailPage() {
           <DialogFooter className="gap-2">
             <Button variant="outline" className="font-semibold text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
             <Button variant="outline" className="font-semibold text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
-            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting||permission.enabled&&!permission.canExecute}>
+            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting||project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:permission.enabled&&!permission.canExecute)}>
               {submitting ? '요청 중...' : '저장 후 재배포'}
             </Button>
           </DialogFooter>

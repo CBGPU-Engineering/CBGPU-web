@@ -1,7 +1,10 @@
 'use client';
+import{cpuReason}from'@/lib/centralCPU';
+import{useCentralCPU}from'@/lib/useCentralCPU';
+import CentralCPUNotice from '@/components/deploy/CentralCPUNotice';
 import{useDeploymentCompute}from'@/lib/useDeploymentCompute';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BackendPresets from '@/components/deploy/BackendPresets';
 import {SERVER_RUNTIMES,legacyServerRuntime,serverGitEnvironment,type ServerRuntime} from '@/lib/serverRuntime';
@@ -85,13 +88,14 @@ const SCOPE_OPTS: { value: AccessScope; label: string; icon: React.ReactNode; de
 
 export default function NewServerPage() {
   const { user, profile, isApproved, isLoading: authLoading } = useAuth();
-  const permission=useDeploymentCompute(),[draftOnly,setDraftOnly]=useState(true);const saveDraft=permission.enabled&&(draftOnly||!permission.canExecute);
+  const permission=useDeploymentCompute(),central=useCentralCPU('compose'),[draftOnly,setDraftOnly]=useState(true),[personalDraft,setPersonalDraft]=useState(false);
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
 
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
+  const otherSchool=central.enabled&&!!central.access?.school_id&&central.access.school_id!=='cbsh';const canStart=otherSchool?form.deployType==='compose'&&central.access?.allowed===true:permission.canExecute;const saveDraft=central.enabled&&personalDraft||permission.enabled&&(draftOnly||!canStart);
   const [domainName,setDomainName]=useState(''),[bulkEnv,setBulkEnv]=useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);const submissionRef=useRef(false);
 
   const set = <K extends keyof FormState>(key: K, val: FormState[K]) =>
     setForm(f => ({ ...f, [key]: val }));
@@ -102,7 +106,7 @@ export default function NewServerPage() {
     set('envVars', form.envVars.map((e, idx) => idx === i ? { ...e, [field]: val } : e));
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user||submissionRef.current||central.enabled&&!personalDraft&&central.loading) return;
     if (!profile || profile.id !== user.id) { showError('계정 프로필을 확인할 수 없습니다. 새로고침 후 다시 시도하고, 계속되면 관리자에게 문의해 주세요.'); return; }
     if (!permission.enabled&&!isApproved) { showError('학번 또는 이름 확인이 필요해 배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
     if (domainName&&!/^[a-z][a-z0-9-]{2,34}$/.test(domainName)) {showError('도메인 이름은 영문 소문자로 시작하는 3~35자 영문·숫자·하이픈으로 입력하세요.');return;}
@@ -123,9 +127,12 @@ export default function NewServerPage() {
     try{for(const line of bulkEnv.split('\n')){const text=line.trim();if(!text||text.startsWith('#'))continue;const pos=text.indexOf('=');if(pos<1)throw Error('환경변수는 KEY=value 형식으로 입력하세요.');const key=text.slice(0,pos).trim().replace(/^export\s+/,'');let value=text.slice(pos+1).trim();if((value.startsWith('\"')&&value.endsWith('\"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);envVarsObj[key]=value}}catch(error){showError(error instanceof Error?error.message:'환경변수를 확인해 주세요.');return;}
     let deploymentEnvironment=envVarsObj;try{if(form.deployType!=='docker')deploymentEnvironment=serverGitEnvironment(envVarsObj,form.runtime,form.rootDirectory)}catch(error){showError(error instanceof Error?error.message:'폴더 설정을 확인해 주세요.');return;}
     if(form.deployType==='compose'){const {CBGPU_RUNTIME_PRESET:unused,...values}=deploymentEnvironment;void unused;deploymentEnvironment={...values,CBGPU_DEPLOY_ENGINE:'compose',CBGPU_COMPOSE_FILE:form.composeFile,CBGPU_GATEWAY_SERVICE:form.gatewayService,CBGPU_STORAGE_GB:form.storageGB};}
+    submissionRef.current=true;setSubmitting(true);
+    const fresh=central.enabled&&!personalDraft?await central.refresh():null;if(central.enabled&&!personalDraft&&(!fresh||!fresh.school_id||fresh.school_id!==central.access?.school_id)){submissionRef.current=false;setSubmitting(false);showError('현재 학교가 바뀌었거나 CPU 할당을 확인하지 못했어요. 학교와 설정을 다시 확인해 주세요.');return;}
+    const allocated=!!fresh?.school_id&&fresh.school_id!=='cbsh';if(allocated&&!fresh!.allowed){submissionRef.current=false;setSubmitting(false);showError(cpuReason(fresh!.reason)+' 입력한 설정은 유지돼요.');return;}const requestedDraft=central.enabled&&personalDraft?true:allocated?(draftOnly||form.deployType!=='compose'||!fresh!.allowed):saveDraft;
     setSubmitting(true);
     const { data:created, error } = await serverProjectRequest(undefined,{
-      ...(permission.enabled?{draft:saveDraft}:{}),
+      ...(central.enabled&&personalDraft?{execution_mode:'UNASSIGNED_V1',allocation_school_id:null,draft:true}:allocated?{execution_mode:'CENTRAL_V1',allocation_school_id:fresh!.school_id,draft:requestedDraft}:permission.enabled?{draft:requestedDraft}:{}),
       user_id:        user.id,
       user_email:     user.email,
       name:           form.name.trim(),
@@ -143,15 +150,15 @@ export default function NewServerPage() {
       memory_limit:   form.memoryLimit.trim() || '512m',
       env_vars:       deploymentEnvironment,
     });
-    setSubmitting(false);
+    setSubmitting(false);submissionRef.current=false;
 
     if (error) {
       if (error.code === '23505') showError('이미 사용 중인 포트입니다.');
       else if (error.code === '42501') showError('프로젝트 생성 권한을 확인할 수 없습니다. 프로필 승인 상태를 확인해 주세요.');
       else showError('프로젝트 생성 실패: ' + error.message);
     } else {
-      if(!saveDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
-      showSuccess(saveDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.');
+      const retainedDraft=requestedDraft||created?.execution_mode==='UNASSIGNED_V1';if(!retainedDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
+      showSuccess(retainedDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.');
       router.push('/server');
     }
   };
@@ -185,7 +192,7 @@ export default function NewServerPage() {
 
   return (
     <div className="cb-page-content animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-      {permission.enabled&&<label className="flex items-start gap-3 rounded-2xl border bg-card p-4 text-sm"><input type="checkbox" checked={saveDraft} disabled={!permission.canExecute} onChange={e=>setDraftOnly(e.target.checked)}/><span>프로젝트 초안만 저장<small className="mt-1 block text-muted-foreground">초안은 실행 권한 없이 보관할 수 있어요. 배포에는 충북과학고 서버 실행 권한이 필요해요.</small></span></label>}
+      <CentralCPUNotice {...central}/>{central.enabled&&<label className="flex items-start gap-3 rounded-2xl border bg-card p-4 text-sm"><input type="checkbox" checked={personalDraft} onChange={e=>setPersonalDraft(e.target.checked)}/><span>개인 초안으로 저장 (학교 CPU 연결 없음)<small className="mt-1 block text-muted-foreground">프로젝트 ID와 설정만 보관해요. 자원 실행은 시작하지 않으며, 나중에 같은 프로젝트를 실제 할당에 명시적으로 연결할 수 있어요.</small></span></label>}{otherSchool&&form.deployType!=='compose'&&<aside role="status" className="rounded-xl border p-4 text-sm"><p>이 학교의 새 서버 실행은 Docker Compose 방식만 지원해요. 일반 Docker·Git 런타임은 초안으로만 보관할 수 있어요.</p><Button type="button" variant="outline" onClick={()=>setForm(old=>({...old,deployType:'compose'}))}>Docker Compose로 전환</Button></aside>}{permission.enabled&&!personalDraft&&<label className="flex items-start gap-3 rounded-2xl border bg-card p-4 text-sm"><input type="checkbox" checked={saveDraft} disabled={!canStart||central.enabled&&central.loading} onChange={e=>setDraftOnly(e.target.checked)}/><span>프로젝트 초안만 저장<small className="mt-1 block text-muted-foreground">초안은 실행 권한 없이 보관할 수 있어요. 실행에는 해당 프로젝트 학교의 서버 사용 권한과 실제 자원 승인이 필요해요.</small></span></label>}
       {/* 상단 헤더 */}
       <div className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
@@ -214,7 +221,7 @@ export default function NewServerPage() {
           <Button
             className="font-semibold text-xs h-9 px-6"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting||central.enabled&&!personalDraft&&(central.loading||!central.access?.school_id||otherSchool&&!central.access?.allowed)}
           >
             {submitting ? '생성 중…' : saveDraft?'프로젝트 초안 저장':'배포 시작'}
           </Button>
@@ -493,7 +500,7 @@ export default function NewServerPage() {
             <Button variant="outline" className="flex-1 font-semibold text-xs h-11" onClick={() => router.back()} disabled={submitting}>
               취소
             </Button>
-            <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting}>
+            <Button className="flex-1 font-semibold text-xs h-11" onClick={handleSubmit} disabled={submitting||central.enabled&&!personalDraft&&(central.loading||!central.access?.school_id||otherSchool&&!central.access?.allowed)}>
               {submitting ? '생성 중…' : saveDraft?'프로젝트 초안 저장':'배포 시작'}
             </Button>
           </div>

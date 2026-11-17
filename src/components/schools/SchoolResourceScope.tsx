@@ -109,8 +109,9 @@ function ResourceSession({ children }: { children: ReactNode }) {
       access.context_type !== current.type ||
       !access.resources ||
       RESOURCE_IDS.some(
-        (id) => id !== "ai" && typeof access.resources[id] !== "boolean",
+        (id) => id !== "ai" && id !== "central_cpu" && typeof access.resources[id] !== "boolean",
       ) ||
+      (access.resources.central_cpu !== undefined && typeof access.resources.central_cpu !== "boolean") ||
       (access.resources.ai !== undefined &&
         typeof access.resources.ai !== "boolean") ||
       (access.expires_at !== null &&
