@@ -1,4 +1,5 @@
 'use client';
+import KakaoPageAd from '@/components/ads/KakaoPageAd';
 import {useSearchParams} from 'next/navigation';
 import KakaoPageAd from '@/components/ads/KakaoPageAd';
 import ServiceDirectory from '@/components/services/ServiceDirectory';
