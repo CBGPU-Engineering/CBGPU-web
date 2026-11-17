@@ -8,6 +8,7 @@ const reply=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'
 export async function POST(req:NextRequest){
  try{if(!await timetableWarmAuthorized(req.headers.get('x-cbgpu-timetable-warm'),process.env.CBGPU_TIMETABLE_WARM_SECRET_FILE))return reply({error:'Operator authentication required'},401)}catch{return reply({error:'Operator warm service unavailable'},503)}
  let input:ReturnType<typeof timetableWarmInput>;try{if(req.nextUrl.search||Number(req.headers.get('content-length')||0)>2048)throw Error();input=timetableWarmInput(JSON.parse(await boundedSchoolBody(req.body,2048)))}catch{return reply({error:'Invalid warm request'},400)}
+ if(input.school_id!=='cbsh')return reply({error:'Target has not been reviewed for canonical warming',code:'UNREVIEWED_WARM_TARGET'},409);
  try{
   const endpoint=trustedInternalServiceUrl(process.env.CBGPU_SCHOOLS_API_URL||'http://127.0.0.1:3546',process.env.CBGPU_INTERNAL_NETWORK_MODE);endpoint.pathname='/v1/schools/'+encodeURIComponent(input.school_id);endpoint.search='';endpoint.hash='';
   const response=await fetch(endpoint,{headers:{Accept:'application/json'},cache:'no-store',redirect:'error',signal:AbortSignal.timeout(12000)});if(!response.ok)return reply({error:'Canonical school source unavailable'},503);
