@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import HeadlineTrend from './HeadlineTrend';
+import {useSchoolScope} from '@/components/schools/SchoolScope';
+import {supabase} from '@/lib/supabase';
+import {multiSchoolEnabled} from '@/lib/schoolsClient';
 
 const TABS = [
   { id: 'notice',   label: '공지사항' },
@@ -22,32 +25,39 @@ function fmtDate(d: string) {
   return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
 }
 
-export default function SchoolNews() {
+export default function SchoolNews(){
+ const scope=useSchoolScope();
+ if(multiSchoolEnabled&&scope.status!=='ready')return <p role="status">학교 소속을 확인한 뒤 학교 소식을 볼 수 있어요.</p>;
+ return <SchoolNewsContents key={multiSchoolEnabled?scope.school?.id:'legacy'} schoolId={multiSchoolEnabled?scope.school?.id:undefined}/>;
+}
+function SchoolNewsContents({schoolId}:{schoolId?:string}) {
   const [tab, setTab] = useState<TabId>('notice');
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const sequence=useRef(0);
   const [month,setMonth]=useState(()=>new Date(Date.now()+9*3600000).toISOString().slice(0,7));
-  const [sourceUrl,setSourceUrl]=useState('https://school.cbe.go.kr/cbs-h/M010401');
+  const [sourceUrl,setSourceUrl]=useState(schoolId?'':'https://school.cbe.go.kr/cbs-h/M010401');
   const [error, setError] = useState('');
   const [updated, setUpdated] = useState<Date | null>(null);
 
   const load = useCallback(async (t: TabId) => {
-    const request=++sequence.current;setLoading(true); setError('');setSourceUrl(t==='schedule'?`https://school.cbe.go.kr/cbs-h/M010407/list?y=${month.slice(0,4)}&m=${Number(month.slice(5))}`:t==='letter'?'https://school.cbe.go.kr/cbs-h/M010403':'https://school.cbe.go.kr/cbs-h/M010401');
+    const request=++sequence.current;setLoading(true); setError('');setItems([]);setUpdated(null);setSourceUrl(schoolId?'':t==='schedule'?`https://school.cbe.go.kr/cbs-h/M010407/list?y=${month.slice(0,4)}&m=${Number(month.slice(5))}`:t==='letter'?'https://school.cbe.go.kr/cbs-h/M010403':'https://school.cbe.go.kr/cbs-h/M010401');
     try {
-      const res = await fetch(`/api/school-news?type=${t}&month=${month}`);
+      const session=schoolId?(await supabase.auth.getSession()).data.session:null;
+      if(schoolId&&!session)throw Error('로그인 후 학교 소속을 확인해주세요.');
+      const res = await fetch(`/api/school-news?type=${t}&month=${month}`+(schoolId?'&school_id='+encodeURIComponent(schoolId):''),{cache:'no-store',headers:session?{Authorization:'Bearer '+session.access_token}:{}});
       const data = await res.json();
       if(request!==sequence.current)return;
       if (!res.ok||data.error) throw new Error(data.error||'조회 실패');
       setItems(Array.isArray(data.items)?data.items:[]);
-      if(typeof data.sourceUrl==='string'&&data.sourceUrl.startsWith('https://school.cbe.go.kr/'))setSourceUrl(data.sourceUrl);
+      if(typeof data.sourceUrl==='string'&&data.sourceUrl.startsWith('https://'))setSourceUrl(data.sourceUrl);
       setUpdated(new Date());
     } catch (e) {
-      if(request===sequence.current)setError(t==='schedule'?'학사일정을 불러오지 못했어요. 다시 시도해주세요.':'학교 소식을 불러오지 못했어요. 다시 시도해주세요.');
+      if(request===sequence.current)setError(e instanceof Error?e.message:'학교 소식을 불러오지 못했어요. 다시 시도해주세요.');
     } finally {
       if(request===sequence.current)setLoading(false);
     }
-  }, [month]);
+  }, [month,schoolId]);
 
   useEffect(() => { void load(tab);return()=>{sequence.current++}; }, [tab, load]);
 
@@ -65,9 +75,9 @@ export default function SchoolNews() {
           <Button variant="ghost" size="icon" aria-label="학교 소식 새로고침" className="size-7" onClick={() => load(tab)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+          {sourceUrl&&<a href={sourceUrl} target="_blank" rel="noopener noreferrer">
             <Button variant="ghost" size="icon" aria-label="학교 홈페이지에서 원문 보기" className="size-7"><ExternalLink className="size-3" /></Button>
-          </a>
+          </a>}
         </div>
       </div>
 
@@ -79,7 +89,7 @@ export default function SchoolNews() {
         </div>
       )}
 
-      {!loading && !error && <HeadlineTrend titles={items.map(item => item.title)} scope={`school:${tab}`} />}
+      {!loading && !error && <HeadlineTrend titles={items.map(item => item.title)} scope={`school:${schoolId??'cbsh'}:${tab}`} />}
 
       <div className={`space-y-1.5 ${loading||error ? 'hidden' : ''}`}>
         {items.map((item, i) => (

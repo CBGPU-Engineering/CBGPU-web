@@ -7,7 +7,7 @@ import SchoolNews from '@/components/feed/SchoolNews';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 
 const TABS = [
-  { id: 'school',    label: '🏫 학교 소식',   desc: '충북과학고 공지' },
+  { id: 'school',    label: '🏫 학교 소식',   desc: '우리 학교 공지·학사일정' },
   { id: 'news',      label: '📡 Tech News',   desc: 'AI · Hacking · Embedded' },
   { id: 'graveyard', label: '🪦 Graveyard',   desc: '서비스 장례식' },
 ] as const;
