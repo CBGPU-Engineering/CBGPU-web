@@ -2,14 +2,14 @@
 import {Suspense,useCallback,useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {usePathname,useSearchParams} from 'next/navigation';
 import {useAuth} from '@/lib/useAuth';
-import {isNativeAppHint} from '@/lib/nativeBridge';
+import {getNativeBridge} from '@/lib/nativeBridge';
 import {adFitEligible,kakaoAdUnits,type AdPlacement} from '@/lib/adPlacement';
 import {adDocumentHasRun,markAdDocument,installAdNavigationBoundary} from '@/lib/adDocumentBoundary';
 import './kakao-page-ad.css';
 export type KakaoPageAdProps={placement:AdPlacement;contentReady:boolean;schoolAdsEnabled?:boolean};
 const leases=new WeakMap<Document,symbol>();
 const subscribeLocation=(update:()=>void)=>{window.addEventListener('hashchange',update);window.addEventListener('popstate',update);window.addEventListener('cbgpu-native-ready',update);return()=>{window.removeEventListener('hashchange',update);window.removeEventListener('popstate',update);window.removeEventListener('cbgpu-native-ready',update)}};
-const locationSnapshot=()=>window.location.hostname+'|'+window.location.hash+'|'+(isNativeAppHint()||/NativeAndroid|CBGPU\/|;\s*wv\)/i.test(navigator.userAgent)?'native':'web');
+const locationSnapshot=()=>window.location.hostname+'|'+window.location.hash+'|'+(getNativeBridge()?.isNative===true||/NativeAndroid|CBGPU\//i.test(navigator.userAgent)?'native':'web');
 /** One supplied unit for a confirmed public page; never refreshes on a timer or data poll. */
 export default function KakaoPageAd(props:KakaoPageAdProps){return <Suspense fallback={null}><PublicAd {...props}/></Suspense>}
 function PublicAd(props:KakaoPageAdProps){
