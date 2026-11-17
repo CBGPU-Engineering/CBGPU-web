@@ -4,7 +4,7 @@ import {usePathname,useSearchParams} from 'next/navigation';
 import {useAuth} from '@/lib/useAuth';
 import {isNativeAppHint} from '@/lib/nativeBridge';
 import {adFitEligible,kakaoAdUnits,type AdPlacement} from '@/lib/adPlacement';
-import {adDocumentHasRun,adDocumentHasPersonalState,markAdDocument,installAdNavigationBoundary} from '@/lib/adDocumentBoundary';
+import {adDocumentHasRun,markAdDocument,installAdNavigationBoundary} from '@/lib/adDocumentBoundary';
 import './kakao-page-ad.css';
 export type KakaoPageAdProps={placement:AdPlacement;contentReady:boolean;schoolAdsEnabled?:boolean};
 const leases=new WeakMap<Document,symbol>();
@@ -16,7 +16,7 @@ function PublicAd(props:KakaoPageAdProps){
  const {user,isLoading}=useAuth(),path=usePathname(),search=useSearchParams().toString();
  const browser=useSyncExternalStore(subscribeLocation,locationSnapshot,()=>'');
  const [hostname,hash,client]=browser.split('|');
- if(adDocumentHasPersonalState()||!adFitEligible({...props,hostname:hostname||'',path,search,hash,nativeApp:client==='native',audience:isLoading?'loading':user?'authenticated':'anonymous'}))return null;
+ if(!adFitEligible({...props,hostname:hostname||'',path,search,hash,nativeApp:client==='native',audience:isLoading?'loading':user?'authenticated':'anonymous'}))return null;
  return <AdUnit key={path+'?'+search}/>;
 }
 function AdUnit(){
