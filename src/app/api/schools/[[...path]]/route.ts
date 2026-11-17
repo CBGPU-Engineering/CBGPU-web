@@ -10,7 +10,7 @@ const fail=(error:string,status:number)=>NextResponse.json({error},{status,heade
 async function handle(request:NextRequest,context:{params:Promise<{path?:string[]}>}){
  if(process.env.CBGPU_MULTISCHOOL_V1!=='1')return fail('Not found',404);
  const {path=[]}=await context.params;if(path.some(part=>!/^[-a-zA-Z0-9_]{1,100}$/.test(part))||path.length>5)return fail('Not found',404);
- if(!['resource-contexts','schools','memberships','current-school','school-applications','admin','publications','messages','message-mutes'].includes(path[0]))return fail('Not found',404);
+ if(!['resource-contexts','schools','memberships','current-school','school-applications','admin','publications','messages','message-mutes','messaging','direct-recipients','direct-conversations','direct-messages'].includes(path[0]))return fail('Not found',404);
  const host=request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'';const origin=request.headers.get('origin');if(!['GET','HEAD'].includes(request.method)&&!schoolRequestOriginAllowed(host,origin))return fail('요청 출처를 확인할 수 없어요.',403);
  const publicRead=request.method==='GET'&&path[0]==='schools'&&path.length<=2;
  const authorization=request.headers.get('authorization');
