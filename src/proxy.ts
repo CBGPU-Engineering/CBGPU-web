@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {normalizeWorkspace,workspaceForHost} from './lib/workspaces';
 import { WindowRateLimiter } from './lib/requestSecurity';
+import{isPublicBrowsingPath}from'./lib/publicPaths';
 
 const publicPages = new Set(['/', '/services', '/contact', '/download', '/privacy']);
 const catalogueLimits = new WindowRateLimiter(60, 60_000);
@@ -10,6 +11,7 @@ export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   if(process.env.CBGPU_DEMO==='1'){
     if(!['localhost','127.0.0.1'].includes(request.headers.get('host')?.split(':')[0]||''))return new NextResponse('Local demo only',{status:403});
+    if(process.env.CBGPU_DEMO_PUBLIC_ROUTES==='1'&&(path==='/api/public'||path.startsWith('/api/public/')))return NextResponse.next();
     if(path==='/api'||path.startsWith('/api/')||path.startsWith('/backend/'))return NextResponse.rewrite(new URL(request.nextUrl.pathname+request.nextUrl.search,'http://127.0.0.1:'+Number(process.env.CBGPU_DEMO_API_PORT||54329)));
     const h=new Headers(request.headers);h.set('x-cbgpu-public-host','app.cbgpu.com');h.set('x-cbgpu-app','1');h.set('x-cbgpu-path',path);h.set('x-cbgpu-mode',request.nextUrl.searchParams.get('mode')==='researcher'?'researcher':'student');
     const response=path==='/'?NextResponse.rewrite(new URL('/workspace'+request.nextUrl.search,request.url),{request:{headers:h}}):NextResponse.next({request:{headers:h}});
@@ -91,7 +93,7 @@ export function proxy(request: NextRequest) {
   }
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   if (/^\/api\/arxiv\/papers\/[a-f0-9-]+\/pdf$/.test(path)) { response.headers.set('X-Robots-Tag', 'index, follow'); return response; }
-  if (!publicPages.has(path) && path !== '/docs' && !path.startsWith('/docs/') && path !== '/arxiv' && !path.startsWith('/arxiv/') && path !== '/robots.txt' && path !== '/sitemap.xml') {
+  if (!(process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'&&isPublicBrowsingPath(path)) && !publicPages.has(path) && path !== '/docs' && !path.startsWith('/docs/') && path !== '/arxiv' && !path.startsWith('/arxiv/') && path !== '/robots.txt' && path !== '/sitemap.xml') {
     response.headers.set('X-Robots-Tag', 'noindex, nofollow');
   }
   if (path === '/arxiv/submit') response.headers.set('X-Robots-Tag', 'noindex, follow');

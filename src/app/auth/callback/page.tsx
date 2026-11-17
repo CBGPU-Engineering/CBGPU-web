@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import{safeAuthReturn}from'@/lib/authReturn';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 export default function AuthCallback() {
@@ -15,7 +16,8 @@ export default function AuthCallback() {
       if (!error) {
         const request=data.session?.user.user_metadata;
         const target=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?(request?.school_setup_request===true?'/schools/new':request?.school_join_request?'/schools':'/'):'/';
-        router.push(target);
+        const requested=new URLSearchParams(window.location.search).get('next');
+        router.replace(process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'&&requested?safeAuthReturn(requested):target);
       } else {
         console.error('Auth callback error:', error);
         router.push('/auth/login');

@@ -13,6 +13,10 @@ import AdminShell from '@/components/AdminShell';
 import ScopedSchoolAdminShell from '@/components/schools/ScopedSchoolAdminShell';
 import {SchoolScopeProvider} from '@/components/schools/SchoolScope';
 import SchoolResourceBoundary from '@/components/schools/SchoolResourceBoundary';
+import PublicShell from '@/components/public-browsing/PublicShell';
+import{isPublicBrowsingPath}from'@/lib/publicPaths';
+import{publicDetail}from'@/lib/publicContentServer';
+import{notFound}from'next/navigation';
 import ManufacturingShell from '@/components/manufacturing/ManufacturingShell';
 import MainSiteFrame from '@/components/workspaces/MainSiteFrame';
 import WorkspaceShell from '@/components/workspaces/WorkspaceShell';
@@ -94,6 +98,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const savedMode=requestHeaders.get('x-cbgpu-mode');
   const appSite=host==='app.cbgpu.com'||requestHeaders.get('x-cbgpu-app')==='1';
 
+  // Resolve anonymous detail existence before the inherited loading boundary can stream a 200.
+  if(process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'){const path=requestHeaders.get('x-cbgpu-path')||'',match=path.match(/^\/(projects|explore\/contests|explore\/schools)\/([^/]+)$/);if(match){const kind=match[1]==='projects'?'projects':match[1]==='explore/contests'?'contests':'schools',result=await publicDetail(kind,match[2]);if(result.ok&&!result.data.item||!result.ok&&result.status===404)notFound();}}
+  const publicBrowsingPage=process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'&&isPublicBrowsingPath(requestHeaders.get('x-cbgpu-path')||'');
+  const sessionHint=/(?:^|;)\s*sb-cbgpu-auth-token(?:\.\d+)?=/.test(requestHeaders.get('cookie')||'');
   const schoolAdminPage=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&/^\/schools\/[A-Za-z0-9_-]{1,100}\/admin$/.test(requestHeaders.get('x-cbgpu-path')||'');
   const adminSite = host === 'admin.cbgpu.com';
   const appWebView=/;\s*wv\)/.test(requestHeaders.get('user-agent')||'');
@@ -125,7 +133,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
             <SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||schoolAdminPage||manufacturingSite}>
-              {schoolAdminPage ? <ScopedSchoolAdminShell><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
+              {schoolAdminPage ? <ScopedSchoolAdminShell><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : publicBrowsingPage ? <PublicShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite} sessionHint={sessionHint}><AuthGate workspaceSite>{children}</AuthGate></PublicShell> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}
