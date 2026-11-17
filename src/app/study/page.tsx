@@ -11,6 +11,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import SelfStudyReminderSettings from '@/components/study/SelfStudyReminderSettings';
 import SupervisorCard from '@/components/study/SupervisorCard';
 import {useAuth} from '@/lib/useAuth';
+import {useSchoolResourcePermission,useSchoolResourceScope} from '@/components/schools/SchoolResourceScope';
 import {loadStudyRooms,formatStudentLabel,type RoomData,type OccupancyEntry,type Occupant} from '@/lib/studyRoomView';
 import StudySeatBrowser from '@/components/study/StudySeatBrowser';
 import StudyRequestPanel,{type StudyPrefill} from '@/components/study/StudyRequestPanel';
@@ -126,6 +127,10 @@ function useStudyDialogViewport() {
 
 export default function StudyPage() {
   const {user,isLoading:authLoading,isApproved}=useAuth();
+  const permission=useSchoolResourcePermission('study',isApproved),resourceScope=useSchoolResourceScope();
+  const canStudy=permission.enabled?permission.allowed&&resourceScope.current?.school_id==='cbsh':isApproved;
+  const permissionLoading=permission.enabled&&permission.status==='loading';
+  const permissionMessage=permission.enabled?permission.reason:'승인된 계정만 조회할 수 있습니다.';
   const generation=useRef(0),busy=useRef(false),lastDate=useRef('');
   const dialogViewport = useStudyDialogViewport();
   const [requestPrefill,setRequestPrefill]=useState<StudyPrefill|null>(null);
@@ -147,7 +152,7 @@ export default function StudyPage() {
   const [searchMode, setSearchMode] = useState<'room' | 'student'>('room');
 
   const loadData = useCallback(async (fresh = false) => {
-    if(authLoading||!user||!isApproved||busy.current)return;
+    if(authLoading||!user||!canStudy||busy.current)return;
     busy.current=true;const request=++generation.current;
     const dateStr=localDateStr();
     if(lastDate.current&&lastDate.current!==dateStr){setRoomData([]);setAllStudents([]);setUpdatedAt(null);setOpenRoomId(null)}
@@ -191,15 +196,15 @@ export default function StudyPage() {
     } finally {
       if(request===generation.current){busy.current=false;setLoading(false)}
     }
-  }, [user?.id,authLoading,isApproved]);
+  }, [user?.id,authLoading,canStudy]);
 
   useEffect(()=>{
     setRoomData([]);setAllStudents([]);setStudentsUnavailable(false);setUpdatedAt(null);setError('');setOpenRoomId(null);lastDate.current='';
-    if(!authLoading&&user&&!isApproved){setLoading(false);setError('승인된 계정만 조회할 수 있습니다.')}else void loadData();
+    if(!authLoading&&user&&!canStudy){setLoading(permissionLoading);if(!permissionLoading)setError(permissionMessage)}else void loadData();
     const refresh=()=>{if(document.visibilityState==='visible')void loadData()};
     const timer=setInterval(refresh,30_000);document.addEventListener('visibilitychange',refresh);
     return()=>{generation.current++;busy.current=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh)};
-  },[loadData]);
+  },[loadData,permissionLoading,permissionMessage,canStudy]);
 
   const periods = useMemo(
     () => Array.from({ length: periodCount }, (_, i) => i + 1),
@@ -283,7 +288,7 @@ export default function StudyPage() {
       </div>
 
       <SupervisorCard />
-      <StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />
+      {canStudy&&<StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />}
       <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
 
       <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{loading ? (roomData.length ? '현황 업데이트 중 · 이전 결과를 표시합니다.' : '자습 현황을 불러오는 중…') : updatedAt ? `최근 조회 ${updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}${error ? ' · 업데이트 실패, 이전 결과입니다.' : ''}` : '아직 조회된 현황이 없습니다.'}</p>
