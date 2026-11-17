@@ -37,6 +37,12 @@ export type DocCategoryId=typeof docCategories[number]['id'];
 export type GuideSection={title:string;body:string;steps?:string[];code?:string;links?:{label:string;href:string}[]};
 export type Guide={slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
+  {slug:'guest-school-access',title:'외부 협업자 학교 자원 이용 요청',description:'프로젝트 협업에 필요한 학교 자원을 기간과 범위를 정해 요청합니다.',category:'school',features:['/schools/[id]/access'],sections:[
+    {title:'인증된 학교 구성원이 요청해요',body:'학교 목록의 외부 협업자 이용 요청에서 협업자의 CBGPU 계정 ID, 프로젝트나 대회 이름, 이용 목적, 필요한 자원과 시작·종료 시각을 입력합니다. 계정 ID는 협업자에게 직접 확인하세요. 비밀번호를 받거나 입력할 필요는 없습니다.'},
+    {title:'승인 전에는 사용할 수 없어요',body:'학교 관리자가 요청을 검토합니다. 본인이 요청한 권한을 스스로 승인할 수 없습니다. 승인이 나더라도 허용된 기간과 자원 범위에서만 이용할 수 있고, 학교에서 조기에 회수할 수도 있습니다.'},
+    {title:'기간이 끝나도 프로젝트는 유지돼요',body:'임시 이용 기간이 종료되면 학교 자원 접근은 차단됩니다. 외부 협업자가 학생 계정으로 바뀌거나 본인 프로젝트와 공동 작업 기록이 삭제되는 것은 아닙니다. 요청 화면에서 진행 상태를 확인하세요.'}
+  ],related:['schools','school-administration']},
+
   {slug:'school-messages',title:'학교와 전국 대화 이용하기',description:'학교 안의 대화와 전국 대화를 구분해서 이용합니다.',category:'school',features:['/messages'],sections:[
     {title:'학교 대화',body:'로그인한 뒤 인증된 학교 소속으로 학교 대화를 엽니다. 선택한 학교의 대화만 표시되며 다른 학교의 내부 대화를 볼 수는 없습니다. 학교를 바꾸면 이전 대화 내용이 그대로 유지되지 않습니다.'},
     {title:'전국 대화와 공개 게시',body:'전국 대화는 직접 선택해 들어갑니다. 전국 대화 참여와 로그인 없이 누구나 읽는 공개 게시 여부는 별개입니다. 공개로 올리려면 공개 범위를 확인하세요. 학번·연락처·학교 내부 자료 등 다른 사람의 개인정보는 올리지 마세요.'},
