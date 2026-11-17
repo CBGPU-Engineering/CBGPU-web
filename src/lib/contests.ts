@@ -9,6 +9,10 @@ export type ContestField = {
   max_size_mb: number;
 };
 export type Contest = {
+  school_id?: string;
+  access_scope?: 'PRIVATE'|'SCHOOL'|'MULTI_SCHOOL'|'AUTHENTICATED'|'PUBLIC';
+  allowed_school_ids?: string[];
+  participant_policy?: 'ALL_ELIGIBLE'|'HIGH_SCHOOL_STUDENTS';
   id: string;
   host_id: string;
   participation_mode?: 'individual' | 'team';

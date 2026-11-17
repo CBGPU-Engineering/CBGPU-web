@@ -1,7 +1,11 @@
 'use client';
 
 import {Dropdown} from '@/components/ui/dropdown';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import {useSchoolScope} from '@/components/schools/SchoolScope';
+import {multiSchoolEnabled} from '@/lib/schoolsClient';
+import ContestSchoolAudience from '@/components/contests/ContestSchoolAudience';
+import {contestSchoolPolicyError,type ContestSchoolPolicy} from '@/lib/contestSchoolPolicy';
 import {ContestTeamSettingsFields} from '@/components/contests/ContestTeams';
 import {contestTeamSettings,contestTeamSettingsError,contestPeriodError} from '@/lib/contests';
 import ContestBannerPicker from '@/components/contests/ContestBannerPicker';
@@ -27,6 +31,9 @@ const textareaClass = 'w-full rounded-lg border bg-background px-3 py-2 text-sm 
 
 export default function NewContestPage() {
   const { user } = useAuth();
+  const schoolScope=useSchoolScope();
+  const [schoolPolicy,setSchoolPolicy]=useState<ContestSchoolPolicy>({school_id:'',access_scope:'SCHOOL',allowed_school_ids:[],participant_policy:'ALL_ELIGIBLE'});
+  useEffect(()=>{setSchoolPolicy(old=>({...old,school_id:schoolScope.school?.id||'',allowed_school_ids:[]}))},[schoolScope.school?.id]);
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
   const { now } = useContestClock();
@@ -64,6 +71,7 @@ export default function NewContestPage() {
   async function create(event: React.FormEvent) {
     event.preventDefault();
     if (!user || busy) return;
+    if(multiSchoolEnabled){const error=contestSchoolPolicyError(schoolPolicy,schoolScope.status==='ready'?schoolScope.school?.id||null:null);if(error)return showError(error)}
     if(imageUploading)return showError('이미지 업로드가 끝나면 신청할 수 있어요.');
     if (!title.trim()) return showError('대회 이름을 입력해 주세요.');
     if (!fields.length || fields.some(field => !field.label.trim())) return showError('이름이 있는 제출 항목을 하나 이상 추가해 주세요.');
@@ -94,6 +102,7 @@ export default function NewContestPage() {
       const cleanQuestions = questions.map(question => ({ ...question, label: question.label.trim(), options: question.options.map(option => option.trim()) }));
       const { data, error } = await supabase.from('contests').insert({
         ...teamSettings,
+        ...(multiSchoolEnabled?schoolPolicy:{}),
         host_id: user.id, title: title.trim(), description: description.trim(), starts_at:startsAt, ends_at: endsAt, fields: cleanFields, logo_path: logoPath, banner_path:bannerPath,
         event_start_at: eventStartsAt, event_end_at: eventEndsAt, location_type: locationType, location_name: locationName.trim(), address: address.trim(),
         visibility, capacity: capacity ? Number(capacity) : null, waitlist_enabled: waitlistEnabled, approval_required: approvalRequired,
@@ -104,7 +113,7 @@ export default function NewContestPage() {
         const { error: accessError } = await supabase.from('event_access_details').insert({ contest_id: data.id, meeting_url: meetingUrl.trim() });
         if (accessError) throw accessError;
       }
-      showSuccess('교내 대회를 만들었어요. 참가 링크를 공유해 보세요!');
+      showSuccess('대회를 만들었어요. 참가 링크를 공유해 보세요.');
       router.push(`/contests/${data.id}`);
     } catch (error) { if(bannerPath)await cleanupContestImages([bannerPath]);await cleanupContestLogo(logoPath); showError(contestError(error)); }
     finally { setBusy(false); }
@@ -116,6 +125,7 @@ export default function NewContestPage() {
       <header className="contest-hero"><h1 className="text-3xl font-bold tracking-tight sm:text-4xl">대회 만들기</h1><p className="mt-3 text-sm leading-relaxed text-muted-foreground">대회 소개, 참가 방식과 제출 일정을 설정하세요.</p></header>
       <form onSubmit={create} className="space-y-6">
         <fieldset disabled={busy} className="space-y-6">
+          {multiSchoolEnabled&&<ContestSchoolAudience value={schoolPolicy} onChange={setSchoolPolicy}/>}
           <section className="contest-panel space-y-5">
             <div className="contest-panel-heading"><span className="contest-step">01</span><div><h2 className="font-bold">대회 소개</h2><p className="mt-1 text-xs text-muted-foreground">참가자가 가장 먼저 만나는 정보예요.</p></div></div>
             <ContestLogoPicker file={logo} currentPath={null} onChange={setLogo} onRemove={() => setLogo(null)} disabled={busy} />
