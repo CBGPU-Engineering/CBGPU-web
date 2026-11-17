@@ -162,7 +162,7 @@ function MealPageContent() {
   return (
     <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground">충북과학고 학교급식</p>
+        <p className="text-xs font-semibold text-muted-foreground">{scope.status==='legacy'?'충북과학고 학교급식':(scope.school?.official_name||'선택한 학교')+' 학교급식'}</p>
         <h1 className="cb-page-title">오늘 뭐 나와요?</h1>
       </div>
 
