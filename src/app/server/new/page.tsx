@@ -131,7 +131,7 @@ export default function NewServerPage() {
     const fresh=central.enabled&&!personalDraft?await central.refresh():null;if(central.enabled&&!personalDraft&&(!fresh||!fresh.school_id||fresh.school_id!==central.access?.school_id)){submissionRef.current=false;setSubmitting(false);showError('현재 학교가 바뀌었거나 CPU 할당을 확인하지 못했어요. 학교와 설정을 다시 확인해 주세요.');return;}
     const allocated=!!fresh?.school_id&&fresh.school_id!=='cbsh';if(allocated&&!fresh!.allowed){submissionRef.current=false;setSubmitting(false);showError(cpuReason(fresh!.reason)+' 입력한 설정은 유지돼요.');return;}const requestedDraft=central.enabled&&personalDraft?true:allocated?(draftOnly||form.deployType!=='compose'||!fresh!.allowed):saveDraft;
     setSubmitting(true);
-    const { data:created, error } = await serverProjectRequest(undefined,{
+    const { data:created, error, deployment_requested, warning } = await serverProjectRequest(undefined,{
       ...(central.enabled&&personalDraft?{execution_mode:'UNASSIGNED_V1',allocation_school_id:null,draft:true}:allocated?{execution_mode:'CENTRAL_V1',allocation_school_id:fresh!.school_id,draft:requestedDraft}:permission.enabled?{draft:requestedDraft}:{}),
       user_id:        user.id,
       user_email:     user.email,
@@ -157,8 +157,8 @@ export default function NewServerPage() {
       else if (error.code === '42501') showError('프로젝트 생성 권한을 확인할 수 없습니다. 프로필 승인 상태를 확인해 주세요.');
       else showError('프로젝트 생성 실패: ' + error.message);
     } else {
-      const retainedDraft=requestedDraft||created?.execution_mode==='UNASSIGNED_V1';if(!retainedDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
-      showSuccess(retainedDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.');
+      const retainedDraft=requestedDraft||created?.execution_mode==='UNASSIGNED_V1'||deployment_requested===false;if(!retainedDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
+      showSuccess(warning||(retainedDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.'));
       router.push('/server');
     }
   };
