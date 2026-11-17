@@ -1,4 +1,6 @@
 'use client';
+import{useSchoolServiceVisibility}from'@/components/schools/SchoolScope';
+import HeaderSchoolSwitcher from '@/components/schools/HeaderSchoolSwitcher';
 
 import CBGPULogo from '@/components/CBGPULogo';
 import Image from 'next/image';
@@ -45,7 +47,8 @@ const BOTTOM_LINKS = [
 ];
 
 export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,searchAudience}:{brandSuffix?:ReactNode;navigationLinks?:NavLink[];hideBottomNav?:boolean;searchAudience?:WorkspaceId}={}) {
-  const primaryLinks=navigationLinks||PRIMARY_LINKS;
+  const canShow=useSchoolServiceVisibility();const groups=GROUPS.map(group=>({...group,links:group.links.filter(link=>canShow(link.href))})).filter(group=>group.links.length);
+  const primaryLinks=(navigationLinks||PRIMARY_LINKS).filter(link=>canShow(link.href));
   const { user, profile, isLoading } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -144,6 +147,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           <span className="hidden sm:inline">기능 찾기</span>
           <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
+        <HeaderSchoolSwitcher compact/>
         <div className="hidden xl:flex items-center gap-2">
           <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
             Contact
@@ -236,7 +240,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
               {primaryLinks.map(link => <Link key={link.href} href={link.href} onClick={() => setIsMenuOpen(false)} aria-current={isActivePath(pathname, link.href) ? 'page' : undefined} className={`min-h-11 py-3 text-sm font-semibold ${isActivePath(pathname, link.href) ? 'text-primary' : 'text-foreground'}`}>{link.label}</Link>)}
 
-              {GROUPS.map(group => (
+              {groups.map(group => (
                 <div key={group.label} className="mt-3">
                   <p className="text-xs font-semibold text-muted-foreground mb-1">{group.label}</p>
                   <div className="flex flex-col">

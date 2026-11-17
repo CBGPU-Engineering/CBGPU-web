@@ -20,6 +20,7 @@ import './workspaces.css';
 import './audience-design.css';
 import './app-layout.css';
 import AccountEntry from './AccountEntry';
+import{useSchoolServiceVisibility}from'@/components/schools/SchoolScope';
 const Context=createContext<WorkspaceId|null>(null);
 const AppContext=createContext(false);
 export const useIsAppWorkspace=()=>useContext(AppContext);
@@ -31,6 +32,7 @@ const modeLabels={student:'학교생활',researcher:'연구·개발'};
 const services=serviceGroups.flatMap(g=>g.services);
 function saveMode(id:WorkspaceId){try{localStorage.setItem('cbgpu-workspace',id)}catch{}document.cookie=`cbgpu-workspace=${id}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`}
 export default function WorkspaceShell({workspace,isApp=false,children}:{workspace:WorkspaceId;isApp?:boolean;children:React.ReactNode}){
+ const canShow=useSchoolServiceVisibility();
  const versionMenuRef=useRef<HTMLDetailsElement>(null);
  const [mode,setMode]=useState<WorkspaceId>(workspace),[search,setSearch]=useState(false);const pathname=usePathname();const {resolvedTheme,setTheme}=useTheme();const {user,isLoading,roleSites}=useAuth();
  useEffect(()=>{
@@ -49,7 +51,7 @@ export default function WorkspaceShell({workspace,isApp=false,children}:{workspa
 
  useEffect(()=>{if(!isApp)return;document.body.dataset.cbgpuApp='true';let baseline=window.visualViewport?.height||window.innerHeight;const sync=()=>{const el=document.activeElement as HTMLElement|null;const editing=!!el&&(el.tagName==='TEXTAREA'||(el.tagName==='INPUT'&&!['button','checkbox','radio','range','file'].includes((el as HTMLInputElement).type)));const height=window.visualViewport?.height||window.innerHeight;if(!editing)baseline=height;document.body.dataset.cbgpuKeyboard=editing&&baseline-height>150?'true':'false'};window.visualViewport?.addEventListener('resize',sync);document.addEventListener('focusin',sync);document.addEventListener('focusout',sync);return()=>{delete document.body.dataset.cbgpuApp;delete document.body.dataset.cbgpuKeyboard;window.visualViewport?.removeEventListener('resize',sync);document.removeEventListener('focusin',sync);document.removeEventListener('focusout',sync)}},[isApp]);
 
- const current=workspaces[mode],primary=current.primary.map(path=>services.find(s=>s.href===path)||{href:path,label:path==='/server/new'?'새 프로젝트':'SSH 접속 안내',icon:LayoutGrid});
+ const current=workspaces[mode],primary=current.primary.filter(canShow).map(path=>services.find(s=>s.href===path)||{href:path,label:path==='/server/new'?'새 프로젝트':'SSH 접속 안내',icon:LayoutGrid});
  const active=(href:string)=>href==='/'?pathname==='/'||pathname==='/workspace':pathname===href||(pathname.startsWith(href+'/')&&!primary.some(other=>other.href!==href&&other.href.startsWith(href+'/')&&(pathname===other.href||pathname.startsWith(other.href+'/'))));
  const nav=[{href:'/',label:'홈',icon:Home},...primary.slice(0,2),{href:'/services',label:'전체 기능',icon:LayoutGrid},{href:'/profile',label:'내 정보',icon:UserCircle}];
  if((pathname==='/ai'||pathname==='/ai/chat'))return <Context.Provider value={mode}><AppContext.Provider value={isApp}>{isApp&&<><AppNavigationBoundary mode={mode}/><NativeNavigationSync mode={mode} visible={false}/></>}<div className="cb-chat-workspace">{children}</div></AppContext.Provider></Context.Provider>;

@@ -11,7 +11,7 @@ import {EmptyState,InlineFeedback,SuccessFeedback} from '@/components/ui/product
 import {ArrowRight,Building2,Check,Plus,RefreshCw} from 'lucide-react';
 import './schools.css';
 export function SchoolSwitcher({memberships,current,onSwitched}:{memberships:SchoolMembership[];current:string|null;onSwitched:(schoolId:string)=>void}){
- const [busy,setBusy]=useState(false),[error,setError]=useState('');const allowed=memberships.filter(m=>m.status==='ACTIVE'&&m.verified);
+ const [busy,setBusy]=useState(false),[error,setError]=useState('');const allowed=memberships.filter(m=>m.status==='ACTIVE'&&m.verified&&m.school.status==='APPROVED');
  async function switchSchool(schoolId:string){if(busy||schoolId===current)return;setBusy(true);setError('');try{const result=await schoolsRequest<{ok:boolean;current_school_id:string}>('current-school','POST',{school_id:schoolId});if(result.ok)onSwitched(result.current_school_id);else throw Error('학교를 전환하지 못했어요.')}catch(e){setError(e instanceof Error?e.message:'학교를 전환하지 못했어요.')}finally{setBusy(false)}}
  if(!allowed.length)return null;
  return <section className="cb-school-switcher"><SchoolSelector label="현재 학교" schools={allowed.map(m=>({id:m.school.id,name:m.school.display_name||m.school.official_name,region:m.school.region}))} value={current} disabled={busy} onChange={school=>void switchSchool(school.id)}/><InlineFeedback message={error}/></section>;

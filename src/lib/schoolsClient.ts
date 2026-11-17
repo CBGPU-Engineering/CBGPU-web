@@ -2,7 +2,7 @@
 import {supabase} from '@/lib/supabase';
 import type {SchoolDraftData} from './schoolOnboarding';
 export const multiSchoolEnabled=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
-export type SchoolSummary={id:string;official_name:string;display_name:string;type:string;region:string;brand_color:string;logo_path:string|null;status:'LISTED'|'UNCLAIMED'|'APPROVED'|'SUSPENDED';allowed_membership_types?:('STUDENT'|'TEACHER'|'EXTERNAL')[];join_policy?:string;student_id_policy?:string;teacher_policy?:string;features:string[];gpu:{status:string;nodes:number;sharing_enabled:boolean}};
+export type SchoolSummary={id:string;official_name:string;display_name:string;type:string;region:string;brand_color:string;logo_path:string|null;status:'LISTED'|'UNCLAIMED'|'APPROVED'|'SUSPENDED';allowed_membership_types?:('STUDENT'|'TEACHER'|'EXTERNAL')[];join_policy?:string;student_id_policy?:string;teacher_policy?:string;features:string[];ads_enabled?:boolean;gpu:{status:string;nodes:number;sharing_enabled:boolean}};
 export type SchoolMembership={id:string;user_id:string;school_id:string;membership_type:'STUDENT'|'TEACHER'|'EXTERNAL';status:'ACTIVE'|'PENDING_VERIFICATION'|'REVERIFICATION_REQUIRED'|'SUSPENDED';verified:boolean;school_roles:string[];student_number?:string|null;school:SchoolSummary};
 export type SchoolApplication={id:string;status:'DRAFT'|'PENDING'|'APPROVED'|'REJECTED';step:number;revision:number;data:SchoolDraftData;created_at:string;updated_at:string;review_note?:string|null};
 export class SchoolsApiError extends Error{constructor(message:string,readonly code?:string,readonly existing_school_id?:string,readonly fields?:Record<string,string>){super(message)}}

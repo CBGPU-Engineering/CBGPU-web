@@ -1,0 +1,9 @@
+'use client';
+import type{ReactNode}from'react';
+import Link from'next/link';
+import{usePathname}from'next/navigation';
+import{useSchoolScope,schoolServiceVisible}from'./SchoolScope';
+import{Button}from'@/components/ui/button';
+import{EmptyState}from'@/components/ui/product-motion';
+/** Prevents unconfigured UI from mounting legacy school readers; never substitutes for server authorization. */
+export default function SchoolResourceBoundary({children}:{children:ReactNode}){const scope=useSchoolScope(),path=usePathname();if(schoolServiceVisible(scope,path))return children;if(scope.status==='loading')return <p role="status" className="cb-school-page">학교에서 제공하는 기능을 확인하고 있어요.</p>;if(scope.status==='unavailable')return <EmptyState kind="permission" title="학교 연결을 확인하지 못했어요" description="개인 프로젝트와 계정은 유지돼요. 학교 기능은 소속 확인 후 다시 사용할 수 있어요." action={<Button onClick={()=>void scope.refresh()}>다시 확인하기</Button>}/>;const gpu=path==='/dashboard'||path.startsWith('/dashboard/');return <section className="cb-school-page"><EmptyState kind="permission" title={scope.school?(gpu?'아직 GPU 서버를 연결하지 않았어요':'이 학교에 아직 연결되지 않은 기능이에요'):'이용할 학교를 선택해주세요'} description={gpu?'GPU 서버 없이도 계정과 프로젝트를 사용할 수 있어요. 학교가 서버를 연결하고 이용 정책을 승인한 뒤 예약할 수 있어요.':'학교별로 실제로 설정한 기능만 제공해요. 다른 학교의 자습 연결 정보나 전용 자료는 표시하지 않아요.'} action={<Button asChild variant="outline"><Link href={scope.school?'/schools/'+scope.school.id+'/features':'/schools'}>{scope.school?'학교 전용 기능 추가하기':'학교 찾기'}</Link></Button>}/></section>}
