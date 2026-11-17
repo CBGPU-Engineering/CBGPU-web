@@ -43,7 +43,7 @@ test('real NextRequest: fixed trusted upstream, no cookie forwarding, no redirec
  assert.equal((await f.invoke('GET',['analytics'],{cookie:'private=must-not-forward',query:'?from=2026-11-01&to=2026-11-17&upstream=https://evil.example'})).status,200);
  const call=f.calls[0];assert.equal(new URL(call.url).origin,'http://127.0.0.1:3549');assert.equal(new URL(call.url).pathname,'/v1/admin/ad-revenue/analytics');assert.equal((call.init.headers as Record<string,string>).Authorization,bearer);assert.equal(Object.keys(call.init.headers||{}).some(key=>key.toLowerCase()==='cookie'),false);assert.equal(call.init.cache,'no-store');assert.equal(call.init.redirect,'error');
  f.env.CBGPU_AD_REVENUE_API_URL='https://attacker.example';assert.equal((await f.invoke()).status,503);assert.equal(f.calls.length,1);
- f.env.CBGPU_AD_REVENUE_API_URL='http://127.0.0.1:3549';f.upstream(async()=>{throw Error('synthetic unavailable')});assert.equal((await f.invoke()).status,503);
+ f.env.CBGPU_AD_REVENUE_API_URL='http://127.0.0.1:3549';f.upstream(async()=>{throw Error('synthetic unavailable after possible commit')});const before=f.calls.length,uncertain=await f.invoke('POST',['imports']);assert.equal(uncertain.status,503);assert.equal((await uncertain.json()).error,'The request outcome could not be confirmed. Check imported reports or experiment records before retrying.');assert.equal(f.calls.length,before+1,'uncertain writes are never retried automatically');
  f.upstream(async()=>Response.json({error:'Fresh platform access required'},{status:403}));assert.equal((await f.invoke()).status,403);
 });
 test('actual HTTP redirect is rejected, not followed to a new report endpoint',async()=>{
