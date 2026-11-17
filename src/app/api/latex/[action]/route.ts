@@ -1,7 +1,6 @@
 import {NextRequest,NextResponse} from 'next/server';
 import {readFile} from 'node:fs/promises';
-import {publicationUser} from '@/lib/preprintsServer';
-import {activeDeploymentSession} from '@/lib/deployAuth';
+import {personalProjectUser} from '@/lib/preprintsServer';
 export const runtime='nodejs';
 export const maxDuration=180;
 const hosts=new Set(['cbgpu.com','researcher.cbgpu.com','app.cbgpu.com']);
@@ -18,7 +17,7 @@ async function handle(req:NextRequest,ctx:{params:Promise<{action:string}>}){
   if(req.method==='POST'){
    const origin=req.headers.get('origin');if(origin!=='https://'+host)return error('올바르지 않은 요청입니다.',403);
   }
-  const user=await publicationUser(req);if(!user||!await activeDeploymentSession(req,user.id))return error('로그인이 필요합니다.',401);
+  const user=await personalProjectUser(req);if(!user)return error('로그인이 필요합니다.',401);
   const now=Date.now();const rate=rates.get(user.id);if(action==='upload-chunk'){}else if(rate&&rate.until>now){if(++rate.count>60)return error('요청이 많습니다. 잠시 후 다시 시도해 주세요.',429)}else rates.set(user.id,{count:1,until:now+60000});if(rates.size>2000)for(const [id,r]of rates)if(r.until<now)rates.delete(id);
   const token=req.headers.get('authorization')!.replace(/^Bearer\s+/i,'');const sid=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString()).session_id;
   const key=(await readFile('/home/cbgpu/CBGPU-live/backend/private/latex/bridge-key','utf8')).trim();
