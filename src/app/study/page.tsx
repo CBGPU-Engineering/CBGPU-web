@@ -149,6 +149,8 @@ export default function StudyPage() {
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [onlyAvailable,setOnlyAvailable]=useState(false);
   const [roomSort,setRoomSort]=useState('name');
+  useEffect(()=>{try{const saved=localStorage.getItem('cbgpu:study:room-sort');if(['name','occupied','free'].includes(saved||''))setRoomSort(saved!)}catch{}},[]);
+  const changeRoomSort=(value:string)=>{if(!['name','occupied','free'].includes(value))return;setRoomSort(value);try{localStorage.setItem('cbgpu:study:room-sort',value)}catch{}};
   const [searchMode, setSearchMode] = useState<'room' | 'student'>('room');
 
   const loadData = useCallback(async (fresh = false) => {
@@ -223,7 +225,7 @@ export default function StudyPage() {
     return roomData.filter(({ room }) => room.name.toLowerCase().includes(q));
   }, [roomData, query]);
 
-  /** Keep names stable between refreshes; optionally prioritize available seats. */
+  /** Sort the selected period; unavailable counts never outrank known counts. */
   const sortedRoomData = useMemo(() => {
     return filteredRoomData
       .map((d) => {
@@ -233,7 +235,9 @@ export default function StudyPage() {
         return { ...d, occupiedCount };
       })
       .filter(d=>!onlyAvailable||(!d.failed&&d.room.hasSeats&&d.seats.length>d.occupiedCount))
-      .sort((a,b)=>roomSort==='free'
+      .sort((a,b)=>roomSort==='occupied'
+        ? ((b.failed?-1:b.occupiedCount)-(a.failed?-1:a.occupiedCount))||a.room.name.localeCompare(b.room.name,'ko',{numeric:true})
+        : roomSort==='free'
         ? ((b.failed||!b.room.hasSeats? -1:b.seats.length-b.occupiedCount)-(a.failed||!a.room.hasSeats? -1:a.seats.length-a.occupiedCount))||a.room.name.localeCompare(b.room.name,'ko',{numeric:true})
         : a.room.name.localeCompare(b.room.name,'ko',{numeric:true}));
   }, [filteredRoomData, selectedPeriod,onlyAvailable,roomSort]);
@@ -379,7 +383,7 @@ export default function StudyPage() {
         )}
       </div>
 
-      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>setRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
+      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>changeRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="occupied">사람 많은 순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
 
       {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했습니다. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
 

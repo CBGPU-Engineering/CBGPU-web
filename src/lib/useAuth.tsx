@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { createAccountReadFence } from '@/lib/accountReadFence';
 import {matchesPortalSession,portalAuthSessionId,reconcilePortalSession} from '@/lib/portalSession';
 import { User } from '@supabase/supabase-js';
 import { createNativeSessionCoordinator } from '@/lib/nativeSessionCoordinator';
@@ -45,7 +46,18 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
   const [managedPrinterIds, setManagedPrinterIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const accountReads = useRef(createAccountReadFence());
+  const acceptUser = (next: User | null) => {
+    if (accountReads.current.setOwner(next?.id ?? null)) {
+      setProfile(null);
+      setManagedPrinterIds([]);
+    }
+    setUser(next);
+  };
+
   const fetchProfile = async (userId: string) => {
+    const current = accountReads.current.lease(userId);
+    if (!current()) return;
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -53,7 +65,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
         .eq('id', userId)
         .single();
 
-      if (data) {
+      if (data && current()) {
         setProfile(data);
       }
     } catch (err) {
@@ -62,9 +74,11 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
   };
 
   const fetchManagedPrinters = async (userId: string) => {
+    const current = accountReads.current.lease(userId);
+    if (!current()) return;
     try {
       const { data } = await supabase.from('printer_managers').select('printer_id').eq('user_id', userId);
-      setManagedPrinterIds((data || []).map(r => r.printer_id));
+      if (current()) setManagedPrinterIds((data || []).map(r => r.printer_id));
     } catch (err) {
       console.error("Managed printers fetch error:", err);
     }
@@ -102,7 +116,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
         if (!verified || cancelled) return;
         if (!matchesPortalSession(session,expectedUser,expectedSessionId)) { void leave(); return; }
         if (event === 'TOKEN_REFRESHED') rememberTokens(session);
-        setUser(session.user);
+        acceptUser(session.user);
       });
       void (async () => {
         try {
@@ -118,7 +132,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
             setSession:async tokens=>{if(cancelled)throw Error('Portal check cancelled');const restored=await supabase.auth.setSession(tokens);if(restored.error)throw restored.error;return restored.data.session},
           });
           if (cancelled) return;
-          setUser(session.user);
+          acceptUser(session.user);
           await Promise.all([fetchProfile(expectedUser), fetchManagedPrinters(expectedUser)]);
           if (cancelled) return;
           verified = true;
@@ -126,7 +140,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
           setIsLoading(false);
         } catch { if (!cancelled) await leave(); }
       })();
-      return () => { cancelled = true; abort.abort(); subscription.unsubscribe(); };
+      return () => { cancelled = true; accountReads.current.invalidate(); abort.abort(); subscription.unsubscribe(); };
     }
 
     // supabase-js fires onAuthStateChange immediately with whatever's in this
@@ -173,7 +187,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const currentUser = session?.user ?? null;
       const generation=++authGeneration;
-      setUser(currentUser);
+      acceptUser(currentUser);
 
       if (currentUser || !nativeHint || resolved) {
         resolveLoading();
@@ -226,6 +240,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
 
     return () => {
       disposed=true;
+      accountReads.current.invalidate();
       coordinator.cancel();
       window.removeEventListener('cbgpu:explicit-signout', onExplicitSignOut);
       subscription.unsubscribe();

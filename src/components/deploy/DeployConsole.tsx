@@ -14,7 +14,7 @@ import DeployMcpSetup from './DeployMcpSetup';
 import ProjectTeam from './ProjectTeam';
 import {useRouter} from 'next/navigation';
 import {GitBranch,Globe,Plus,ArrowUpRight,ArrowLeft,RefreshCw,Search,CheckCircle2,Loader2,AlertCircle,Terminal,Settings,Clock,Copy,RotateCcw,Trash2} from 'lucide-react';
-import {supabase} from '@/lib/supabase';
+import {deploymentApi} from '@/lib/deploymentApi';
 import InlineAi from '@/components/ai/InlineAi';
 import {useAuth} from '@/lib/useAuth';
 import {motion} from 'motion/react';
@@ -26,7 +26,7 @@ type Deployment={id:string;status:string;created_at:string;finished_at:string|nu
 type Project={automatic_deploy_available?:boolean;execution_mode?:'UNASSIGNED_V1'|'CENTRAL_V1'|null;allocation_school_id?:string|null;collaboration_role:'owner'|'editor'|'viewer';id:string;slug:string;repository:string;branch:string;framework:string;root_directory:string;output_directory:string;install_command:string;build_command:string;auto_deploy:boolean;production:string|null;created_at:string;url:string;domain:string;environment_keys:string[];git_connected:boolean;deployments:Deployment[]};
 type Fields={slug:string;repository:string;branch:string;framework:string;root_directory:string;output_directory:string;install_command:string;build_command:string;auto_deploy:boolean;git_token:string;environment:string};
 const empty:Fields={slug:'',repository:'',branch:'main',framework:'auto',root_directory:'',output_directory:'',install_command:'',build_command:'',auto_deploy:true,git_token:'',environment:''};
-async function api(path:string,method='GET',body?:unknown){const {data:{session}}=await supabase.auth.getSession();if(!session)throw new Error('CBGPU 계정으로 로그인해 주세요.');const response=await fetch('/api/deploy/projects'+path,{method,headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});const result=await response.json();if(!response.ok)throw new Error(result.message||'요청을 처리하지 못했습니다.');return result}
+function api(path:string,method='GET',body?:unknown){return deploymentApi('projects'+path,method,body)}
 function date(value:string){return new Date(value).toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
 function State({value}:{value:string}){const label:Record<string,string>={ready:'Ready',building:'Building',queued:'Queued',error:'Error',expired:'Expired',idle:'미배포'};return <ResourceStatus value={value} className={`cb-deploy-state ${value}`}>{value==='building'||value==='queued'?<Loader2 size={13} className="cb-deploy-spin"/>:value==='ready'?<CheckCircle2 size={13}/>:value==='error'?<AlertCircle size={13}/>:<Clock size={13}/>}<span>{label[value]||value}</span></ResourceStatus>}
 function fieldsOf(p:Project):Fields{return{slug:p.slug,repository:p.repository,branch:p.branch||empty.branch,framework:p.framework||empty.framework,root_directory:p.root_directory||'',output_directory:p.output_directory||'',install_command:p.install_command||'',build_command:p.build_command||'',auto_deploy:p.auto_deploy===true,git_token:'',environment:''}}
