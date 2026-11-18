@@ -24,10 +24,11 @@ export async function GET(req: NextRequest) {
    const sources=await schoolLifeAuthorityJson(response);neis=schoolId==='cbsh'?null:neisSheetTargetFromSources(schoolId,sources);try{school=comciganTargetFromSources(schoolId,sources)}catch(error){if(!neis)throw error}
   }catch{return reply({error:'이 학교의 시간표 연결을 준비하고 있어요. 학교 관리자에게 연결 확인을 요청해주세요.'},503)}
  }
+ let attemptedSheet=false;
  try{
-  if(!school&&neis)return reply(await getNeisSheetTimetable(neis,grade,cls,department));
+  if(!school&&neis){attemptedSheet=true;return reply(await getNeisSheetTimetable(neis,grade,cls,department));}
   if(department&&!neis)return reply({error:'이 시간표는 학과 선택을 제공하지 않아요.'},400);
   const result=await getTimetable(grade,cls,{forceRefresh:sp.get('refresh')==='1',...(school?{school}:{})});
   return reply({grid:result.grid,times:result.classTimes,grades:result.grades,classes:result.classes,school:result.schoolName,school_id:school?.id??'cbsh',stale:result.stale,fetchedAt:result.fetchedAt,weekStart:result.weekStart});
- }catch(error){if(neis){try{return reply(await getNeisSheetTimetable(neis,grade,cls,department))}catch{return reply({error:'학교 시간표를 확인하지 못했어요. 잠시 후 다시 조회하거나 학교에 확인해주세요.',code:'TIMETABLE_PROVIDER_ERROR',school_id:neis.id},502)}}return reply({error:error instanceof Error?error.message:'시간표를 불러오지 못했어요.',code:'TIMETABLE_PROVIDER_ERROR',school_id:school?.id??'cbsh'},502)}
+ }catch(error){if(neis){if(!attemptedSheet){try{return reply(await getNeisSheetTimetable(neis,grade,cls,department))}catch{/* One bounded provider attempt only. */}}return reply({error:'학교 시간표를 확인하지 못했어요. 잠시 후 다시 조회하거나 학교에 확인해주세요.',code:'TIMETABLE_PROVIDER_ERROR',school_id:neis.id},502)}return reply({error:error instanceof Error?error.message:'시간표를 불러오지 못했어요.',code:'TIMETABLE_PROVIDER_ERROR',school_id:school?.id??'cbsh'},502)}
 }
