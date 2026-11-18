@@ -17,3 +17,6 @@ export function contestWorkspaceSections(canManage:boolean,isOwner:boolean){retu
 export function contestEventSection(section:ContestManagementSection):section is ContestEventSection{return !['submissions','awards','presentation'].includes(section)}
 export function contestParticipantHref(id:string){return '/contests/'+encodeURIComponent(id)}
 export function contestManagementHref(id:string){return contestParticipantHref(id)+'/manage'}
+
+/** Share the participant entry, even when copied from the separate organizer workspace. */
+export function contestTeamInvitationUrl(id:string,joinCode:string,origin:string){const url=new URL(contestParticipantHref(id),origin);url.searchParams.set('team',joinCode);return url.toString()}
