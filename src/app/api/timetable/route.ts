@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTimetable } from '@/lib/comcigan';
 import {comciganTargetFromSources,type ComciganSchoolTarget}from'@/lib/comciganSchool';
+import{schoolLifeAuthorityJson}from'@/lib/schoolLifeAuthority';
 import{trustedInternalServiceUrl}from'@/lib/internalServiceUrl';
 export const dynamic = 'force-dynamic';
 const reply=(body:unknown,status=200)=>NextResponse.json(body,{status,headers:{'Cache-Control':'no-store','Vary':'Authorization'}});
@@ -18,8 +19,7 @@ export async function GET(req: NextRequest) {
   try{
    const response=await fetch(endpoint,{headers:{Authorization:authorization},cache:'no-store',redirect:'error',signal:AbortSignal.timeout(20_000)});
    if(!response.ok)return reply({error:response.status===401?'다시 로그인해 학교 소속을 확인해주세요.':response.status===403?'인증된 학교 구성원만 시간표를 볼 수 있어요.':'학교 시간표 연결을 확인하지 못했어요.'},[401,403].includes(response.status)?response.status:503);
-   const bytes=await response.arrayBuffer();if(bytes.byteLength>64*1024)throw Error('Invalid school configuration');
-   school=comciganTargetFromSources(schoolId,JSON.parse(new TextDecoder().decode(bytes)));
+   school=comciganTargetFromSources(schoolId,await schoolLifeAuthorityJson(response));
   }catch{return reply({error:'이 학교의 시간표 연결을 준비하고 있어요. 학교 관리자에게 연결 확인을 요청해주세요.'},503)}
  }
  try{
