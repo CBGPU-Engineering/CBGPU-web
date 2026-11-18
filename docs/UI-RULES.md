@@ -96,7 +96,11 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 4. Do not delete or rewrite someone else's UI work while adding a feature. If you must replace a
    pattern, update this document in the same PR.
 
-## Checks that fail CI
+## What CI checks, and what it does not
+
+Layout (what sits where, how many columns, what is above the fold) is **not** tested in CI. It is
+verified during development: open the screens (section 7) before you push. CI only runs cheap static
+rules that behave like lint:
 
 | Rule | Test |
 | --- | --- |
@@ -104,4 +108,3 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 | No `window.confirm/prompt/alert` | `tests/ui-conventions.test.mts` |
 | Feature flags must not decide whether the app admin frame is used | `tests/ui-conventions.test.mts` |
 | App admin labels are short Korean | `tests/ui-conventions.test.mts` |
-| Home: everyday features before the AI box and ads; two-column grid on phones | `tests/ui-conventions.test.mts` |

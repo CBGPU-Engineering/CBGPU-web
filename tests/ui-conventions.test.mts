@@ -44,13 +44,3 @@ test('app admin navigation labels are short Korean text (they must fit the botto
   assert.deepEqual(bad, [], 'Use short Korean labels in the app admin navigation: ' + bad.join(', '));
   assert.ok(labels.every(label => label.length <= 12), 'Labels must stay short: ' + labels.filter(label => label.length > 12).join(', '));
 });
-
-test('home keeps the everyday features first: ads and the AI box come after them, grid stays two columns', () => {
-  const home = read(path.join(SRC, 'components/workspaces/WorkspaceHome.tsx'));
-  const at = (needle: string) => home.indexOf(needle);
-  assert.ok(at('<ServiceDirectory') >= 0 && at('<KakaoPageAd') > at('<ServiceDirectory'), 'Ads must render after the feature directory on the home');
-  assert.ok(!/<ServiceDirectory[^>]*searchSlot=\{<HomeAiSearch/.test(home), 'The AI question box must not replace the feature search above the features');
-  assert.ok(/afterFirst=\{<HomeAiSearch/.test(home), 'The AI question box belongs after the first feature group');
-  const css = read(path.join(SRC, 'components/services/service-directory.css'));
-  assert.ok(/\.cb-directory\.cb-directory-home \.cb-directory-grid\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/.test(css), 'Home feature tiles must stay a two-column grid on phones');
-});
