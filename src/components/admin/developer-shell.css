@@ -72,3 +72,16 @@
 
 
 .admin-developer-shell .theme-control{width:36px;min-width:36px;height:36px;padding:0;justify-content:center;border:1px solid var(--dev-border,var(--border));border-radius:10px;background:transparent;cursor:pointer}.admin-developer-shell .theme-control:hover{background:var(--dev-hover)}.admin-developer-shell .theme-control>.icon,.admin-developer-shell .header-actions .theme-control>.icon{display:block;width:17px;height:17px}
+
+/* A valid long school/page title must move actions below it before becoming a
+   narrow column. Keep the existing type scale and allow complete labels. */
+.admin-developer-shell .page-heading{flex-wrap:wrap}
+.admin-developer-shell .page-heading>div{min-width:0;flex:1 1 22rem}
+.admin-developer-shell .page-heading h1{overflow-wrap:anywhere}
+.admin-developer-shell .page-heading>.button,.admin-developer-shell .page-heading>[data-slot=button]{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+/* The tablet sidebar leaves less room than the viewport suggests. Let the
+   header grow instead of squeezing breadcrumbs beside fixed action controls. */
+.admin-developer-shell .workspace-header{height:auto;min-height:88px;flex-wrap:wrap}
+.admin-developer-shell .workspace-header>.breadcrumbs{min-width:0;max-width:100%;flex:1 1 16rem;flex-wrap:wrap}
+.admin-developer-shell .workspace-header>.header-actions{max-width:100%;flex-wrap:wrap}
+@media(max-width:720px){.admin-developer-shell .workspace-header{min-height:76px}}
