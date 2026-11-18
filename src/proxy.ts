@@ -1,3 +1,5 @@
+import{notebookEdgeAllowed}from'./lib/notebookEdge';
+import{trustedInternalServiceUrl}from'./lib/internalServiceUrl';
 import { NextRequest, NextResponse } from 'next/server';
 import {normalizeWorkspace,workspaceForHost} from './lib/workspaces';
 import { WindowRateLimiter } from './lib/requestSecurity';
@@ -26,6 +28,17 @@ export function proxy(request: NextRequest) {
   const forwardedHost=request.headers.get('x-cbgpu-public-host')||'';
   const internalHost=rawHost==='localhost'||rawHost==='127.0.0.1';
   const host=internalHost&&(workspaceForHost(forwardedHost)||['cbgpu.com','app.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(forwardedHost))?forwardedHost:rawHost;
+  // Untrusted notebook HTML is available ONLY through the isolated authenticated edge.
+  if(host==='notebooks.cbgpu.com')return new NextResponse('Not found',{status:404});
+  if(path.startsWith('/__notebook_gateway/')){
+    const notebookPath=path.slice('/__notebook_gateway'.length);
+    if(process.env.CBGPU_GPU_NOTEBOOKS_ENABLED!=='1'||!notebookEdgeAllowed(request.headers.get('x-cbgpu-note-edge'))||!/^\/notebooks\/[a-f0-9-]{36}\//.test(notebookPath))return new NextResponse('Not found',{status:404});
+    try{const target=trustedInternalServiceUrl(process.env.CBGPU_NOTEBOOK_RELAY_URL||'http://127.0.0.1:3557',process.env.CBGPU_INTERNAL_NETWORK_MODE);target.pathname=notebookPath;target.search=request.nextUrl.search;const h=new Headers(request.headers);h.delete('x-cbgpu-note-edge');h.delete('authorization');h.set('x-cbgpu-public-host','notebooks.cbgpu.com');return NextResponse.rewrite(target,{request:{headers:h}})}catch{return new NextResponse('Notebook unavailable',{status:503})}
+  }
+  if(path==='/v1/gpu/relay'){
+    if(process.env.CBGPU_GPU_NOTEBOOKS_ENABLED!=='1'||!['cbgpu.com','www.cbgpu.com'].includes(host))return new NextResponse('Not found',{status:404});
+    try{const target=trustedInternalServiceUrl(process.env.CBGPU_NOTEBOOK_RELAY_URL||'http://127.0.0.1:3557',process.env.CBGPU_INTERNAL_NETWORK_MODE);target.pathname=path;target.search='';if(request.nextUrl.search)return new NextResponse('Invalid request',{status:400});const h=new Headers(request.headers);h.delete('cookie');h.delete('authorization');h.delete('x-cbgpu-note-edge');return NextResponse.rewrite(target,{request:{headers:h}})}catch{return new NextResponse('Notebook unavailable',{status:503})}
+  }
   const manufacturingHost=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host);
   if((path==='/api/public-assets'||path.startsWith('/api/public-assets/'))&&!['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host))return new NextResponse('Not found',{status:404});
   if(host==='admin.cbgpu.com'&&path==='/'&&['GET','HEAD'].includes(request.method)){const target=request.nextUrl.clone();target.pathname=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?'/admin/schools':'/admin/gpu';target.search='';return NextResponse.redirect(target,307);}
