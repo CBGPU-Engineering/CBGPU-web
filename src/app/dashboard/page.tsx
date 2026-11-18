@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [pastShown, setPastShown] = useState(5);
   const [selectedRes, setSelectedRes] = useState<any>(null);
   const [cancelTarget, setCancelTarget] = useState<{ id: string; status: string } | null>(null);
   const [endTarget, setEndTarget] = useState<string | null>(null);
@@ -286,6 +287,12 @@ export default function Dashboard() {
     }
   }, [user]);
 
+  // Finished and rejected reservations stay in the history, but only a few show at first so the page does not run on forever.
+  const isPastReservation = (r: any) => r.status === 'rejected' || currentTime > new Date(r.end_time);
+  const activeReservations = myReservations.filter(r => !isPastReservation(r));
+  const pastReservations = myReservations.filter(isPastReservation);
+  const shownReservations = [...activeReservations, ...pastReservations.slice(0, pastShown)];
+
   return (
     <div className="cb-page-content space-y-12 md:space-y-20 transition-colors duration-500">
       <section>
@@ -518,8 +525,9 @@ export default function Dashboard() {
             No active reservations found.
           </div>
         ) : (
+          <>
           <div className="grid gap-4 md:gap-6">
-            {myReservations.map((res) => {
+            {shownReservations.map((res) => {
               const start = new Date(res.start_time);
               const end = new Date(res.end_time);
               const isStarted = currentTime >= start;
@@ -644,6 +652,14 @@ export default function Dashboard() {
               );
             })}
           </div>
+          {pastReservations.length > 5 && (
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+              <p className="text-sm text-muted-foreground">지난 예약 {Math.min(pastShown, pastReservations.length)} / {pastReservations.length}개 표시 중</p>
+              {pastShown < pastReservations.length && <Button variant="outline" className="min-h-11" onClick={() => setPastShown(n => n + 10)}>지난 예약 더 보기</Button>}
+              {pastShown > 5 && <Button variant="ghost" className="min-h-11" onClick={() => setPastShown(5)}>접기</Button>}
+            </div>
+          )}
+          </>
         )}
       </div>
       )}
