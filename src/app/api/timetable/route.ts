@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
  }
  let attemptedSheet=false;
  try{
-  if(!school&&neis){attemptedSheet=true;return reply(await getNeisSheetTimetable(neis,grade,cls,department));}
+  if(neis&&(department||!school)){attemptedSheet=true;return reply(await getNeisSheetTimetable(neis,grade,cls,department));}
   if(department&&!neis)return reply({error:'이 시간표는 학과 선택을 제공하지 않아요.'},400);
   const result=await getTimetable(grade,cls,{forceRefresh:sp.get('refresh')==='1',...(school?{school}:{})});
   return reply({grid:result.grid,times:result.classTimes,grades:result.grades,classes:result.classes,school:result.schoolName,school_id:school?.id??'cbsh',stale:result.stale,fetchedAt:result.fetchedAt,weekStart:result.weekStart});
