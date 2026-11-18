@@ -767,7 +767,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                       <span className="text-sm font-bold shrink-0">{accountStudentNumberDisplay(p,schoolFilter)}</span>
                     </div>
                     {p.email && <p className="text-xs text-muted-foreground break-all">{p.email}</p>}
-                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p}/></div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p} showStudentNumber={false}/></div>
                     {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">Updating account…</p>}
                     <div className="flex items-center justify-between gap-2">
                       <div>
@@ -826,7 +826,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           {p.email && <p className="mt-2 text-xs text-muted-foreground break-all">{p.email}</p>}
                           {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">Updating…</p>}
                         </TableCell>
-                        <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p}/></TableCell>
+                        <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p} showStudentNumber={false}/></TableCell>
                         <TableCell className="text-sm font-bold">{accountStudentNumberDisplay(p,schoolFilter)}</TableCell>
                         <TableCell className="py-5">
                           {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
