@@ -132,11 +132,11 @@ export function eventError(error: unknown) {
 const icsEscape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
 const icsDate = (value: string) => new Date(value).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 export function downloadEventCalendar(contest: Contest) {
-  if (!contest.event_start_at) return;
-  const end = contest.event_end_at || new Date(new Date(contest.event_start_at).getTime() + 60 * 60 * 1000).toISOString();
+  const period=contestCalendarPeriod(contest);if(!period)return;
+  const end=period.ends_at;
   const location = [contest.location_name, contest.address].filter(Boolean).join(', ');
   const text = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//CBGPU//Campus Events//KO', 'BEGIN:VEVENT',
-    `UID:${contest.id}@cbgpu`, `DTSTAMP:${icsDate(new Date().toISOString())}`, `DTSTART:${icsDate(contest.event_start_at)}`,
+    `UID:${contest.id}@cbgpu`, `DTSTAMP:${icsDate(new Date().toISOString())}`, `DTSTART:${icsDate(period.starts_at)}`,
     `DTEND:${icsDate(end)}`, `SUMMARY:${icsEscape(contest.title)}`, `DESCRIPTION:${icsEscape(contest.description || '')}`,
     `LOCATION:${icsEscape(location)}`, `URL:${icsEscape(window.location.href)}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
   const url = URL.createObjectURL(new Blob([text], { type: 'text/calendar;charset=utf-8' }));
@@ -195,5 +195,19 @@ export function contestTeamJoinCode(value:string){const raw=value.trim();try{con
 
 export type ContestPeriodPhase = 'checking'|'pending'|'open'|'closed';
 export function contestSubmissionPhase(contest:Pick<Contest,'is_open'|'ends_at'>&{starts_at?:string|null},now:number|null):ContestPeriodPhase{if(!contest.is_open)return 'closed';if(now===null)return 'checking';if(contest.ends_at&&new Date(contest.ends_at).getTime()<=now)return 'closed';if(contest.starts_at&&new Date(contest.starts_at).getTime()>now)return 'pending';return 'open';}
-export function contestRegistrationPhase(contest:Pick<Contest,'registration_open'|'registration_closes_at'|'event_start_at'>&{registration_opens_at?:string|null;lifecycle_status?:string},now:number|null):ContestPeriodPhase{if(!contest.registration_open||(contest.lifecycle_status&&contest.lifecycle_status!=='published'))return 'closed';if(now===null)return 'checking';const end=contest.registration_closes_at||contest.event_start_at;if(end&&new Date(end).getTime()<=now)return 'closed';if(contest.registration_opens_at&&new Date(contest.registration_opens_at).getTime()>now)return 'pending';return 'open';}
+export function contestRegistrationPhase(contest:Pick<Contest,'registration_open'|'registration_closes_at'|'event_start_at'>&{registration_opens_at?:string|null;lifecycle_status?:string;event_end_at?:string|null;ends_at?:string|null},now:number|null):ContestPeriodPhase{if(!contest.registration_open||(contest.lifecycle_status&&contest.lifecycle_status!=='published'))return 'closed';if(now===null)return 'checking';const dates=[contest.registration_closes_at||contest.event_start_at,contest.event_end_at||contest.ends_at].filter((value):value is string=>!!value);if(dates.some(value=>!Number.isFinite(Date.parse(value))))return 'closed';if(dates.some(value=>Date.parse(value)<=now))return 'closed';if(contest.registration_opens_at){const start=Date.parse(contest.registration_opens_at);if(!Number.isFinite(start))return 'closed';if(start>now)return 'pending';}return 'open';}
+
+export type ContestEventPhase='checking'|'cancelled'|'archived'|'ended'|'upcoming'|'ongoing'|'unscheduled';
+export function contestEventPhase(contest:{lifecycle_status?:string;event_start_at?:string|null;event_end_at?:string|null;ends_at?:string|null},now:number|null):ContestEventPhase{
+ if(contest.lifecycle_status==='cancelled')return 'cancelled';if(contest.lifecycle_status==='archived')return 'archived';if(now===null)return 'checking';
+ const end=contest.event_end_at||contest.ends_at;
+ if(end&&Number.isFinite(Date.parse(end))&&Date.parse(end)<=now)return 'ended';
+ if(contest.event_start_at&&Number.isFinite(Date.parse(contest.event_start_at)))return Date.parse(contest.event_start_at)>now?'upcoming':'ongoing';
+ return 'unscheduled';
+}
+export function contestCalendarPeriod(contest:{event_start_at:string|null;event_end_at:string|null}):{starts_at:string;ends_at:string}|null{
+ if(!contest.event_start_at)return null;const start=Date.parse(contest.event_start_at);if(!Number.isFinite(start))return null;
+ const end=contest.event_end_at?Date.parse(contest.event_end_at):start+3600000;if(!Number.isFinite(end)||end<=start)return null;
+ return {starts_at:new Date(start).toISOString(),ends_at:new Date(end).toISOString()};
+}
 export function contestPeriodError(start:string|null,end:string|null,label:string):string|null{if(start&&!Number.isFinite(new Date(start).getTime())||end&&!Number.isFinite(new Date(end).getTime()))return `${label} 시작·마감 시각을 확인해 주세요.`;if(start&&end&&new Date(end).getTime()<=new Date(start).getTime())return `${label} 마감은 시작 이후로 지정해 주세요.`;return null;}
