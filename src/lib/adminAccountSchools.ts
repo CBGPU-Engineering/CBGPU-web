@@ -30,11 +30,11 @@ export function schoolAccountApprovalScope(account:SchoolAccount,schoolFilter='a
  const schools=account.school_affiliations.filter(school=>!!school.school_id&&school.status!=='PRIMARY');
  if(schoolFilter==='all'&&schools.length>1)return{kind:'select-school'};
  const school=schoolFilter==='all'?schools[0]:schools.find(school=>school.school_id===schoolFilter);
- if(!school)return{kind:'unavailable'};
+ if(!school)return account.school_id==='cbsh'&&(schoolFilter==='all'||schoolFilter==='cbsh')?{kind:'legacy'}:{kind:'unavailable'};
  return school.school_id==='cbsh'?{kind:'legacy',school}:{kind:'school',school};
 }
 export function schoolAccountApprovalState(account:SchoolAccount,schoolFilter='all'):'approved'|'unreviewed'|'restricted'|'multiple'|'unavailable'{
  if(account.account_status==='SUSPENDED')return'restricted';const scope=schoolAccountApprovalScope(account,schoolFilter);if(scope.kind==='legacy')return account.is_approved===true?'approved':account.is_approved===false?'restricted':'unreviewed';
- if(scope.kind==='select-school')return'multiple';if(scope.kind==='unavailable'||!scope.school)return'unavailable';
+ if(scope.kind==='select-school')return'multiple';if(scope.kind==='unavailable'||!scope.school)return !account.school_id&&account.school_affiliations?.length===0&&account.account_status==='ACTIVE'?'approved':'unavailable';
  return scope.school.status==='SUSPENDED'?'restricted':scope.school.status==='ACTIVE'&&scope.school.verified?'approved':'unreviewed';
 }
