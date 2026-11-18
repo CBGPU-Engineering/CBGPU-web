@@ -28,7 +28,7 @@ export function proxy(request: NextRequest) {
   const host=internalHost&&(workspaceForHost(forwardedHost)||['cbgpu.com','app.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(forwardedHost))?forwardedHost:rawHost;
   const manufacturingHost=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host);
   if((path==='/api/public-assets'||path.startsWith('/api/public-assets/'))&&!['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host))return new NextResponse('Not found',{status:404});
-  if(host==='admin.cbgpu.com'&&path==='/'&&['GET','HEAD'].includes(request.method)){const target=request.nextUrl.clone();target.pathname='/admin/gpu';target.search='';return NextResponse.redirect(target,307);}
+  if(host==='admin.cbgpu.com'&&path==='/'&&['GET','HEAD'].includes(request.method)){const target=request.nextUrl.clone();target.pathname=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?'/admin/schools':'/admin/gpu';target.search='';return NextResponse.redirect(target,307);}
   if(/^\/manage\/manufacturing(?:\/|$)/.test(path)&&!manufacturingHost&&host!=='admin.cbgpu.com'){
     const userHost=['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host);
     if(userHost&&['GET','HEAD'].includes(request.method)){

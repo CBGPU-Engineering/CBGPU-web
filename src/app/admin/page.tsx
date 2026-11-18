@@ -1,4 +1,5 @@
 'use client';
+import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { formatMemoryLimit } from '@/lib/formatMemoryLimit';
@@ -22,6 +23,7 @@ type AdminTab = 'gpu' | 'server' | 'accounts' | 'manufacture' | 'materials';
 
 export default function AdminPage({sectionOverride}:{sectionOverride?:AdminTab}) {
   const params=useSearchParams(),section=sectionOverride||params.get('section');
+  if(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&!section)return <SchoolAdminHub/>;
   const initialTab:AdminTab=section&&['gpu','server','accounts','manufacture','materials'].includes(section)?section as AdminTab:'gpu';
   const initialReview=params.get('review')==='1';
   return <AdminContent key={initialTab+String(initialReview)} initialTab={initialTab} initialReview={initialReview}/>;

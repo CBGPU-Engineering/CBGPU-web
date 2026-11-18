@@ -4,12 +4,12 @@ import {Cpu,Server,Users,Printer,Files,KeyRound,CalendarDays,Vote,UserPlus,Layou
 import AppSpaceFrame,{type SpaceNavItem} from './AppSpaceFrame';
 /** 관리 공간(admin.cbgpu.com)의 앱 틀. /admin/wakeup은 기상송 공간으로 따로 보여 준다. */
 const adminNav:SpaceNavItem[]=[
+ ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'schools',href:'/admin/schools',label:'Schools',Icon:Users},{id:'school-applications',href:'/admin/school-applications',label:'School applications',Icon:Files}]:[]),
  {id:'m',href:'/admin/m',label:'Overview',Icon:LayoutDashboard},
  {id:'m:signups',href:'/admin/m?tab=signups',label:'Membership reviews',Icon:UserPlus},
  {id:'m:gpu',href:'/admin/m?tab=gpu',label:'GPU reservations',Icon:Cpu},
  {id:'server',href:'/admin/server',label:'Server deployments',Icon:Server},
  {id:'accounts',href:'/admin/accounts',label:'Accounts',Icon:Users},
- ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'schools',href:'/admin/schools',label:'School applications',Icon:Users}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_AD_REVENUE_V1==='1'?[{id:'ad-revenue',href:'/admin/ad-revenue',label:'Ad revenue',Icon:LayoutDashboard}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'feature-requests',href:'/admin/feature-requests',label:'School feature requests',Icon:Files}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'message-reports',href:'/admin/message-reports',label:'Message reports',Icon:Users}]:[]),
@@ -26,6 +26,6 @@ export default function AppAdminFrame({children}:{children:React.ReactNode}){
  const pathname=usePathname(),params=useSearchParams(),tab=params.get('tab');
  if(pathname==='/admin/wakeup'||pathname.startsWith('/admin/wakeup/'))return <AppSpaceFrame current="wakeup" nav={wakeupNav} activeId="wakeup">{children}</AppSpaceFrame>;
  const isM=pathname==='/admin/m'||pathname.startsWith('/admin/m/');
- const activeId=isM?(tab==='signups'?'m:signups':tab==='gpu'?'m:gpu':'m'):(pathname==='/admin'?'gpu':pathname.split('/')[2]);
+ const activeId=isM?(tab==='signups'?'m:signups':tab==='gpu'?'m:gpu':'m'):(pathname==='/admin'?(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?'schools':'gpu'):pathname.split('/')[2]);
  return <AppSpaceFrame current="admin" nav={adminNav} activeId={activeId}>{children}</AppSpaceFrame>;
 }
