@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/serve.mts",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "prebuild": "npm run build:browser && node scripts/check-docs-coverage.cts",
     "test": "node --test tests/*.test.mts tests/contests/*.test.mts && node scripts/verify-study-student.cts",

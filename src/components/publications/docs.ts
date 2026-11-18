@@ -692,6 +692,11 @@ export const guides:Guide[] = [
         "links": [{"label": "학교별 GPU 연결", "href": "https://admin.cbgpu.com/admin/schools"}]
       },
       {
+        "title": "설치 도우미로 연결하기",
+        "body": "학교 관리자 화면의 GPU 서버에서 Linux AppImage를 내려받아 실제 GPU 서버에서 실행하세요. 도우미에서 환경을 검사하고 Jupyter 실행 이미지를 준비한 다음, 학교 관리 화면에서 연결 파일을 발급하세요. 파일 하나에 등록 정보와 실행 정책이 담기며 도우미에서 Jupyter 설치를 직접 선택해야 합니다. 드라이버나 Docker 권한을 자동으로 바꾸지 않습니다. Windows EXE는 현재 환경 검사와 WSL2 준비 안내용이며 자동 설치는 검증 중입니다. 다른 예약 제어기가 이미 관리하는 GPU를 새 실행기에 중복 연결하지 마세요.",
+        "links": [{"label": "학교별 GPU 서버 관리", "href": "https://admin.cbgpu.com/admin/schools"}]
+      },
+      {
         "title": "새 학교 GPU 예약과 Jupyter",
         "body": "학교 GPU 화면에서 선택한 학교의 자원을 확인합니다. 실행 환경과 보안 연결 검사를 모두 통과한 자원만 예약할 수 있습니다. 예약 시간에 Jupyter 실행을 요청하고 RUNNING 상태가 확인되면 Jupyter 열기를 누르세요. 노트북은 CBGPU 계정과 분리된 접속 주소에서 열리며, 예약 종료나 권한 회수 후에는 접속할 수 없습니다. 새 실행 환경의 파일은 임시 저장소이므로 종료 전에 필요한 결과를 내려받으세요. 학교 서버를 보호하기 위해 노트북의 외부 네트워크 접속은 차단됩니다.",
         "links": [{"label": "학교 GPU 예약", "href": "https://cbgpu.com/compute"}]

@@ -17,7 +17,7 @@ ENV NEXT_TELEMETRY_DISABLED=1 CBGPU_WEB_STANDALONE=1
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1=$NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1 NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1=$NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1 CBGPU_RELEASE_SHA=$CBGPU_RELEASE_SHA
 RUN node scripts/prepare-container-browser.mts /opt/cbgpu-browser
-RUN test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" && npm run prebuild && node node_modules/next/dist/bin/next build --webpack
+RUN test -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" && npm run prebuild && node node_modules/next/dist/bin/next build --webpack && node scripts/prepare-container-server.mts
 
 FROM gcr.io/distroless/nodejs22-debian13:nonroot@sha256:39c66687298417dbf3ff2fb8b6012c20554494e16414ef7afd07b9abbb45b501 AS runtime
 WORKDIR /app
@@ -36,4 +36,4 @@ EXPOSE 3000
 STOPSIGNAL SIGTERM
 HEALTHCHECK --interval=30s --timeout=4s --start-period=20s --retries=3 CMD ["/nodejs/bin/node","-e","fetch('http://127.0.0.1:'+process.env.PORT+'/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
 ENTRYPOINT ["/nodejs/bin/node"]
-CMD ["server.js"]
+CMD ["scripts/serve.mts"]
