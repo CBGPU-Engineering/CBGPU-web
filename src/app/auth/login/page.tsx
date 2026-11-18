@@ -3,7 +3,7 @@ import {useState} from 'react';
 import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
 import {Input} from '@/components/ui/input';
-import Link from 'next/link';
+import {AuthFlowLink as Link} from '@/components/auth/AuthFlowLink';
 import {useAlert} from '@/lib/alert';
 import {safeWorkspacePath} from '@/lib/workspaces';
 import {Eye,EyeOff} from 'lucide-react';

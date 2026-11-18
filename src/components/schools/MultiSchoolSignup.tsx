@@ -1,7 +1,7 @@
 'use client';
 import {Dropdown} from '@/components/ui/dropdown';
 import {useEffect,useState} from 'react';
-import Link from 'next/link';
+import {AuthFlowLink as Link} from '@/components/auth/AuthFlowLink';
 import {useRouter} from 'next/navigation';
 import {supabase} from '@/lib/supabase';
 import {getURL} from '@/lib/utils';

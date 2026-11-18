@@ -49,3 +49,8 @@ test('contest credentials and JWT-only key management use the separate fixed exe
  await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests/tokens/'+id,{method:'DELETE',headers:{authorization:'Bearer caller-jwt'}}),['tokens',id],{key:async()=>key,fetch:fetcher});
  assert.deepEqual(calls,['http://127.0.0.1:13545/v1/contests/register','http://127.0.0.1:13545/v1/tokens','http://127.0.0.1:13545/v1/tokens/'+id]);
 });
+
+test('proxy never relabels upstream HTML or redirected login pages as JSON contest data',async()=>{
+ for(const status of[200,502]){const upstream=new Response('<!DOCTYPE html><title>internal gateway details</title>',{status,headers:{'Content-Type':'text/html'}});const response=await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests',{headers:{authorization:'Bearer synthetic'}}),[],{key:async()=>key,fetch:async()=>upstream});assert.equal(response.status,503);assert.equal((await response.json()).message,'Contest API is unavailable; retry later')}
+ const upstream=Response.json({private:'never forwarded'});Object.defineProperty(upstream,'redirected',{value:true});const response=await contestApiProxy(new Request('https://cbgpu.com/api/ai/v1/contests',{headers:{authorization:'Bearer synthetic'}}),[],{key:async()=>key,fetch:async()=>upstream});assert.equal(response.status,503);assert.equal(JSON.stringify(await response.json()).includes('private'),false);
+});
