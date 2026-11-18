@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     for(let page=0;;page++){
       if(page>=100||profileDeadline.aborted)throw Error('PROFILE_PAGE_LIMIT');
       const query=admin.from('profiles')
-        .select('id, school_id, student_id, full_name, is_admin, is_approved, is_laser_cut_manager')
+        .select('id, school_id, student_id, full_name, account_status, account_type, is_admin, is_approved, is_laser_cut_manager, is_wakeup_manager')
         .order('is_approved', { ascending: true, nullsFirst: true }).order('full_name', { ascending: true }).order('id',{ascending:true})
         .abortSignal(profileDeadline).range(page*1000,page*1000+999);
       const {data:batch,error:profileError}=await query;

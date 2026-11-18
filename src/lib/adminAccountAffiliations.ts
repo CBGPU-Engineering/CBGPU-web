@@ -1,6 +1,6 @@
 import {trustedInternalServiceUrl} from './internalServiceUrl';
 import {boundedSchoolBody} from './schoolsProxySecurity';
-export type AdminAccountAffiliation={school_id:string;school_name:string;status:string;membership_type:string;student_number:string|null;verified:boolean};
+export type AdminAccountAffiliation={membership_id?:string;school_id:string;school_name:string;status:string;membership_type:string;student_number:string|null;verified:boolean};
 /** Only called after the global administrator guard; retain the caller's real JWT. */
 export async function adminAccountAffiliations(authorization:string,options:{endpoint:string;networkMode?:string;fetcher?:typeof fetch;timeoutMs?:number}){
  const base=trustedInternalServiceUrl(options.endpoint,options.networkMode),controller=new AbortController();
@@ -29,7 +29,7 @@ export async function adminAccountAffiliations(authorization:string,options:{end
     if(page.items.length>10000||!Number.isSafeInteger(page.total)||page.total!==page.items.length)throw Error('SCHOOL_AFFILIATIONS_UNAVAILABLE');
     for(const member of page.items){if(typeof member.user_id!=='string'||member.school_id!==schoolId||!['ACTIVE','PENDING_VERIFICATION','REVERIFICATION_REQUIRED','SUSPENDED'].includes(member.status)||!['STUDENT','TEACHER','EXTERNAL'].includes(member.membership_type)||typeof member.verified!=='boolean'||!(member.student_number==null||typeof member.student_number==='string'))throw Error('SCHOOL_AFFILIATIONS_UNAVAILABLE');
      const list=result.get(member.user_id)??[];if(list.some(x=>x.school_id===schoolId))throw Error('SCHOOL_AFFILIATIONS_UNAVAILABLE');
-     list.push({school_id:schoolId,school_name:schoolName,status:member.status,membership_type:member.membership_type,student_number:member.student_number??null,verified:member.verified});result.set(member.user_id,list);
+     list.push({...((typeof member.id==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(member.id))?{membership_id:member.id}:{}),school_id:schoolId,school_name:schoolName,status:member.status,membership_type:member.membership_type,student_number:member.student_number??null,verified:member.verified});result.set(member.user_id,list);
     }
    }
   }));

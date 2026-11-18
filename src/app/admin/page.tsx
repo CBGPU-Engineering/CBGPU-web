@@ -1,7 +1,8 @@
 'use client';
 import {SchoolAffiliationReview} from '@/components/schools/SchoolAffiliation';
+import SchoolAccountApproval from '@/components/admin/SchoolAccountApproval';
 import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
-import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay}from'@/lib/adminAccountSchools';
+import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay,schoolAccountApprovalScope,schoolAccountApprovalState,accountSchools}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -44,6 +45,11 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const [gpuFilter, setGpuFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [schoolFilter,setSchoolFilter]=useState('all');
+  const schoolAccountsEnabled=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
+  const modernSchoolAccount=(account:any)=>schoolAccountsEnabled&&schoolAccountApprovalScope(account,schoolFilter).kind!=='legacy';
+  const accountState=(account:any)=>modernSchoolAccount(account)?schoolAccountApprovalState(account,schoolFilter):account.is_approved===true?'approved':account.is_approved===false?'restricted':'unreviewed';
+  const accountStatusBadge=(account:any)=>{const state=accountState(account),personal=modernSchoolAccount(account)&&!account.school_id&&Array.isArray(account.school_affiliations)&&account.school_affiliations.length===0;return <Badge variant={state==='approved'?'success':state==='restricted'?'danger':state==='multiple'?'default':'warning'}>{personal?'Personal account':state==='approved'?'Approved':state==='restricted'?'Restricted':state==='multiple'?'Select school':state==='unavailable'?'School unavailable':'Unreviewed'}</Badge>};
+
   const [rowActions, setRowActions] = useState<Record<string, boolean>>({});
   const activeRowActions = useRef(new Set<string>());
   async function runRowAction(key: string, action: () => Promise<void>) {
@@ -185,6 +191,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   };
 
   async function setProfileApproval(id: string, approved: boolean) {
+    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError('Use the selected school membership approval controls.');return;}
     return runRowAction('account:' + id, async () => {
     const { error } = await supabase.from('profiles').update({ is_approved: approved }).eq('id', id);
     if (error) showError("Operation failed: " + error.message);
@@ -384,7 +391,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   }
 
   const pendingCpuCount = cpuProjects.filter(p => p.status === 'pending').length;
-  const unreviewedCount = profiles.filter(p => p.is_approved === null || p.is_approved === false).length;
+  const unreviewedCount = profiles.filter(p => accountState(p)!=='approved').length;
   const pendingGpuCount = reservations.filter(r => r.status === 'pending' && new Date(r.end_time) > new Date()).length;
   const conflictsWithApproved = (target: any) => target.status === 'pending' && reservations.some(r =>
     r.id !== target.id && r.gpu_id === target.gpu_id && r.status === 'approved' &&
@@ -395,11 +402,11 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const filteredReservations = reservations.filter(r => (!needsReviewOnly || (r.status === 'pending' && new Date(r.end_time) > new Date())) && (gpuFilter === 'all' || String(r.gpu_id) === gpuFilter) && (statusFilter === 'all' || (statusFilter === 'ended' ? new Date(r.end_time) <= new Date() : r.status === statusFilter)) && matchesQuery(r.profiles?.full_name, r.profiles?.student_id, r.gpu_id, r.purpose));
   const filteredProjects = cpuProjects.filter(p => (!needsReviewOnly || p.status === 'pending') && (statusFilter === 'all' || p.status === statusFilter) && matchesQuery(p.name, p.user_email, p.profiles?.full_name, p.profiles?.student_id));
   const schoolOptions=accountSchoolOptions(profiles);
-  const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || p.is_approved !== true) && (statusFilter === 'all' || (statusFilter === 'unreviewed' ? p.is_approved == null : statusFilter === 'approved' ? p.is_approved === true : p.is_approved === false)) && (roleFilter === 'all' || (roleFilter === 'admin' ? p.is_admin === true : p.is_laser_cut_manager === true || p.is_wakeup_manager === true)) && matchesQuery(p.full_name, p.student_id, p.email,...accountSchoolSearch(p)));
+  const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || accountState(p)!=='approved') && (statusFilter==='all'||accountState(p)===statusFilter) && (roleFilter==='all'||(['student','teacher','external'].includes(roleFilter)?accountSchools(p).some(school=>(schoolFilter==='all'||school.school_id===schoolFilter)&&school.membership_type===roleFilter.toUpperCase()):roleFilter==='admin'?p.is_admin===true:p.is_laser_cut_manager===true||p.is_wakeup_manager===true)) && matchesQuery(p.full_name,accountStudentNumberDisplay(p,schoolFilter),p.email,...accountSchoolSearch(p)));
   const sortRows = (rows: any[]) => [...rows].sort((a, b) => {
     if (sortOrder === 'name') return String(a.profiles?.full_name || a.full_name || a.name || '').localeCompare(String(b.profiles?.full_name || b.full_name || b.name || ''));
     if (sortOrder === 'oldest' || sortOrder === 'newest') return (Date.parse(a.created_at || '') - Date.parse(b.created_at || '') || 0) * (sortOrder === 'newest' ? -1 : 1);
-    if (sortOrder === 'review') return Number(b.status === 'pending' || b.is_approved === false || b.is_approved === null) - Number(a.status === 'pending' || a.is_approved === false || a.is_approved === null);
+    if (sortOrder === 'review') return Number(tab==='accounts'?accountState(b)!=='approved':b.status==='pending')-Number(tab==='accounts'?accountState(a)!=='approved':a.status==='pending');
     return 0;
   });
   const resultTotal = tab === 'gpu' ? filteredReservations.length : tab === 'server' ? filteredProjects.length : filteredProfiles.length;
@@ -450,7 +457,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             <label className="text-xs font-semibold space-y-2"><span className="block">Status</span><Dropdown aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option>{tab === 'gpu' && <option value="ended">Ended</option>}</>}</Dropdown></label>
             {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label="Filter by GPU" value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All GPUs</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>GPU #{id}</option>)}</Dropdown></label>}
             {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">School</span><Dropdown aria-label="Filter accounts by school" value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">All schools</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">No school affiliation</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">School information unavailable</option>}</Dropdown></label>}
-            {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><Dropdown aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="admin">Administration</option><option value="manager">Laser and music managers</option></Dropdown></label>}
+            {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><Dropdown aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="external">External collaborators</option><option value="admin">Platform administrators</option><option value="manager">Laser and music managers</option></Dropdown></label>}
           <Button type="button" variant="outline" disabled={listLoading} onClick={refreshList} className="min-h-11 gap-2"><RefreshCw className={`size-4 ${listLoading ? 'animate-spin motion-reduce:animate-none' : ''}`} />{listLoading ? "Loading…" : "Refresh list"}</Button>
           </div>
           <div className="admin-list-options">
@@ -771,12 +778,10 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                     {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">Updating account…</p>}
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
-                        {p.is_approved === null && <Badge variant="warning" icon={<HelpCircle className="size-3" />}>Unreviewed</Badge>}
-                        {p.is_approved === true && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
+                        {accountStatusBadge(p)}
                       </div>
                       <div className="flex gap-2 flex-wrap justify-end">
-                        {p.is_approved !== true && (
+                        {modernSchoolAccount(p)?<SchoolAccountApproval account={p} schoolFilter={schoolFilter} onUpdated={fetchProfiles}/>:<>{p.is_approved !== true && (
                           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
                             Approve
@@ -788,6 +793,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                             Mark for review
                           </Button>
                         )}
+                        </>}
                         <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || "Selected account"} Delete`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
                           <Trash2 className="size-3" />
                         </Button>
@@ -829,13 +835,11 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p} showStudentNumber={false}/></TableCell>
                         <TableCell className="text-sm font-bold">{accountStudentNumberDisplay(p,schoolFilter)}</TableCell>
                         <TableCell className="py-5">
-                          {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
-                          {p.is_approved === null && <Badge variant="warning" icon={<HelpCircle className="size-3" />}>Unreviewed</Badge>}
-                          {p.is_approved === true && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
+                          {accountStatusBadge(p)}
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2 flex-wrap">
-                            {p.is_approved !== true && (
+                            {modernSchoolAccount(p)?<SchoolAccountApproval account={p} schoolFilter={schoolFilter} onUpdated={fetchProfiles}/>:<>{p.is_approved !== true && (
                               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
                                 Approve
@@ -847,7 +851,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                                 Mark for review
                               </Button>
                             )}
-                            <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || "Selected account"} Delete`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
+                            </>}
+                        <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || "Selected account"} Delete`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
                               <Trash2 className="size-3" />  Delete
                             </Button>
                           </div>
