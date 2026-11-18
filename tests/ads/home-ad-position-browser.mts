@@ -20,7 +20,7 @@ try {
    onAuthStateChange:(callback:(event:string,session:null)=>void)=>{(window as any).__fixtureAuthCallbacks=((window as any).__fixtureAuthCallbacks||0)+1;let active=true;queueMicrotask(()=>{if(active)callback('INITIAL_SESSION',null)});return{data:{subscription:{unsubscribe(){active=false}}}}},
   }};
  });
- await context.routeWebSocket('**/*',socket=>{socket.connectToServer('ws://127.0.0.1:'+port+'/_next/webpack-hmr')});
+ await context.routeWebSocket('**/*',socket=>socket.close());
  const page=await context.newPage(),errors:string[]=[];let sdkRequests=0,privateMocks=0,blockedExternal=0;
  page.on('requestfailed',request=>console.log('Failed request',request.url(),request.failure()?.errorText));
  page.on('pageerror',error=>{errors.push(error.message);console.log('Page error',error.message)});page.on('console',message=>{if(message.type()==='error')console.log('Console',message.text())});
