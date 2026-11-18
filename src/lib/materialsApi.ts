@@ -23,11 +23,21 @@ export async function materialsToken() {
 /** 서버가 아직 이 엔드포인트를 모르는 옛 버전이면 null — 호출하는 쪽에서 조용히 넘어간다. */
 export async function fetchMaterialsJson<T>(path: string): Promise<T | null> {
   const token = await materialsToken();
-  const response = await fetch(`${MATERIALS_API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-  if (response.status === 404 || response.status === 405) return null;
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(typeof body?.detail === 'string' ? body.detail : `파일 서버 오류 (${response.status})`);
-  }
-  return response.json() as Promise<T>;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch(`${MATERIALS_API_BASE}${path}`, { cache: 'no-store', signal: controller.signal, headers: { Authorization: `Bearer ${token}` } });
+    if (response.status === 404 || response.status === 405) return null;
+    const body: unknown = await response.json().catch(() => null);
+    if (!response.ok) {
+      const detail = body && typeof body === 'object' && 'detail' in body ? body.detail : null;
+      throw new Error(typeof detail === 'string' && detail.length <= 1000 ? detail : `파일 서버에 연결하지 못했어요 (${response.status}). 잠시 후 다시 확인해 주세요.`);
+    }
+    if (body === null || typeof body !== 'object' || Array.isArray(body)) throw new Error('파일 서버 응답을 확인하지 못했어요. 잠시 후 다시 확인해 주세요.');
+    return body as T;
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error('파일 서버 응답이 늦어지고 있어요. 잠시 후 다시 확인해 주세요.');
+    if (error instanceof TypeError) throw new Error('파일 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.');
+    throw error;
+  } finally { clearTimeout(timer); }
 }
