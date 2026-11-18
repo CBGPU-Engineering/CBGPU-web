@@ -822,7 +822,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           {p.email && <p className="mt-2 text-xs text-muted-foreground break-all">{p.email}</p>}
                           {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">Updating…</p>}
                         </TableCell>
-                        <TableCell className="min-w-56 max-w-sm py-5"><AccountSchoolDetails account={p}/></TableCell>
+                        <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p}/></TableCell>
                         <TableCell className="text-sm font-bold">{p.student_id || '-'}</TableCell>
                         <TableCell className="py-5">
                           {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
