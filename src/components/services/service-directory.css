@@ -24,3 +24,14 @@
 .cb-directory.cb-directory-home .cb-directory-grid .cb-directory-arrow{position:absolute;top:14px;right:12px}
 .cb-directory.cb-directory-home .cb-directory-copy small{font-size:13px;line-height:1.5;margin-top:2px}
 }
+/* Discovery feedback stays readable and reachable with a keyboard or thumb. */
+.cb-directory-search button{width:44px;min-height:44px;cursor:pointer;border-radius:var(--cb-control-radius,10px)}
+.cb-directory-search button:hover{background:var(--muted)}
+.cb-directory-filters button{min-height:44px;transition:background .16s,color .16s,border-color .16s}
+.cb-directory-filter-count{font-variant-numeric:tabular-nums;opacity:.8;font-size:14px;min-width:1ch}
+.cb-directory-result{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-block:12px 20px;overflow-wrap:anywhere}
+.cb-directory-result:empty{display:none}
+.cb-directory-result button{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--cb-control-radius,10px);background:var(--card);color:var(--foreground);text-align:left;font-size:14px}
+.cb-directory .cb-directory-tile:active{background:var(--muted)}
+@media(max-width:900px){.cb-directory.cb-directory-home .cb-directory-copy small{font-size:14px;line-height:1.5}}
+@media(prefers-reduced-motion:reduce){.cb-directory-filters button{transition:none}}
