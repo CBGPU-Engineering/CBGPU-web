@@ -4,7 +4,7 @@ import {supabase} from '@/lib/supabase';
 import {useRouter} from 'next/navigation';
 import {Input} from '@/components/ui/input';
 import {Button} from '@/components/ui/button';
-import Link from 'next/link';
+import {AuthFlowLink as Link} from '@/components/auth/AuthFlowLink';
 import {useAlert} from '@/lib/alert';
 import {getURL} from '@/lib/utils';
 import {isValidStudentId,STUDENT_ID_HINT} from '@/lib/studentId';
