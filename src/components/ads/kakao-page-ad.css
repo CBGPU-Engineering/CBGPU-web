@@ -2,4 +2,4 @@
 .cb-kakao-page-ad[data-ad-unavailable=true]{visibility:hidden!important;pointer-events:none}
 @container(min-width:728px){.cb-kakao-ad-slot{min-height:90px}}
 /* A supplied 320px unit may use the page gutters on narrow phones, at its original size. */
-@media(min-width:320px) and (max-width:359px){.cb-kakao-page-ad{width:min(320px,100vw);margin-inline:calc((100% - min(320px,100vw))/2)}}
+@media(min-width:320px) and (max-width:767px){.cb-kakao-page-ad{width:min(max(100%,320px),100vw);margin-inline:calc((100% - min(max(100%,320px),100vw))/2)}}

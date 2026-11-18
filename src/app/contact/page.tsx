@@ -1,4 +1,5 @@
 'use client';
+import KakaoPageAd from '@/components/ads/KakaoPageAd';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ export default function ContactPage() {
         </p>
       </div>
 
+      <KakaoPageAd placement="platform" contentReady/>
       <form onSubmit={handleSubmit} className="tilt-3d space-y-5 ring-1 ring-foreground/5 rounded-2xl p-6 md:p-8 bg-card shadow-lg">
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">

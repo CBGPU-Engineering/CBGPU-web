@@ -1,3 +1,4 @@
+import KakaoPageAd from '@/components/ads/KakaoPageAd';
 export const metadata = {
   title: '개인정보처리방침',
   description: 'CBGPU 서비스의 개인정보 수집, 이용 및 보호에 관한 안내입니다.',
@@ -18,6 +19,8 @@ export default function PrivacyPage() {
         CBGPU(이하 &ldquo;서비스&rdquo;)는 학교생활, 연구와 프로젝트를 연결하는 플랫폼입니다.
         서비스 이용을 위해 아래와 같이 개인정보를 수집·이용하며, 관련 법령을 준수합니다.
       </p>
+
+      <KakaoPageAd placement="platform" contentReady/>
 
       <Section title="1. 수집하는 정보">
         <ul className="list-disc pl-5 space-y-1.5">
