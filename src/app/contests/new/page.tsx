@@ -114,7 +114,7 @@ export default function NewContestPage() {
         if (accessError) throw accessError;
       }
       showSuccess('대회를 만들었어요. 참가 링크를 공유해 보세요.');
-      router.push(`/contests/${data.id}`);
+      router.push(`/contests/${data.id}/manage`);
     } catch (error) { if(bannerPath)await cleanupContestImages([bannerPath]);await cleanupContestLogo(logoPath); showError(contestError(error)); }
     finally { setBusy(false); }
   }
