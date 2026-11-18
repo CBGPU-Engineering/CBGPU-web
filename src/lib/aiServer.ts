@@ -20,7 +20,7 @@ export async function aiJson(path:string,owner:string,method='GET',body?:unknown
  let response:Response;try{response=await aiInternal(path,owner,method,body)}catch{throw new AiFailure('로컬 AI 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.',503)}
  const result=await response.json();if(!response.ok)throw new AiFailure(result.message||'AI 요청을 처리하지 못했어요.',response.status);return result;
 }
-export async function aiIdentity(request:Request,keysAllowed=true){
+export async function aiIdentity(request:Request,keysAllowed=true,resourceRequired=true){
  const origin=request.headers.get('origin');if(!['GET','HEAD'].includes(request.method)&&origin&&!origins.has(origin))throw new AiFailure('허용되지 않은 요청 주소입니다.',403);
  const token=request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];if(!token)throw new AiFailure('CBGPU 계정으로 로그인해 주세요.',401);
  let owner:string,isKey=false;
@@ -42,7 +42,7 @@ export async function aiIdentity(request:Request,keysAllowed=true){
  }else{
   const user=await publicationUser(request);if(!user||!await activeDeploymentSession(request,user.id))throw new AiFailure('다시 로그인하고 계정 승인 상태를 확인해 주세요.',401);owner=user.id;
  }
- if(scoped)try{
+ if(scoped&&resourceRequired)try{
   const userClient=isKey?null:aiUserClient(token);
   await requireAiSchoolAccess({isKey,schoolHeader:request.headers.get('x-cbgpu-school-id')},async()=>{
    const {data,error}=await userClient!.rpc('cbgpu_school_resource_contexts');if(error)throw Error('AI_SCHOOL_CONTEXT_UNAVAILABLE');return data;
