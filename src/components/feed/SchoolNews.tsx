@@ -8,6 +8,7 @@ import HeadlineTrend from './HeadlineTrend';
 import {useSchoolScope} from '@/components/schools/SchoolScope';
 import {supabase} from '@/lib/supabase';
 import {multiSchoolEnabled} from '@/lib/schoolsClient';
+import {readSchoolNewsResponse,schoolNewsHttps,SchoolNewsWireError} from '@/lib/schoolNewsWire';
 
 const TABS = [
   { id: 'notice',   label: '공지사항' },
@@ -28,36 +29,35 @@ function fmtDate(d: string) {
 export default function SchoolNews(){
  const scope=useSchoolScope();
  if(multiSchoolEnabled&&scope.status!=='ready')return <p role="status">학교 소속을 확인한 뒤 학교 소식을 볼 수 있어요.</p>;
- return <SchoolNewsContents key={multiSchoolEnabled?scope.school?.id:'legacy'} schoolId={multiSchoolEnabled?scope.school?.id:undefined}/>;
+ return <SchoolNewsContents key={multiSchoolEnabled?scope.school?.id:'legacy'} schoolId={multiSchoolEnabled?scope.school?.id:undefined} schoolName={multiSchoolEnabled?scope.school?.display_name:'충북과학고등학교'} homepage={multiSchoolEnabled?scope.school?.homepage_url:'https://school.cbe.go.kr/cbs-h'}/>;
 }
-function SchoolNewsContents({schoolId}:{schoolId?:string}) {
+function SchoolNewsContents({schoolId,schoolName,homepage}:{schoolId?:string;schoolName?:string;homepage?:string|null}) {
   const [tab, setTab] = useState<TabId>('notice');
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const sequence=useRef(0);
   const [month,setMonth]=useState(()=>new Date(Date.now()+9*3600000).toISOString().slice(0,7));
-  const [sourceUrl,setSourceUrl]=useState(schoolId?'':'https://school.cbe.go.kr/cbs-h/M010401');
+  const [sourceUrl,setSourceUrl]=useState(schoolNewsHttps(homepage)??'');
   const [error, setError] = useState('');
   const [updated, setUpdated] = useState<Date | null>(null);
 
   const load = useCallback(async (t: TabId) => {
-    const request=++sequence.current;setLoading(true); setError('');setItems([]);setUpdated(null);setSourceUrl(schoolId?'':t==='schedule'?`https://school.cbe.go.kr/cbs-h/M010407/list?y=${month.slice(0,4)}&m=${Number(month.slice(5))}`:t==='letter'?'https://school.cbe.go.kr/cbs-h/M010403':'https://school.cbe.go.kr/cbs-h/M010401');
+    const request=++sequence.current;setLoading(true); setError('');setItems([]);setUpdated(null);setSourceUrl(schoolId?(schoolNewsHttps(homepage)??''):t==='schedule'?`https://school.cbe.go.kr/cbs-h/M010407/list?y=${month.slice(0,4)}&m=${Number(month.slice(5))}`:t==='letter'?'https://school.cbe.go.kr/cbs-h/M010403':'https://school.cbe.go.kr/cbs-h/M010401');
     try {
       const session=schoolId?(await supabase.auth.getSession()).data.session:null;
       if(schoolId&&!session)throw Error('로그인 후 학교 소속을 확인해주세요.');
-      const res = await fetch(`/api/school-news?type=${t}&month=${month}`+(schoolId?'&school_id='+encodeURIComponent(schoolId):''),{cache:'no-store',headers:session?{Authorization:'Bearer '+session.access_token}:{}});
-      const data = await res.json();
+      const res = await fetch(`/api/school-news?type=${t}&month=${month}`+(schoolId?'&school_id='+encodeURIComponent(schoolId):''),{cache:'no-store',redirect:'error',signal:AbortSignal.timeout(20000),headers:{Accept:'application/json',...(session?{Authorization:'Bearer '+session.access_token}:{})}});
+      const data = await readSchoolNewsResponse(res,schoolId??'cbsh',month);
       if(request!==sequence.current)return;
-      if (!res.ok||data.error) throw new Error(data.error||'조회 실패');
       setItems(Array.isArray(data.items)?data.items:[]);
       if(typeof data.sourceUrl==='string'&&data.sourceUrl.startsWith('https://'))setSourceUrl(data.sourceUrl);
       setUpdated(new Date());
     } catch (e) {
-      if(request===sequence.current)setError(e instanceof Error?e.message:'학교 소식을 불러오지 못했어요. 다시 시도해주세요.');
+      if(request===sequence.current)setError(e instanceof SchoolNewsWireError?e.message:'학교 소식을 불러오지 못했어요. 로그인 상태와 네트워크를 확인한 뒤 다시 시도하거나 학교 홈페이지에서 원문을 확인해주세요.');
     } finally {
       if(request===sequence.current)setLoading(false);
     }
-  }, [month,schoolId]);
+  }, [month,schoolId,homepage]);
 
   useEffect(() => { void load(tab);return()=>{sequence.current++}; }, [tab, load]);
 
@@ -112,8 +112,8 @@ function SchoolNewsContents({schoolId}:{schoolId?:string}) {
       {items.length > 0 && (
         <p className="text-center text-xs text-muted-foreground pt-1">
           출처:{' '}
-          <a href="https://school.cbe.go.kr/cbs-h" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">
-            충북과학고등학교 홈페이지
+          <a href={schoolNewsHttps(homepage)??sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">
+            {schoolName??'학교'} 홈페이지
           </a>
         </p>
       )}
