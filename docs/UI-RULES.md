@@ -66,11 +66,19 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 
 ## 5. Home and navigation order
 
-- The student home shows the everyday features first (자습 신청, 시간표, 급식, 기상송, 자료 공유).
-  The AI entry is a compact row below them, **never a big card on top**. The category filter
-  chips belong to the full feature list (`/services`), not the home.
-- Search stays above the feature list; do not move it when adding a block.
+- The student home shows the everyday features first: 자습 신청, 시간표, 급식, 기상송, 자료 공유 as a
+  **compact two-column grid on phones** (never one wide card per row). The owner uses these most;
+  the first screen must show as many of them as possible.
+- Anything that is not an everyday feature goes **below** them: the AI question box and its
+  suggested questions, community entries, advertising, "docs / research" links. **Advertising never
+  sits above the features** and never pushes them below the fold.
+- The plain feature search stays where it was (right above the features). The AI question box is
+  not the search field.
+- No category filter chips on the home (they belong to `/services`).
 - Space order in the switcher: 학교생활, 연구·개발, 관리, 제작, 기상송.
+- Usage data (accounts, sign-ins, requests, DB row counts) says the heavily used features are 기상송,
+  자습, GPU, 3D print/laser and server projects. Rarely used ones (polls, preprints, file share,
+  community) must not take first-screen space from them.
 
 ## 6. Notifications and deep links
 
@@ -96,3 +104,4 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 | No `window.confirm/prompt/alert` | `tests/ui-conventions.test.mts` |
 | Feature flags must not decide whether the app admin frame is used | `tests/ui-conventions.test.mts` |
 | App admin labels are short Korean | `tests/ui-conventions.test.mts` |
+| Home: everyday features before the AI box and ads; two-column grid on phones | `tests/ui-conventions.test.mts` |

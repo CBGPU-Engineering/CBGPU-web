@@ -17,3 +17,10 @@
 .cb-directory-heading>div{min-width:0;flex:1}.cb-directory-filters button{max-width:100%;min-width:0;white-space:normal;word-break:keep-all;text-align:left;line-height:1.5}
 @media(max-width:900px){.cb-directory-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}}
 @media(max-width:480px){.cb-directory-heading{flex-wrap:wrap;align-items:flex-start}.cb-directory-heading>div{flex-basis:180px}.cb-directory .cb-directory-grid .cb-directory-tile{flex-direction:row;align-items:center;min-height:88px;padding-right:38px}.cb-directory-copy{max-width:100%}.cb-directory .cb-directory-grid .cb-directory-arrow{top:calc(50% - 7px)}}
+/* App/phone home: the everyday features stay a compact two-column grid so the first screen shows as many as possible. */
+@media(max-width:900px){
+.cb-directory.cb-directory-home .cb-directory-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cb-directory.cb-directory-home .cb-directory-grid .cb-directory-tile{position:relative;flex-direction:column;align-items:flex-start;gap:10px;min-height:0;padding:14px 13px}
+.cb-directory.cb-directory-home .cb-directory-grid .cb-directory-arrow{position:absolute;top:14px;right:12px}
+.cb-directory.cb-directory-home .cb-directory-copy small{font-size:13px;line-height:1.5;margin-top:2px}
+}
