@@ -152,3 +152,13 @@ contest registration/submission and storage RLS, physical GPU kernel execution/S
 Android device behavior, and live payment/ad reporting. Do not mint a production user session
 or weaken permissions to run these tests. Existing kernel containers and real user projects
 must remain untouched during launch verification.
+
+Authentication regressions are covered by `tests/auth-flow-href.test.mts` and the synthetic
+browser review: login → signup → login, recovery email redirect (intercepted locally), reset
+retry, and catalog school selection through the authentication gate retain a sanitized
+internal destination. No operation is automatically replayed after login. Four phone/desktop
+and light/dark combinations also verified reduced-motion rendering without hydration errors.
+Screenshots use synthetic data in [docs/ux/launch-20261118](./ux/launch-20261118).
+
+The production-only npm dependency audit (`npm audit --omit=dev`) reported zero known
+vulnerabilities at review time. This is a point-in-time advisory check, not a proof of security.
