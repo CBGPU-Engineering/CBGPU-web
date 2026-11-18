@@ -13,6 +13,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidStudentId, STUDENT_ID_HINT } from '@/lib/studentId';
 import {multiSchoolEnabled} from '@/lib/schoolsClient';
+import ProfileSchoolIdentity from '@/components/schools/ProfileSchoolIdentity';
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -319,7 +320,7 @@ export default function Profile() {
         onSubmit={(e) => { e.preventDefault(); updateProfile(); }}
         className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl shadow-sm space-y-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className={multiSchoolEnabled?"grid grid-cols-1 gap-8":"grid grid-cols-1 md:grid-cols-2 gap-8"}>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
               <UserCircle2 className="size-3" /> 이름 (Name)
@@ -333,7 +334,7 @@ export default function Profile() {
               placeholder="Your Name"
             />
           </div>
-          <div className="space-y-2">
+          {!multiSchoolEnabled&&<div className="space-y-2">
             <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
               <Hash className="size-3" /> 학번 (Student ID)
             </label>
@@ -350,7 +351,7 @@ export default function Profile() {
             />
             <p className="text-xs text-muted-foreground font-medium ml-1">{scopedIdentity?'학번은 학교별 소속 정보에서 확인하고 인증해요. 교사와 외부 계정은 학번 없이 프로필을 저장할 수 있어요.':STUDENT_ID_HINT}</p>
             {scopedIdentity&&<Button asChild variant="link" size="sm"><a href="/schools">학교 소속 확인하기</a></Button>}
-          </div>
+          </div>}
         </div>
 
         <Button
@@ -359,9 +360,10 @@ export default function Profile() {
           className="w-full h-12 rounded-lg font-semibold text-sm shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-2"
         >
           {isUpdating ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
-          {isUpdating ? "Saving Changes..." : "Save Profile"}
+          {isUpdating ? "저장 중…" : multiSchoolEnabled ? "이름 저장" : "프로필 저장"}
         </Button>
       </form>
+      {multiSchoolEnabled&&<ProfileSchoolIdentity/>}
 
       <section className="bg-card ring-1 ring-foreground/5 p-5 rounded-2xl space-y-3">
         <h2 className="text-lg font-semibold">내 제작 신청 내역</h2>
