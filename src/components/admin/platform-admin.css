@@ -35,3 +35,5 @@
  .admin-developer-shell.cb-platform-admin-shell main { padding:24px 16px 48px; }
  .admin-developer-shell.cb-platform-admin-shell .sidebar-bottom { display:none; }
 }
+/* The school picker, like the first menu, keeps a clear gap below the brand block. */
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-sidebar-brand+.cb-platform-school-trigger{margin-top:20px}
