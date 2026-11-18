@@ -13,3 +13,7 @@
 .cb-directory-copy strong{font-size:15px}
 .cb-directory-copy small{font-size:14px}
 @media(max-width:480px){.cb-directory-copy strong{font-size:15px}.cb-directory-copy small{font-size:14px}}
+/* Size cards from usable text width, not a fixed phone/tablet column count. */
+.cb-directory-heading>div{min-width:0;flex:1}.cb-directory-filters button{max-width:100%;min-width:0;white-space:normal;word-break:keep-all;text-align:left;line-height:1.5}
+@media(max-width:900px){.cb-directory-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}}
+@media(max-width:480px){.cb-directory-heading{flex-wrap:wrap;align-items:flex-start}.cb-directory-heading>div{flex-basis:180px}.cb-directory .cb-directory-grid .cb-directory-tile{flex-direction:row;align-items:center;min-height:88px;padding-right:38px}.cb-directory-copy{max-width:100%}.cb-directory .cb-directory-grid .cb-directory-arrow{top:calc(50% - 7px)}}

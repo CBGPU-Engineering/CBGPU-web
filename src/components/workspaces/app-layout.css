@@ -30,3 +30,5 @@ html[data-cbgpu-native-navigation="true"] .cb-app .cb-bottom-nav{display:none}
   padding-inline: max(var(--cb-page-gutter,16px), env(safe-area-inset-left,0px)) max(var(--cb-page-gutter,16px), env(safe-area-inset-right,0px));
 }
 .cb-app .cb-workspace-content > .cb-school-page { padding:0; }
+/* Three app controls must not share the absolutely centred mode button's hit area. */
+@media(max-width:359px){.cb-app .cb-app-header{display:grid;grid-template-columns:42px minmax(0,1fr) auto;column-gap:8px}.cb-app .cb-app-mode-trigger{position:static;left:auto;transform:none;justify-self:center;max-width:100%;min-width:0;padding-inline:4px;gap:4px}}
