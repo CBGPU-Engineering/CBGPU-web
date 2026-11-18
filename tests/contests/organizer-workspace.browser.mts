@@ -15,7 +15,7 @@ async function fixture(context:BrowserContext,viewer:'owner'|'participant'){
  const id=viewer==='owner'?owner:participant;
  const profile={id,full_name:viewer==='owner'?'가상 주최자':'가상 참가자',student_id:'',is_admin:false,is_approved:true};
  const session={user:{id,user_metadata:{}},access_token:'synthetic-no-real-authentication',refresh_token:'synthetic-no-refresh'};
- (window as any).__contestFixtureMutations=[];
+ (window as any).__contestFixtureMutations=[];Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async(value:string)=>{(window as any).__contestClipboard=value}}});
  const rejectWrite=(name:string)=>{(window as any).__contestFixtureMutations.push(name);return{data:null,error:{message:'Synthetic writes are blocked'}}};
  const read=(table:string)=>{
  const where:Record<string,unknown>={};let single=false,write:string|null=null;
@@ -28,6 +28,7 @@ async function fixture(context:BrowserContext,viewer:'owner'|'participant'){
  let rows:any[]=[];
  if(table==='profiles')rows=[profile];
  if(table==='contests')rows=contests.filter(c=>!where.id||c.id===where.id);
+ if(table==='contest_teams'&&where.contest_id===contests[0].id)rows=[{id:'20000000-0000-4000-8000-000000000001',contest_id:contests[0].id,name:'가상 참가 팀',captain_id:owner,kind:'formed',join_code:'TESTJOIN01',formation_status:'ready'}];
  return{data:single?rows[0]||null:rows,error:null};
  };
  query.single=query.maybeSingle=()=>{single=true;return Promise.resolve(result())};
@@ -75,6 +76,8 @@ try{for(const frame of ['desktop','app']as const)for(const theme of ['light','da
  const nav=page.getByRole('navigation',{name:'대회 관리 항목'});
  for(const label of ['운영 현황','참가자','팀','제출물','심사·투표','세부 일정','공지','소개·배너','신청·장소','운영진','보관·복제']){
  const button=nav.getByRole('button',{name:label,exact:true});await button.click();assert.equal(await button.getAttribute('aria-pressed'),'true');
+ if(label==='팀'){await page.getByRole('button',{name:'팀 초대 링크 복사',exact:true}).click();const invitation=new URL(await page.evaluate(()=>(window as any).__contestClipboard));assert.equal(invitation.origin,origin);assert.equal(invitation.pathname,'/contests/'+teamId);assert.equal(invitation.search,'?team=TESTJOIN01');assert.equal(invitation.hash,'');}
+
  assert.equal(await page.locator('.contest-management-section-heading h2').textContent(),label);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'management overflow '+label);
  assert.equal(await page.locator('#answer-idea').count(),0,'participant submission mounted in management '+label);
@@ -116,7 +119,7 @@ try{for(const frame of ['desktop','app']as const)for(const theme of ['light','da
  assert.ok(await participantPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  assert.deepEqual(await participantPage.evaluate(()=>(window as any).__contestFixtureMutations),[]);
  await participantPage.screenshot({path:output+'/ended-'+frame+'-'+theme+'.png',fullPage:true});
- results.push({frame,theme,ownerManagementSeparate:true,ownerPreviewReadOnly:true,participantFormsPreserved:true,unauthorizedManageBlocked:true,staleOpenEndedContestClosed:true,realMutations:0});
+ results.push({frame,theme,teamInvitationTargetsParticipant:true,ownerManagementSeparate:true,ownerPreviewReadOnly:true,participantFormsPreserved:true,unauthorizedManageBlocked:true,staleOpenEndedContestClosed:true,realMutations:0});
  assert.deepEqual(participantErrors,[]);assert.equal(participantApiWrites(),0);await participantContext.close();
  }
  await writeFile(output+'/PASSED.json',JSON.stringify({realApiRequests:0,syntheticIdentitiesOnly:true,results},null,2));console.log(JSON.stringify(results));
