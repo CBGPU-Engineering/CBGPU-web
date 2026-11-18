@@ -116,3 +116,39 @@ ignored local environment file, never in this launcher or Git. The launcher supp
 resolver. Workspace and publication links resolve to local origins during
 development. Production links remain canonical when the setting is absent or
 NODE_ENV is production. The gateway maps server HTTP redirects as well.
+
+## Launch verification — 2026-11-18
+
+This review extends the school-service fixes in `a274c675`; it does not change production
+account types, content visibility, school policies or GPU sharing.
+
+| Journey / failure | Regression protection |
+| --- | --- |
+| Contest duplication omitted closing dates and school audience | `tests/contests/duplicate-policy.test.mts`: both endpoints shift together; school and participation scope survive copying |
+| Contest upstream returned HTML with a JSON label | Contest proxy wire tests reject HTML and redirects; no upstream error document is relayed as JSON |
+| AI polling stalled beyond its advertised deadline | `tests/ai-client-request.test.mts`: body deadline, cancelled request, denial status and job identity/state |
+| Meal or timetable response stalled or was invalid | `tests/school-life-read.test.mts`: one read-only request, bounded JSON, header/body deadline, cancellation, safe errors |
+| Timetable school context changed | Existing request-generation guard retained; successful multi-school responses must also match the selected school |
+
+Read-only production verification opened eleven public/authentication routes at 390px and
+1280px: home, schools, docs, public contests/schools, login, signup, recovery, download,
+privacy and contact. All 22 combinations returned without page exceptions, fatal application
+screens or horizontal page overflow. The browser blocked writes and third-party requests;
+this **does not** verify live ad fill or revenue. Repeat with:
+
+```bash
+node tests/launch/public.browser.mts
+```
+
+`node scripts/demo-smoke.mts` against an isolated local demo additionally exercised synthetic
+login, school connection, study apply/reload/cancel, automatic-study settings, small-screen
+seat dialogs, stale timetable feedback and concurrent authentication tabs. It did not send
+requests to EduSet or modify real reservations. Keep the clean demo checkout free of real
+`.env` files, as enforced by `scripts/demo.mts`.
+
+Remaining operational checks require designated test users or infrastructure and are not
+claimed by the anonymous smoke: real school-provider credentials, email delivery, production
+contest registration/submission and storage RLS, physical GPU kernel execution/SSH, native
+Android device behavior, and live payment/ad reporting. Do not mint a production user session
+or weaken permissions to run these tests. Existing kernel containers and real user projects
+must remain untouched during launch verification.
