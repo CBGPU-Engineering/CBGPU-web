@@ -6,7 +6,7 @@ require.extensions['.ts']=(m: NodeModule & {_compile(source: string,file: string
 const {validateAutomation,nextAutomaticStudyDate}=require('../src/lib/studyAutomation.ts');
 const {handleStudentStudy,StudyFailure}=require('../src/lib/edusetStudent.ts');
 function createDemoServer(){
- const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map(),aiJobs=new Map(),aiKeys=new Map(),aiUploads=new Map(),aiChats=new Map(),robotPlans=new Map(),remoteDevices=new Map();let records=[],sequence=1;
+ const data=fixtures.tables(),sessions=new Map(),connections=new Map(),automation=new Map(),aiJobs=new Map(),aiKeys=new Map(),aiUploads=new Map(),aiChats=new Map(),robotPlans=new Map(),remoteDevices=new Map();let records=[],sequence=1;const seatHolds=new Map();
  function userFor(req){return sessions.get((req.headers['x-cbgpu-auth']||req.headers.authorization||'').replace(/^Bearer /,''))||null}
  const student={id:'demo-school-student',name:'Demo Student',grade:2,classNo:3,number:1};
  const rooms=[{id:1,name:'Demo study room',hasSeats:true,width:2,height:1}],teachers=[{id:'demo-teacher',name:'Demo Teacher'}];
@@ -20,7 +20,10 @@ function createDemoServer(){
   if(p==='/rooms')return rooms;if(p==='/teachers')return teachers;
   if(p==='/rooms/1/composition')return composition;
   if(p==='/selfstudy/search')return records;
-  if(p==='/selfstudy'&&method==='POST'){const row={id:sequence++,type:'selfstudy',student,date:body.date,period:body.period,status:'PENDING',room:rooms[0],seat:{id:body.seatId,name:String(body.seatId)},teacher:teachers[0],reason:body.reason};records.push(row);return row}
+  if(p.startsWith('/rooms/1/seats/occupations?date='))return [...seatHolds.values()];
+  const hold=p.match(/^\/rooms\/1\/seats\/([12])\/occupy$/);
+  if(hold&&method==='POST'){seatHolds.set(body.period,{seatId:Number(hold[1]),studentId:student.id,period:body.period,type:'occupied'});return {ok:true}}
+  if(p==='/selfstudy'&&method==='POST'){if(seatHolds.get(body.period)?.seatId!==body.seatId)throw new StudyFailure('Synthetic seat is not reserved.',400);const row={id:sequence++,type:'selfstudy',student,date:body.date,period:body.period,status:'PENDING',room:rooms[0],seat:{id:body.seatId,name:String(body.seatId)},teacher:teachers[0],reason:body.reason};records.push(row);return row}
   if(method==='DELETE'&&p.startsWith('/selfstudy/')){records=records.filter(r=>String(r.id)!==p.split('/').pop());return null}
   throw new StudyFailure('This school operation is not implemented in the demo.',501);
  };

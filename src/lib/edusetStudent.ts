@@ -118,6 +118,26 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
    if(fresh.some(e=>e.period===body.period))throw new StudyFailure('이미 신청한 교시입니다.',409,'already_registered');
    await lease.mark('submitting');
   }
+  // EduSet's normal student flow holds the seat before creating self-study.
+  // Keep this behind the durable claim and use only this student's credential.
+  if(room.hasSeats){
+   const occupationPath='/rooms/'+room.id+'/seats/occupations?date='+window.date;
+   const owns=(row:any)=>String(row.seatId)===String(seatId)&&Number(row.period)===body.period&&String(row.studentId)===String(identity.id)&&row.type==='occupied';
+   const occupations=await deps.send(occupationPath,token);
+   if(!Array.isArray(occupations))throw new StudyFailure('좌석 예약 상태를 확인하지 못했어요. 새로고침 후 다시 확인해 주세요.',502);
+   const matching=occupations.filter(row=>String(row.seatId)===String(seatId)&&Number(row.period)===body.period);
+   if(matching.some(row=>!owns(row)))throw new StudyFailure('다른 학생이 선택한 자리예요. 좌석 현황을 새로고침해 주세요.',409);
+   if(!matching.some(owns)){
+    // A lost reply can still have reserved the seat. Never release/retry that write blindly.
+    submitted=true;
+    await deps.send('/rooms/'+room.id+'/seats/'+seatId+'/occupy',token,'POST',{period:body.period,date:window.date+'T00:00:00.000Z'});
+    const confirmed=await deps.send(occupationPath,token);
+    const matchingConfirmed=Array.isArray(confirmed)?confirmed.filter(row=>String(row.seatId)===String(seatId)&&Number(row.period)===body.period):[];
+    if(!matchingConfirmed.length||!matchingConfirmed.every(owns))throw new StudyFailure('좌석 예약 결과를 확인하지 못했어요. 다시 신청하기 전에 내 신청과 좌석 현황을 확인해 주세요.',502,'submission_uncertain');
+   }
+   const currentWindow=studyWindow(policy,deps.now?.()||new Date());
+   if(!currentWindow.open||currentWindow.date!==window.date)throw new StudyFailure('신청 날짜 또는 시간이 바뀌었어요. 새로고침 후 다시 확인해 주세요.',409);
+  }
   submitted=true;
   await deps.send('/selfstudy',token,'POST',{studentId:identity.id,date:window.date+'T00:00:00.000Z',roomId:room.id,teacherId:teacher.id,period:body.period,reason:body.reason.trim(),...(seatId===undefined?{}:{seatId})});
   const after=await ownEntries(deps.send,token,identity.id,window.date);

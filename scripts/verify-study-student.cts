@@ -6,7 +6,7 @@ const token=id=>'fixture.'+Buffer.from(JSON.stringify({userId:id})).toString('ba
 const schoolToken=token('student-user'),policy={timelimit:{assign:Array.from({length:7},()=>({start:{h:0,m:0},end:{h:24,m:0}})),exception:{}},timetable:{assign:Array(7).fill('day'),presets:{day:[{},{}]},exception:{}}};
 const at=new Date('2026-11-03T07:00:00Z');
 function fixture(){
- let records=[],next=10;const calls=[];let clock=at,admin=false,authorized=true,delay=null,uncertain=false;
+ let records=[],next=10;const holds=new Map();const calls=[];let clock=at,admin=false,authorized=true,delay=null,uncertain=false;
  const rooms=[{id:31,name:'좌석실',hasSeats:true,width:2,height:1},{id:32,name:'정원실',hasSeats:false,width:1,height:1}];
  const teachers=[{id:'teacher-one',name:'담당교사'}];
  const send=async(path,t,method='GET',body)=>{
@@ -20,7 +20,10 @@ function fixture(){
   if(path==='/teachers')return teachers;
   if(path==='/rooms/31/composition')return {seats:[{id:41,name:'1'}]};
   if(path==='/selfstudy/search')return structuredClone(records);
+  if(path.startsWith('/rooms/31/seats/occupations?'))return [...holds.values()];
+  if(path==='/rooms/31/seats/41/occupy'&&method==='POST'){holds.set(body.period,{seatId:41,period:body.period,studentId:'student-user',type:'occupied'});return {ok:true}}
   if(path==='/selfstudy'&&method==='POST'){
+   if(body.roomId===31&&!holds.has(body.period))throw new StudyFailure('Seat #41 is not reserved.',400);
    if(delay)await delay;
    const row={id:next++,date:body.date,type:'selfstudy',student:{id:'student-user'},period:body.period,status:'PENDING',room:rooms.find(r=>r.id===body.roomId),teacher:teachers[0],seat:body.seatId?{id:body.seatId,name:'1'}:null,reason:body.reason};records.push(row);
    if(uncertain)throw Error('connection lost after commit');return row;
