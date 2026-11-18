@@ -1,5 +1,5 @@
-export type AccountSchool={school_id:string;school_name:string;status:string;membership_type:string;student_number:string|null;verified:boolean};
-export type SchoolAccount={school_id?:string|null;primary_school_name?:string|null;school_affiliations?:AccountSchool[]};
+export type AccountSchool={membership_id?:string;school_id:string;school_name:string;status:string;membership_type:string;student_number:string|null;verified:boolean};
+export type SchoolAccount={account_status?:string;is_approved?:boolean|null;school_id?:string|null;primary_school_name?:string|null;school_affiliations?:AccountSchool[]};
 export function accountSchools(account:SchoolAccount):AccountSchool[]{
  const schools=new Map<string,AccountSchool>();
  for(const entry of account.school_affiliations??[])if(entry.school_id&&entry.school_name)schools.set(entry.school_id,entry);
@@ -21,4 +21,20 @@ export function accountStudentNumberDisplay(account:SchoolAccount&{student_id?:s
  // Explicit empty memberships or an unresolved school never borrow that legacy number.
  if(schoolFilter==='all'&&!account.school_id&&!account.primary_school_name&&!Object.hasOwn(account,'school_affiliations'))return account.student_id?.trim()||'—';
  return '—';
+}
+
+export type SchoolAccountApprovalScope={kind:'legacy'|'select-school'|'unavailable'|'school';school?:AccountSchool};
+export function schoolAccountApprovalScope(account:SchoolAccount,schoolFilter='all'):SchoolAccountApprovalScope{
+ if(!Array.isArray(account.school_affiliations)&&schoolFilter!=='all'&&schoolFilter!=='cbsh')return{kind:'unavailable'};
+ if(!Array.isArray(account.school_affiliations))return !account.school_id||account.school_id==='cbsh'?{kind:'legacy'}:{kind:'unavailable'};
+ const schools=account.school_affiliations.filter(school=>!!school.school_id&&school.status!=='PRIMARY');
+ if(schoolFilter==='all'&&schools.length>1)return{kind:'select-school'};
+ const school=schoolFilter==='all'?schools[0]:schools.find(school=>school.school_id===schoolFilter);
+ if(!school)return{kind:'unavailable'};
+ return school.school_id==='cbsh'?{kind:'legacy',school}:{kind:'school',school};
+}
+export function schoolAccountApprovalState(account:SchoolAccount,schoolFilter='all'):'approved'|'unreviewed'|'restricted'|'multiple'|'unavailable'{
+ if(account.account_status==='SUSPENDED')return'restricted';const scope=schoolAccountApprovalScope(account,schoolFilter);if(scope.kind==='legacy')return account.is_approved===true?'approved':account.is_approved===false?'restricted':'unreviewed';
+ if(scope.kind==='select-school')return'multiple';if(scope.kind==='unavailable'||!scope.school)return'unavailable';
+ return scope.school.status==='SUSPENDED'?'restricted':scope.school.status==='ACTIVE'&&scope.school.verified?'approved':'unreviewed';
 }
