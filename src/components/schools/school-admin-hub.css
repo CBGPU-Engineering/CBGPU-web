@@ -7,3 +7,6 @@
  .cb-admin-school-overview-facts strong { flex:none; max-width:100%; }
  .cb-admin-school-overview-facts span { text-align:left; margin-top:0; }
 }
+
+/* The shell resets paragraph margins; the count line must still breathe above the school cards. */
+.admin-developer-shell .cb-school-admin-hub .cb-admin-school-count{margin:18px 0 16px;font-size:14px}
