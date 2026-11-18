@@ -646,6 +646,7 @@ export const guides:Guide[] = [
     "category": "research",
     "features": [
       "/dashboard",
+      "/compute",
       "/schedule"
     ],
     "sections": [
@@ -693,7 +694,7 @@ export const guides:Guide[] = [
       {
         "title": "새 학교 GPU 예약과 Jupyter",
         "body": "학교 GPU 화면에서 선택한 학교의 자원을 확인합니다. 실행 환경과 보안 연결 검사를 모두 통과한 자원만 예약할 수 있습니다. 예약 시간에 Jupyter 실행을 요청하고 RUNNING 상태가 확인되면 Jupyter 열기를 누르세요. 노트북은 CBGPU 계정과 분리된 접속 주소에서 열리며, 예약 종료나 권한 회수 후에는 접속할 수 없습니다. 새 실행 환경의 파일은 임시 저장소이므로 종료 전에 필요한 결과를 내려받으세요. 학교 서버를 보호하기 위해 노트북의 외부 네트워크 접속은 차단됩니다.",
-        "links": [{"label": "학교 GPU 예약", "href": "/compute"}]
+        "links": [{"label": "학교 GPU 예약", "href": "https://cbgpu.com/compute"}]
       },
       {
         "title": "작업 마치기",
