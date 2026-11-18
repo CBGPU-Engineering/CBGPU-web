@@ -16,6 +16,8 @@ npm test
 npm run build:demo
 ```
 
+UI changes must follow [docs/UI-RULES.md](docs/UI-RULES.md); read it first and say in the PR which existing screens a change touches.
+
 Write project documentation and PR summaries in English. Existing Korean product
 UI is intentional. Do not commit credentials or runtime data. Tests must not send
 real emails, submit school applications, run equipment or touch production data.

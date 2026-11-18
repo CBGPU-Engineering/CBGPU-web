@@ -12,6 +12,13 @@ mobile web interface, public documentation, preprints and web-facing API routes.
 The Flutter shell is in [CBGPU-app](https://github.com/CBGPU-Engineering/CBGPU-app); database and infrastructure
 services are in [CBGPU-backend](https://github.com/CBGPU-Engineering/CBGPU-backend).
 
+## UI rules (read before touching any screen)
+
+Humans and development agents must read [docs/UI-RULES.md](docs/UI-RULES.md) before changing a
+screen, component, style or navigation, and open the screens they changed before calling the work
+done. The rules cover the app chrome, shared components, language, sizes and the checks that fail CI
+(`tests/ui-conventions.test.mts`).
+
 ## Screenshots
 
 ![Student workspace](docs/screenshots/home.png)

@@ -1,3 +1,10 @@
+## Before any UI work: read `docs/UI-RULES.md`
+
+Every screen, component, style or navigation change (web, the app WebView, admin portal) must follow
+[docs/UI-RULES.md](docs/UI-RULES.md): one app chrome, the shared dropdown/dialog components instead of
+browser defaults, short Korean labels in the app, readable sizes, and opening the screens you changed
+before reporting done. `npm test` enforces the mechanical rules (`tests/ui-conventions.test.mts`).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know
