@@ -32,6 +32,7 @@ jobs:
           node scripts/demo.mts --built > /tmp/demo.log 2>&1 &
           demo_pid=$!
           trap 'kill "$demo_pid" || true; cat /tmp/demo.log' EXIT
+          node tests/schools/ai-effort-focus-browser.mts
           node scripts/demo-smoke.mts
           node scripts/study-session-smoke.mts
           node scripts/app-update-smoke.mts
