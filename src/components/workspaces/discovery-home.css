@@ -64,3 +64,19 @@
  .cb-home-entry-actions { gap:10px; margin-top:16px; }
  .cb-home-entry-actions > a { padding-inline:12px; }
 }
+/* Preserve choices until Save; Cancel must never change saved shortcuts. */
+.cb-favorites-editor .cb-favorites-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+.cb-favorites-actions>button{min-height:44px;padding:10px 16px;border:1px solid var(--border);border-radius:var(--cb-control-radius,10px);font-size:14px;font-weight:600}
+.cb-favorites-actions>button:last-child{background:var(--primary);color:var(--primary-foreground);border-color:var(--primary)}
+.cb-home-pins .cb-section-heading>button,.cb-favorites-editor>div>button{min-height:44px}
+.cb-home-pins .cb-section-heading>button{padding:10px 14px;font-size:14px}
+.cb-favorites-feedback:empty{display:none}
+/* Home AI is a real interaction, not small-print decoration. */
+.cb-home-ask form>button,.cb-home-ask form>a{min-width:44px;min-height:44px;align-items:center;justify-content:center}
+.cb-home-ask-examples button{font-size:14px;min-height:44px;padding:8px 10px}
+.cb-home-ask-progress,.cb-home-ask-error,.cb-home-answer-time,.cb-home-answer-body,.cb-home-answer-sources a,.cb-home-answer footer,.cb-home-answer footer a{font-size:14px}
+.cb-home-answer header button{min-width:44px;min-height:44px;display:grid;place-items:center;border-radius:var(--cb-control-radius,10px)}
+.cb-home-answer-sources a,.cb-home-answer footer a{min-height:44px;align-items:center}
+.cb-home-answer footer{gap:8px;line-height:1.7}
+/* The workspace accent marks selection; readable text keeps its semantic foreground. */
+.cb-discovery-home .cb-favorites-editor button[aria-pressed=true],.cb-discovery-home .cb-favorites-feedback{color:var(--foreground)}

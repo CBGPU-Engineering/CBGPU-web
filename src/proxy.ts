@@ -18,7 +18,9 @@ export function proxy(request: NextRequest) {
     if(!['localhost','127.0.0.1'].includes(request.headers.get('host')?.split(':')[0]||''))return new NextResponse('Local demo only',{status:403});
     if(process.env.CBGPU_DEMO_PUBLIC_ROUTES==='1'&&(path==='/api/public'||path.startsWith('/api/public/')||path==='/api/public-assets'||path.startsWith('/api/public-assets/')))return NextResponse.next();
     if(path==='/api'||path.startsWith('/api/')||path.startsWith('/backend/'))return NextResponse.rewrite(new URL(request.nextUrl.pathname+request.nextUrl.search,'http://127.0.0.1:'+Number(process.env.CBGPU_DEMO_API_PORT||54329)));
-    const h=new Headers(request.headers);h.set('x-cbgpu-public-host','app.cbgpu.com');h.set('x-cbgpu-app','1');h.set('x-cbgpu-path',path);h.set('x-cbgpu-mode',request.nextUrl.searchParams.get('mode')==='researcher'?'researcher':'student');
+    // Loopback-only visual checks can exercise the real desktop frame as well as the app.
+    const mode=request.nextUrl.searchParams.get('mode')==='researcher'?'researcher':'student',desktop=request.nextUrl.searchParams.get('demo-frame')==='web';
+    const h=new Headers(request.headers);h.set('x-cbgpu-public-host',desktop?mode+'.cbgpu.com':'app.cbgpu.com');h.set('x-cbgpu-app',desktop?'0':'1');h.set('x-cbgpu-path',path);h.set('x-cbgpu-mode',mode);
     const response=path==='/'?NextResponse.rewrite(new URL('/workspace'+request.nextUrl.search,request.url),{request:{headers:h}}):NextResponse.next({request:{headers:h}});
     response.headers.set('Content-Security-Policy',`default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:${Number(process.env.CBGPU_DEMO_PORT||3100)} ws://127.0.0.1:${Number(process.env.CBGPU_DEMO_PORT||3100)}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'`);
     response.headers.set('X-Robots-Tag','noindex, nofollow');return response;
