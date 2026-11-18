@@ -162,3 +162,10 @@ Screenshots use synthetic data in [docs/ux/launch-20261118](./ux/launch-20261118
 
 The production-only npm dependency audit (`npm audit --omit=dev`) reported zero known
 vulnerabilities at review time. This is a point-in-time advisory check, not a proof of security.
+
+Cold-page verification caught an additional return-link race before passive React effects.
+The opt-in regression `CBGPU_BROWSER_QA=1 node --test tests/auth-flow-link.browser.test.mts`
+activates the real link component before its passive effect, checking ordinary/keyboard
+activation and preserving native modifier, target and download behavior. Browser CI runs it.
+Desktop screenshots were retaken using the actual desktop frame, with visible app navigation
+explicitly excluded; viewport width alone is not treated as a frame-selection test.

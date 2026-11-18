@@ -23,6 +23,8 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run build:demo
       - run: npx playwright install --with-deps chromium
+      - name: Cold authentication link regression
+        run: CBGPU_BROWSER_QA=1 node --test tests/auth-flow-link.browser.test.mts
       - name: Browser demo
         id: browser_demo
         run: |
