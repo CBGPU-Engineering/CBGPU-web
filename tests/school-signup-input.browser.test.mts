@@ -1,0 +1,18 @@
+import test from'node:test';import assert from'node:assert/strict';import{build}from'esbuild';import{createServer}from'node:http';import{chromium}from'playwright';
+test('actual signup component switches from Chungbuk four digits to generic80-character input at all viewport sizes',{skip:process.env.CBGPU_SIGNUP_INPUT_BROWSER!=='1'},async()=>{
+ const stubs:Record<string,string>={
+  'next/navigation':"export const useRouter=()=>({replace(){},push(){}});",
+  '@/lib/supabase':"export const supabase={auth:{signUp(){throw Error('No signup may be submitted in this fixture')}}};",
+  '@/components/auth/AuthFlowLink':"import React from'react';export const AuthFlowLink=({children,...p})=>React.createElement('a',p,children);",
+  '@/components/auth/AuthFrame':"import React from'react';export const AuthFrame=({children})=>React.createElement('main',{},children);export const AuthSubmit=({children})=>React.createElement('button',{type:'submit'},children);",
+  '@/components/ui/product-motion':"export const InlineFeedback=()=>null;export const SuccessFeedback=()=>null;",
+  '@/lib/alert':"export const useAlert=()=>({showSuccess(){}});",
+  '@/lib/schoolsClient':"export const schoolsRequest=async()=>({items:[{id:'school-b',official_name:'School B',display_name:'School B',status:'APPROVED',allowed_membership_types:['STUDENT'],features:[]}]});",
+  './SchoolSelector':"import React from'react';export const SchoolSelector=({schools,onChange})=>schools.some(s=>s.id==='school-b')?React.createElement('button',{type:'button',onClick:()=>onChange({id:'school-b'})},'Choose school B'):null;",
+ };
+ const compiled=await build({stdin:{contents:"import React from'react';import{createRoot}from'react-dom/client';import Signup from'./src/components/schools/MultiSchoolSignup';createRoot(document.getElementById('root')).render(React.createElement(Signup));",resolveDir:process.cwd(),loader:'tsx'},bundle:true,platform:'browser',write:false,define:{'process.env.NODE_ENV':'"production"','process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1':'"1"'},plugins:[{name:'synthetic-signup-boundaries',setup(b){b.onResolve({filter:/.*/},a=>stubs[a.path]?{path:a.path,namespace:'fixture'}:undefined);b.onLoad({filter:/.*/,namespace:'fixture'},a=>({contents:stubs[a.path],loader:'tsx',resolveDir:process.cwd()}));b.onLoad({filter:/\.css$/},()=>({contents:'',loader:'js'}))}}]});
+ const script=compiled.outputFiles.find(f=>!f.path.endsWith('.css'))!.text;
+ const server=createServer((request,response)=>{response.setHeader('Content-Type',request.url==='/app.js'?'text/javascript':'text/html');response.end(request.url==='/app.js'?script:'<div id="root"></div><script src="/app.js"></script>')});await new Promise<void>(resolve=>server.listen(0,'127.0.0.1',resolve));const address=server.address();assert(address&&typeof address!=='string');const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ try{for(const width of[1280,390,320]){const page=await browser.newPage({viewport:{width,height:900}}),errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('http://127.0.0.1:'+address.port+'/?next=%2Fschools');const field=page.locator('#school-signup-student');await field.waitFor();assert.equal(await field.getAttribute('maxlength'),'4');await page.getByRole('button',{name:'Choose school B'}).click();assert.equal(await field.getAttribute('maxlength'),'80');assert.equal(await field.getAttribute('inputmode'),'text');await field.fill('X'.repeat(81));assert.equal((await field.inputValue()).length,80);assert.deepEqual(errors,[]);await page.close()}}
+ finally{await browser.close();await new Promise<void>(resolve=>server.close(()=>resolve()))}
+});
