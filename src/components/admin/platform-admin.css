@@ -1,0 +1,37 @@
+/* The platform operator chooses a school; school tools and global tools remain distinct. */
+.admin-developer-shell.cb-platform-admin-shell .sidebar { padding:24px 16px; gap:0; overflow-y:auto; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-sidebar-brand { display:flex; align-items:center; justify-content:space-between; gap:12px; min-width:0; }
+.admin-developer-shell.cb-platform-admin-shell .brand { min-width:0; }
+.cb-admin-menu-toggle { display:none; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-navigation-panel { min-height:0; flex:1; margin-block:20px; overflow-y:auto; overscroll-behavior:contain; }
+.admin-developer-shell.cb-platform-admin-shell .navigation { margin:8px 0 0; gap:4px; overflow:visible; }
+.admin-developer-shell.cb-platform-admin-shell .nav-item { border:0; border-radius:8px; padding:10px 12px; gap:10px; min-height:44px; min-width:0; }
+.admin-developer-shell.cb-platform-admin-shell .nav-item > span:last-child { min-width:0; overflow-wrap:anywhere; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-nav-icon { display:flex; flex:none; }
+.admin-developer-shell.cb-platform-admin-shell .nav-caption { margin:16px 10px 8px; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-nav-group { margin-top:16px; border-top:1px solid var(--dev-border); padding-top:12px; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-nav-group > summary { display:flex; gap:8px; align-items:center; cursor:pointer; min-height:44px; font-size:12px; font-weight:600; color:var(--dev-muted); list-style:none; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-nav-group > summary::-webkit-details-marker { display:none; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-nav-group > summary > span { flex:1; min-width:0; }
+.admin-developer-shell.cb-platform-admin-shell .cb-admin-scope-note { font-size:11px; line-height:1.7; color:var(--dev-muted); margin:8px 10px 12px; }
+.admin-developer-shell.cb-platform-admin-shell .sidebar-bottom { flex:none; }
+.admin-developer-shell.cb-platform-admin-shell main > .cb-school-page { width:100%; max-width:none; padding:0; margin:0; }
+.admin-developer-shell.cb-platform-admin-shell .cb-school-admin-tabs { display:none; }
+.admin-developer-shell.cb-platform-admin-shell .workspace-header { gap:12px; }
+.admin-developer-shell.cb-platform-admin-shell .header-actions { gap:8px; }
+.admin-developer-shell.cb-platform-admin-shell .workspace-header > .breadcrumbs { flex-basis:200px; }
+@media(max-width:720px) {
+ .admin-developer-shell.cb-platform-admin-shell .portal { display:block; }
+ .admin-developer-shell.cb-platform-admin-shell .sidebar { position:relative; top:auto; height:auto; padding:16px; border-right:0; border-bottom:1px solid var(--dev-border); overflow:visible; }
+ .admin-developer-shell.cb-platform-admin-shell .cb-admin-sidebar-brand { width:100%; }
+ .admin-developer-shell.cb-platform-admin-shell .cb-admin-menu-toggle { display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:none; border:1px solid var(--dev-border); color:var(--dev-ink); background:var(--dev-surface); border-radius:8px; }
+ .admin-developer-shell.cb-platform-admin-shell .cb-admin-navigation-panel { display:none; margin:16px 0 0; max-height:55dvh; overflow-y:auto; overscroll-behavior:contain; }
+ .admin-developer-shell.cb-platform-admin-shell .sidebar[data-menu-open=true] .cb-admin-navigation-panel { display:block; }
+ .admin-developer-shell.cb-platform-admin-shell .navigation { display:flex; flex-direction:column; flex-wrap:nowrap; width:100%; overflow:visible; padding:0; }
+ .admin-developer-shell.cb-platform-admin-shell .nav-item { width:100%; white-space:normal; flex:none; }
+ .admin-developer-shell.cb-platform-admin-shell .workspace-header { padding:16px; min-height:0; }
+ .admin-developer-shell.cb-platform-admin-shell .workspace-header .account-button > span { display:none; }
+ .admin-developer-shell.cb-platform-admin-shell .workspace-header .header-actions { margin-left:auto; }
+ .admin-developer-shell.cb-platform-admin-shell main { padding:24px 16px 48px; }
+ .admin-developer-shell.cb-platform-admin-shell .sidebar-bottom { display:none; }
+}
