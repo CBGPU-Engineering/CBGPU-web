@@ -1,5 +1,6 @@
 'use client';
 import {supabase} from '@/lib/supabase';
+import {schoolAccountResponse} from './schoolAccountResponse';
 import type {SchoolDraftData} from './schoolOnboarding';
 export const multiSchoolEnabled=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
 export type SchoolSummary={id:string;official_name:string;display_name:string;type:string;region:string;brand_color:string;logo_path:string|null;status:'LISTED'|'UNCLAIMED'|'APPROVED'|'SUSPENDED';allowed_membership_types?:('STUDENT'|'TEACHER'|'EXTERNAL')[];join_policy?:string;student_id_policy?:string;teacher_policy?:string;features:string[];ads_enabled?:boolean;life_capabilities?:{timetable:boolean;meal:boolean;news:boolean};homepage_url?:string|null;gpu?:{status:string;nodes:number;sharing_enabled:boolean}};
@@ -9,8 +10,8 @@ export class SchoolsApiError extends Error{constructor(message:string,readonly c
 export async function schoolsRequest<T>(path:string,method='GET',body?:unknown,publicRead=false,expectedOwner?:string):Promise<T>{
  if(!multiSchoolEnabled)throw new SchoolsApiError('학교 기능을 준비하고 있어요.');
  const session=publicRead?null:(await supabase.auth.getSession()).data.session;if(expectedOwner&&session?.user.id!==expectedOwner)throw new SchoolsApiError('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');if(!publicRead&&!session)throw new SchoolsApiError('로그인 후 이용해주세요.');
- const response=await fetch('/api/schools/'+path,{method,headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.access_token}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
- const data=await response.json();if(expectedOwner&&(await supabase.auth.getSession()).data.session?.user.id!==expectedOwner)throw new SchoolsApiError('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');if(!response.ok)throw new SchoolsApiError(typeof data.error==='string'?data.error:'요청을 처리하지 못했어요.',data.code,data.existing_school_id,data.fields,response.status);return data as T;
+ const {response,data}=await schoolAccountResponse('/api/schools/'+path,{method,headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.access_token}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store'});
+ if(expectedOwner&&(await supabase.auth.getSession()).data.session?.user.id!==expectedOwner)throw new SchoolsApiError('계정이 바뀌었어요. 현재 계정에서 다시 시도해주세요.');if(!response.ok)throw new SchoolsApiError(typeof data.error==='string'?data.error:'요청을 처리하지 못했어요.',data.code,data.existing_school_id,data.fields,response.status);return data as T;
 }
 
 /** Account-owned server preference; never write a device/localStorage default school. */

@@ -1,3 +1,4 @@
+import {aiResourceRequired} from '@/lib/aiRouteAccess';
 import {NextRequest,NextResponse} from 'next/server';
 import {AiFailure,aiIdentity,aiInternal,aiJson,waitAi,aiUserClient} from '@/lib/aiServer';
 import {conversationStream} from '@/lib/aiConversationStream';
@@ -27,7 +28,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    if(path[3]==='enroll'&&!robotPairing.allow(request.headers.get('cf-connecting-ip')||'unknown'))throw new AiFailure('Pairing requests are too frequent',429);
    return NextResponse.json(await aiJson(path.slice(1).join('/'),'','POST',{...value,device_token:agentToken}));
   }
-  const keyManagement=path[0]==='keys',robotManagement=path[0]==='v1'&&path[1]==='robotics'&&path[2]==='devices';const identity=await aiIdentity(request,!keyManagement&&!robotManagement);const {owner,token,isKey}=identity;
+  const keyManagement=path[0]==='keys',robotManagement=path[0]==='v1'&&path[1]==='robotics'&&path[2]==='devices';const identity=await aiIdentity(request,!keyManagement&&!robotManagement,aiResourceRequired(path,request.method));const {owner,token,isKey}=identity;
   if(isKey&&path[0]!=='v1')throw new AiFailure('AI API 키는 /v1의 추론·Robotics API에서 사용할 수 있어요. 작업 관리에는 계정 로그인이 필요해요.',403);
   if(path.some(p=>!/^[-a-z0-9]+$/.test(p))||path.length>5)throw new AiFailure('Not found',404);
   let body:Record<string,unknown>={};if(request.method==='POST'&&!['uploads'].includes(path[0])&&path.join('/')!=='v1/audio/transcriptions'){const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('JSON 객체를 보내 주세요.');body=value as Record<string,unknown>}

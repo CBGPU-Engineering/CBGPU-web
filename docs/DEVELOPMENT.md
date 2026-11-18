@@ -169,3 +169,18 @@ activates the real link component before its passive effect, checking ordinary/k
 activation and preserving native modifier, target and download behavior. Browser CI runs it.
 Desktop screenshots were retaken using the actual desktop frame, with visible app navigation
 explicitly excluded; viewport width alone is not treated as a frame-selection test.
+
+AI authorization in multi-school mode checks the live account/session independently of
+school compute permission. Creating inference work checks the selected resource context and
+`cbgpu_can_use_resource('ai', target_school)` on every request; an existing GPU reservation
+is not required. A denied or expired compute grant does not prevent authenticated owners
+from reading/deleting their history, revoking keys, cancelling work, or stopping their local
+robot. Upstream ownership checks still apply to those operations. Suspended accounts,
+revoked API keys and logged-out sessions remain denied.
+
+For AI API keys, `x-cbgpu-school-id` selects the target school and never grants access. Send
+this header for a school other than CBsh; omitting it preserves the existing `cbsh` default.
+The service checks the registered key owner against the current school resource policy. A
+browser JWT instead uses its stored, authoritative current-school context and cannot override
+it with this header. This change does not enable GPU sharing or other-school compute; those
+remain subject to the existing rollout policy.
