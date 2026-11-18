@@ -70,8 +70,11 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
   **compact two-column grid on phones** (never one wide card per row). The owner uses these most;
   the first screen must show as many of them as possible.
 - Anything that is not an everyday feature goes **below** them: the AI question box and its
-  suggested questions, community entries, advertising, "docs / research" links. **Advertising never
-  sits above the features** and never pushes them below the fold.
+  suggested questions, community entries, and "docs / research" links.
+- **Owner correction (2026-11-18):** restore the existing single home advertisement immediately
+  after the greeting/hero, before the feature directory, on web and app. This explicitly supersedes
+  the earlier instruction to put home advertising below the features. Keep the supplied sizes,
+  visible advertisement label and existing privacy/eligibility guards; do not add duplicate units.
 - The plain feature search stays where it was (right above the features). The AI question box is
   not the search field.
 - No category filter chips on the home (they belong to `/services`).
