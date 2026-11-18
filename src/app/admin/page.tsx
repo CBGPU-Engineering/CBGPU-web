@@ -1,6 +1,7 @@
 'use client';
+import {SchoolAffiliationReview} from '@/components/schools/SchoolAffiliation';
 import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
-import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch}from'@/lib/adminAccountSchools';
+import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -424,15 +425,16 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
         </div>
 
-        <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-3" aria-label="Review queues">
+        <div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Review queues">
           {([
             ['gpu', "Upcoming GPU requests", pendingGpuCount, gpuLoading],
             ['server', "Pending deployments", pendingCpuCount, cpuLoading],
-            ['accounts', "Accounts requiring review", unreviewedCount, profilesLoading],
-          ] as const).map(([target, label, count, loading]) => (
-            <button key={target} type="button" onClick={() => selectTab(target, true)} className="rounded-2xl border bg-card p-3 sm:p-5 text-left transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary" aria-pressed={tab === target && needsReviewOnly}>
+            ['accounts', "Account access reviews", unreviewedCount, profilesLoading],
+            ['accounts', "Student ID & affiliation requests", null, false],
+          ] as const).filter(([, ,count])=>count!==null||process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1').map(([target, label, count, loading]) => (
+            <button key={label} type="button" onClick={() => selectTab(target, count!==null)} className="rounded-2xl border bg-card p-3 sm:p-5 text-left transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary" aria-pressed={tab===target&&(count===null?!needsReviewOnly:needsReviewOnly)}>
               <span className="block text-sm text-muted-foreground">{label}</span>
-              <span className="mt-2 block text-2xl font-semibold tabular-nums">{loading ? "Checking…" : loadErrors[target] ? "Needs review" : `${count} items`}</span>
+              <span className="mt-2 block text-2xl font-semibold tabular-nums">{count===null?"Open requests":loading ? "Checking…" : loadErrors[target] ? "Needs review" : `${count} items`}</span>
               <span className="mt-2 block text-xs text-muted-foreground">Review list →</span>
             </button>
           ))}
@@ -440,7 +442,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
 
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
-          <h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Account access"}</h2>
+          <h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Accounts & school membership"}</h2>
           <div className="flex flex-wrap items-end gap-3">
             <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
             <Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>
@@ -463,6 +465,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{listError}</p><p className="mt-2 text-muted-foreground">Previously loaded records remain below. Refresh to try again.</p></div>}
           {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">Saving changes and refreshing the list…</p>}
         </div>}
+
+        {tab==='accounts'&&process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&<div id="admin-school-affiliation-requests" className="surface mb-6 p-4 sm:p-6"><SchoolAffiliationReview platform pendingOnly schoolFilter={schoolFilter==='all'?null:schoolFilter} schoolNames={Object.fromEntries(schoolOptions.map(school=>[school.id,school.name]))} onReviewed={()=>void fetchProfiles()}/></div>}
 
         {/* ── GPU 예약 탭 ── */}
         {tab === 'gpu' && (
@@ -760,10 +764,10 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         {p.is_admin && <Badge variant="warning">Admin</Badge>}
                         {p.is_laser_cut_manager && <Badge variant="default">Laser manager</Badge>}
                       </div>
-                      <span className="text-sm font-bold shrink-0">{p.student_id || '-'}</span>
+                      <span className="text-sm font-bold shrink-0">{accountStudentNumberDisplay(p,schoolFilter)}</span>
                     </div>
                     {p.email && <p className="text-xs text-muted-foreground break-all">{p.email}</p>}
-                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p}/></div>
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p} showStudentNumber={false}/></div>
                     {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">Updating account…</p>}
                     <div className="flex items-center justify-between gap-2">
                       <div>
@@ -822,8 +826,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           {p.email && <p className="mt-2 text-xs text-muted-foreground break-all">{p.email}</p>}
                           {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">Updating…</p>}
                         </TableCell>
-                        <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p}/></TableCell>
-                        <TableCell className="text-sm font-bold">{p.student_id || '-'}</TableCell>
+                        <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p} showStudentNumber={false}/></TableCell>
+                        <TableCell className="text-sm font-bold">{accountStudentNumberDisplay(p,schoolFilter)}</TableCell>
                         <TableCell className="py-5">
                           {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
                           {p.is_approved === null && <Badge variant="warning" icon={<HelpCircle className="size-3" />}>Unreviewed</Badge>}
