@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {parseSchoolRSS} from '@/lib/schoolNewsFeed';
+import {isGyo6CalendarSource,parseGyo6SchoolCalendar} from '@/lib/schoolCalendarGyo6';
 import {parseCbeSchoolCalendar} from '@/lib/schoolCalendar';
 import {schoolNewsSource} from '@/lib/schoolNewsSource';
 import {publicSchoolText} from '@/lib/publicSchoolFetch';
@@ -12,31 +14,6 @@ const FEEDS = {
   letter: 'https://school.cbe.go.kr/rss/cbs-h/M010403',
   schedule: 'https://school.cbe.go.kr/rss/cbs-h/M010407',
 } as const;
-
-function extract(tag: string, xml: string): string {
-  return (
-    xml.match(new RegExp(`<${tag}><\\!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>`))?.[1] ||
-    xml.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`))?.[1] ||
-    ''
-  ).trim();
-}
-
-function parseRSS(xml: string, source: string) {
-  if(!/<(?:rss|rdf:RDF)\b/i.test(xml)||!/<channel\b/i.test(xml))throw Error('UNSUPPORTED_SCHOOL_FEED');
-  const items: { title: string; link: string; pubDate: string; author: string }[] = [];
-  const re = /<item>([\s\S]*?)<\/item>/g;
-  let m;
-  while ((m = re.exec(xml)) !== null) {
-    const b = m[1];
-    const title = extract('title', b);
-    const link = extract('link', b) || extract('guid', b);
-    const pubDate = extract('pubDate', b);
-    const author = extract('author', b);
-    let safeLink:string;try{const target=new URL(link,source);if(target.protocol!=='https:'||target.origin!==new URL(source).origin)continue;safeLink=target.href}catch{continue}
-    if (title) items.push({ title, link:safeLink, pubDate, author });
-  }
-  return items;
-}
 
 export async function GET(req: NextRequest) {
   const type = (req.nextUrl.searchParams.get('type') || 'notice') as keyof typeof FEEDS;
@@ -65,7 +42,7 @@ export async function GET(req: NextRequest) {
   try {
     const xml=await publicSchoolText(url,allowedHosts);
     const calendarHtml=type==='schedule'&&xml.includes('tch-sch-lst');
-    return reply({items:calendarHtml?parseCbeSchoolCalendar(xml,url):parseRSS(xml,url),sourceUrl:url,school:{id:school,name:schoolName},month});
+    return reply({items:type==='schedule'&&isGyo6CalendarSource(url)?parseGyo6SchoolCalendar(xml,url):calendarHtml?parseCbeSchoolCalendar(xml,url):parseSchoolRSS(xml,url),sourceUrl:url,school:{id:school,name:schoolName},month});
   } catch {
     return NextResponse.json({ items: [], error:type==='schedule'?'학사일정을 불러오지 못했어요. 잠시 후 다시 시도하거나 학교 홈페이지를 확인해주세요.':'학교 소식을 불러오지 못했어요. 잠시 후 다시 시도해주세요.' }, { status: 502,headers:{'Cache-Control':'no-store'} });
   }

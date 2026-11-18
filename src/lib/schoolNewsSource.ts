@@ -8,5 +8,6 @@ export function schoolNewsSource(schoolId:string,value:unknown,kind:SchoolNewsKi
  if(kind==='schedule'&&url.hostname==='school.cbe.go.kr'&&/\/M\d+\/(?:list)?$/.test(url.pathname)){
   url.searchParams.set('y',month.slice(0,4));url.searchParams.set('m',String(Number(month.slice(5))));
  }
+ if(kind==='schedule'&&url.hostname==='school.gyo6.net'&&/^\/[a-zA-Z0-9_-]+\/schl\/sv\/schdulView\/schdulCalendarView\.do$/.test(url.pathname))url.searchParams.set('selectYearMonth',month.replace('-',''));
  return {url:url.href,allowedHosts:dto.allowed_hosts as string[],name:typeof dto.school_name==='string'?dto.school_name:'학교'};
 }
