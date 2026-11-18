@@ -12,17 +12,17 @@ test('auth return survives a click before passive effects without hijacking nati
  import React,{useLayoutEffect}from'react';
  import{createRoot}from'react-dom/client';
  import{AuthFlowLink}from'${root}src/components/auth/AuthFlowLink.tsx';
- window.pushes=[];window.callers=0;
+ window.pushes=[];window.callers=0;window.auxCallers=0;window.contextCallers=0;
  function App(){useLayoutEffect(()=>{
  const anchor=document.querySelector('a');
  if(window.fixture.kind==='plain'||window.fixture.kind==='keyboard')anchor.click();
- else anchor.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,...window.fixture.event}));
+ else anchor.dispatchEvent(new MouseEvent(window.fixture.kind==='context'?'contextmenu':window.fixture.event?.button===1?'auxclick':'click',{bubbles:true,cancelable:true,...window.fixture.event}));
  },[]);
- return <AuthFlowLink href="/auth/signup" target={window.fixture.target} download={window.fixture.download} onClick={event=>{window.callers++;if(window.fixture.prevent)event.preventDefault()}}>Join</AuthFlowLink>}
+ return <AuthFlowLink href="/auth/signup" target={window.fixture.target} download={window.fixture.download} onClick={event=>{window.callers++;if(window.fixture.prevent)event.preventDefault()}} onAuxClick={event=>{window.auxCallers++;if(window.fixture.prevent)event.preventDefault()}} onContextMenu={event=>{window.contextCallers++;if(window.fixture.prevent)event.preventDefault()}}>Join</AuthFlowLink>}
  createRoot(document.getElementById('root')).render(<App/>);
  `,resolveDir:root,loader:'tsx'},bundle:true,write:false,platform:'browser',define:{'process.env.NODE_ENV':'"test"'},plugins:[{name:'isolated-next',setup(b:any){
  b.onResolve({filter:/^next\/(link|navigation)$/},(a:any)=>({path:a.path,namespace:'fixture-next'}));
- b.onLoad({filter:/.*/,namespace:'fixture-next'},(a:any)=>({contents:a.path==='next/link'?`import React from'react';export default function Link(p){return React.createElement('a',{...p,onClick:event=>{p.onClick?.(event);event.preventDefault()}})}`:`export function useRouter(){return{push:url=>window.pushes.push(url)}}`,resolveDir:root}));
+ b.onLoad({filter:/.*/,namespace:'fixture-next'},(a:any)=>({contents:a.path==='next/link'?`import React from'react';export default function Link(p){return React.createElement('a',{...p,onClick:event=>{p.onClick?.(event);window.activationHref=event.currentTarget.getAttribute('href');event.preventDefault()},onAuxClick:event=>{p.onAuxClick?.(event);window.activationHref=event.currentTarget.getAttribute('href');event.preventDefault()},onContextMenu:event=>{p.onContextMenu?.(event);window.activationHref=event.currentTarget.getAttribute('href');event.preventDefault()}})}`:`export function useRouter(){return{push:url=>window.pushes.push(url)}}`,resolveDir:root}));
  b.onResolve({filter:/^@\/lib\/authFlowHref$/},()=>({path:root+'src/lib/authFlowHref.ts'}));
  }}]});
  const server=createServer((_q,r)=>{r.setHeader('Content-Type','text/html');r.end('<main id="root"></main>')});
@@ -41,6 +41,9 @@ test('auth return survives a click before passive effects without hijacking nati
   {kind:'target',target:'_blank',push:false},
   {kind:'download',download:'',push:false},
   {kind:'prevented',prevent:true,push:false},
+  {kind:'aux-prevented',event:{button:1},prevent:true,push:false},
+  {kind:'context',push:false},
+  {kind:'context',prevent:true,push:false},
  ];
  for(const fixture of cases){
  const page=await browser.newPage();
@@ -50,6 +53,9 @@ test('auth return survives a click before passive effects without hijacking nati
  await page.waitForFunction(()=>Array.isArray((window as any).pushes));
  await page.waitForTimeout(30);
  assert.deepEqual(await page.evaluate(()=>(window as any).pushes),fixture.push?['/auth/signup?next=%2Fschools%2Fnew%3Fcatalog_school_id%3Dsynthetic-school']:[],JSON.stringify(fixture));
+ if(!fixture.push)assert.equal(await page.evaluate(()=>(window as any).activationHref),fixture.prevent?'/auth/signup':'/auth/signup?next=%2Fschools%2Fnew%3Fcatalog_school_id%3Dsynthetic-school',JSON.stringify(fixture));
+ if(fixture.event?.button===1)assert.equal(await page.evaluate(()=>(window as any).auxCallers),1);
+ if(fixture.kind==='context')assert.equal(await page.evaluate(()=>(window as any).contextCallers),1);
  if(fixture.kind==='plain')assert.equal(await page.evaluate(()=>(window as any).callers),1);
  await page.close();
  }
