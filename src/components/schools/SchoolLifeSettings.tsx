@@ -1,4 +1,5 @@
 "use client";
+import {Dropdown} from '@/components/ui/dropdown';
 import {
   useCallback,
   useEffect,
@@ -251,7 +252,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
               ))}
               <label className="cb-school-field">
                 <span>Meal provider</span>
-                <select
+                <Dropdown
                   disabled={busy}
                   value={draft.meal_provider}
                   onChange={(e) => {
@@ -266,7 +267,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                   <option value="">Not configured</option>
                   <option value="NEIS">NEIS</option>
                   <option value="SCHOOL_WEBSITE">School website</option>
-                </select>
+                </Dropdown>
               </label>
               <label className="cb-school-field">
                 <span>Reviewed Comcigan school code (optional)</span>
