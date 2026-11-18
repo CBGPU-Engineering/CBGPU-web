@@ -85,3 +85,5 @@
 .admin-developer-shell .workspace-header>.breadcrumbs{min-width:0;max-width:100%;flex:1 1 16rem;flex-wrap:wrap}
 .admin-developer-shell .workspace-header>.header-actions{max-width:100%;flex-wrap:wrap}
 @media(max-width:720px){.admin-developer-shell .workspace-header{min-height:76px}}
+/* A sidebar never lets the first menu touch the brand block, with or without a caption in between. */
+.admin-developer-shell .sidebar>.brand+.navigation,.admin-developer-shell .sidebar>.cb-admin-sidebar-brand+.cb-admin-navigation-panel{margin-top:28px}
