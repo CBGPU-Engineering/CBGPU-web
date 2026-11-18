@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import vm from 'node:vm';
+const bundled=await build({entryPoints:[new URL('../src/app/api/admin/profiles/route.ts',import.meta.url).pathname],bundle:true,platform:'node',format:'cjs',write:false,plugins:[{name:'isolated-admin-dependencies',setup(b){b.onResolve({filter:/^next\/server$/},()=>({path:'next',namespace:'fixture'}));b.onResolve({filter:/^@supabase\/supabase-js$/},()=>({path:'supabase',namespace:'fixture'}));b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='next'?'export const NextResponse={json:(body,options)=>Response.json(body,options)};':'export const createClient=()=>globalThis.__adminFixture.client;',loader:'js'}))}}]});
+type Options={isAdmin?:boolean;invalid?:boolean;deleted?:boolean;schoolFailure?:boolean;profileFailure?:boolean;listFailure?:boolean;configured?:boolean;large?:boolean;laterPageFailure?:boolean};
+function fixture(options:Options={}){
+ const calls={listUsers:0,schools:0,profiles:0};
+ const ordinaryProfiles=[{id:'one',school_id:'a',student_id:'1234',full_name:'One',is_admin:false},{id:'two',school_id:'b',student_id:null,full_name:'Two',is_admin:false},{id:'external',school_id:null,full_name:'External'},{id:'deleted',school_id:'a',full_name:'Removed'}];
+ const profiles=options.large?Array.from({length:1001},(_,i)=>({id:'profile-'+i,school_id:i===1000?'b':'a',full_name:'Profile '+i})):ordinaryProfiles;
+ const users=options.large?profiles.map(p=>({id:p.id,email:p.id+'@example.invalid'})):[{id:'one',email:'one@example.invalid'},{id:'two',email:'two@example.invalid'},{id:'external',email:'external@example.invalid'},{id:'deleted',deleted_at:'2026-01-01'}];
+ const client={
+  auth:{
+   getUser:async(token:string)=>{assert.equal(token,'synthetic-admin');return{data:{user:options.invalid?null:{id:'operator',...(options.deleted?{deleted_at:'2026-01-01'}:{})}},error:options.invalid?Error('invalid'):null}},
+   admin:{listUsers:async({page,perPage}:{page:number;perPage:number})=>{calls.listUsers++;return{data:{users:users.slice((page-1)*perPage,page*perPage)},error:options.listFailure?Error('private error'):null}}}
+  },
+  from(table:string){assert.equal(table,'profiles');calls.profiles++;return{
+   select(fields:string){return fields==='is_admin'
+    ?{eq:()=>({maybeSingle:async()=>({data:{is_admin:options.isAdmin!==false}})})}
+    :{order(){return this},abortSignal(signal:AbortSignal){assert(signal instanceof AbortSignal);return this},limit:async(count:number)=>({data:profiles.slice(0,count),error:options.profileFailure?Error('private error'):null}),range:async(start:number,end:number)=>({data:profiles.slice(start,end+1),error:options.profileFailure||options.laterPageFailure&&start>=1000?Error('private error'):null})}}
+  }}
+ };
+ const member=(user:string,school:string,status:string,type='STUDENT')=>({user_id:user,school_id:school,status,membership_type:type,student_number:type==='STUDENT'?'1234':null,verified:status==='ACTIVE'});
+ const fetchSchoolsAPI:typeof fetch=async(input,init)=>{calls.schools++;const url=new URL(String(input));assert.equal(url.origin,'http://127.0.0.1:3546');assert.equal(new Headers(init?.headers).get('authorization'),'Bearer synthetic-admin');assert.equal(init?.cache,'no-store');assert.equal(init?.redirect,'error');if(options.schoolFailure)return new Response('<!DOCTYPE html><title>private diagnostics</title>',{status:502});if(url.pathname==='/v1/admin/schools')return Response.json({items:[{id:url.searchParams.get('status')==='APPROVED'?'a':'b',display_name:url.searchParams.get('status')==='APPROVED'?'School A':'School B'}],total:1});assert(['/v1/schools/a/members','/v1/schools/b/members'].includes(url.pathname));return Response.json({items:url.pathname.includes('/a/')?[member('one','a','ACTIVE'),member('two','a','PENDING_VERIFICATION','TEACHER')]:[member('one','b','SUSPENDED'),member('two','b','REVERIFICATION_REQUIRED')],total:2})};
+ const module={exports:{}}as{exports:{GET:(r:unknown)=>Promise<Response>}};
+ vm.runInNewContext(bundled.outputFiles[0].text,{module,exports:module.exports,__adminFixture:{client},Response,URL,Error,Map,JSON,Array,Number,AbortSignal,AbortController,setTimeout,clearTimeout,TextDecoder,Uint8Array,fetch:fetchSchoolsAPI,process:{env:options.configured===false?{}:{NEXT_PUBLIC_SUPABASE_URL:'https://auth.example.invalid',SUPABASE_SERVICE_ROLE_KEY:'synthetic-private-key',CBGPU_MULTISCHOOL_V1:'1'}}});
+ return{calls,get:(token=true)=>module.exports.GET({headers:new Headers(token?{Authorization:'Bearer synthetic-admin'}:{})})};
+}
+function privateResponse(response:Response){assert.equal(response.headers.get('cache-control'),'private, no-store')}
+test('missing, invalid and deleted credentials cannot list users or call school authority',async()=>{for(const kind of['missing','invalid','deleted']as const){const f=fixture({invalid:kind==='invalid',deleted:kind==='deleted'}),r=await f.get(kind!=='missing');assert.equal(r.status,401);privateResponse(r);assert.equal(f.calls.listUsers,0);assert.equal(f.calls.schools,0)}});
+test('non-admin denial happens before account enumeration and school requests',async()=>{const f=fixture({isAdmin:false}),r=await f.get();assert.equal(r.status,403);privateResponse(r);assert.equal(f.calls.listUsers,0);assert.equal(f.calls.schools,0)});
+test('administrator DTO includes actual named schools and preserves multiple membership statuses',async()=>{const f=fixture(),r=await f.get();assert.equal(r.status,200);privateResponse(r);const{profiles}=await r.json();assert.equal(profiles.length,3);assert.equal(profiles.some((p:any)=>p.id==='deleted'),false);const one=profiles.find((p:any)=>p.id==='one');assert.equal(one.primary_school_name,'School A');assert.deepEqual(one.school_affiliations.map((a:any)=>[a.school_name,a.status]),[['School A','ACTIVE'],['School B','SUSPENDED']]);const two=profiles.find((p:any)=>p.id==='two');assert.equal(two.primary_school_name,'School B');assert.deepEqual(two.school_affiliations.map((a:any)=>a.status),['PENDING_VERIFICATION','REVERIFICATION_REQUIRED']);assert.deepEqual(profiles.find((p:any)=>p.id==='external').school_affiliations,[]);assert.equal(f.calls.schools,4)});
+test('school authority outage returns private503 rather than a successful No school projection',async()=>{const f=fixture({schoolFailure:true}),r=await f.get();assert.equal(r.status,503);privateResponse(r);const body=await r.json();assert.equal('profiles'in body,false);assert.equal(JSON.stringify(body).includes('private diagnostics'),false)});
+test('configuration and enumeration failures remain private and never expose internal errors',async()=>{for(const options of[{configured:false},{listFailure:true},{profileFailure:true}]){const f=fixture(options),r=await f.get();assert.equal(r.status,options.configured===false?503:502);privateResponse(r);assert.equal(JSON.stringify(await r.json()).includes('private error'),false);assert.equal(f.calls.schools,0)}});
+
+test('profile pagination includes accounts beyond1000 and keeps their actual school name',async()=>{const f=fixture({large:true}),r=await f.get();assert.equal(r.status,200);const{profiles}=await r.json();assert.equal(profiles.length,1001);assert.equal(profiles.find((p:any)=>p.id==='profile-1000').primary_school_name,'School B');assert.equal(f.calls.listUsers,2)});
+
+test('later profile page failure never returns a successful truncated account list',async()=>{const f=fixture({large:true,laterPageFailure:true}),r=await f.get();assert.equal(r.status,502);privateResponse(r);const body=await r.json();assert.equal('profiles'in body,false);assert.equal(JSON.stringify(body).includes('private error'),false);assert.equal(f.calls.schools,0)});
