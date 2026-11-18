@@ -50,6 +50,7 @@ export async function contestApiProxy(request:Request,path:string[],dependencies
    method:request.method,headers:{Authorization:authorization,'x-cbgpu-contest-key':key,'Content-Type':'application/json'},body,
    cache:'no-store',redirect:'error',signal:AbortSignal.timeout(25_000),
   });
+  if(response.redirected||!/^application\/(?:json|[\w.+-]+\+json)(?:\s*;|$)/i.test(response.headers.get('content-type')||'')){await response.body?.cancel();return json(503,'Contest API is unavailable; retry later')}
   return new Response(response.body,{status:response.status,headers:{...common,'Content-Type':'application/json'}});
  }catch(error){
   return error instanceof RequestBodyError?json(error.status,error.status===413?'Request is too large':'Invalid JSON'):json(503,'Contest API is unavailable; retry later');
