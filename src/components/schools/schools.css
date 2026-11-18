@@ -30,3 +30,12 @@
  .cb-school-directory-grid article > a,
  .cb-school-directory-grid article > button { max-width:100%; white-space:normal; height:auto; }
 }
+
+/* Keep long member identities and request actions readable on narrow screens. */
+@media(max-width:640px) {
+ .cb-school-member-list > li { flex-direction:column; align-items:stretch; }
+ .cb-school-member-list > li > :is(button,a) { align-self:flex-start; max-width:100%; height:auto; min-height:44px; white-space:normal; }
+ .cb-school-request-heading { flex-wrap:wrap; align-items:flex-start; }
+ .cb-school-request-heading > h2 { flex:1 1 220px; min-width:0; overflow-wrap:anywhere; }
+ .cb-school-request-heading > :is(button,a) { max-width:100%; height:auto; min-height:44px; white-space:normal; }
+}
