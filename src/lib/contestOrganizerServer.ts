@@ -16,6 +16,7 @@ export async function contestOrganizer(request: Request, contestId: string) {
   const client = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }, global: { headers: { Authorization: `Bearer ${token}` }, fetch: (input, init) => fetch(input, { ...init, signal: AbortSignal.timeout(10_000), cache: 'no-store' }) } });
   try {
     const { data: { user }, error } = await client.auth.getUser(token);
+    if (error && (error.status === 0 || (error.status || 0) >= 500 || error.name === 'AuthRetryableFetchError')) return { response: organizerReply({ error: '로그인 상태를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.' }, 503) };
     if (error || !user || user.deleted_at) return { response: organizerReply({ error: '다시 로그인해 주세요.' }, 401) };
     const [event, host] = await Promise.all([
       client.from('contests').select('id,title,host_id').eq('id', contestId).maybeSingle(),
