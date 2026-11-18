@@ -1,0 +1,5 @@
+'use client';
+import Link from 'next/link';
+import {useSchoolScope} from '@/components/schools/SchoolScope';
+import SchoolGpuResources from '@/components/schools/SchoolGpuResources';
+export default function SchoolComputePage(){const scope=useSchoolScope(),resource=scope.resource;const selected=resource.status==='ready'?resource.current?.school:null;const school=selected||(scope.status==='ready'?scope.school:null);if(scope.status==='loading'||resource.status==='loading')return <p role="status" className="cb-school-page">이용할 학교를 확인하고 있습니다.</p>;if(!school)return <section className="cb-school-page"><h1>학교 GPU</h1><p>계정에서 이용할 학교를 먼저 선택해 주세요. 학교를 선택해도 자원 이용 권한이 자동으로 부여되지는 않습니다.</p><Link href="/schools">학교 선택하기</Link>{scope.status==='legacy'&&<p><Link href="/dashboard">기존 충북과고 GPU 예약</Link></p>}</section>;return <div className="cb-school-page"><p style={{fontSize:13,marginBottom:20}}>{school.display_name||school.id} · 선택한 학교의 자원</p><SchoolGpuResources schoolId={school.id}/>{school.id==='cbsh'&&<p style={{marginTop:28}}><Link href="/dashboard">기존 충북과고 GPU 예약으로 이동</Link></p>}</div>}

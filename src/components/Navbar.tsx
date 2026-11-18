@@ -32,6 +32,7 @@ const PRIMARY_LINKS: NavLink[] = [
   { href: '/meal', label: '급식' },
   { href: '/wakeup', label: '기상송' },
   { href: '/dashboard', label: 'GPU' },
+  { href: '/compute', label: '학교 GPU' },
   { href: '/community', label: '커뮤니티' },
 ];
 

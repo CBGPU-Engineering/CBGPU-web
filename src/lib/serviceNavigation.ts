@@ -13,6 +13,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
   ] },
   {id:'ai',title:'AI',services:[{href:'/ai',label:'CBGPU AI',description:'대화·프롬프트 최적화·전사·검색·GPU·API·CLI',icon:Sparkles,keywords:'AI 인공지능 채팅 chatgpt 프롬프트 최적화 전사 검색 모델 API CLI 코딩 에이전트'}]},
   {id:'compute',title:'GPU 사용',services:[
+    {href:'/compute',label:'학교 GPU',description:'학교별 GPU 예약과 Jupyter 실행',icon:Cpu,keywords:'학교 GPU 서버 노트북 주피터 jupyter 예약'},
     {href:'/dashboard',label:'GPU 예약',description:'사용 가능한 GPU 확인과 예약',icon:Cpu,keywords:'GPU 대여 컴퓨팅 그래픽카드 주피터 jupyter 실험 학습'},
     {href:'/dashboard/ssh-guide',label:'GPU 접속 안내',description:'Jupyter·SSH 접속 방법',icon:TerminalSquare,keywords:'ssh 원격 터미널 vscode 주피터 jupyter 연결'},
   ]},
