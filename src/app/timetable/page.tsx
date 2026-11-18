@@ -8,6 +8,7 @@ import { Edit3, Save, X, RotateCcw, RefreshCw, AlertTriangle, Sparkles } from 'l
 import { ResourceSelection, ResourcePanel, ResourceStatus } from '@/components/ui/resource-motion';
 import { EmptyState, InlineFeedback } from '@/components/ui/product-motion';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {schoolLifeRead} from '@/lib/schoolLifeRead';
 import { timetableWeekDates } from '@/lib/timetablePresentation';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useCachedAi } from '@/lib/useCachedAi';
@@ -90,11 +91,12 @@ export default function TimetablePage() {
     try {
       const session=schoolScope.status==='legacy'?null:(await supabase.auth.getSession()).data.session;
       if(schoolScope.status!=='legacy'&&!session)throw Error('로그인 후 학교 소속을 확인해주세요.');
-      const res=await fetch(`/api/timetable?grade=${g}&class=${c}${refresh?'&refresh=1':''}${schoolScope.status==='legacy'?'':'&school_id='+encodeURIComponent(activeSchool)}`,{headers:session?{Authorization:'Bearer '+session.access_token}:{},cache:'no-store'});
-      const json = await res.json();
-      if (json.error){verifiedManualFallback ||=res.status===502&&json.code==='TIMETABLE_PROVIDER_ERROR'&&json.school_id==='cbsh';throw new Error(json.error);}
+      const {response:res,value:json}=await schoolLifeRead(`/api/timetable?grade=${g}&class=${c}${refresh?'&refresh=1':''}${schoolScope.status==='legacy'?'':'&school_id='+encodeURIComponent(activeSchool)}`,{headers:session?{Authorization:'Bearer '+session.access_token}:{},cache:'no-store'});
+      if (!res.ok || json.error){verifiedManualFallback ||=res.status===502&&json.code==='TIMETABLE_PROVIDER_ERROR'&&json.school_id==='cbsh';throw new Error(typeof json.error==='string'?json.error:'시간표를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');}
       if(request!==requestRef.current||scopeRef.current!==requestScope)return;
-      setGrid(json.grid ?? {});setGridContext({grade:g,cls:c,school:requestScope});
+      if(schoolScope.status!=='legacy'&&json.school_id!==activeSchool)throw Error('선택한 학교의 시간표 응답을 확인하지 못했어요. 다시 조회해주세요.');
+      if(!json.grid||typeof json.grid!=='object'||Array.isArray(json.grid))throw Error('시간표 응답을 확인하지 못했어요. 다시 조회해주세요.');
+      setGrid(json.grid);setGridContext({grade:g,cls:c,school:requestScope});
       const native=(window as Window&{CBGPUNative?:{setTimetableSelection?:(value:{school_id:string;grade:number;class_num:number;expected_user_id:string})=>Promise<unknown>}}).CBGPUNative;
       const preference=native?.setTimetableSelection?.({school_id:activeSchool,grade:g,class_num:c,expected_user_id:user?.id||''});if(preference)void preference.catch(()=>{});
 
