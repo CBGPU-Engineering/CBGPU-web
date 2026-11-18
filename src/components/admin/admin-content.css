@@ -33,3 +33,6 @@
 .admin-developer-shell .careers-row[open]::details-content{block-size:auto;opacity:1}
 }
 .admin-developer-shell .admin-list-options [data-slot=select-trigger]{width:auto;min-height:40px;padding:6px 10px;border-color:var(--dev-border);background:var(--dev-surface);color:var(--dev-ink)}
+
+/* Result count and its scope note sit in the free space right of the sort/rows/density controls. */
+.admin-developer-shell .admin-list-options .admin-list-summary{margin-left:auto;display:grid;gap:2px;text-align:right;max-width:100%}.admin-developer-shell .admin-list-summary p{margin:0}@media(max-width:720px){.admin-developer-shell .admin-list-options .admin-list-summary{margin-left:0;text-align:left;width:100%}}

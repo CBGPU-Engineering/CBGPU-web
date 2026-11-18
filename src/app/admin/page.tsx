@@ -450,11 +450,13 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             <label>Sort<Dropdown aria-label="Sort records" value={sortOrder} onChange={e => setSortOrder(e.target.value)}><option value="default">Original order</option><option value="review">Needs review first</option><option value="name">Name A–Z</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></Dropdown></label>
             <label>Rows per page<Dropdown aria-label="Rows per page" value={visibleLimit} onChange={e => setVisibleLimit(Number(e.target.value))}>{[15,30,60,100].map(n => <option key={n} value={n}>{n}</option>)}</Dropdown></label>
             <label>Density<Dropdown aria-label="Table density" value={density} onChange={e => setDensity(e.target.value)}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></Dropdown></label>
+            <div className="admin-list-summary">
+            <p role="status" className="text-sm text-foreground">{listError ? "Could not refresh the list." : listLoading ? "Loading records…" : `${resultCount} results · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)} shown`}</p>
+            {tab !== 'accounts' && <p className="text-xs text-muted-foreground">Search and counts cover the most recent 1,000 loaded records.</p>}
+            </div>
           </div>
           {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{listError}</p><p className="mt-2 text-muted-foreground">Previously loaded records remain below. Refresh to try again.</p></div>}
           {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">Saving changes and refreshing the list…</p>}
-          <p role="status" className="text-sm text-muted-foreground">{listError ? "Could not refresh the list." : listLoading ? "Loading records…" : `${resultCount} results · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)} shown`}</p>
-          {tab !== 'accounts' && <p className="text-xs text-muted-foreground">Search and counts cover the most recent 1,000 loaded records.</p>}
         </div>}
 
         {/* ── GPU 예약 탭 ── */}
