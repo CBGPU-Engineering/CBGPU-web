@@ -20,13 +20,24 @@ export async function GET(request: NextRequest) {
     for (const account of data.users) if (!(account as unknown as { deleted_at?: string }).deleted_at) active.set(account.id, account.email || '');
     if (data.users.length < 1000) break;
   }
-  const { data, error: profileError } = await admin.from('profiles')
-    .select('id, school_id, student_id, full_name, is_admin, is_approved, is_laser_cut_manager')
-    .order('is_approved', { ascending: true, nullsFirst: true }).order('full_name', { ascending: true }).limit(1000);
-  if (profileError) return NextResponse.json({ error: '프로필 목록을 불러오지 못했습니다.' }, { status: 502, headers: { 'Cache-Control': 'private, no-store' } });
+  const data: {id:string;school_id:string|null;student_id:string|null;full_name:string|null;is_admin:boolean|null;is_approved:boolean|null;is_laser_cut_manager:boolean|null}[]=[];
+  const profileDeadline=AbortSignal.timeout(20000);
+  try {
+    for(let page=0;;page++){
+      if(page>=100||profileDeadline.aborted)throw Error('PROFILE_PAGE_LIMIT');
+      const query=admin.from('profiles')
+        .select('id, school_id, student_id, full_name, is_admin, is_approved, is_laser_cut_manager')
+        .order('is_approved', { ascending: true, nullsFirst: true }).order('full_name', { ascending: true }).order('id',{ascending:true})
+        .abortSignal(profileDeadline).range(page*1000,page*1000+999);
+      const {data:batch,error:profileError}=await query;
+      if(profileError||!batch||profileDeadline.aborted)throw Error('PROFILE_PAGE_UNAVAILABLE');
+      data.push(...batch);
+      if(batch.length<1000)break;
+    }
+  }catch{return NextResponse.json({ error: '프로필 목록을 불러오지 못했습니다.' }, { status: 502, headers: { 'Cache-Control': 'private, no-store' } });}
   let projection:Awaited<ReturnType<typeof adminAccountAffiliations>>|null=null;
   if(process.env.CBGPU_MULTISCHOOL_V1==='1')try{
     projection=await adminAccountAffiliations('Bearer '+token,{endpoint:process.env.CBGPU_SCHOOLS_API_URL||'http://127.0.0.1:3546',networkMode:process.env.CBGPU_INTERNAL_NETWORK_MODE});
   }catch{return NextResponse.json({error:'학교 소속을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.'},{status:503,headers:{'Cache-Control':'private, no-store'}})}
-  return NextResponse.json({ profiles: (data || []).filter(profile => active.has(profile.id)).map(profile => ({ ...profile, email: active.get(profile.id) || '',school_affiliations:projection?.affiliations.get(profile.id)??[],primary_school_name:projection?.schools.get(profile.school_id)??null })) }, { headers: { 'Cache-Control': 'private, no-store' } });
+  return NextResponse.json({ profiles: (data || []).filter(profile => active.has(profile.id)).map(profile => ({ ...profile, email: active.get(profile.id) || '',school_affiliations:projection?.affiliations.get(profile.id)??[],primary_school_name:(profile.school_id?projection?.schools.get(profile.school_id):null)??null })) }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
