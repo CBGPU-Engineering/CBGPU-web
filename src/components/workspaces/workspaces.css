@@ -32,3 +32,11 @@
 
 /* Keep app chrome in one layer beneath body-portalled dialogs and overlays. */
 .cb-app{isolation:isolate}
+
+/* Keep the same content edge through headings, forms and feature sections. */
+.cb-user-workspace .cb-workspace-content {
+  padding: var(--cb-page-top,32px) var(--cb-page-gutter,24px) 64px;
+}
+@media(max-width:760px) {
+  .cb-user-workspace .cb-workspace-content { padding-bottom:44px; }
+}

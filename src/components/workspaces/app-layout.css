@@ -24,3 +24,9 @@
 /* Only a successfully acknowledged native navigation capability owns this inset. */
 html[data-cbgpu-native-navigation="true"] .cb-app .cb-bottom-nav{display:none}
 @media(max-width:760px){html[data-cbgpu-native-navigation="true"] .cb-app .cb-workspace-content{padding-bottom:32px}}
+
+/* Compact app chrome; comfortable reading gutters without a second page inset. */
+.cb-app .cb-workspace-content {
+  padding-inline: max(var(--cb-page-gutter,16px), env(safe-area-inset-left,0px)) max(var(--cb-page-gutter,16px), env(safe-area-inset-right,0px));
+}
+.cb-app .cb-workspace-content > .cb-school-page { padding:0; }

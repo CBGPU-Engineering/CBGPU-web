@@ -10,7 +10,7 @@ export default function MainSiteFrame({children}:{children:React.ReactNode}){con
               <Navbar />
               <SiteBanner />
               <ApprovalNotice />
-              <main id="main-content" tabIndex={-1} className="flex-grow container mx-auto px-4 md:px-6 py-10 pb-28 xl:pb-10">
+              <main id="main-content" tabIndex={-1} className="cb-main-content flex-grow">
                 <AuthGate>{children}</AuthGate>
               </main>
               <footer className="hidden xl:block border-t py-12 bg-muted/20 text-center text-sm text-muted-foreground transition-all">

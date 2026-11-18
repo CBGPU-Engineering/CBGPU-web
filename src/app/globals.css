@@ -534,3 +534,18 @@ body{font-family:var(--cb-font-sans)}
 .cb-scroll-section{position:relative}.cb-scroll-title{font-size:17px;font-weight:700;margin:0 0 16px;letter-spacing:-.025em}.cb-scroll-rail{position:absolute;left:0;top:24px;bottom:24px;width:2px;border-radius:3px;background:var(--border);overflow:hidden;pointer-events:none}.cb-scroll-rail>i{display:block;width:100%;height:100%;transform-origin:top;background:var(--primary)}@media(prefers-reduced-motion:reduce){.cb-scroll-rail{display:none}}
 
 .cb-brand-art>img{width:100%;height:100%;object-fit:contain;filter:none!important}.cb-brand-art-dark{display:none}.dark .cb-brand-art-light,[data-theme="dark"] .cb-brand-art-light{display:none}.dark .cb-brand-art-dark,[data-theme="dark"] .cb-brand-art-dark{display:block}[data-theme="light"] .cb-brand-art-light{display:block}[data-theme="light"] .cb-brand-art-dark{display:none}
+
+/* Shared page rhythm: one outer gutter; feature containers own their internal gaps. */
+:root {
+  --cb-page-gutter: clamp(16px, 3vw, 40px);
+  --cb-page-top: clamp(24px, 3vw, 40px);
+  --cb-section-gap: clamp(24px, 3vw, 40px);
+  --cb-panel-padding: clamp(16px, 2vw, 24px);
+}
+.cb-main-content {
+  width: 100%; max-width: 1280px; margin-inline: auto; min-width: 0;
+  padding: var(--cb-page-top) var(--cb-page-gutter) 112px;
+}
+.cb-main-content > .cb-school-page,
+.cb-workspace-content > .cb-school-page { padding-inline: 0; padding-top: 0; }
+@media (min-width:1280px) { .cb-main-content { padding-bottom:64px; } }

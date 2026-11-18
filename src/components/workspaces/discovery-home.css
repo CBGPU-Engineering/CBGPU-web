@@ -56,3 +56,11 @@
  .cb-discovery-greeting>.cb-account-with-school>.cb-header-school{flex:1;min-width:0;max-width:calc(100% - 52px);justify-content:flex-start}
  .cb-discovery-greeting>.cb-account-with-school>.cb-header-school>svg{flex:none}
 }
+
+.cb-home-entry-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:20px; }
+.cb-home-entry-actions:empty { display:none; }
+.cb-home-entry-actions > a { margin-top:0; min-width:0; }
+@media(max-width:480px) {
+ .cb-home-entry-actions { gap:10px; margin-top:16px; }
+ .cb-home-entry-actions > a { padding-inline:12px; }
+}
