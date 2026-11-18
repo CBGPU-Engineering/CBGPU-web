@@ -1,4 +1,6 @@
 'use client';
+import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
+import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -40,6 +42,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const [statusFilter, setStatusFilter] = useState('all');
   const [gpuFilter, setGpuFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [schoolFilter,setSchoolFilter]=useState('all');
   const [rowActions, setRowActions] = useState<Record<string, boolean>>({});
   const activeRowActions = useRef(new Set<string>());
   async function runRowAction(key: string, action: () => Promise<void>) {
@@ -49,13 +52,13 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     catch (error) { showError(error instanceof Error ? error.message : "Could not complete the operation. Please try again."); }
     finally { activeRowActions.current.delete(key); setRowActions(v => ({ ...v, [key]: false })); }
   }
-  const resetFilters = () => { setQuery(''); setNeedsReviewOnly(false); setStatusFilter('all'); setGpuFilter('all'); setRoleFilter('all'); setVisibleLimit(30); };
+  const resetFilters = () => { setQuery(''); setNeedsReviewOnly(false); setStatusFilter('all'); setGpuFilter('all'); setRoleFilter('all'); setSchoolFilter('all'); setVisibleLimit(30); };
   const [visibleLimit, setVisibleLimit] = useState(30);
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState('default');
   const [density, setDensity] = useState('comfortable');
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
-  useEffect(() => { setPage(1); }, [query, needsReviewOnly, statusFilter, gpuFilter, roleFilter, visibleLimit, sortOrder]);
+  useEffect(() => { setPage(1); }, [query, needsReviewOnly, statusFilter, gpuFilter, roleFilter, schoolFilter, visibleLimit, sortOrder]);
   useEffect(() => {
     const handle = () => document.querySelector<HTMLInputElement>('input[aria-label="Search current list"]')?.focus();
     window.addEventListener('admin:search-list', handle);
@@ -390,7 +393,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const matchesQuery = (...values: unknown[]) => values.some(value => String(value ?? '').toLocaleLowerCase().includes(deferredQuery.trim().toLocaleLowerCase()));
   const filteredReservations = reservations.filter(r => (!needsReviewOnly || (r.status === 'pending' && new Date(r.end_time) > new Date())) && (gpuFilter === 'all' || String(r.gpu_id) === gpuFilter) && (statusFilter === 'all' || (statusFilter === 'ended' ? new Date(r.end_time) <= new Date() : r.status === statusFilter)) && matchesQuery(r.profiles?.full_name, r.profiles?.student_id, r.gpu_id, r.purpose));
   const filteredProjects = cpuProjects.filter(p => (!needsReviewOnly || p.status === 'pending') && (statusFilter === 'all' || p.status === statusFilter) && matchesQuery(p.name, p.user_email, p.profiles?.full_name, p.profiles?.student_id));
-  const filteredProfiles = profiles.filter(p => (!needsReviewOnly || p.is_approved !== true) && (statusFilter === 'all' || (statusFilter === 'unreviewed' ? p.is_approved == null : statusFilter === 'approved' ? p.is_approved === true : p.is_approved === false)) && (roleFilter === 'all' || (roleFilter === 'admin' ? p.is_admin === true : p.is_laser_cut_manager === true || p.is_wakeup_manager === true)) && matchesQuery(p.full_name, p.student_id, p.email));
+  const schoolOptions=accountSchoolOptions(profiles);
+  const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || p.is_approved !== true) && (statusFilter === 'all' || (statusFilter === 'unreviewed' ? p.is_approved == null : statusFilter === 'approved' ? p.is_approved === true : p.is_approved === false)) && (roleFilter === 'all' || (roleFilter === 'admin' ? p.is_admin === true : p.is_laser_cut_manager === true || p.is_wakeup_manager === true)) && matchesQuery(p.full_name, p.student_id, p.email,...accountSchoolSearch(p)));
   const sortRows = (rows: any[]) => [...rows].sort((a, b) => {
     if (sortOrder === 'name') return String(a.profiles?.full_name || a.full_name || a.name || '').localeCompare(String(b.profiles?.full_name || b.full_name || b.name || ''));
     if (sortOrder === 'oldest' || sortOrder === 'newest') return (Date.parse(a.created_at || '') - Date.parse(b.created_at || '') || 0) * (sortOrder === 'newest' ? -1 : 1);
@@ -438,11 +442,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
           <h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Account access"}</h2>
           <div className="flex flex-wrap items-end gap-3">
-            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
+            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
             <Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>
-            {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>Clear filters</Button>}
+            {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all' || schoolFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>Clear filters</Button>}
             <label className="text-xs font-semibold space-y-2"><span className="block">Status</span><Dropdown aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option>{tab === 'gpu' && <option value="ended">Ended</option>}</>}</Dropdown></label>
             {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label="Filter by GPU" value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All GPUs</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>GPU #{id}</option>)}</Dropdown></label>}
+            {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">School</span><Dropdown aria-label="Filter accounts by school" value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">All schools</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">No school affiliation</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">School information unavailable</option>}</Dropdown></label>}
             {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><Dropdown aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="admin">Administration</option><option value="manager">Laser and music managers</option></Dropdown></label>}
           <Button type="button" variant="outline" disabled={listLoading} onClick={refreshList} className="min-h-11 gap-2"><RefreshCw className={`size-4 ${listLoading ? 'animate-spin motion-reduce:animate-none' : ''}`} />{listLoading ? "Loading…" : "Refresh list"}</Button>
           </div>
@@ -758,6 +763,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                       <span className="text-sm font-bold shrink-0">{p.student_id || '-'}</span>
                     </div>
                     {p.email && <p className="text-xs text-muted-foreground break-all">{p.email}</p>}
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p}/></div>
                     {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">Updating account…</p>}
                     <div className="flex items-center justify-between gap-2">
                       <div>
@@ -793,6 +799,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
                     <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">Name</TableHead>
+                    <TableHead className="min-w-56 font-black uppercase text-[10px] tracking-widest py-5">School</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Student ID</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Status</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">Actions</TableHead>
@@ -800,9 +807,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                 </TableHeader>
                 <TableBody>
                   {profilesLoading || profilesJustFinished ? (
-                    <TableRow><TableCell colSpan={4} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label="Loading accounts" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label="Loading accounts" /></div></TableCell></TableRow>
                   ) : visibleProfiles.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20 font-bold text-muted-foreground opacity-50">No accounts to display.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">No accounts to display.</TableCell></TableRow>
                   ) : (
                     visibleProfiles.map((p) => (
                       <TableRow key={p.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
@@ -815,6 +822,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           {p.email && <p className="mt-2 text-xs text-muted-foreground break-all">{p.email}</p>}
                           {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">Updating…</p>}
                         </TableCell>
+                        <TableCell className="min-w-56 max-w-sm py-5"><AccountSchoolDetails account={p}/></TableCell>
                         <TableCell className="text-sm font-bold">{p.student_id || '-'}</TableCell>
                         <TableCell className="py-5">
                           {p.is_approved === false && <Badge variant="danger" icon={<XCircle className="size-3" />}>Restricted</Badge>}
