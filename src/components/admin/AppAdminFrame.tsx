@@ -1,6 +1,10 @@
 'use client';
 import {usePathname,useSearchParams} from 'next/navigation';
-import {Cpu,Server,Users,Printer,Files,KeyRound,CalendarDays,Vote,UserPlus,LayoutDashboard,Briefcase,Music} from 'lucide-react';
+import {Cpu,Server,Users,Printer,Files,KeyRound,CalendarDays,Vote,UserPlus,LayoutDashboard,Briefcase,Music,Building2,Settings,GraduationCap,Link2,Handshake,UserCheck,Flag} from 'lucide-react';
+import {useAuth} from '@/lib/useAuth';
+import PlatformSchoolPicker from '@/components/schools/PlatformSchoolPicker';
+import {platformAdminSchool,platformSchoolAdminHref} from '@/lib/platformAdminNavigation';
+import {schoolAdminSections} from '@/lib/schoolAdministration';
 import AppSpaceFrame,{type SpaceNavItem} from './AppSpaceFrame';
 /** 관리 공간(admin.cbgpu.com)의 앱 틀. /admin/wakeup은 기상송 공간으로 따로 보여 준다. */
 const adminNav:SpaceNavItem[]=[
@@ -21,11 +25,16 @@ const adminNav:SpaceNavItem[]=[
  {id:'polls',href:'/admin/polls',label:'투표',Icon:Vote},
  {id:'manufacturing',href:'/admin/manufacturing',label:'제작 현황',Icon:Printer},
 ];
+// 선택한 학교의 관리 메뉴(앱 하단 탭용 짧은 한글 이름).
+const schoolTabs:Record<string,[string,SpaceNavItem['Icon']]>={overview:['개요',LayoutDashboard],members:['구성원',Users],features:['구성',Settings],access:['게스트',KeyRound],academic:['학년',GraduationCap],integrations:['연동',Link2],gpu:['GPU 노드',Cpu],'joint-events':['공동 행사',Handshake],affiliations:['소속 변경',UserCheck],moderation:['신고',Flag]};
 const wakeupNav:SpaceNavItem[]=[{id:'wakeup',href:'/admin/wakeup',label:'기상송',Icon:Music}];
 export default function AppAdminFrame({children}:{children:React.ReactNode}){
- const pathname=usePathname(),params=useSearchParams(),tab=params.get('tab');
+ const pathname=usePathname(),params=useSearchParams(),tab=params.get('tab'),{isAdmin}=useAuth();
+ const multi=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1',school=multi?platformAdminSchool(pathname,params.get('section')):null;
  if(pathname==='/admin/wakeup'||pathname.startsWith('/admin/wakeup/'))return <AppSpaceFrame current="wakeup" nav={wakeupNav} activeId="wakeup">{children}</AppSpaceFrame>;
  const isM=pathname==='/admin/m'||pathname.startsWith('/admin/m/');
  const activeId=isM?(tab==='signups'?'m:signups':tab==='gpu'?'m:gpu':'m'):(pathname==='/admin'?(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?'schools':'gpu'):pathname.split('/')[2]);
- return <AppSpaceFrame current="admin" nav={adminNav} activeId={activeId}>{children}</AppSpaceFrame>;
+ const schoolNav:SpaceNavItem[]=school?[{id:'schools',href:'/admin/schools',label:'학교 목록',Icon:Building2},...schoolAdminSections.map(item=>({id:'school:'+item.id,href:platformSchoolAdminHref(school.schoolId,item.id),label:schoolTabs[item.id]?.[0]||item.label,Icon:schoolTabs[item.id]?.[1]||LayoutDashboard}))]:[];
+ const nav=school?[...schoolNav,...adminNav.filter(item=>item.id!=='schools')]:adminNav;
+ return <AppSpaceFrame current="admin" nav={nav} activeId={school?'school:'+school.section:activeId}>{multi&&isAdmin&&<div className="cb-app-admin-school"><PlatformSchoolPicker schoolId={school?.schoolId} section={school?.section}/></div>}{children}</AppSpaceFrame>;
 }
