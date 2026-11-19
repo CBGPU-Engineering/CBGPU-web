@@ -72,6 +72,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     live = useRef(true),
     selected = useRef(""),
     flight = useRef<{sequence:number;promise:Promise<void>}|null>(null),
+    selectionGeneration = useRef(0),
     authLoading = useRef(isLoading);
   authLoading.current=isLoading;
   const owner = user?.id;
@@ -168,6 +169,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     const sync = (event: Event) => {
       if ((event as CustomEvent).detail?.source !== "resource-scope") {
         if (event.type === "cbgpu-school-changed") {
+          selectionGeneration.current++;
           generation.current++;
           selected.current = "";
           setSnapshot(null);
@@ -200,6 +202,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
   async function select(schoolId: string) {
     if (!multiSchoolEnabled || !owner)
       throw Error("로그인 후 자원 이용 학교를 선택해주세요.");
+    const selection=++selectionGeneration.current;
     generation.current++;
     selected.current = "";
     setSnapshot(null);
@@ -208,16 +211,18 @@ function ResourceSession({ children }: { children: ReactNode }) {
     window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{school_id:schoolId,source:"resource-scope",pending:true}}));
     try {
       await selectAccountSchool(schoolId, owner);
-      if (!live.current) return;
+      if (!live.current||selection!==selectionGeneration.current) return;
       await refresh();
+      if (!live.current||selection!==selectionGeneration.current) return;
       window.dispatchEvent(
         new CustomEvent("cbgpu-school-changed", {
           detail: { school_id: schoolId, source: "resource-scope" },
         }),
       );
     } catch (e) {
+      if(!live.current||selection!==selectionGeneration.current)throw e;
       await refresh();
-      if(live.current)window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
+      if(live.current&&selection===selectionGeneration.current)window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
       throw e;
     }
   }
