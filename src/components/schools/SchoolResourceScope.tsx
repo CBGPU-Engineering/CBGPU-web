@@ -70,7 +70,10 @@ function ResourceSession({ children }: { children: ReactNode }) {
     [tick, setTick] = useState(0);
   const generation = useRef(0),
     live = useRef(true),
-    selected = useRef("");
+    selected = useRef(""),
+    flight = useRef<{sequence:number;promise:Promise<void>}|null>(null),
+    authLoading = useRef(isLoading);
+  authLoading.current=isLoading;
   const owner = user?.id;
   const read = useCallback(async (): Promise<Snapshot> => {
     const contexts = validResourceContexts(
@@ -131,11 +134,12 @@ function ResourceSession({ children }: { children: ReactNode }) {
     if (!owner) {
       selected.current = "";
       setSnapshot(null);
-      setStatus(isLoading ? "loading" : "none");
+      setStatus(authLoading.current ? "loading" : "none");
       return;
     }
+    if(flight.current?.sequence===generation.current)return flight.current.promise;
     const seq = ++generation.current;
-    try {
+    const pending=(async()=>{try {
       const next = await read();
       if (!live.current || seq !== generation.current) return;
       selected.current = next.current
@@ -152,7 +156,11 @@ function ResourceSession({ children }: { children: ReactNode }) {
         setError((e as Error).message);
       }
     }
-  }, [owner, isLoading, read]);
+    })();
+    flight.current={sequence:seq,promise:pending};
+    try{await pending}finally{if(flight.current?.promise===pending)flight.current=null}
+  }, [owner, read]);
+  useEffect(()=>{if(multiSchoolEnabled&&!owner){setSnapshot(null);setStatus(isLoading?"loading":"none")}},[owner,isLoading]);
   useEffect(() => {
     live.current = true;
     if (!multiSchoolEnabled) return;
@@ -164,6 +172,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
           selected.current = "";
           setSnapshot(null);
           setStatus("loading");
+          if((event as CustomEvent).detail?.pending)return;
         }
         void refresh();
       }
@@ -196,6 +205,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     setSnapshot(null);
     setStatus("loading");
     setError("");
+    window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{school_id:schoolId,source:"resource-scope",pending:true}}));
     try {
       await selectAccountSchool(schoolId, owner);
       if (!live.current) return;
@@ -207,6 +217,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
       );
     } catch (e) {
       await refresh();
+      if(live.current)window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
       throw e;
     }
   }
