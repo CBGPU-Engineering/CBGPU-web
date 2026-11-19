@@ -38,7 +38,7 @@ test('installed Storage SDK sends the current bearer to the manufacturing gatewa
 test('portal private file adapter stays same-origin despite a canonical main-host Storage URL',async()=>{
  const {sameOriginManufacturingFileClient}=load('../src/lib/manufacturing/fileAccess.ts');
  let current='synthetic.portal.bearer';const calls:{url:string;init:RequestInit}[]=[];
- const client=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:{user:{id:'operator'},access_token:current}}})}},async(url:string,init:RequestInit)=>{calls.push({url,init});return new Response('synthetic bytes')});
+ const client=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:{user:{id:'operator'},access_token:current}}})}},async(url:string,init:RequestInit)=>{calls.push({url,init});return new Response('synthetic bytes')},'operator');
  const output=await client.storage.from('manufacturing').download('owner/print/model + 한국어.3mf');
  assert.equal(await output.data.text(),'synthetic bytes');
  assert.equal(calls[0].url,'/api/manufacturing/file-read?key=owner%2Fprint%2Fmodel+%2B+%ED%95%9C%EA%B5%AD%EC%96%B4.3mf');
@@ -51,8 +51,19 @@ test('portal private file adapter stays same-origin despite a canonical main-hos
 
 test('same-origin file adapter fails closed on missing SDK bearer and propagates authority denial',async()=>{
  const {sameOriginManufacturingFileClient}=load('../src/lib/manufacturing/fileAccess.ts');let called=0;
- const missing=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:null}})}},async()=>{called++;throw Error('must not fetch')});
+ const missing=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:null}})}},async()=>{called++;throw Error('must not fetch')},'operator');
  assert.equal((await missing.storage.from('manufacturing').download('owner/print/file')).error.status,401);assert.equal(called,0);
- const denied=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:{user:{id:'operator'},access_token:'synthetic.bearer.token'}}})}},async()=>new Response('not available',{status:404}));
+ const denied=sameOriginManufacturingFileClient({auth:{getSession:async()=>({data:{session:{user:{id:'operator'},access_token:'synthetic.bearer.token'}}})}},async()=>new Response('not available',{status:404}),'operator');
  const result=await denied.storage.from('manufacturing').download('foreign/print/file');assert.equal(result.error.status,404);assert.equal(result.data,null);
+});
+
+
+test('account changes between lease identity check and bearer acquisition never send another account token',async()=>{
+ const {sameOriginManufacturingFileClient}=load('../src/lib/manufacturing/fileAccess.ts');
+ let reads=0,network=0,created=0;
+ const auth={getSession:async()=>({data:{session:{user:{id:++reads===1?'owner-a':'owner-b'},access_token:'synthetic.other.token'}}})};
+ const client=sameOriginManufacturingFileClient({auth},async()=>{network++;return new Response('must not be read')},'owner-a');
+ const lease=new ManufacturingFileLease({createObjectURL:()=>{created++;return 'blob:wrong-owner'},revokeObjectURL:()=>{}});
+ await assert.rejects(lease.preview(client,'owner-a','owner-a/print/file.3mf',()=>true),(error:any)=>error.status===401);
+ assert.equal(network,0);assert.equal(created,0);assert.equal(reads,2);
 });

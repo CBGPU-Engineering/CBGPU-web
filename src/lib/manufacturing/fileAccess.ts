@@ -30,12 +30,12 @@ export class ManufacturingFileLease{
 
 /** Portal Storage URLs may point at the main host. Keep private bytes on this origin,
  * with the current SDK bearer; never use main-site cookies or signed capabilities. */
-export function sameOriginManufacturingFileClient(client:{auth:{getSession:()=>PromiseLike<{data:{session:{user:{id:string};access_token?:string}|null};error?:unknown}>}},request:typeof fetch=fetch):FileReadClient{
+export function sameOriginManufacturingFileClient(client:{auth:{getSession:()=>PromiseLike<{data:{session:{user:{id:string};access_token?:string}|null};error?:unknown}>}},request:typeof fetch=fetch,expectedViewer?:string):FileReadClient{
  return{auth:client.auth,storage:{from:(bucket:string)=>({download:async(path:string)=>{
   if(bucket!=='manufacturing')return{data:null,error:{status:403}};
   const session=await client.auth.getSession();
   const token=session.data.session?.access_token;
-  if(session.error||!token)return{data:null,error:{status:session.error?503:401}};
+  if(session.error||!token||!expectedViewer||session.data.session?.user.id!==expectedViewer)return{data:null,error:{status:session.error?503:401}};
   const response=await request('/api/manufacturing/file-read?'+new URLSearchParams({key:path}),{method:'GET',headers:{Authorization:'Bearer '+token},credentials:'omit',cache:'no-store',redirect:'error'});
   if(!response.ok){await response.body?.cancel();return{data:null,error:{status:response.status}};}
   return{data:await response.blob(),error:null};
