@@ -73,6 +73,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     selected = useRef(""),
     flight = useRef<{sequence:number;promise:Promise<void>}|null>(null),
     selectionGeneration = useRef(0),
+    selectionPending = useRef(false),
     authLoading = useRef(isLoading);
   authLoading.current=isLoading;
   const owner = user?.id;
@@ -131,7 +132,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     };
   }, [owner]);
   const refresh = useCallback(async () => {
-    if (!multiSchoolEnabled) return;
+    if (!multiSchoolEnabled||selectionPending.current) return;
     if (!owner) {
       selected.current = "";
       setSnapshot(null);
@@ -170,6 +171,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
       if ((event as CustomEvent).detail?.source !== "resource-scope") {
         if (event.type === "cbgpu-school-changed") {
           selectionGeneration.current++;
+          selectionPending.current=!!(event as CustomEvent).detail?.pending;
           generation.current++;
           selected.current = "";
           setSnapshot(null);
@@ -203,6 +205,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     if (!multiSchoolEnabled || !owner)
       throw Error("로그인 후 자원 이용 학교를 선택해주세요.");
     const selection=++selectionGeneration.current;
+    selectionPending.current=true;
     generation.current++;
     selected.current = "";
     setSnapshot(null);
@@ -212,6 +215,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
     try {
       await selectAccountSchool(schoolId, owner);
       if (!live.current||selection!==selectionGeneration.current) return;
+      selectionPending.current=false;generation.current++;
       await refresh();
       if (!live.current||selection!==selectionGeneration.current) return;
       window.dispatchEvent(
@@ -221,6 +225,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
       );
     } catch (e) {
       if(!live.current||selection!==selectionGeneration.current)throw e;
+      selectionPending.current=false;generation.current++;
       await refresh();
       if(live.current&&selection===selectionGeneration.current)window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
       throw e;
