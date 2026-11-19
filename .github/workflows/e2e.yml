@@ -25,6 +25,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Cold authentication link regression
         run: CBGPU_BROWSER_QA=1 node --test tests/auth-flow-link.browser.test.mts
+      - name: Queued job dropdown above modal
+        run: node tests/manufacturing/queue-select-browser.mts
       - name: Browser demo
         id: browser_demo
         run: |
