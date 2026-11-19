@@ -216,18 +216,17 @@ function ResourceSession({ children }: { children: ReactNode }) {
       await selectAccountSchool(schoolId, owner);
       if (!live.current||selection!==selectionGeneration.current) return;
       selectionPending.current=false;generation.current++;
-      await refresh();
-      if (!live.current||selection!==selectionGeneration.current) return;
       window.dispatchEvent(
         new CustomEvent("cbgpu-school-changed", {
           detail: { school_id: schoolId, source: "resource-scope" },
         }),
       );
+      await refresh();
     } catch (e) {
       if(!live.current||selection!==selectionGeneration.current)throw e;
       selectionPending.current=false;generation.current++;
+      window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
       await refresh();
-      if(live.current&&selection===selectionGeneration.current)window.dispatchEvent(new CustomEvent("cbgpu-school-changed",{detail:{source:"resource-scope"}}));
       throw e;
     }
   }
