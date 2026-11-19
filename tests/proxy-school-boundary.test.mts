@@ -19,3 +19,11 @@ test('manufacturing portals serve real public brand variants without widening po
   for(const path of ['/brand/v1/private.json','/brand/v1/unknown.svg','/brand/v2/symbol_black.svg','/api/admin/profiles','/dashboard'])assert.equal(run(request(host,path)).status,404);
  }
 });
+
+test('private manufacturing storage rewrites use the HTTP listener behind the HTTPS tunnel',()=>{
+ const run=proxy({CBGPU_MULTISCHOOL_V1:'1'}),key='synthetic-owner/fixture.3mf';
+ for(const host of ['cbgpu.com','app.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'])for(const method of ['GET','HEAD'])for(const mode of ['object/','object/authenticated/','object/info/authenticated/']){
+  const request=new NextRequest('https://localhost:3000/backend/storage/v1/'+mode+'manufacturing/'+key+'?token=never-forward',{method,headers:{host,'x-forwarded-proto':'https',authorization:'Bearer synthetic-caller'}}),response=run(request),target=new URL(response.headers.get('x-middleware-rewrite')!);
+  assert.equal(target.origin,'http://localhost:3000');assert.equal(target.pathname,'/api/manufacturing/file-read');assert.equal(target.searchParams.get('key'),key);assert.equal(target.searchParams.get('metadata'),mode.includes('info')?'1':null);assert.equal(target.searchParams.get('token'),null);assert.equal(response.headers.get('x-middleware-request-authorization'),'Bearer synthetic-caller');assert.equal(response.headers.get('x-middleware-request-x-cbgpu-public-host'),host);assert.match(response.headers.get('cache-control')!,/no-store/);
+ }
+});
