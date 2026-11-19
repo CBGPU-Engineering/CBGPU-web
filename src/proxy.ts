@@ -53,7 +53,9 @@ export function proxy(request: NextRequest) {
     return new NextResponse('Not found',{status:404});
   }
   if(manufacturingHost){
-    const allowed=path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/manufacturing/file-read'||path==='/api/schools/memberships'||path==='/api/schools/current-school'||path==='/api/schools/resource-contexts'||/^\/api\/schools\/schools\/[-a-zA-Z0-9_]+\/(?:life-sources|resource-access)$/.test(path)||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
+    // Shared logo/theme variants are public assets, not additional portal capabilities.
+    const brandAsset=['GET','HEAD'].includes(request.method)&&/^\/brand\/v1\/(?:(?:symbol|horizontal|wordmark)_(?:black|white)\.svg|app_icon_(?:dark|light)\.svg|icon_(?:dark_512|light_(?:180|192|512))\.png|symbol_(?:black|white)\.png|favicon\.ico)$/.test(path);
+    const allowed=brandAsset||path==='/'||/^\/(?:manage\/manufacturing|auth|_next|img|backend)(?:\/|$)/.test(path)||path==='/api/manufacturing/access'||path==='/api/manufacturing/file-read'||path==='/api/schools/memberships'||path==='/api/schools/current-school'||path==='/api/schools/resource-contexts'||/^\/api\/schools\/schools\/[-a-zA-Z0-9_]+\/(?:life-sources|resource-access)$/.test(path)||path==='/api/auth/shared-session'||path==='/api/timetable'||/^\/api\/study\/(?:proxy|auth)(?:\/|$)/.test(path)||path==='/favicon.ico';
     if(!allowed)return new NextResponse('Not found',{status:404});
     if(path==='/')return NextResponse.redirect(new URL('https://'+host+'/manage/manufacturing'),307);
   }
