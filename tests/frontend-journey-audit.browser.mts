@@ -6,7 +6,7 @@ const origin=process.env.CBGPU_FRONTEND_AUDIT_ORIGIN||'http://localhost:13852';
 assert.match(origin,/^http:\/\/(localhost|127\.0\.0\.1):\d+$/);
 const screenshots='docs/screenshots/frontend-reliability-synthetic-20261120';
 await mkdir(screenshots,{recursive:true});
-const browser=await chromium.launch({headless:true,executablePath:'/tmp/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM,args:['--no-sandbox','--disable-dev-shm-usage']});
 const login=async(email:string)=>fetch(origin+'/backend/auth/v1/token?grant_type=password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:'demo-only'})}).then(r=>r.json());
 try{
  const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import {seededRandom} from '../src/lib/arcadeClient.ts';
 const origin=process.env.CBGPU_ARCADE_TEST_ORIGIN||'http://localhost:13848';
 assert.match(origin,/^http:\/\/(localhost|127\.0\.0\.1):\d+$/);
-const browser=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM||'/tmp/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM,args:['--no-sandbox','--disable-dev-shm-usage']});
 const evidence:unknown[]=[];
 const screenshotDirectory='docs/screenshots/arcade-synthetic-20261120';
 await mkdir(screenshotDirectory,{recursive:true});
