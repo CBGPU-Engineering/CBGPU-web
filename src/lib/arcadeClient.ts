@@ -19,7 +19,7 @@ export async function createArcadeRun(game: ArcadeGame, ranked: boolean, config:
   let session: { id: string; seed: number } | null = null;
   if (ranked) {
     try {
-      const response = await fetch('/api/arcade/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game, params: config }) });
+      const response = await fetch('/api/arcade/sessions', { signal: AbortSignal.timeout(8000), method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ game, params: config }) });
       if (response.ok) {
         const value = await response.json();
         if (typeof value.id === 'string' && Number.isInteger(value.seed)) session = value;
@@ -36,7 +36,7 @@ export async function createArcadeRun(game: ArcadeGame, ranked: boolean, config:
       if (!session || exhausted || !actions.length) return Promise.resolve(false);
       if (submitted) return submitted;
       submitted = fetch(`/api/arcade/sessions/${encodeURIComponent(session.id)}/submit`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actions }),
+        signal: AbortSignal.timeout(12000), method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actions }),
       }).then(response => response.ok).catch(() => false);
       return submitted;
     },
