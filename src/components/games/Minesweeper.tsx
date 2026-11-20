@@ -94,7 +94,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
     run.current.record({ type: 'reveal', r, c });
     let g = grid;
     if (firstClick) {
-      g = placeMines(makeGrid(cfg.rows, cfg.cols), cfg.rows, cfg.cols, cfg.mines, r, c, run.current.random);
+      g = placeMines(grid, cfg.rows, cfg.cols, cfg.mines, r, c, run.current.random);
       setFirstClick(false);
       setPhase('playing');
     }
