@@ -63,7 +63,7 @@ function flood(grid: Grid, r: number, c: number, rows: number, cols: number): Gr
 const ADJ_COLORS = ['', '#3b82f6','#22c55e','#ef4444','#8b5cf6','#f97316','#06b6d4','#e11d48','#6b7280'];
 
 export default function Minesweeper(props: RankedGameProps = {}) {
-  const { run, pending, start, finish } = useArcadeRun('mines', props);
+  const { run, pending, start, finish, statusText } = useArcadeRun('mines', props);
   const initialized = useRef(false);
   const [level, setLevel] = useState<Level>('easy');
   const [grid, setGrid] = useState<Grid>(() => makeGrid(9, 9));
@@ -132,13 +132,14 @@ export default function Minesweeper(props: RankedGameProps = {}) {
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <p role="status" className="text-sm text-muted-foreground text-center">{statusText}</p>
       {/* difficulty + hud */}
       <div className="flex items-center gap-2 flex-wrap justify-center">
         {(Object.keys(LEVELS) as Level[]).map(lv => (
           <button key={lv} onClick={() => { setLevel(lv); reset(lv); }}
             className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
               level === lv ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            }`>{lv === 'easy' ? '쉬움' : lv === 'medium' ? '보통' : '어려움'}</button>
+            }`}>{lv === 'easy' ? '쉬움' : lv === 'medium' ? '보통' : '어려움'}</button>
         ))}
         <span className="text-xs font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
         <span className="text-xs font-black text-muted-foreground">⏱ {time}s</span>

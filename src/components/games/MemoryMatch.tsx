@@ -24,7 +24,7 @@ function makeCards(count: number, random: () => number): Card[] {
 }
 
 export default function MemoryMatch(props: RankedGameProps = {}) {
-  const { run, pending, start: startRun, finish } = useArcadeRun('memory', props);
+  const { run, pending, start: startRun, finish, statusText } = useArcadeRun('memory', props);
   const initialized = useRef(false);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const version = useRef(0);
@@ -98,6 +98,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
 
   return (
     <div className="flex flex-col items-center gap-5">
+      <p role="status" className="text-sm text-muted-foreground text-center">{statusText}</p>
       {/* controls */}
       <div className="flex items-center gap-3 flex-wrap justify-center">
         <div className="flex gap-1">
