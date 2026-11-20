@@ -37,6 +37,6 @@ function GamesSession(){
   <div className="arcade-columns"><div className="arcade-playfield"><div className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">{selected.emoji} {selected.label}</h2><span className="text-sm text-muted-foreground">{ranked?'기록 모드':selected.touch?'터치로 플레이':'방향키로 플레이'}</span></div>
    <div key={active+':'+ranked} className="arcade-game">{active==='flappy'&&<FlappyBird {...props}/>}{active==='memory'&&<MemoryMatch {...props}/>} {active==='mines'&&<Minesweeper {...props}/>} {active==='snake'&&<Snake {...props}/>}{active==='tetris'&&<Tetris {...props}/>}{active==='2048'&&<Game2048 {...props}/>}</div>
    {saved&&<p role="status" className="arcade-saved">✨ 플레이 기록을 확인하고 저장했어요. 내 기록에서 확인해 보세요.</p>}
-  </div><GameLeaderboard game={active} ranked={ranked} setRanked={setRanked} revision={revision} supported={SUPPORTED.includes(active)}/></div>
+  </div><GameLeaderboard game={active} ranked={ranked} setRanked={value=>{setSaved(false);setRanked(value)}} revision={revision} supported={SUPPORTED.includes(active)}/></div>
  </section>;
 }
