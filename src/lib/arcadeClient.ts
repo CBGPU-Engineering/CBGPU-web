@@ -44,13 +44,14 @@ export async function createArcadeRun(game: ArcadeGame, ranked: boolean, config:
       if (!session || exhausted || !actions.length) return Promise.resolve(false);
       if (submitted) return submitted;
       const target = session;
+      const replay = [...actions];
       const expectedOwner = owner?.userId;
       // Resolve fresh credentials at submit, but never cross the original account boundary.
       submitted = (async () => {
         const current = await credentials();
         if (!current?.accessToken || !expectedOwner || current.userId !== expectedOwner) return false;
         const response = await fetch(`/api/arcade/sessions/${encodeURIComponent(target.id)}/submit`, {
-          signal: AbortSignal.timeout(12000), method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${current.accessToken}` }, body: JSON.stringify({ actions }),
+          signal: AbortSignal.timeout(12000), method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${current.accessToken}` }, body: JSON.stringify({ actions: replay }),
         });
         return response.ok;
       })().catch(() => false);

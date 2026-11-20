@@ -86,3 +86,24 @@ test('submit uses the refreshed bearer for the original owner', async () => {
     assert.deepEqual(bearers, ['Bearer fixture-initial', 'Bearer fixture-refreshed']);
   } finally { globalThis.fetch = original; }
 });
+
+test('a save captures its replay before waiting for refreshed credentials', async () => {
+  const original = globalThis.fetch;
+  let submitted: unknown;
+  globalThis.fetch = async (_url, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (body.actions) submitted = body.actions;
+    return Response.json({ id: 'snapshot', seed: 2 });
+  };
+  try {
+    let resolve!: (value: Awaited<ReturnType<typeof credential>>) => void;
+    let reads = 0;
+    const run = await createArcadeRun('2048', true, {}, () => ++reads === 1 ? credential() : new Promise(r => { resolve = r; }));
+    run.record('left');
+    const pending = run.finish();
+    run.record('right');
+    resolve(await credential());
+    assert.equal(await pending, true);
+    assert.deepEqual(submitted, ['left']);
+  } finally { globalThis.fetch = original; }
+});
