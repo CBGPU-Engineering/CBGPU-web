@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Download, File as FileIcon, FileArchive, FileImage, FileText, FolderOpen, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
 import { supabase } from '@/lib/supabase';
+import { readMaterialsList } from '@/lib/materialsListRead';
 import { getNativeBridge } from '@/lib/nativeBridge';
 import { MATERIALS_API_BASE as API_BASE, formatBytes as fileSize, materialsToken as sessionToken } from '@/lib/materialsApi';
 
@@ -43,6 +44,11 @@ async function apiError(response: Response) {
 
 export default function MaterialsPage() {
   const { user } = useAuth();
+  return <MaterialsSession key={user?.id || 'anonymous'} />;
+}
+
+function MaterialsSession() {
+  const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,21 +59,37 @@ export default function MaterialsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Material | null>(null);
 
+  const [listError, setListError] = useState('');
+  const request = useRef<AbortController | null>(null);
+  const userId = user?.id;
   const load = useCallback(async (offset = 0) => {
-    if (!user) { setLoading(false); return; }
-    setLoading(true);
-    const { data, error } = await supabase.from('shared_materials')
-      .select('id,uploader_id,title,tags,file_name,content_type,size_bytes,created_at')
-      .eq('status', 'ready').order('created_at', { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1);
-    setLoading(false);
-    if (error) { showError('자료 목록을 불러오지 못했습니다: ' + error.message); return; }
-    const rows = (data ?? []) as Material[];
-    setMaterials(previous => offset ? [...previous, ...rows] : rows);
-    setHasMore(rows.length === PAGE_SIZE);
-  }, [user, showError]);
+    request.current?.abort();
+    if (!userId) { setLoading(false); return; }
+    const controller = new AbortController();
+    request.current = controller;
+    setLoading(true); setListError('');
+    try {
+      const { data, error } = await readMaterialsList(signal => supabase.from('shared_materials')
+        .select('id,uploader_id,title,tags,file_name,content_type,size_bytes,created_at')
+        .eq('status', 'ready').order('created_at', { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1).abortSignal(signal), controller.signal);
+      if (request.current !== controller || controller.signal.aborted) return;
+      if (error) throw error;
+      const rows = (data ?? []) as Material[];
+      setMaterials(previous => offset ? [...previous, ...rows] : rows);
+      setHasMore(rows.length === PAGE_SIZE);
+    } catch {
+      if (request.current === controller && !controller.signal.aborted)
+        setListError('자료 목록을 불러오지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.');
+    } finally {
+      if (request.current === controller) setLoading(false);
+    }
+  }, [userId]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    return () => { request.current?.abort(); request.current = null; };
+  }, [load]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
@@ -150,6 +172,11 @@ export default function MaterialsPage() {
       })}
     </div>}
 
+    {listError && <div role="alert" className="rounded-xl border border-border p-4 text-sm">
+      <p>{listError}</p>
+      <Button variant="outline" className="mt-3" disabled={loading} onClick={() => void load()}>목록 다시 불러오기</Button>
+    </div>}
+
     {loading && !materials.length ? <div className="grid gap-3 sm:grid-cols-2" aria-busy="true" aria-label="자료를 불러오는 중">
       {[0, 1, 2, 3].map(index => <div key={index} className="h-[132px] animate-pulse rounded-2xl border border-border/50 bg-card" />)}
     </div> :
@@ -182,7 +209,7 @@ export default function MaterialsPage() {
             </div>
           </article>;
         })}
-      </div> : <div className="rounded-2xl border-2 border-dashed bg-muted/10 px-4 py-16 text-center text-muted-foreground">
+      </div> : listError ? null : <div className="rounded-2xl border-2 border-dashed bg-muted/10 px-4 py-16 text-center text-muted-foreground">
         <FolderOpen className="mx-auto mb-4 size-12 opacity-20" />
         <p className="text-sm font-semibold">{filtering ? '조건에 맞는 자료가 없어요' : '아직 공유된 자료가 없어요'}</p>
         {filtering

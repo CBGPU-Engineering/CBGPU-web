@@ -135,7 +135,8 @@ export default function TimetablePage() {
   const initScopeKey=scopeKey+':'+(ownStudentNumber||'');
   const didInitRef = useRef<string|null>(null);
   useEffect(() => {
-    if(authLoading||user&&!profile)return;
+    // The profile only suggests a class; an unavailable optional profile must not block school data.
+    if(authLoading)return;
     if(didInitRef.current===initScopeKey)return;
     departmentRef.current=null;setDepartment(null);setDepartments([]);setDepartmentRequired(false);setSource('comcigan');requestRef.current++;setGrid({});setGridContext(null);setFreshness(null);setSubjectDetail(null);setEditing(false);setDbMissing(false);setError('');setLoading(false);
     didInitRef.current=initScopeKey;
