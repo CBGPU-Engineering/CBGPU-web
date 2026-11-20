@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
 import { Button } from '@/components/ui/button';
 
 const W = 360, H = 480;
@@ -8,9 +10,11 @@ const GRAVITY = 0.45, JUMP = -8.5, PIPE_W = 52, GAP = 140, PIPE_SPEED = 2.8, BIR
 interface Pipe { x: number; top: number; id: number }
 
 let _pipeId = 0;
-function randTop() { return 60 + Math.random() * (H - GAP - 120); }
+function randTop(random: () => number) { return 60 + random() * (H - GAP - 120); }
 
-export default function FlappyBird() {
+export default function FlappyBird(props: RankedGameProps) {
+  const arcade = useArcadeRun('flappy', props);
+  const randomRef = useRef<() => number>(Math.random);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const s = useRef({
     bird: { y: H / 2, vy: 0 },
@@ -22,7 +26,8 @@ export default function FlappyBird() {
     over: false,
     started: false,
   });
-  const rafRef = useRef<number>(0);
+  const flappedFrame = useRef(-1);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [phase, setPhase] = useState<'idle' | 'running' | 'over'>('idle');
@@ -82,22 +87,34 @@ export default function FlappyBird() {
     const st = s.current;
     if (st.over) return;
     if (!st.running) {
-      st.running = true; st.started = true;
-      setPhase('running');
+      if (arcade.pending) return;
+      void arcade.start({}, random => {
+        randomRef.current = random;
+        st.running = true; st.started = true;
+        flappedFrame.current = st.frame;
+        arcade.run.current?.record('flap');
+        st.bird.vy = JUMP;
+        setPhase('running');
+      });
+      return;
     }
+    if (flappedFrame.current === st.frame) return;
+    flappedFrame.current = st.frame;
+    arcade.run.current?.record('flap');
     st.bird.vy = JUMP;
-  }, []);
+  }, [arcade.start, arcade.pending]);
 
   const tick = useCallback(() => {
     const st = s.current;
-    if (!st.running) { draw(); rafRef.current = requestAnimationFrame(tick); return; }
+    if (!st.running) { draw(); return; }
+    arcade.run.current?.record('tick');
 
     st.bird.vy += GRAVITY;
     st.bird.y += st.bird.vy;
     st.frame++;
 
     // spawn pipe
-    if (st.frame % 90 === 0) st.pipes.push({ x: W + 10, top: randTop(), id: _pipeId++ });
+    if (st.frame % 90 === 0) st.pipes.push({ x: W + 10, top: randTop(randomRef.current), id: _pipeId++ });
     st.pipes.forEach(p => { p.x -= PIPE_SPEED; });
     st.pipes = st.pipes.filter(p => p.x > -PIPE_W - 10);
 
@@ -120,33 +137,39 @@ export default function FlappyBird() {
     }
 
     draw();
-    rafRef.current = requestAnimationFrame(tick);
   }, [draw]);
 
   function endGame() {
     s.current.running = false; s.current.over = true;
-    cancelAnimationFrame(rafRef.current);
+    arcade.finish();
     setBest(b => Math.max(b, s.current.score));
     setPhase('over');
     draw();
   }
 
   const reset = useCallback(() => {
-    cancelAnimationFrame(rafRef.current);
     s.current = { bird: { y: H / 2, vy: 0 }, pipes: [], scored: new Set(), score: 0, frame: 0, running: false, over: false, started: true };
+    flappedFrame.current = -1;
     setScore(0); setPhase('idle');
-    rafRef.current = requestAnimationFrame(tick);
   }, [tick]);
 
   useEffect(() => {
-    rafRef.current = requestAnimationFrame(tick);
+    let last = performance.now();
+    intervalRef.current = setInterval(() => {
+      const now = performance.now();
+      if (now - last < 1000 / 60) return;
+      last = Math.max(last + 1000 / 60, now - 1000 / 60);
+      tick();
+    }, 8);
+
     const onKey = (e: KeyboardEvent) => { if (e.code === 'Space') { e.preventDefault(); flap(); } };
     window.addEventListener('keydown', onKey);
-    return () => { cancelAnimationFrame(rafRef.current); window.removeEventListener('keydown', onKey); };
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); window.removeEventListener('keydown', onKey); };
   }, [tick, flap]);
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
       <div className="flex items-center gap-6">
         <span className="text-sm font-black uppercase tracking-widest">Score: {score}</span>
         <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Best: {best}</span>

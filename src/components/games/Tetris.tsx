@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, ArrowDown, RotateCw, ChevronsDown } from 'lucide-react';
 
@@ -24,8 +26,8 @@ function createBoard(): Board {
   return Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 }
 
-function randPiece(): Piece {
-  const p = PIECES[Math.floor(Math.random() * PIECES.length)];
+function randPiece(random: () => number = Math.random): Piece {
+  const p = PIECES[Math.floor(random() * PIECES.length)];
   return { shape: p.shape.map(r => [...r]), color: p.color, x: Math.floor(COLS / 2) - Math.floor(p.shape[0].length / 2), y: 0 };
 }
 
@@ -43,7 +45,9 @@ function valid(board: Board, piece: Piece, dx = 0, dy = 0, shape = piece.shape):
   );
 }
 
-export default function Tetris() {
+export default function Tetris(props: RankedGameProps) {
+  const arcade = useArcadeRun('tetris', props);
+  const randomRef = useRef<() => number>(Math.random);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sRef = useRef({ board: createBoard(), piece: null as Piece | null, next: randPiece(), score: 0, lines: 0, running: false });
   const [score, setScore] = useState(0);
@@ -112,11 +116,12 @@ export default function Tetris() {
     s.lines += cleared;
     setScore(s.score); setLines(s.lines);
     s.piece = s.next;
-    s.next = randPiece();
+    s.next = randPiece(randomRef.current);
     if (!valid(s.board, s.piece)) {
       s.running = false;
       if (intervalRef.current) clearInterval(intervalRef.current);
       setGameOver(true);
+      arcade.finish();
     }
     draw();
   }, [draw]);
@@ -124,19 +129,26 @@ export default function Tetris() {
   const tick = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('tick');
     if (valid(s.board, s.piece, 0, 1)) { s.piece.y++; draw(); } else lock();
   }, [draw, lock]);
 
   const start = useCallback(() => {
-    const s = sRef.current;
-    s.board = createBoard(); s.piece = randPiece(); s.next = randPiece();
-    s.score = 0; s.lines = 0; s.running = true;
-    setScore(0); setLines(0); setGameOver(false); setStarted(true); setPaused(false);
-    pausedRef.current = false;
+    if (arcade.pending) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(tick, 400);
-    draw();
-  }, [tick, draw]);
+    sRef.current.running = false;
+    void arcade.start({}, random => {
+      randomRef.current = random;
+      const s = sRef.current;
+      s.board = createBoard(); s.piece = randPiece(randomRef.current); s.next = randPiece(randomRef.current);
+      s.score = 0; s.lines = 0; s.running = true;
+      setScore(0); setLines(0); setGameOver(false); setStarted(true); setPaused(false);
+      pausedRef.current = false;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(tick, 400);
+      draw();
+      });
+  }, [tick, draw, arcade]);
 
   const togglePause = useCallback(() => {
     pausedRef.current = !pausedRef.current;
@@ -146,27 +158,32 @@ export default function Tetris() {
   const moveLeft = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('left');
     if (valid(s.board, s.piece, -1)) { s.piece.x--; draw(); }
   }, [draw]);
   const moveRight = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('right');
     if (valid(s.board, s.piece, 1)) { s.piece.x++; draw(); }
   }, [draw]);
   const softDrop = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('down');
     if (valid(s.board, s.piece, 0, 1)) { s.piece.y++; draw(); } else lock();
   }, [draw, lock]);
   const rotatePiece = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('rotate');
     const rot = rotate90(s.piece.shape);
     if (valid(s.board, s.piece, 0, 0, rot)) { s.piece.shape = rot; draw(); }
   }, [draw]);
   const hardDrop = useCallback(() => {
     const s = sRef.current;
     if (!s.piece || !s.running || pausedRef.current) return;
+    arcade.run.current?.record('drop');
     while (valid(s.board, s.piece, 0, 1)) s.piece.y++;
     lock();
   }, [lock]);
@@ -191,6 +208,7 @@ export default function Tetris() {
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
       <div className="flex items-center gap-6">
         <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
         <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Lines</p><p className="text-xl font-black">{lines}</p></div>
