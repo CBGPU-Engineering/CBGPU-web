@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
 import { Button } from '@/components/ui/button';
 
 const CELL = 22;
@@ -11,15 +13,17 @@ type Dir = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
 const OPPOSITE: Record<Dir, Dir> = { UP: 'DOWN', DOWN: 'UP', LEFT: 'RIGHT', RIGHT: 'LEFT' };
 
-function randFood(snake: Point[]): Point {
+function randFood(snake: Point[], random: () => number): Point {
   let pos: Point;
   do {
-    pos = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+    pos = { x: Math.floor(random() * COLS), y: Math.floor(random() * ROWS) };
   } while (snake.some(s => s.x === pos.x && s.y === pos.y));
   return pos;
 }
 
-export default function Snake() {
+export default function Snake(props: RankedGameProps) {
+  const arcade = useArcadeRun('snake', props);
+  const randomRef = useRef<() => number>(Math.random);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gRef = useRef({
     snake: [{ x: 10, y: 10 }] as Point[],
@@ -64,6 +68,8 @@ export default function Snake() {
 
   const placePiece = useCallback(() => {
     const g = gRef.current;
+    if (!g.running) return;
+    arcade.run.current?.record(g.nextDir);
     g.dir = g.nextDir;
     const head = g.snake[0];
     const nh: Point = {
@@ -75,31 +81,45 @@ export default function Snake() {
       g.running = false;
       if (intervalRef.current) clearInterval(intervalRef.current);
       setGameOver(true);
+      arcade.finish();
       return;
     }
 
     const ate = nh.x === g.food.x && nh.y === g.food.y;
     g.snake = [nh, ...g.snake];
     if (!ate) g.snake.pop();
-    else { g.food = randFood(g.snake); g.score++; setScore(g.score); }
+    else {
+      g.score++; setScore(g.score);
+      if (g.snake.length === COLS * ROWS) {
+        g.running = false;
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        setGameOver(true); arcade.finish();
+      } else g.food = randFood(g.snake, randomRef.current);
+    }
     draw();
   }, [draw]);
 
   const start = useCallback(() => {
-    const g = gRef.current;
-    g.snake = [{ x: 10, y: 10 }];
-    g.dir = 'RIGHT'; g.nextDir = 'RIGHT';
-    g.food = randFood(g.snake);
-    g.score = 0; g.running = true;
-    setScore(0); setGameOver(false); setStarted(true);
+    if (arcade.pending) return;
     if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(placePiece, 110);
-    draw();
-  }, [placePiece, draw]);
+    gRef.current.running = false;
+    void arcade.start({}, random => {
+      randomRef.current = random;
+      const g = gRef.current;
+      g.snake = [{ x: 10, y: 10 }];
+      g.dir = 'RIGHT'; g.nextDir = 'RIGHT';
+      g.food = randFood(g.snake, randomRef.current);
+      g.score = 0; g.running = true;
+      setScore(0); setGameOver(false); setStarted(true);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(placePiece, 110);
+      draw();
+      });
+  }, [placePiece, draw, arcade]);
 
   const setNextDir = useCallback((nd: Dir) => {
     const g = gRef.current;
-    if (g.dir !== OPPOSITE[nd]) g.nextDir = nd;
+    if (g.running && g.dir !== OPPOSITE[nd]) g.nextDir = nd;
   }, []);
 
   const touchOrigin = useRef<{ x: number; y: number } | null>(null);
@@ -134,9 +154,11 @@ export default function Snake() {
 
   return (
     <div className="flex flex-col items-center gap-4">
+      <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
+      {arcade.retryButton}
       <div className="flex items-center gap-4">
         <span className="text-sm font-black uppercase tracking-widest">Score: {score}</span>
-        {started && !gameOver && <Button variant="outline" size="sm" onClick={() => { if (intervalRef.current) clearInterval(intervalRef.current); setGameOver(true); }}>Stop</Button>}
+        {started && !gameOver && <Button variant="outline" size="sm" onClick={() => { gRef.current.running = false; arcade.run.current?.record('stop'); arcade.finish(); if (intervalRef.current) clearInterval(intervalRef.current); setGameOver(true); }}>Stop</Button>}
       </div>
       <canvas
         ref={canvasRef} width={COLS * CELL} height={ROWS * CELL}
