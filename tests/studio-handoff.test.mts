@@ -13,6 +13,12 @@ test('operator config only accepts one UUID, loopback adapter and HTTPS project 
  for(const patch of [{CBGPU_STUDIO_ADAPTER_URL:'http://192.168.1.1:9000'},{CBGPU_STUDIO_ADAPTER_URL:'http://127.0.0.1:9000/injected'},{CBGPU_STUDIO_PUBLIC_ORIGIN:'https://evil.invalid'},{CBGPU_STUDIO_PUBLIC_ORIGIN:config.publicOrigin+'/?return=https://evil.invalid'},{CBGPU_STUDIO_PROJECT_ID:'../../other'}])assert.equal(studioHandoffConfig({...env,...patch}),null);
 });
 
+test('HTTPS adapter may use only the exact configured project origin',()=>{
+ const env={CBGPU_STUDIO_PROJECT_ID:project,CBGPU_STUDIO_ADAPTER_URL:config.publicOrigin,CBGPU_STUDIO_PUBLIC_ORIGIN:config.publicOrigin};
+ assert.deepEqual(studioHandoffConfig(env),{...config,adapterOrigin:config.publicOrigin});
+ for(const adapter of ['https://different.server.cbgpu.com',config.publicOrigin+':8443',config.publicOrigin+'/_cbgpu/auth/tickets',config.publicOrigin+'/?next=other',config.publicOrigin+'/#fragment',config.publicOrigin.replace('https://','https://user:pass@'),'http://'+new URL(config.publicOrigin).host])assert.equal(studioHandoffConfig({...env,CBGPU_STUDIO_ADAPTER_URL:adapter}),null);
+});
+
 test('login return keeps the challenge inside a safe first-party path',()=>{
  const path=studioLoginReturn(project,challenge);assert.equal(safeAuthReturn(path),path);
  assert.equal(studioLoginReturn(project,'https://evil.invalid'),'/server');

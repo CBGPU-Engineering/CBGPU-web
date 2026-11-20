@@ -9,8 +9,11 @@ export function studioHandoffConfig(env:Readonly<Record<string,string|undefined>
   const projectId=env.CBGPU_STUDIO_PROJECT_ID||'';
   if(!studioProjectPattern.test(projectId))return null;
   const adapter=new URL(env.CBGPU_STUDIO_ADAPTER_URL||''),target=new URL(env.CBGPU_STUDIO_PUBLIC_ORIGIN||'');
-  if(!['http:','https:'].includes(adapter.protocol)||!['127.0.0.1','localhost','[::1]'].includes(adapter.hostname)||adapter.username||adapter.password||adapter.pathname!=='/'||adapter.search||adapter.hash)return null;
   if(target.protocol!=='https:'||target.username||target.password||target.port||target.pathname!=='/'||target.search||target.hash||!/^[-a-z0-9]+\.server\.cbgpu\.com$/.test(target.hostname))return null;
+  if(adapter.username||adapter.password||adapter.pathname!=='/'||adapter.search||adapter.hash)return null;
+  const loopback=['http:','https:'].includes(adapter.protocol)&&['127.0.0.1','localhost','[::1]'].includes(adapter.hostname);
+  const sameTarget=adapter.protocol==='https:'&&adapter.origin===target.origin&&!adapter.port;
+  if(!loopback&&!sameTarget)return null;
   return{projectId,adapterOrigin:adapter.origin,publicOrigin:target.origin};
  }catch{return null}
 }
