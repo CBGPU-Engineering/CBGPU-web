@@ -3,3 +3,14 @@ test('school concurrency stays bounded even under a burst',async()=>{const run=c
 test('repeated outages temporarily stop new calls and queue overflow fails without executing',async()=>{const run=createStudyReadQueue();for(let i=0;i<4;i++)assert.equal((await run(async()=>({status:503}))).status,503);let called=false;await assert.rejects(run(async()=>{called=true;return {status:200}}));assert.equal(called,false);const one=createStudyReadQueue(1,0);let release;const pending=one(()=>new Promise<{status:number}>(r=>release=()=>r({status:200})));await assert.rejects(one(async()=>({status:200})));release();await pending;assert.equal((await one(async()=>({status:200}))).status,200)});
 
 test('school rate limits pause subsequent calls instead of amplifying a 429 burst',async()=>{const run=createStudyReadQueue();assert.equal((await run(async()=>({status:429}))).status,429);let called=false;await assert.rejects(run(async()=>{called=true;return {status:200}}));assert.equal(called,false)});
+
+test('expired queued reads never execute later or consume a concurrency slot',async()=>{
+ const run=createStudyReadQueue(1,1,20);let release!:()=>void;
+ const first=run(()=>new Promise<{status:number}>(r=>{release=()=>r({status:200})}));
+ let executed=false;
+ await assert.rejects(run(async()=>{executed=true;return{status:200}}),/지연/);
+ assert.equal(executed,false);
+ const next=run(async()=>({status:200}));release();await first;
+ assert.equal((await next).status,200);assert.equal(executed,false);
+ assert.equal((await run(async()=>({status:200}))).status,200);
+});
