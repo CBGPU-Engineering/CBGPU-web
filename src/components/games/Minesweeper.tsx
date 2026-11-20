@@ -1,6 +1,9 @@
 'use client';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
 
 type Cell = { mine: boolean; revealed: boolean; flagged: boolean; adj: number };
 type Grid = Cell[][];
@@ -18,13 +21,13 @@ function makeGrid(rows: number, cols: number): Grid {
     Array.from({ length: cols }, () => ({ mine: false, revealed: false, flagged: false, adj: 0 })));
 }
 
-function placeMines(grid: Grid, rows: number, cols: number, mines: number, safeR: number, safeC: number): Grid {
+function placeMines(grid: Grid, rows: number, cols: number, mines: number, safeR: number, safeC: number, random: () => number): Grid {
   const g = grid.map(r => r.map(c => ({ ...c })));
   let placed = 0;
   while (placed < mines) {
-    const r = Math.floor(Math.random() * rows);
-    const c = Math.floor(Math.random() * cols);
-    if (!g[r][c].mine && Math.abs(r - safeR) > 1 || Math.abs(c - safeC) > 1) {
+    const r = Math.floor(random() * rows);
+    const c = Math.floor(random() * cols);
+    if (!g[r][c].mine && (Math.abs(r - safeR) > 1 || Math.abs(c - safeC) > 1)) {
       if (!g[r][c].mine) { g[r][c].mine = true; placed++; }
     }
   }
@@ -59,7 +62,9 @@ function flood(grid: Grid, r: number, c: number, rows: number, cols: number): Gr
 
 const ADJ_COLORS = ['', '#3b82f6','#22c55e','#ef4444','#8b5cf6','#f97316','#06b6d4','#e11d48','#6b7280'];
 
-export default function Minesweeper() {
+export default function Minesweeper(props: RankedGameProps = {}) {
+  const { run, pending, start, finish } = useArcadeRun('mines', props);
+  const initialized = useRef(false);
   const [level, setLevel] = useState<Level>('easy');
   const [grid, setGrid] = useState<Grid>(() => makeGrid(9, 9));
   const [phase, setPhase] = useState<Phase>('idle');
@@ -71,11 +76,11 @@ export default function Minesweeper() {
   const cfg = LEVELS[level];
 
   const reset = useCallback((lv: Level = level) => {
-    setGrid(makeGrid(LEVELS[lv].rows, LEVELS[lv].cols));
+    void start({ level: lv }, () => setGrid(makeGrid(LEVELS[lv].rows, LEVELS[lv].cols)));
     setPhase('idle'); setFlags(0); setTime(0); setFirstClick(true); setFlagMode(false);
-  }, [level]);
+  }, [level, start]);
 
-  useEffect(() => { reset(level); }, [level]);
+  useEffect(() => { if (!initialized.current) { initialized.current = true; reset(); } }, [reset]);
 
   useEffect(() => {
     if (phase !== 'playing') return;
@@ -84,10 +89,12 @@ export default function Minesweeper() {
   }, [phase]);
 
   const reveal = useCallback((r: number, c: number) => {
-    if (phase === 'won' || phase === 'lost') return;
+    if (pending || !run.current || phase === 'won' || phase === 'lost') return;
+    if (grid[r][c].revealed || grid[r][c].flagged) return;
+    run.current.record({ type: 'reveal', r, c });
     let g = grid;
     if (firstClick) {
-      g = placeMines(makeGrid(cfg.rows, cfg.cols), cfg.rows, cfg.cols, cfg.mines, r, c);
+      g = placeMines(makeGrid(cfg.rows, cfg.cols), cfg.rows, cfg.cols, cfg.mines, r, c, run.current.random);
       setFirstClick(false);
       setPhase('playing');
     }
@@ -100,19 +107,20 @@ export default function Minesweeper() {
     const ng = flood(g, r, c, cfg.rows, cfg.cols);
     setGrid(ng);
     const unrevealed = ng.flat().filter(cl => !cl.mine && !cl.revealed).length;
-    if (unrevealed === 0) setPhase('won');
-  }, [grid, phase, firstClick, cfg]);
+    if (unrevealed === 0) { setPhase('won'); finish(); }
+  }, [grid, phase, firstClick, cfg, pending, run, finish]);
 
   const flag = useCallback((r: number, c: number) => {
-    if (phase === 'won' || phase === 'lost') return;
+    if (pending || !run.current || phase === 'won' || phase === 'lost') return;
     const cell = grid[r][c];
     if (cell.revealed) return;
+    run.current.record({ type: 'flag', r, c });
     const ng = grid.map((row, ri) => row.map((cl, ci) =>
       ri === r && ci === c ? { ...cl, flagged: !cl.flagged } : cl
     ));
     setGrid(ng);
     setFlags(f => cell.flagged ? f - 1 : f + 1);
-  }, [grid, phase]);
+  }, [grid, phase, pending, run]);
 
   const handleCell = useCallback((e: React.MouseEvent | React.TouchEvent, r: number, c: number) => {
     e.preventDefault();
@@ -130,11 +138,11 @@ export default function Minesweeper() {
           <button key={lv} onClick={() => { setLevel(lv); reset(lv); }}
             className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
               level === lv ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-            }`}>{lv}</button>
+            }`>{lv === 'easy' ? '쉬움' : lv === 'medium' ? '보통' : '어려움'}</button>
         ))}
         <span className="text-xs font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
         <span className="text-xs font-black text-muted-foreground">⏱ {time}s</span>
-        <Button variant="outline" size="sm" className="font-black text-xs uppercase" onClick={() => reset()}>Reset</Button>
+        <Button variant="outline" size="sm" className="font-black text-xs uppercase" onClick={() => reset()}>다시 하기</Button>
       </div>
 
       {/* flag toggle (touch mode) */}

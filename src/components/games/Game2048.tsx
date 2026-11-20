@@ -2,18 +2,21 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
+
 type Grid = (number | null)[][];
 
-function createGrid(): Grid {
-  return addRandom(addRandom(Array.from({ length: 4 }, () => Array(4).fill(null))));
+function createGrid(random = Math.random): Grid {
+  return addRandom(addRandom(Array.from({ length: 4 }, () => Array(4).fill(null)), random), random);
 }
 
-function addRandom(g: Grid): Grid {
+function addRandom(g: Grid, random = Math.random): Grid {
   const empty: [number, number][] = [];
   g.forEach((row, r) => row.forEach((v, c) => { if (!v) empty.push([r, c]); }));
   if (!empty.length) return g;
-  const [r, c] = empty[Math.floor(Math.random() * empty.length)];
-  return g.map((row, ri) => row.map((v, ci) => (ri === r && ci === c ? (Math.random() < 0.9 ? 2 : 4) : v)));
+  const [r, c] = empty[Math.floor(random() * empty.length)];
+  return g.map((row, ri) => row.map((v, ci) => (ri === r && ci === c ? (random() < 0.9 ? 2 : 4) : v)));
 }
 
 function slideRow(row: (number | null)[]): { row: (number | null)[]; score: number } {
@@ -75,27 +78,30 @@ function fontSize(v: number) {
   return 'text-xl';
 }
 
-export default function Game2048() {
+export default function Game2048(props: RankedGameProps = {}) {
+  const { run, pending, start, finish } = useArcadeRun('2048', props);
+  const initialized = useRef(false);
   const [grid, setGrid] = useState<Grid>(createGrid);
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [over, setOver] = useState(false);
   const [won, setWon] = useState(false);
 
-  const reset = () => { setGrid(createGrid()); setScore(0); setOver(false); setWon(false); };
+  const reset = useCallback(() => { void start({}, random => { setGrid(createGrid(random)); setScore(0); setOver(false); setWon(false); }); }, [start]);
+  useEffect(() => { if (!initialized.current) { initialized.current = true; reset(); } }, [reset]);
 
   const handleMove = useCallback((dir: 'left' | 'right' | 'up' | 'down') => {
-    if (over) return;
-    setGrid(prev => {
-      const { grid: ng, score: gained } = applyMove(prev, dir);
-      if (JSON.stringify(ng) === JSON.stringify(prev)) return prev;
-      const final = addRandom(ng);
-      setScore(s => { const ns = s + gained; setBest(b => Math.max(b, ns)); return ns; });
-      if (!won && final.flat().includes(2048)) setWon(true);
-      if (isOver(final)) setOver(true);
-      return final;
-    });
-  }, [over, won]);
+    if (over || pending || !run.current) return;
+    const { grid: ng, score: gained } = applyMove(grid, dir);
+    if (JSON.stringify(ng) === JSON.stringify(grid)) return;
+    run.current.record(dir);
+    const final = addRandom(ng, run.current.random);
+    setGrid(final);
+    const nextScore = score + gained;
+    setScore(nextScore); setBest(b => Math.max(b, nextScore));
+    if (!won && final.flat().includes(2048)) setWon(true);
+    if (isOver(final)) { setOver(true); finish(); }
+  }, [over, pending, run, grid, score, won, finish]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -125,10 +131,11 @@ export default function Game2048() {
 
   return (
     <div className="flex flex-col items-center gap-5">
-      <div className="flex items-center gap-6">
-        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
-        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Best</p><p className="text-xl font-black">{best}</p></div>
-        <Button onClick={reset} variant="outline" size="sm" className="font-black text-xs uppercase tracking-widest">New Game</Button>
+      <div className="flex flex-wrap justify-center items-center gap-3">
+        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">점수</p><p className="text-xl font-black">{score}</p></div>
+        <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">최고</p><p className="text-xl font-black">{best}</p></div>
+        {props.ranked && <Button onClick={finish} disabled={pending || score === 0} variant="outline" size="sm">기록 저장</Button>}
+        <Button onClick={reset} disabled={pending} variant="outline" size="sm" className="font-black text-xs uppercase tracking-widest">새 게임</Button>
       </div>
 
       <div
@@ -151,14 +158,14 @@ export default function Game2048() {
 
       {won && !over && (
         <div className="flex items-center gap-3 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl">
-          <p className="text-green-500 font-black uppercase tracking-widest text-sm">You reached 2048!</p>
-          <Button onClick={() => setWon(false)} size="sm" variant="outline" className="font-black text-xs">Keep going</Button>
+          <p className="text-green-500 font-black uppercase tracking-widest text-sm">2048 달성!</p>
+          <Button onClick={() => setWon(false)} size="sm" variant="outline" className="font-black text-xs">계속하기</Button>
         </div>
       )}
       {over && (
         <div className="flex flex-col items-center gap-2">
-          <p className="text-destructive font-black uppercase tracking-widest">Game Over!</p>
-          <Button onClick={reset} className="font-black uppercase tracking-widest">Restart</Button>
+          <p className="text-destructive font-black uppercase tracking-widest">게임 종료</p>
+          <Button onClick={reset} disabled={pending} className="font-black uppercase tracking-widest">다시 하기</Button>
         </div>
       )}
 

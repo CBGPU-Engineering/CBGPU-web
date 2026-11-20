@@ -1,21 +1,33 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+
+import { RankedGameProps } from '@/lib/arcadeClient';
+import { useArcadeRun } from '@/lib/useArcadeRun';
 
 const EMOJIS = ['🐱','🐶','🦊','🐼','🐸','🦁','🐯','🦋','🌈','🍕','🚀','⚡'];
 
 interface Card { id: number; emoji: string; flipped: boolean; matched: boolean }
 
-function shuffle<T>(arr: T[]): T[] {
-  return [...arr].sort(() => Math.random() - 0.5);
+function shuffle<T>(arr: T[], random: () => number): T[] {
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
-function makeCards(count: number): Card[] {
+function makeCards(count: number, random: () => number): Card[] {
   const pool = EMOJIS.slice(0, count);
-  return shuffle([...pool, ...pool]).map((emoji, id) => ({ id, emoji, flipped: false, matched: false }));
+  return shuffle([...pool, ...pool], random).map((emoji, id) => ({ id, emoji, flipped: false, matched: false }));
 }
 
-export default function MemoryMatch() {
+export default function MemoryMatch(props: RankedGameProps = {}) {
+  const { run, pending, start: startRun, finish } = useArcadeRun('memory', props);
+  const initialized = useRef(false);
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const version = useRef(0);
   const [cards, setCards] = useState<Card[]>([]);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -27,12 +39,17 @@ export default function MemoryMatch() {
   const [done, setDone] = useState(false);
 
   const start = useCallback((p = pairs) => {
-    setCards(makeCards(p));
+    version.current++;
+    if (timeout.current) clearTimeout(timeout.current);
+    void startRun({ pairs: p }, random => setCards(makeCards(p, random)));
     setFlipped([]); setMoves(0); setMatched(0);
     setLocked(false); setTime(0); setRunning(false); setDone(false);
-  }, [pairs]);
+  }, [pairs, startRun]);
 
-  useEffect(() => { start(); }, []);
+  useEffect(() => {
+    if (!initialized.current) { initialized.current = true; start(); }
+    return () => { if (timeout.current) clearTimeout(timeout.current); };
+  }, [start]);
 
   useEffect(() => {
     if (!running || done) return;
@@ -41,11 +58,12 @@ export default function MemoryMatch() {
   }, [running, done]);
 
   const flip = useCallback((id: number) => {
-    if (locked || done) return;
+    if (pending || locked || done || !run.current) return;
     const card = cards[id];
     if (card.flipped || card.matched || flipped.includes(id)) return;
     if (!running) setRunning(true);
 
+    run.current.record(id);
     const next = [...flipped, id];
     setCards(prev => prev.map((c, i) => i === id ? { ...c, flipped: true } : c));
     setFlipped(next);
@@ -56,22 +74,22 @@ export default function MemoryMatch() {
       const [a, b] = next;
       if (cards[a].emoji === cards[b].emoji) {
         setCards(prev => prev.map((c, i) => next.includes(i) ? { ...c, matched: true } : c));
-        setMatched(m => {
-          const nm = m + 1;
-          if (nm === pairs) { setDone(true); setRunning(false); }
-          return nm;
-        });
+        const nm = matched + 1;
+        setMatched(nm);
+        if (nm === pairs) { setDone(true); setRunning(false); finish(); }
         setFlipped([]);
         setLocked(false);
       } else {
-        setTimeout(() => {
+        const token = version.current;
+        timeout.current = setTimeout(() => {
+          if (token !== version.current) return;
           setCards(prev => prev.map((c, i) => next.includes(i) ? { ...c, flipped: false } : c));
           setFlipped([]);
           setLocked(false);
         }, 900);
       }
     }
-  }, [locked, done, cards, flipped, running, pairs]);
+  }, [locked, done, cards, flipped, running, pairs, pending, run, matched, finish]);
 
   const fmt = (s: number) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
@@ -88,7 +106,7 @@ export default function MemoryMatch() {
               className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
                 pairs === p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}>
-              {p === 6 ? 'Easy' : p === 8 ? 'Mid' : 'Hard'}
+              {p === 6 ? '쉬움' : p === 8 ? '보통' : '어려움'}
             </button>
           ))}
         </div>
@@ -97,7 +115,7 @@ export default function MemoryMatch() {
           <span className="text-muted-foreground uppercase tracking-widest text-xs">🔄 {moves}</span>
           <span className="text-muted-foreground uppercase tracking-widest text-xs">✅ {matched}/{pairs}</span>
         </div>
-        <Button variant="outline" size="sm" onClick={() => start()} className="font-black text-xs uppercase">Reset</Button>
+        <Button variant="outline" size="sm" onClick={() => start()} className="font-black text-xs uppercase">다시 하기</Button>
       </div>
 
       {/* grid — 뷰포트 너비에 맞춰 카드 크기가 줄어들도록 vw로 상한을 둔다 */}
