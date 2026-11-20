@@ -170,6 +170,7 @@ export default function FlappyBird(props: RankedGameProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
+      {arcade.retryButton}
       <div className="flex items-center gap-6">
         <span className="text-sm font-black uppercase tracking-widest">Score: {score}</span>
         <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Best: {best}</span>

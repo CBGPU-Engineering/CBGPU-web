@@ -24,7 +24,7 @@ function makeCards(count: number, random: () => number): Card[] {
 }
 
 export default function MemoryMatch(props: RankedGameProps = {}) {
-  const { run, pending, start: startRun, finish, statusText } = useArcadeRun('memory', props);
+  const { run, pending, start: startRun, finish, statusText, retryButton } = useArcadeRun('memory', props);
   const initialized = useRef(false);
   const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const version = useRef(0);
@@ -99,6 +99,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
   return (
     <div className="flex flex-col items-center gap-5">
       <p role="status" className="text-sm text-muted-foreground text-center">{statusText}</p>
+      {retryButton}
       {/* controls */}
       <div className="flex items-center gap-3 flex-wrap justify-center">
         <div className="flex gap-1">
@@ -125,7 +126,11 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
         style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, width: `min(${maxBoardPx}px, 90vw)` }}
       >
         {cards.map((card, i) => (
-          <div
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto min-h-0 min-w-0 w-full p-0 rounded-none"
+            aria-label={`카드 ${card.id + 1} · ${card.matched ? '맞춘 카드' : card.flipped ? '뒤집힘' : '숨김'}`}
             key={card.id}
             onClick={() => flip(i)}
             onTouchStart={e => { e.preventDefault(); flip(i); }}
@@ -157,7 +162,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
                 filter: card.matched ? 'none' : undefined,
               }}>{card.emoji}</div>
             </div>
-          </div>
+          </Button>
         ))}
       </div>
 

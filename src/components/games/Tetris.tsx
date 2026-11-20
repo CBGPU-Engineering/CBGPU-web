@@ -209,6 +209,7 @@ export default function Tetris(props: RankedGameProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
+      {arcade.retryButton}
       <div className="flex items-center gap-6">
         <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
         <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Lines</p><p className="text-xl font-black">{lines}</p></div>

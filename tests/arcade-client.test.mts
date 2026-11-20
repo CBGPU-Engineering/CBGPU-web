@@ -107,3 +107,29 @@ test('a save captures its replay before waiting for refreshed credentials', asyn
     assert.deepEqual(submitted, ['left']);
   } finally { globalThis.fetch = original; }
 });
+
+test('a network failure retries the exact frozen attempt and still fences account changes', async () => {
+  const original = globalThis.fetch;
+  const payloads: string[] = [];
+  let auth: Awaited<ReturnType<typeof credential>> | null = await credential();
+  globalThis.fetch = async (url, init) => {
+    if (String(url).endsWith('/sessions')) return Response.json({ id: 'retry-attempt', seed: 11 });
+    payloads.push(String(init?.body));
+    if (payloads.length === 1) throw new TypeError('fixture network interruption');
+    return Response.json({ score: 4 });
+  };
+  try {
+    const run = await createArcadeRun('2048', true, {}, async () => auth);
+    run.record('left');
+    assert.equal(await run.finish(), false);
+    run.record('right');
+    auth = { userId: 'fixture-other', accessToken: 'fixture-other-token' };
+    assert.equal(await run.finish(), false);
+    assert.equal(payloads.length, 1);
+    auth = await credential();
+    assert.equal(await run.finish(), true);
+    assert.deepEqual(payloads, ['{"actions":["left"]}', '{"actions":["left"]}']);
+    assert.equal(await run.finish(), true);
+    assert.equal(payloads.length, 2);
+  } finally { globalThis.fetch = original; }
+});

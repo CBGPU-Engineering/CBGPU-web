@@ -36,25 +36,30 @@ export async function createArcadeRun(game: ArcadeGame, ranked: boolean, config:
   const actions: ArcadeAction[] = [];
   let exhausted = false;
   let submitted: Promise<boolean> | undefined;
+  let replayBody: string | undefined;
   return {
     ranked: session !== null,
     random: session ? seededRandom(session.seed) : Math.random,
     record(action) { if (actions.length < 20000) actions.push(action); else exhausted = true; },
     finish() {
-      if (!session || exhausted || !actions.length) return Promise.resolve(false);
+      if (!session || (!replayBody && (exhausted || !actions.length))) return Promise.resolve(false);
       if (submitted) return submitted;
       const target = session;
-      const replay = [...actions];
+      replayBody ??= JSON.stringify({ actions: [...actions] });
+      const body = replayBody;
       const expectedOwner = owner?.userId;
       // Resolve fresh credentials at submit, but never cross the original account boundary.
       submitted = (async () => {
         const current = await credentials();
         if (!current?.accessToken || !expectedOwner || current.userId !== expectedOwner) return false;
         const response = await fetch(`/api/arcade/sessions/${encodeURIComponent(target.id)}/submit`, {
-          signal: AbortSignal.timeout(12000), method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${current.accessToken}` }, body: JSON.stringify({ actions: replay }),
+          signal: AbortSignal.timeout(12000), method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${current.accessToken}` }, body,
         });
         return response.ok;
-      })().catch(() => false);
+      })().catch(() => false).then(saved => {
+        if (!saved) submitted = undefined;
+        return saved;
+      });
       return submitted;
     },
   };

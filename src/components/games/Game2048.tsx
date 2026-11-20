@@ -79,7 +79,7 @@ function fontSize(v: number) {
 }
 
 export default function Game2048(props: RankedGameProps = {}) {
-  const { run, pending, start, finish, statusText } = useArcadeRun('2048', props);
+  const { run, pending, start, finish, statusText, retryButton } = useArcadeRun('2048', props);
   const initialized = useRef(false);
   const [grid, setGrid] = useState<Grid>(createGrid);
   const [score, setScore] = useState(0);
@@ -132,10 +132,11 @@ export default function Game2048(props: RankedGameProps = {}) {
   return (
     <div className="flex flex-col items-center gap-5">
       <p role="status" className="text-sm text-muted-foreground text-center">{statusText}</p>
+      {retryButton}
       <div className="flex flex-wrap justify-center items-center gap-3">
         <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">점수</p><p className="text-xl font-black">{score}</p></div>
         <div className="text-center bg-muted px-4 py-2 rounded-lg"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">최고</p><p className="text-xl font-black">{best}</p></div>
-        {props.ranked && <Button onClick={finish} disabled={pending || score === 0} variant="outline" size="sm">기록 저장</Button>}
+        {props.ranked && <Button onClick={() => { setOver(true); finish(); }} disabled={pending || score === 0 || over} variant="outline" size="sm">기록 저장하고 끝내기</Button>}
         <Button onClick={reset} disabled={pending} variant="outline" size="sm" className="font-black text-xs uppercase tracking-widest">새 게임</Button>
       </div>
 

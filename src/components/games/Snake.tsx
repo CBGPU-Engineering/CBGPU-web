@@ -155,6 +155,7 @@ export default function Snake(props: RankedGameProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
+      {arcade.retryButton}
       <div className="flex items-center gap-4">
         <span className="text-sm font-black uppercase tracking-widest">Score: {score}</span>
         {started && !gameOver && <Button variant="outline" size="sm" onClick={() => { gRef.current.running = false; arcade.run.current?.record('stop'); arcade.finish(); if (intervalRef.current) clearInterval(intervalRef.current); setGameOver(true); }}>Stop</Button>}

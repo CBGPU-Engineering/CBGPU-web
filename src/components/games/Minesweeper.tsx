@@ -63,7 +63,7 @@ function flood(grid: Grid, r: number, c: number, rows: number, cols: number): Gr
 const ADJ_COLORS = ['', '#3b82f6','#22c55e','#ef4444','#8b5cf6','#f97316','#06b6d4','#e11d48','#6b7280'];
 
 export default function Minesweeper(props: RankedGameProps = {}) {
-  const { run, pending, start, finish, statusText } = useArcadeRun('mines', props);
+  const { run, pending, start, finish, statusText, retryButton } = useArcadeRun('mines', props);
   const initialized = useRef(false);
   const [level, setLevel] = useState<Level>('easy');
   const [grid, setGrid] = useState<Grid>(() => makeGrid(9, 9));
@@ -133,6 +133,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
   return (
     <div className="flex flex-col items-center gap-4">
       <p role="status" className="text-sm text-muted-foreground text-center">{statusText}</p>
+      {retryButton}
       {/* difficulty + hud */}
       <div className="flex items-center gap-2 flex-wrap justify-center">
         {(Object.keys(LEVELS) as Level[]).map(lv => (
@@ -167,10 +168,13 @@ export default function Minesweeper(props: RankedGameProps = {}) {
           if (cell.revealed) bg = cell.mine ? 'bg-red-500/80' : 'bg-muted/10';
 
           return (
-            <div
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label={`${r + 1}행 ${c + 1}열 · ${cell.revealed ? (cell.mine ? '지뢰' : `열림 ${cell.adj}`) : cell.flagged ? '깃발' : '닫힘'}`}
               key={`${r}-${c}`}
               style={{ aspectRatio: '1 / 1', fontSize: `min(${maxBoardPx / cfg.cols * 0.45}px, ${94 / cfg.cols * 0.45}vw)` }}
-              className={`flex items-center justify-center font-black border border-border/20 cursor-pointer select-none transition-colors touch-none ${bg}`}
+              className={`h-auto min-h-0 min-w-0 w-full p-0 rounded-none flex items-center justify-center font-black border border-border/20 cursor-pointer select-none transition-colors touch-none ${bg}`}
               onClick={e => handleCell(e, r, c)}
               onTouchStart={e => handleCell(e, r, c)}
               onContextMenu={e => { e.preventDefault(); flag(r, c); }}
@@ -180,7 +184,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
                cell.revealed && cell.adj > 0 ? (
                  <span style={{ color: ADJ_COLORS[cell.adj] }}>{cell.adj}</span>
                ) : null}
-            </div>
+            </Button>
           );
         }))}
       </div>
