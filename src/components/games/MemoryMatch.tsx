@@ -123,7 +123,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
       {/* grid — 뷰포트 너비에 맞춰 카드 크기가 줄어들도록 vw로 상한을 둔다 */}
       <div
         className="grid gap-2 touch-none"
-        style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, width: `min(${maxBoardPx}px, 90vw)` }}
+        style={{ maxWidth: '100%', gridTemplateColumns: `repeat(${cols}, 1fr)`, width: `min(${maxBoardPx}px, 90vw)` }}
       >
         {cards.map((card, i) => (
           <Button

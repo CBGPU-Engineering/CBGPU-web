@@ -145,7 +145,7 @@ export default function Game2048(props: RankedGameProps = {}) {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div className="grid grid-cols-4 gap-2" style={{ width: 'min(312px, 80vw)' }}>
+        <div className="grid grid-cols-4 gap-2" style={{ width: 'min(312px, 80vw)', maxWidth: '100%' }}>
           {grid.flat().map((val, i) => (
             <div
               key={i}

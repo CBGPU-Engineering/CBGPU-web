@@ -160,7 +160,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
       {/* board — 뷰포트보다 넓어지면 cols당 폭이 줄어들도록 vw로 상한을 둔다 */}
       <div
         className="grid border-2 border-border/50 rounded-xl overflow-hidden shadow-lg"
-        style={{ gridTemplateColumns: `repeat(${cfg.cols}, 1fr)`, width: `min(${maxBoardPx}px, 94vw)` }}
+        style={{ maxWidth: '100%', gridTemplateColumns: `repeat(${cfg.cols}, 1fr)`, width: `min(${maxBoardPx}px, 94vw)` }}
         onContextMenu={e => e.preventDefault()}
       >
         {grid.map((row, r) => row.map((cell, c) => {
