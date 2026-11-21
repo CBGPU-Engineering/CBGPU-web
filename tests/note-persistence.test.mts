@@ -36,3 +36,8 @@ test('request deadline aborts preparation and prevents a late SDK continuation f
 test('unmount cancels queued saves while an already submitted write can finish once',async()=>{
  const gate=deferred<number>(),calls:number[]=[];const writer=createSerializedWriter(async(v:number)=>{calls.push(v);return gate.promise});const active=writer.save(1);const pending=assert.rejects(writer.save(2));writer.cancelPending();gate.resolve(1);assert.equal(await active,1);await pending;assert.deepEqual(calls,[1]);
 });
+test('recovery reconciles the last dispatched write before saving newer unsent typing',async()=>{
+ let updates=0;
+ const persist=createNotePersistence({id:'fixture-note',owner:'fixture-owner',initial:row('old'),recoveredDraft:draft('sent before leaving'),read:async()=>row('sent before leaving','v2'),create:async()=>assert.fail(),update:async(value,version)=>{updates++;assert.equal(version,'v2');return row(value.content,'v3')}});
+ assert.equal((await persist(draft('typed while the sent write was in flight'))).content,'typed while the sent write was in flight');assert.equal(updates,1);
+});

@@ -38,6 +38,7 @@ jobs:
           node tests/schools/ai-effort-focus-browser.mts
           node scripts/demo-smoke.mts
           CBGPU_ARCADE_TEST_ORIGIN=http://localhost:3100 node tests/arcade-browser.mts
+          CBGPU_NOTES_TEST_ORIGIN=http://localhost:3100 node tests/notes-persistence.browser.mts
           CBGPU_FRONTEND_AUDIT_ORIGIN=http://localhost:3100 node tests/frontend-journey-audit.browser.mts
           node scripts/study-session-smoke.mts
           node scripts/app-update-smoke.mts

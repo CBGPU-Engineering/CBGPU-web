@@ -68,6 +68,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   const [id] = useState(()=>recovery?.id??note?.id??crypto.randomUUID());
   const initial=recovery?.draft??{title:note?.title??'',content:note?.content??'',tags:note?.tags??[],is_shared:note?.is_shared??false};
   const base=useRef<Note|null>(recovery?.base??note);
+  const attempted=useRef<NoteDraft|undefined>(recovery?.attempted);
   const [draft,setDraft]=useState<NoteDraft>(initial);
   const latest=useRef<NoteDraft>(initial),revision=useRef(recovery?1:0),acknowledged=useRef(0),alive=useRef(true),paused=useRef(!!recovery),pendingSaves=useRef(0);
   const {title,content,tags,is_shared:shared}=draft;
@@ -89,12 +90,12 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
       if(signal.aborted||!alive.current||session?.user.id!==owner)throw Error('로그인한 계정이 바뀌었어요.');
     };
     const fields='id,user_id,title,content,tags,is_shared,created_at,updated_at';
-    const persistence=createNotePersistence({id,owner,initial:recovery?.base??note,recoveredDraft:recovery?.draft,
+    const persistence=createNotePersistence({id,owner,initial:recovery?.base??note,recoveredDraft:recovery?.attempted??recovery?.draft,
       read:()=>boundedClientRequest(async signal=>{await guard(signal);const {data,error}=await supabase.from('research_notes').select(fields).eq('id',id).eq('user_id',owner).abortSignal(signal).maybeSingle();if(error)throw error;return data as Note|null}),
       create:value=>boundedClientRequest(async signal=>{await guard(signal);const {data,error}=await supabase.from('research_notes').insert({...value,id,user_id:owner,updated_at:new Date().toISOString()}).select(fields).abortSignal(signal).single();if(error)throw error;return data as Note},undefined,30000),
       update:(value,version)=>boundedClientRequest(async signal=>{await guard(signal);const stamp=new Date(Math.max(Date.now(),Date.parse(version)+1)).toISOString();const {data,error}=await supabase.from('research_notes').update({...value,updated_at:stamp}).eq('id',id).eq('user_id',owner).eq('updated_at',version).select(fields).abortSignal(signal).maybeSingle();if(error)throw error;return data as Note|null},undefined,30000),
     });
-    writerRef.current=createSerializedWriter(async(value:{draft:NoteDraft;revision:number})=>({note:await persistence(value.draft),revision:value.revision}));
+    writerRef.current=createSerializedWriter(async(value:{draft:NoteDraft;revision:number})=>{attempted.current=value.draft;writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:base.current,draft:latest.current,attempted:value.draft});return{note:await persistence(value.draft),revision:value.revision}});
     return writerRef.current;
   },[id,owner,note,recovery]);
   useEffect(()=>{
@@ -114,7 +115,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
       base.current=result.note;
       acknowledged.current=Math.max(acknowledged.current,result.revision);
       if(revision.current===acknowledged.current)clearNoteRecovery(noteRecoveryStorage(),owner,id);
-      else writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:result.note,draft:latest.current});
+      else writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:result.note,draft:latest.current,attempted:attempted.current});
       savedCallback.current(result.note);return true;
     }catch(error){
       if(alive.current){paused.current=true;if(autoRef.current)clearTimeout(autoRef.current);setSaveError(error instanceof NoteConflict?error.message:'저장 결과를 확인하지 못했어요. 입력 내용은 그대로예요. 저장을 다시 누르면 기존 기록부터 확인해요.');}
@@ -125,7 +126,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
     if(autoRef.current)clearTimeout(autoRef.current);
     if(!paused.current)autoRef.current=setTimeout(()=>{autoRef.current=null;void saveCurrent()},2000);
   };
-  const change=(patch:Partial<NoteDraft>)=>{latest.current={...latest.current,...patch};revision.current++;if(!writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:base.current,draft:latest.current}))setSaveError('브라우저가 임시 보관을 차단했어요. 저장을 확인하기 전에는 이 탭을 닫거나 새로고침하지 마세요.');setDraft(latest.current);setSaveState('idle');scheduleAutoSave()};
+  const change=(patch:Partial<NoteDraft>)=>{latest.current={...latest.current,...patch};revision.current++;if(!writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:base.current,draft:latest.current,attempted:attempted.current}))setSaveError('브라우저가 임시 보관을 차단했어요. 저장을 확인하기 전에는 이 탭을 닫거나 새로고침하지 마세요.');setDraft(latest.current);setSaveState('idle');scheduleAutoSave()};
   const setTitle=(value:string)=>change({title:value});
   const setContent=(value:string|((previous:string)=>string))=>change({content:typeof value==='function'?value(latest.current.content):value});
   const setTags=(value:string[])=>change({tags:value});

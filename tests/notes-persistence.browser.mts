@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 const origin=process.env.CBGPU_NOTES_TEST_ORIGIN||'http://localhost:13880';
 assert.match(origin,/^http:\/\/(localhost|127\.0\.0\.1):\d+$/);
 const output=process.env.CBGPU_NOTES_TEST_OUTPUT||'/tmp/cbgpu-notes-persistence';fs.mkdirSync(output,{recursive:true});
-const b=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM||'/tmp/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+const b=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
 const results=[];
 try {
 for(const config of [{name:'desktop-light',width:1440,height:1000,colorScheme:'light'},{name:'phone-dark',width:390,height:844,colorScheme:'dark'},{name:'phone-light',width:360,height:800,colorScheme:'light'},{name:'desktop-dark',width:1280,height:900,colorScheme:'dark'},{name:'android-webview',width:393,height:851,colorScheme:'dark'}]){
@@ -32,6 +32,8 @@ for(const config of [{name:'desktop-light',width:1440,height:1000,colorScheme:'l
  if(config.name==='desktop-light'){failNext=true;await p.locator('#note-content').fill('실패해도 남아야 하는 내용');await p.waitForTimeout(2400);await p.getByRole('alert').filter({hasText:'저장 결과'}).waitFor();const count=writes.length;await p.waitForTimeout(2300);assert.equal(writes.length,count);assert.equal(await p.locator('#note-content').inputValue(),'실패해도 남아야 하는 내용');await p.getByRole('button',{name:'저장',exact:true}).click();await p.waitForTimeout(500);assert.equal(row?.content,'실패해도 남아야 하는 내용');
  delayNext=true;await p.locator('#note-content').fill('뒤로 저장 시작');await p.getByRole('button',{name:'노트 목록으로 돌아가기',exact:true}).click();await p.locator('#note-content').fill('뒤로 저장 중 추가 입력');await p.waitForTimeout(5500);assert.equal(await p.locator('#note-content').inputValue(),'뒤로 저장 중 추가 입력');assert.equal(row?.content,'뒤로 저장 중 추가 입력');
  await p.locator('#note-content').fill('다른 탭으로 이동 직전 입력');await p.getByRole('link',{name:'전체 기능',exact:true}).click();await p.waitForURL('**/services');await p.goto(origin+'/notes');await p.getByRole('button',{name:'작성하던 노트 복구',exact:true}).click();assert.equal(await p.locator('#note-content').inputValue(),'다른 탭으로 이동 직전 입력');await p.getByRole('button',{name:'저장',exact:true}).click();await p.waitForTimeout(700);assert.equal(row?.content,'다른 탭으로 이동 직전 입력');
+ delayNext=true;await p.locator('#note-content').fill('이동 전에 보낸 내용');await p.waitForTimeout(2200);await p.locator('#note-content').fill('전송 중 이동한 최신 내용');await p.getByRole('link',{name:'전체 기능',exact:true}).click();await p.waitForURL('**/services');await p.waitForTimeout(3000);await p.goto(origin+'/notes');await p.getByRole('button',{name:'작성하던 노트 복구',exact:true}).click();assert.equal(await p.locator('#note-content').inputValue(),'전송 중 이동한 최신 내용');await p.getByRole('button',{name:'저장',exact:true}).click();await p.waitForTimeout(700);assert.equal(row?.content,'전송 중 이동한 최신 내용');
+
  }
 
  const overflow=await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth);assert.equal(overflow,false);

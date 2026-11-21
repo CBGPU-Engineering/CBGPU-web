@@ -1,5 +1,5 @@
 import type {NoteDraft,ResearchNote} from './notePersistence';
-export type NoteRecovery={id:string;owner:string;base:ResearchNote|null;draft:NoteDraft;at:number};
+export type NoteRecovery={id:string;owner:string;base:ResearchNote|null;draft:NoteDraft;attempted?:NoteDraft;at:number};
 type Store=Pick<Storage,'getItem'|'setItem'|'removeItem'>|null;
 export function noteRecoveryStorage():Store{try{return window.sessionStorage}catch{return null}}
 const memory=new Map<string,NoteRecovery>();
@@ -10,7 +10,7 @@ export function readNoteRecovery(store:Store,owner:string,now=Date.now()):NoteRe
  let value=memory.get(owner);
  if(!value)try{const raw=store?.getItem(key(owner));if(raw)value=JSON.parse(raw) as NoteRecovery}catch{return null}
  if(!value)return null;
- if(value.owner!==owner||typeof value.id!=='string'||!Number.isFinite(value.at)||value.at>now||now-value.at>86400000||!validDraft(value.draft)||value.base&&(value.base.id!==value.id||value.base.user_id!==owner||!validDraft(value.base)||typeof value.base.updated_at!=='string')){
+ if(value.owner!==owner||typeof value.id!=='string'||!Number.isFinite(value.at)||value.at>now||now-value.at>86400000||!validDraft(value.draft)||value.attempted!==undefined&&!validDraft(value.attempted)||value.base&&(value.base.id!==value.id||value.base.user_id!==owner||!validDraft(value.base)||typeof value.base.updated_at!=='string')){
   memory.delete(owner);try{store?.removeItem(key(owner))}catch{/* Storage may be blocked. */}return null;
  }
  return value;
