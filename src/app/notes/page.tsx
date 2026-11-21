@@ -12,13 +12,13 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { requestAi } from '@/lib/requestAi';
 import InlineAi from '@/components/ai/InlineAi';
+import {boundedClientRequest} from '@/lib/boundedClientRequest';
+import {createNotePersistence,createSerializedWriter,NoteConflict,type NoteDraft,type ResearchNote} from '@/lib/notePersistence';
+
+import {noteRecoveryStorage,readNoteRecovery,writeNoteRecovery,clearNoteRecovery,type NoteRecovery} from '@/lib/noteDraftRecovery';
 
 // ─── types ────────────────────────────────────────────────────────────────────
-interface Note {
-  id: string; created_at: string; updated_at: string;
-  user_id: string; title: string; content: string;
-  tags: string[]; is_shared: boolean;
-}
+type Note=ResearchNote;
 
 // ─── Simple markdown renderer (no external lib) ───────────────────────────────
 function renderMd(raw: string): string {
@@ -53,56 +53,96 @@ function inlineMd(s: string) {
 }
 
 // ─── NoteEditor ───────────────────────────────────────────────────────────────
-function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () => void; onSaved: (n: Note) => void }) {
+function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; recovery?:NoteRecovery; onBack: () => void; onSaved: (n: Note) => void }) {
   const { user } = useAuth();
-  const { showError } = useAlert();
+  const frame=useRef<HTMLDivElement>(null);
+  const [frameHeight,setFrameHeight]=useState('calc(100dvh - 220px)');
+  useEffect(()=>{
+    const fit=()=>{if(!frame.current)return;const viewport=window.visualViewport;const bottom=(viewport?.height??innerHeight)+(viewport?.offsetTop??0);const nav=document.querySelector('.cb-bottom-nav');const rect=nav?.getBoundingClientRect();const limit=rect&&rect.height>0&&rect.top>0?Math.min(bottom,rect.top):bottom;setFrameHeight(`${Math.max(280,limit-frame.current.getBoundingClientRect().top-12)}px`)};
+    fit();const observer=new ResizeObserver(fit);for(const element of document.querySelectorAll('header,.cb-bottom-nav'))observer.observe(element);window.addEventListener('resize',fit);window.visualViewport?.addEventListener('resize',fit);
+    return()=>{observer.disconnect();window.removeEventListener('resize',fit);window.visualViewport?.removeEventListener('resize',fit)};
+  },[]);
+  const { showError, confirm } = useAlert();
   const isOwner = !note || note.user_id === user?.id;
-  const [title,    setTitle]    = useState(note?.title ?? '');
-  const [content,  setContent]  = useState(note?.content ?? '');
-  const [tags,     setTags]     = useState<string[]>(note?.tags ?? []);
-  const [shared,   setShared]   = useState(note?.is_shared ?? false);
+  const [owner] = useState(()=>user!.id);
+  const [id] = useState(()=>recovery?.id??note?.id??crypto.randomUUID());
+  const initial=recovery?.draft??{title:note?.title??'',content:note?.content??'',tags:note?.tags??[],is_shared:note?.is_shared??false};
+  const base=useRef<Note|null>(recovery?.base??note);
+  const [draft,setDraft]=useState<NoteDraft>(initial);
+  const latest=useRef<NoteDraft>(initial),revision=useRef(recovery?1:0),acknowledged=useRef(0),alive=useRef(true),paused=useRef(!!recovery),pendingSaves=useRef(0);
+  const {title,content,tags,is_shared:shared}=draft;
   const [tagInput, setTagInput] = useState('');
-  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [suggestingTags, setSuggestingTags] = useState(false);
-  const lastTagRequestRef = useRef('');
-  const [view,     setView]     = useState<'edit'|'preview'>('edit');
-  const autoRef = useRef<ReturnType<typeof setTimeout>|null>(null);
-  const savedFlashRef = useRef<ReturnType<typeof setTimeout>|null>(null);
-
-  const save = useCallback(async (t = title, c = content, tg = tags, sh = shared) => {
-    if (!user) return;
-    setSaveState('saving');
-    const payload = { title: t || '제목 없음', content: c, tags: tg, is_shared: sh, updated_at: new Date().toISOString(), user_id: user.id };
-    const { data, error } = note
-      ? await supabase.from('research_notes').update(payload).eq('id', note.id).select().single()
-      : await supabase.from('research_notes').insert(payload).select().single();
-    if (error) { setSaveState('idle'); showError(error.message); return; }
-    setSaveState('saved');
-    if (savedFlashRef.current) clearTimeout(savedFlashRef.current);
-    savedFlashRef.current = setTimeout(() => setSaveState('idle'), 1500);
-    onSaved(data as Note);
-  }, [note, title, content, tags, shared, user, onSaved, showError]);
-
-  // auto-save debounce
-  const scheduleAutoSave = () => {
-    if (autoRef.current) clearTimeout(autoRef.current);
-    autoRef.current = setTimeout(() => save(), 2000);
+  const [saveState,setSaveState]=useState<'idle'|'saving'|'saved'>('idle');
+  const [saveError,setSaveError]=useState('');
+  const [suggestedTags,setSuggestedTags]=useState<string[]>([]);
+  const [suggestingTags,setSuggestingTags]=useState(false);
+  const lastTagRequestRef=useRef('');
+  const [view,setView]=useState<'edit'|'preview'>('edit');
+  const autoRef=useRef<ReturnType<typeof setTimeout>|null>(null);
+  const savedCallback=useRef(onSaved);
+  useEffect(()=>{savedCallback.current=onSaved},[onSaved]);
+  const writerRef=useRef<ReturnType<typeof createSerializedWriter<{draft:NoteDraft;revision:number},{note:Note;revision:number}>>|null>(null);
+  const getWriter=useCallback(()=>{
+    if(writerRef.current)return writerRef.current;
+    const guard=async(signal:AbortSignal)=>{
+      const session=(await supabase.auth.getSession()).data.session;
+      if(signal.aborted||!alive.current||session?.user.id!==owner)throw Error('로그인한 계정이 바뀌었어요.');
+    };
+    const fields='id,user_id,title,content,tags,is_shared,created_at,updated_at';
+    const persistence=createNotePersistence({id,owner,initial:recovery?.base??note,recoveredDraft:recovery?.draft,
+      read:()=>boundedClientRequest(async signal=>{await guard(signal);const {data,error}=await supabase.from('research_notes').select(fields).eq('id',id).eq('user_id',owner).abortSignal(signal).maybeSingle();if(error)throw error;return data as Note|null}),
+      create:value=>boundedClientRequest(async signal=>{await guard(signal);const {data,error}=await supabase.from('research_notes').insert({...value,id,user_id:owner,updated_at:new Date().toISOString()}).select(fields).abortSignal(signal).single();if(error)throw error;return data as Note},undefined,30000),
+      update:(value,version)=>boundedClientRequest(async signal=>{await guard(signal);const stamp=new Date(Math.max(Date.now(),Date.parse(version)+1)).toISOString();const {data,error}=await supabase.from('research_notes').update({...value,updated_at:stamp}).eq('id',id).eq('user_id',owner).eq('updated_at',version).select(fields).abortSignal(signal).maybeSingle();if(error)throw error;return data as Note|null},undefined,30000),
+    });
+    writerRef.current=createSerializedWriter(async(value:{draft:NoteDraft;revision:number})=>({note:await persistence(value.draft),revision:value.revision}));
+    return writerRef.current;
+  },[id,owner,note,recovery]);
+  useEffect(()=>{
+    alive.current=true;
+    const beforeUnload=(event:BeforeUnloadEvent)=>{if(revision.current>acknowledged.current){event.preventDefault();event.returnValue=''}};
+    window.addEventListener('beforeunload',beforeUnload);
+    return()=>{alive.current=false;if(autoRef.current)clearTimeout(autoRef.current);writerRef.current?.cancelPending();window.removeEventListener('beforeunload',beforeUnload)};
+  },[]);
+  const saveCurrent=useCallback(async()=>{
+    if(!alive.current||paused.current||!isOwner)return false;
+    if(revision.current===acknowledged.current)return true;
+    const version=revision.current;
+    pendingSaves.current++;setSaveState('saving');setSaveError('');
+    try{
+      const result=await getWriter().save({draft:{...latest.current,tags:[...latest.current.tags]},revision:version});
+      if(!alive.current)return false;
+      base.current=result.note;
+      acknowledged.current=Math.max(acknowledged.current,result.revision);
+      if(revision.current===acknowledged.current)clearNoteRecovery(noteRecoveryStorage(),owner,id);
+      else writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:result.note,draft:latest.current});
+      savedCallback.current(result.note);return true;
+    }catch(error){
+      if(alive.current){paused.current=true;if(autoRef.current)clearTimeout(autoRef.current);setSaveError(error instanceof NoteConflict?error.message:'저장 결과를 확인하지 못했어요. 입력 내용은 그대로예요. 저장을 다시 누르면 기존 기록부터 확인해요.');}
+      return false;
+    }finally{pendingSaves.current--;if(alive.current)setSaveState(pendingSaves.current?'saving':revision.current===acknowledged.current?'saved':'idle')}
+  },[getWriter,isOwner,owner,id]);
+  const scheduleAutoSave=()=>{
+    if(autoRef.current)clearTimeout(autoRef.current);
+    if(!paused.current)autoRef.current=setTimeout(()=>{autoRef.current=null;void saveCurrent()},2000);
   };
-
-  /**
-   * 공유 토글/태그 삭제처럼 즉시 저장해야 하는 동작 전용.
-   * 예약돼 있던 자동 저장(2초 디바운스)을 취소하지 않으면, 그 안에 캡처된
-   * 오래된 shared/tags 값으로 나중에 덮어써서 방금 한 변경이 사라지는 버그가 있었다.
-   */
-  const saveNow = useCallback((t = title, c = content, tg = tags, sh = shared) => {
-    if (autoRef.current) { clearTimeout(autoRef.current); autoRef.current = null; }
-    save(t, c, tg, sh);
-  }, [save, title, content, tags, shared]);
+  const change=(patch:Partial<NoteDraft>)=>{latest.current={...latest.current,...patch};revision.current++;if(!writeNoteRecovery(noteRecoveryStorage(),{id,owner,base:base.current,draft:latest.current}))setSaveError('브라우저가 임시 보관을 차단했어요. 저장을 확인하기 전에는 이 탭을 닫거나 새로고침하지 마세요.');setDraft(latest.current);setSaveState('idle');scheduleAutoSave()};
+  const setTitle=(value:string)=>change({title:value});
+  const setContent=(value:string|((previous:string)=>string))=>change({content:typeof value==='function'?value(latest.current.content):value});
+  const setTags=(value:string[])=>change({tags:value});
+  const setShared=(value:boolean)=>change({is_shared:value});
+  const saveNow=(t=latest.current.title,c=latest.current.content,tg=latest.current.tags,sh=latest.current.is_shared)=>{
+    if(autoRef.current){clearTimeout(autoRef.current);autoRef.current=null}
+    latest.current={title:t,content:c,tags:[...tg],is_shared:sh};if(!note&&revision.current===0)revision.current++;paused.current=false;return saveCurrent();
+  };
+  const leave=async()=>{
+    if(!isOwner||revision.current===acknowledged.current){if(alive.current)onBack();return}
+    if(await saveNow()){if(alive.current&&revision.current===acknowledged.current)onBack();return}
+    if(await confirm({title:'아직 저장되지 않은 내용이 있어요',message:'입력 내용을 복사해 보관할 수 있어요. 저장하지 않고 목록으로 돌아갈까요?',confirmLabel:'저장하지 않고 나가기',cancelLabel:'계속 편집'})){if(alive.current){clearNoteRecovery(noteRecoveryStorage(),owner,id);onBack()}}
+  };
 
   const addTag = () => {
     const t = tagInput.trim();
-    if (t && !tags.includes(t)) { const next = [...tags, t]; setTags(next); scheduleAutoSave(); }
+    if (t && !tags.includes(t)) { const next = [...tags, t]; setTags(next); }
     setTagInput('');
   };
 
@@ -146,9 +186,9 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
   // 편집 UI를 그대로 보여주면 한참 고치고 저장할 때야 에러를 보게 돼서 미리 분기한다.
   if (!isOwner) {
     return (
-      <div className="flex flex-col h-screen max-h-screen">
+      <div ref={frame} className="flex min-h-0 flex-col overflow-hidden" style={{height:frameHeight}}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
-          <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
           <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
           <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-muted shrink-0">
             <Share2 className="size-3" />공개 노트
@@ -167,11 +207,11 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen">
+    <div ref={frame} className="flex min-h-0 flex-col overflow-hidden" style={{height:frameHeight}}>
       {/* header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0 flex-wrap gap-y-2">
-        <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={onBack} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
-        <Input value={title} onChange={e => { setTitle(e.target.value); scheduleAutoSave(); }}
+        <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
+        <Input value={title} onChange={e => { setTitle(e.target.value); }}
           placeholder="제목 없음" className="flex-1 min-w-32 font-semibold text-base border-none shadow-none focus-visible:ring-0 px-2" />
         <div className="flex gap-1 items-center ml-auto flex-wrap">
           <button onClick={() => { const n = !shared; setShared(n); saveNow(title, content, tags, n); }}
@@ -208,13 +248,14 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
         </div>
       </div>
 
-      <details className="mx-4 shrink-0"><summary className="min-h-11 cursor-pointer text-sm font-medium text-primary">AI로 요약·문장 다듬기</summary><div className="max-h-[45dvh] overflow-auto"><InlineAi input={title+'\n'+content} label="이 연구노트 살펴보기" actions={isOwner?['summary','improve','explain']:['summary','explain']} onApply={isOwner?text=>{if(autoRef.current){clearTimeout(autoRef.current);autoRef.current=null}setContent(text);setSaveState('idle')}:undefined}/></div></details>
+      {saveError&&<div role="alert" className="mx-4 my-2 shrink-0 rounded-lg border border-destructive/30 p-3 text-sm"><p>{saveError}</p><Button variant="outline" className="mt-2" onClick={()=>void navigator.clipboard.writeText(title+'\n\n'+content).catch(()=>showError('복사하지 못했어요. 내용을 직접 선택해 보관해 주세요.'))}>입력 내용 복사</Button></div>}
+      <details className="mx-4 shrink-0"><summary className="min-h-11 cursor-pointer text-sm font-medium text-primary">AI로 요약·문장 다듬기</summary><div className="max-h-[45dvh] overflow-auto"><InlineAi input={title+'\n'+content} label="이 연구노트 살펴보기" actions={isOwner?['summary','improve','explain']:['summary','explain']} onApply={isOwner?text=>setContent(text):undefined}/></div></details>
       {/* toolbar */}
       {view === 'edit' && (
         <div className="flex gap-1 px-4 py-1.5 border-b border-border/20 overflow-x-auto flex-shrink-0">
-          {TOOLBAR.map(t => (
-            <button key={t.label} onClick={t.action}
-              className="px-2 py-1 rounded text-xs font-semibold text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{t.label}</button>
+          {['H1','H2','B','I','`','```','>','—'].map((label,index) => (
+            <button key={label} onClick={()=>TOOLBAR[index].action()}
+              className="px-2 py-1 rounded text-xs font-semibold text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{label}</button>
           ))}
         </div>
       )}
@@ -223,7 +264,7 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
       <div className="flex-1 overflow-hidden flex flex-col">
         {view === 'edit' ? (
           <textarea id="note-content" value={content}
-            onChange={e => { setContent(e.target.value); scheduleAutoSave(); }}
+            onChange={e => { setContent(e.target.value); }}
             onBlur={suggestTags}
             placeholder={'# 연구 노트 제목\n\n내용을 입력하세요...\n\n## 마크다운 문법 지원\n- **굵게**, *기울임*, `코드`\n- # H1, ## H2, ### H3\n- > 인용, --- 구분선\n- ``` 코드 블록 ```'}
             className="flex-1 w-full resize-none px-6 py-4 text-sm font-mono bg-background outline-none leading-relaxed animate-in fade-in duration-200"
@@ -259,45 +300,59 @@ function NoteEditor({ note, onBack, onSaved }: { note: Note | null; onBack: () =
 // ─── NoteList ─────────────────────────────────────────────────────────────────
 function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
   const { user } = useAuth();
-  const { showSuccess } = useAlert();
+  const { showSuccess,showError } = useAlert();
   const [notes,  setNotes]  = useState<Note[]>([]);
   const [shared, setShared] = useState<Note[]>([]);
   const [tab,    setTab]    = useState<'mine'|'shared'>('mine');
   const [search, setSearch] = useState('');
-  const [loading,setLoading]= useState(true);
-  const [justFinished, setJustFinished] = useState(false);
+  const [loadingTabs,setLoadingTabs]=useState({mine:true,shared:true});
+  const loading=loadingTabs[tab];
+  const [errors,setErrors]=useState({mine:'',shared:''});
+  const requestRef=useRef<AbortController|null>(null),deleting=useRef(false);
   const [dbMissing, setDbMissing] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!user) return;
-    const [{ data: mine, error }, { data: pub }] = await Promise.all([
-      supabase.from('research_notes').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(500),
-      supabase.from('research_notes').select('*').eq('is_shared', true).neq('user_id', user.id).order('updated_at', { ascending: false }).limit(500),
-    ]);
-    if (error?.message?.includes('does not exist')) { setDbMissing(true); setLoading(false); return; }
-    setNotes((mine ?? []) as Note[]);
-    setShared((pub ?? []) as Note[]);
-    setLoading(false);
-    setJustFinished(true);
-    setTimeout(() => setJustFinished(false), 600);
-  }, [user]);
-
-  useEffect(() => { load(); }, [load]);
-
+  const owner=user?.id;
+  const load=useCallback(async()=>{
+    requestRef.current?.abort();const controller=new AbortController();requestRef.current=controller;
+    if(!owner){setLoadingTabs({mine:false,shared:false});return}
+    setLoadingTabs({mine:true,shared:true});setErrors({mine:'',shared:''});
+    const read=async(kind:'mine'|'shared')=>{
+      try{
+        const{data,error}=await boundedClientRequest(signal=>{
+          const query=supabase.from('research_notes').select('*');
+          return(kind==='mine'?query.eq('user_id',owner):query.eq('is_shared',true).neq('user_id',owner)).order('updated_at',{ascending:false}).limit(500).abortSignal(signal);
+        },controller.signal);
+        if(requestRef.current!==controller||controller.signal.aborted)return;
+        if(error){if(error.code==='42P01'){setDbMissing(true);return}throw error}
+        const rows=(data??[])as Note[];(kind==='mine'?setNotes:setShared)(rows);
+      }catch{if(requestRef.current===controller&&!controller.signal.aborted)setErrors(previous=>({...previous,[kind]:'노트 목록을 불러오지 못했어요. 연결을 확인한 뒤 다시 시도해 주세요.'}))}
+      finally{if(requestRef.current===controller&&!controller.signal.aborted)setLoadingTabs(previous=>({...previous,[kind]:false}))}
+    };
+    await Promise.all([read('mine'),read('shared')]);
+  },[owner]);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active)void load()});return()=>{active=false;requestRef.current?.abort();requestRef.current=null}},[load]);
   useEffect(()=>{if(loading)return;const id=new URLSearchParams(window.location.search).get('note');const found=[...notes,...shared].find(n=>n.id===id);if(found){onOpen(found);window.history.replaceState(null,'',window.location.pathname)}},[loading,notes,shared,onOpen]);
-
-  const deleteNote = async (id: string) => {
-    await supabase.from('research_notes').delete().eq('id', id);
-    setNotes(n => n.filter(x => x.id !== id));
-    showSuccess('삭제됐습니다.');
+  const deleteNote=async(id:string)=>{
+    if(deleting.current||!owner)return;deleting.current=true;
+    try{
+      const result=await boundedClientRequest(async signal=>{
+        const session=(await supabase.auth.getSession()).data.session;
+        if(!requestRef.current||signal.aborted||session?.user.id!==owner)throw Error('Account changed');
+        return supabase.from('research_notes').delete().eq('id',id).eq('user_id',owner).select('id').abortSignal(signal);
+      },undefined,30000);
+      if(!requestRef.current)return;
+      if(result.error||result.data?.length!==1||result.data[0].id!==id)throw Error('Deletion not confirmed');
+      setNotes(n=>n.filter(x=>x.id!==id));showSuccess('노트를 삭제했어요.');
+    }catch{if(requestRef.current)showError('삭제 결과를 확인하지 못했어요. 목록을 다시 불러와 확인해 주세요.');}
+    finally{deleting.current=false}
   };
 
   if (dbMissing) return (
     <div className="py-16 flex flex-col items-center gap-4 text-center">
       <p className="text-4xl">⚠️</p>
-      <p className="font-semibold text-lg tracking-tight">DB 설정 필요</p>
-      <p className="text-sm text-muted-foreground"><code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_notes_study_migration.sql</code>을 실행해 주세요.</p>
+      <p className="font-semibold text-lg tracking-tight">노트 저장소를 확인하지 못했어요</p>
+      <p className="text-sm text-muted-foreground">잠시 후 다시 시도하거나 관리자에게 연결 상태 확인을 요청해 주세요.</p>
     </div>
   );
 
@@ -308,7 +363,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
     <div className="space-y-4">
       <ConfirmDialog
         open={!!confirmDeleteId}
-        onConfirm={() => { deleteNote(confirmDeleteId!); setConfirmDeleteId(null); }}
+        onConfirm={() => { if(confirmDeleteId)void deleteNote(confirmDeleteId); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -326,8 +381,9 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
         </div>
       </div>
 
-      {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="노트 불러오는 중" /></div>
-      : shown.length === 0 ? (
+      {errors[tab]&&<div role="alert" className="rounded-lg border border-border p-4 text-sm"><p>{errors[tab]}</p><Button variant="outline" className="mt-2" disabled={loading} onClick={()=>void load()}>목록 다시 불러오기</Button></div>}
+      {loading ? <div className="py-16 flex items-center justify-center"><LoadingSpinner size={56} label="노트 불러오는 중" /></div>
+      : shown.length === 0 && !errors[tab] ? (
         <div className="py-16 text-center text-muted-foreground border-2 border-dashed rounded-2xl animate-in fade-in duration-300 pop-in-3d">
           <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">📓</p>
           <p className="font-medium">{tab==='mine'?'노트를 만들어 보세요.':'공유된 노트가 없습니다.'}</p>
@@ -365,9 +421,14 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
 }
 
 // ─── page ─────────────────────────────────────────────────────────────────────
-export default function NotesPage() {
+export default function NotesPage(){const{user}=useAuth();return <NotesSession key={user?.id||'anonymous'}/>}
+function NotesSession() {
   const { user } = useAuth();
-  const [editing, setEditing] = useState<Note | null | 'new'>('list' as any);
+  const {showError}=useAlert();
+  const [editing, setEditing] = useState<Note | 'new' | 'list'>('list');
+  const [recovery,setRecovery]=useState<NoteRecovery|null>(null);
+  const [restoring,setRestoring]=useState(false);
+  useEffect(()=>{let active=true;queueMicrotask(()=>{if(active&&user)setRecovery(readNoteRecovery(noteRecoveryStorage(),user.id))});return()=>{active=false}},[user]);
 
   if (!user) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center">
@@ -375,12 +436,13 @@ export default function NotesPage() {
     </section>
   );
 
-  if (editing !== ('list' as any)) {
+  if (editing !== 'list'||restoring) {
     return (
-      <div className="h-[calc(100vh-80px)]">
+      <div className="min-h-0">
         <NoteEditor
-          note={editing === 'new' ? null : editing as Note}
-          onBack={() => setEditing('list' as any)}
+          note={restoring?recovery?.base??null:editing==='new'||editing==='list'?null:editing}
+          recovery={restoring?recovery??undefined:undefined}
+          onBack={() => {setEditing('list');setRestoring(false);setRecovery(readNoteRecovery(noteRecoveryStorage(),user.id))}}
           onSaved={(n) => setEditing(n)}
         />
       </div>
@@ -394,7 +456,8 @@ export default function NotesPage() {
         <p className="cb-page-sub mt-1">마크다운 지원 · 자동 저장 · 공유 가능</p>
       </div>
       <Link href="/ai?tab=search&scope=notes" className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm text-primary">의미로 연구노트 찾기 · AI 검색</Link>
-      <NoteList onOpen={(n) => setEditing(n ?? 'new')} />
+      {recovery&&<div role="status" className="my-4 rounded-lg border p-4 text-sm"><p>이 브라우저 탭에 아직 저장하지 않은 노트가 있어요. 복구한 뒤 저장 여부를 확인해 주세요.</p><div className="mt-3 flex flex-wrap gap-2"><Button onClick={()=>setRestoring(true)}>작성하던 노트 복구</Button><Button variant="outline" onClick={()=>{clearNoteRecovery(noteRecoveryStorage(),user.id,recovery.id);setRecovery(null)}}>임시 내용 지우기</Button></div></div>}
+      <NoteList onOpen={(n) => {if(recovery){showError('작성하던 노트를 복구하거나 임시 내용을 지운 뒤 다른 노트를 열어 주세요.');return}setEditing(n ?? 'new')}} />
     </section>
   );
 }
