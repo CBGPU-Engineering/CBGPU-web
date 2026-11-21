@@ -219,6 +219,10 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
 }
 
 export default function ContestDetailPage({managementRoute=false}:{managementRoute?:boolean}={}) {
+  const{id}=useParams<{id:string}>(),{user}=useAuth();
+  return <ContestSession key={`${id}:${user?.id||'anonymous'}:${managementRoute}`} managementRoute={managementRoute}/>;
+}
+function ContestSession({managementRoute}:{managementRoute:boolean}) {
   const [activeSection,setActiveSection]=useState<ContestManagementSection>('overview');
   const [eventSection,setEventSection]=useState<ContestEventSection>('overview');
   const { id } = useParams<{ id: string }>();
@@ -231,38 +235,45 @@ export default function ContestDetailPage({managementRoute=false}:{managementRou
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { now, syncError } = useContestClock();
+  const userId=user?.id,reads=useRef({generation:0,controller:null as AbortController|null});
   const load = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
+    const state=reads.current,generation=++state.generation;
+    state.controller?.abort();
+    const controller=new AbortController();state.controller=controller;
+    const current=()=>generation===state.generation&&!controller.signal.aborted;
     setError('');
     try {
-      const { data, error } = await supabase.from('contests').select('*').eq('id', id).maybeSingle();
+      const { data, error } = await supabase.from('contests').select('*').eq('id', id).abortSignal(controller.signal).maybeSingle();
       if (error) throw error;
       if (!data) throw new Error('대회를 찾을 수 없어요. 공유받은 링크를 확인해 주세요.');
-      const owner = data.host_id === user.id;
+      const owner = data.host_id === userId;
       let operatorRole: 'owner' | 'manager' | 'checkin' | null = owner ? 'owner' : null;
       if (!owner) {
-        const { data: hostEntry } = await supabase.from('event_hosts').select('role').eq('contest_id', id).eq('user_id', user.id).maybeSingle();
+        const { data: hostEntry } = await supabase.from('event_hosts').select('role').eq('contest_id', id).eq('user_id', userId).abortSignal(controller.signal).maybeSingle();
         operatorRole = hostEntry?.role || null;
       }
       const operator = !!operatorRole;
       let team:ContestTeam|null=null;let teamReady=false;
       if(data.participation_mode==='team'&&!operator){
-       const {data:membership,error:memberError}=await supabase.from('contest_team_members').select('team_id,registration_status').eq('contest_id',id).eq('user_id',user.id).maybeSingle();if(memberError)throw memberError;
-       if(membership){const {data:entry,error:teamError}=await supabase.from('contest_teams').select('*').eq('id',membership.team_id).maybeSingle();if(teamError)throw teamError;team=entry;const {data:confirmed,error:rosterError}=await supabase.from('contest_team_members').select('user_id').eq('team_id',membership.team_id).eq('registration_status','confirmed');if(rosterError)throw rosterError;const count=confirmed?.length||0;teamReady=membership.registration_status==='confirmed'&&count>=(data.team_min_size||2)&&count<=(data.team_max_size||5);}
+       const {data:membership,error:memberError}=await supabase.from('contest_team_members').select('team_id,registration_status').eq('contest_id',id).eq('user_id',userId).abortSignal(controller.signal).maybeSingle();if(memberError)throw memberError;
+       if(membership){const {data:entry,error:teamError}=await supabase.from('contest_teams').select('*').eq('id',membership.team_id).abortSignal(controller.signal).maybeSingle();if(teamError)throw teamError;team=entry;const {data:confirmed,error:rosterError}=await supabase.from('contest_team_members').select('user_id').eq('team_id',membership.team_id).eq('registration_status','confirmed').abortSignal(controller.signal);if(rosterError)throw rosterError;const count=confirmed?.length||0;teamReady=membership.registration_status==='confirmed'&&count>=(data.team_min_size||2)&&count<=(data.team_max_size||5);}
       }
-      setOwnTeam(team);setTeamSubmissionReady(teamReady);
-      if(managementRoute&&(!operator||operatorRole==='checkin')){setContest(data);setEventOperatorRole(operatorRole);setSubmissions([]);return;}
-      let query = supabase.from('contest_submissions').select('*').eq('contest_id', id).order('submitted_at', { ascending: false });
-      if (!operator||!managementRoute) query = team?query.eq('team_id',team.id):query.eq('user_id', user.id);
+      if(!current())return;
+      if(managementRoute&&(!operator||operatorRole==='checkin')){setOwnTeam(team);setTeamSubmissionReady(teamReady);setContest(data);setEventOperatorRole(operatorRole);setSubmissions([]);return;}
+      let query = supabase.from('contest_submissions').select('*').eq('contest_id', id).order('submitted_at', { ascending: false }).abortSignal(controller.signal);
+      if (!operator||!managementRoute) query = team?query.eq('team_id',team.id):query.eq('user_id', userId);
       const { data: entries, error: entriesError } = await query;
+      if(!current())return;
       if (entriesError) throw entriesError;
+      setOwnTeam(team);setTeamSubmissionReady(teamReady);
       setContest(data);
       setEventOperatorRole(operatorRole);
       setSubmissions(entries || []);
-    } catch (error) { setError(contestError(error)); }
-    finally { setLoading(false); }
-  }, [id, user,managementRoute]);
-  useEffect(() => { void load();const refresh=()=>void load();window.addEventListener('cbgpu:contest-registration',refresh);return()=>window.removeEventListener('cbgpu:contest-registration',refresh); }, [load]);
+    } catch (error) { if(current())setError(contestError(error)); }
+    finally { if(current())setLoading(false); }
+  }, [id,userId,managementRoute]);
+  useEffect(() => { const state=reads.current;void load();const refresh=()=>void load();window.addEventListener('cbgpu:contest-registration',refresh);return()=>{state.generation++;state.controller?.abort();window.removeEventListener('cbgpu:contest-registration',refresh)}; }, [load]);
   useEffect(() => {
     if (!user) return;
     let disposed = false;
