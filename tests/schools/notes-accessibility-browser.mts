@@ -19,6 +19,7 @@ try{
  await page.getByRole('button',{name:'노트 목록으로 돌아가기',exact:true}).click();
  const remove=page.getByRole('button',{name:'노트 삭제: Keyboard note',exact:true});await remove.waitFor();
  assert.equal(await remove.evaluate(element=>getComputedStyle(element).opacity),'1');
+ await remove.evaluate(async element=>{await Promise.all(element.getAnimations({subtree:false}).map(animation=>animation.finished.catch(()=>{})));const card=element.closest('.group');if(card)await Promise.all(card.getAnimations().map(animation=>animation.finished.catch(()=>{})))});
  const box=await remove.boundingBox();assert(box&&box.width>=44&&box.height>=44);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
  await page.emulateMedia({reducedMotion:'reduce'});
