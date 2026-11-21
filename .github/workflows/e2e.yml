@@ -44,6 +44,13 @@ jobs:
           node scripts/app-update-smoke.mts
           node scripts/hybrid-navigation-smoke.mts
           node scripts/ai-smoke.mts
+      - name: GPU reservation extension UI
+        run: |
+          node scripts/gpu-extension-preview.mts --build
+          node scripts/gpu-extension-preview.mts > /tmp/gpu-extension-demo.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" || true; cat /tmp/gpu-extension-demo.log' EXIT
+          node tests/gpu-reservation-extension.browser.mts
       - name: AI demo failure diagnostics
         if: failure() && steps.browser_demo.outcome == 'failure'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

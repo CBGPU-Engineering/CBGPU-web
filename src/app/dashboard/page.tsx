@@ -1,5 +1,6 @@
 'use client';
 
+import GpuReservationExtension from '@/components/gpu/GpuReservationExtension';
 import GpuQueueHint from '@/components/ai/GpuQueueHint';
 import { useEffect, useState, useRef, Fragment } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -57,6 +58,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [clientToday, setClientToday] = useState<Date | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarRevision,setCalendarRevision]=useState(0);
 
 
   const monthStart = startOfMonth(currentMonth);
@@ -81,7 +83,7 @@ export default function Dashboard() {
     };
     void fetchCalendar();
     return () => { current = false; };
-  }, [gridStart.getTime(), gridEnd.getTime()]);
+  }, [gridStart.getTime(), gridEnd.getTime(),calendarRevision]);
   const calendarDays: Date[] = [];
   for (let cursor = gridStart; cursor <= gridEnd; cursor = addDays(cursor, 1)) calendarDays.push(cursor);
 
@@ -559,7 +561,8 @@ export default function Dashboard() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      {canStart&&<GpuReservationExtension reservationId={res.id} apiBase={'/api/compute/legacy/reservations/'+res.id} onExtended={end=>{setMyReservations(previous=>previous.map(item=>item.id===res.id?{...item,end_time:end}:item));setSelectedRes((previous:Record<string,unknown>|null)=>previous?.id===res.id?{...previous,end_time:end}:previous);setCalendarRevision(value=>value+1);void fetchMyReservations()}}/>}
                       {(isPending || (isApproved && !isStarted)) && (
                         <Button
                           variant="ghost"
