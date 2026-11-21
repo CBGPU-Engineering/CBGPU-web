@@ -8,7 +8,7 @@ const output=process.env.CBGPU_NOTES_TEST_OUTPUT||'/tmp/cbgpu-notes-persistence'
 const b=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
 const results=[];
 try {
-for(const config of [{name:'desktop-light',width:1440,height:1000,colorScheme:'light'},{name:'phone-dark',width:390,height:844,colorScheme:'dark'},{name:'phone-light',width:360,height:800,colorScheme:'light'},{name:'desktop-dark',width:1280,height:900,colorScheme:'dark'},{name:'android-webview',width:393,height:851,colorScheme:'dark'}]){
+for(const config of [{name:'desktop-light',width:1440,height:1000,colorScheme:'light'},{name:'phone-dark',width:390,height:844,colorScheme:'dark'},{name:'phone-light',width:360,height:800,colorScheme:'light'},{name:'phone-short',width:360,height:560,colorScheme:'light'},{name:'desktop-dark',width:1280,height:900,colorScheme:'dark'},{name:'android-webview',width:393,height:851,colorScheme:'dark'}]){
  const c=await b.newContext({viewport:{width:config.width,height:config.height},colorScheme:config.colorScheme as 'light'|'dark',...(config.name==='android-webview'?{userAgent:'Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/TEST; wv) AppleWebKit/537.36 Version/4.0 Chrome/131.0.0.0 Mobile Safari/537.36',reducedMotion:'reduce' as const}:{})});
  const session=await fetch(origin+'/backend/auth/v1/token?grant_type=password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:'student@example.invalid',password:'demo-only'})}).then(r=>r.json());
  await c.addInitScript(s=>localStorage.setItem('sb-localhost-auth-token',JSON.stringify(s)),session);

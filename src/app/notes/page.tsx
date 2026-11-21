@@ -58,7 +58,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   const frame=useRef<HTMLDivElement>(null);
   const [frameHeight,setFrameHeight]=useState('calc(100dvh - 220px)');
   useEffect(()=>{
-    const fit=()=>{if(!frame.current)return;const viewport=window.visualViewport;const bottom=(viewport?.height??innerHeight)+(viewport?.offsetTop??0);const nav=document.querySelector('.cb-bottom-nav');const rect=nav?.getBoundingClientRect();const limit=rect&&rect.height>0&&rect.top>0?Math.min(bottom,rect.top):bottom;setFrameHeight(`${Math.max(280,limit-frame.current.getBoundingClientRect().top-12)}px`)};
+    const fit=()=>{if(!frame.current)return;const viewport=window.visualViewport;const bottom=(viewport?.height??innerHeight)+(viewport?.offsetTop??0);const nav=document.querySelector('.cb-bottom-nav');const rect=nav?.getBoundingClientRect();const limit=rect&&rect.height>0&&rect.top>0?Math.min(bottom,rect.top):bottom;setFrameHeight(`${Math.max(120,limit-frame.current.getBoundingClientRect().top-12)}px`)};
     fit();const observer=new ResizeObserver(fit);for(const element of document.querySelectorAll('header,.cb-bottom-nav'))observer.observe(element);window.addEventListener('resize',fit);window.visualViewport?.addEventListener('resize',fit);
     return()=>{observer.disconnect();window.removeEventListener('resize',fit);window.visualViewport?.removeEventListener('resize',fit)};
   },[]);
@@ -187,7 +187,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   // 편집 UI를 그대로 보여주면 한참 고치고 저장할 때야 에러를 보게 돼서 미리 분기한다.
   if (!isOwner) {
     return (
-      <div ref={frame} className="flex min-h-0 flex-col overflow-hidden" style={{height:frameHeight}}>
+      <div ref={frame} className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
           <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
           <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
@@ -208,7 +208,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   }
 
   return (
-    <div ref={frame} className="flex min-h-0 flex-col overflow-hidden" style={{height:frameHeight}}>
+    <div ref={frame} className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
       {/* header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0 flex-wrap gap-y-2">
         <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
