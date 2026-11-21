@@ -1,4 +1,7 @@
 'use client';
+import {createAccountReadFence} from '@/lib/accountReadFence';
+import {changeProfilePassword} from '@/lib/profilePasswordChange';
+import {confirmedAccountSession} from '@/lib/confirmedAccountSession';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { signOutEverywhere } from '@/lib/signOutEverywhere';
@@ -44,6 +47,10 @@ const NOTIF_PREFS = [
 type NotifPrefKey = typeof NOTIF_PREFS[number]['key'];
 
 export default function Profile() {
+  const {user}=useAuth();
+  return <ProfileSession key={user?.id||'anonymous'} />;
+}
+function ProfileSession() {
   const scopedIdentity=multiSchoolEnabled||['1','true'].includes(process.env.NEXT_PUBLIC_CBGPU_ACCOUNT_V2||'');
   const { user, profile, refreshProfile, isLoading: authLoading, isAdmin, is3DPrintManager, isLaserCutManager } = useAuth();
   const { showError, showSuccess } = useAlert();
@@ -69,6 +76,11 @@ export default function Profile() {
   const [savedSshKey, setSavedSshKey] = useState('');
   const [savingSshKey, setSavingSshKey] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const operations=useRef(createAccountReadFence()),deleting=useRef(false),changingPassword=useRef(false);
+  useEffect(()=>{
+    const fence=operations.current;fence.setOwner(user?.id||null);
+    return()=>fence.invalidate();
+  },[user?.id]);
 
   useEffect(() => {
     if (profile) {
@@ -87,13 +99,16 @@ export default function Profile() {
   }, [profile]);
 
   useEffect(() => {
-    if (!user) return;
-    void supabase.from('gpu_ssh_keys').select('public_key').eq('user_id', user.id).maybeSingle()
+    const owner=user?.id;if(!owner)return;
+    const current=operations.current.lease(owner),controller=new AbortController();
+    void supabase.from('gpu_ssh_keys').select('public_key').eq('user_id', owner).abortSignal(controller.signal).maybeSingle()
       .then(({ data }) => {
+        if(!current()||controller.signal.aborted)return;
         setSshPublicKey(data?.public_key ?? '');
         setSavedSshKey(data?.public_key ?? '');
       });
-  }, [user]);
+    return()=>controller.abort();
+  }, [user?.id]);
 
   useEffect(() => {
     if (authLoading || !user || window.location.hash !== '#gpu-ssh-key') return;
@@ -110,34 +125,42 @@ export default function Profile() {
       showError('ssh-ed25519 형식의 공개키를 입력해 주세요.');
       return;
     }
+    const owner=user.id,current=operations.current.lease(owner);
     setSavingSshKey(true);
     try {
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const { error } = key
         ? await supabase.from('gpu_ssh_keys').upsert({ user_id: user.id, public_key: key })
         : await supabase.from('gpu_ssh_keys').delete().eq('user_id', user.id);
+      if(!current())return;
       if (error) throw error;
       setSavedSshKey(key);
       showSuccess(key ? 'SSH 공개키를 저장했습니다.' : 'SSH 공개키를 삭제했습니다.');
     } catch (error: any) {
+      if(!current())return;
       showError(error.message || 'SSH 공개키 저장 실패');
     } finally {
-      setSavingSshKey(false);
+      if(current())setSavingSshKey(false);
     }
   }
 
   async function toggleNotifPref(key: NotifPrefKey) {
     if (!user) return;
+    const owner=user.id,current=operations.current.lease(owner);
     const next = !notifPrefs[key];
     setNotifPrefs((prev) => ({ ...prev, [key]: next }));
     setSavingNotifKey(key);
     try {
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const { error } = await supabase.from('profiles').update({ [key]: next }).eq('id', user.id);
+      if(!current())return;
       if (error) throw error;
     } catch (error: any) {
+      if(!current())return;
       setNotifPrefs((prev) => ({ ...prev, [key]: !next })); // revert on failure
       showError(error.message || '알림 설정 저장 실패');
     } finally {
-      setSavingNotifKey(null);
+      if(current())setSavingNotifKey(null);
     }
   }
 
@@ -158,24 +181,30 @@ export default function Profile() {
       showError(`학번 형식이 올바르지 않습니다. ${STUDENT_ID_HINT}`);
       return;
     }
+    const owner=user.id,current=operations.current.lease(owner);
     setIsUpdating(true);
     try {
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const { error } = await supabase.from('profiles').update(scopedIdentity?{full_name:fullName}:{student_id:studentId,full_name:fullName}).eq('id', user.id);
 
+      if(!current())return;
       if (error) throw error;
+      if(!current())return;
       await refreshProfile();
+      if(!current())return;
       showSuccess('프로필이 업데이트됐습니다!');
     } catch (error: any) {
+      if(!current())return;
       showError(error.code === '23505' || error.message?.includes('STUDENT_ID_ALREADY_REGISTERED')
         ? '이 학번은 같은 학년도에 이미 등록되어 있습니다. 기존 계정을 확인해주세요.'
         : error.message || '업데이트 실패');
     } finally {
-      setIsUpdating(false);
+      if(current())setIsUpdating(false);
     }
   }
 
   async function changePassword() {
-    if (!user?.email) return;
+    if (!user?.email||changingPassword.current) return;
 
     if (newPassword.length < 6) {
       showError('새 비밀번호는 6자 이상이어야 합니다.'); return;
@@ -184,53 +213,47 @@ export default function Profile() {
       showError('새 비밀번호가 일치하지 않습니다.'); return;
     }
 
-    setIsChangingPassword(true);
+    const owner=user.id,current=operations.current.lease(owner);
+    changingPassword.current=true;setIsChangingPassword(true);
     try {
-      const { error: verifyError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-      if (verifyError) {
-        showError('현재 비밀번호가 올바르지 않습니다.'); return;
-      }
-
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-
+      await changeProfilePassword({owner,email:user.email,currentPassword,newPassword},current);
+      if(!current())return;
       showSuccess('비밀번호가 변경됐습니다!');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setCurrentPassword('');setNewPassword('');setConfirmPassword('');
     } catch (error: any) {
-      showError(error.message || '비밀번호 변경 실패');
+      if(current())showError(error.message || '비밀번호 변경 실패');
     } finally {
-      setIsChangingPassword(false);
+      changingPassword.current=false;if(current())setIsChangingPassword(false);
     }
   }
 
   async function handleDeleteAccount() {
-    if (!user) return;
+    if (!user||deleting.current) return;
+    deleting.current=true;
+    const owner=user.id,current=operations.current.lease(owner);
     setIsDeletingAccount(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) { showError('세션이 만료되었습니다. 다시 로그인해주세요.'); return; }
-
+      const session=await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const res = await fetch('/api/account/delete', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type':'application/json' },
+        body:JSON.stringify({expected_user_id:owner}),
       });
+      if(!current())return;
       const body = await res.json().catch(() => ({}));
+      if(!current())return;
       if (!res.ok) { showError(body?.message || '계정 삭제 실패'); return; }
 
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       await signOutEverywhere();
+      if(!current())return;
       showSuccess('계정이 삭제됐습니다.');
       router.push('/');
     } catch (error: any) {
-      showError(error.message || '계정 삭제 중 오류가 발생했습니다.');
+      if(current())showError(error.message || '계정 삭제 중 오류가 발생했습니다.');
     } finally {
-      setIsDeletingAccount(false);
-      setDeleteOpen(false);
+      deleting.current=false;
+      if(current()){setIsDeletingAccount(false);setDeleteOpen(false);}
     }
   }
 
@@ -246,10 +269,13 @@ export default function Profile() {
       showError('5MB 이하 이미지만 업로드할 수 있습니다.'); return;
     }
 
+    const owner=user.id,current=operations.current.lease(owner);
     setIsUploadingAvatar(true);
     try {
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const resized = await resizeImageToJpeg(file);
-      const path = `${user.id}/avatar.jpg`;
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
+      const path = `${owner}/avatar.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
@@ -259,18 +285,22 @@ export default function Profile() {
       const { data: pub } = supabase.storage.from('avatars').getPublicUrl(path);
       const avatarUrl = `${pub.publicUrl}?v=${Date.now()}`;
 
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       const { error: dbError } = await supabase
         .from('profiles')
         .update({ avatar_url: avatarUrl })
         .eq('id', user.id);
       if (dbError) throw dbError;
 
+      if(!current())return;
       await refreshProfile();
+      if(!current())return;
       showSuccess('프로필 사진이 변경됐습니다!');
     } catch (error: any) {
+      if(!current())return;
       showError(error.message || '업로드 실패');
     } finally {
-      setIsUploadingAvatar(false);
+      if(current())setIsUploadingAvatar(false);
     }
   }
 
