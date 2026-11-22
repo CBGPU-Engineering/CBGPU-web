@@ -8,13 +8,16 @@ for(let attempt=0;;attempt++){try{await fetch(origin+'/_next/static/__gpu-extens
 const output=process.env.CBGPU_GPU_EXTENSION_OUTPUT||'/tmp/cbgpu-gpu-extension';fs.mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({headless:true,executablePath:process.env.CBGPU_CHROMIUM||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
 const id='11111111-1111-4111-8111-111111111111',rid='22222222-2222-4222-8222-222222222222',jid='33333333-3333-4333-8333-333333333333';
-const local=(value:string)=>new Date(Date.parse(value)+9*3600000).toISOString().slice(0,19); // Contexts use Asia/Seoul, independently of the CI host timezone.
+// Chromium canonicalizes zero seconds away; Playwright fill rejects a noncanonical :00 value.
+// Contexts use Asia/Seoul, independently of the CI host timezone.
+const local=(value:string)=>new Date(Date.parse(value)+9*3600000).toISOString().slice(0,19).replace(/:00$/,'');
 const results=[];
 try{for(const [width,theme,app]of[[1280,'light',false],[1280,'dark',false],[390,'light',false],[390,'dark',true],[320,'light',true]]as const){
  const c=await browser.newContext({viewport:{width,height:900},colorScheme:theme,locale:'ko-KR',timezoneId:'Asia/Seoul',reducedMotion:'reduce',userAgent:app?'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 Version/4.0 Chrome/131.0 Mobile Safari/537.36':undefined});
  await c.addInitScript(()=>{const original=window.setInterval.bind(window);window.__gpuTicks=[];window.setInterval=((handler:TimerHandler,delay?:number,...args:unknown[])=>{if(delay===60000&&typeof handler==='function')window.__gpuTicks.push(()=>handler(...args));return original(handler,delay,...args)}) as typeof window.setInterval});
  const session=await fetch(origin+'/backend/auth/v1/token?grant_type=password',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:'student@example.invalid',password:'demo-only'})}).then(r=>r.json());await c.addInitScript(s=>localStorage.setItem('sb-localhost-auth-token',JSON.stringify(s)),session);
- let schoolId='cbsh',conflict=false,lostResponse=false,holdResponse=false,releaseResponse:(()=>void)|undefined,posts=0,reads=0;const current=new Date(Date.now()+3600000).toISOString();let limit=new Date(Date.parse(current)+5400000).toISOString();let end=current;
+ // Always exercise the zero-second boundary that previously failed depending on wall-clock timing.
+ let schoolId='cbsh',conflict=false,lostResponse=false,holdResponse=false,releaseResponse:(()=>void)|undefined,posts=0,reads=0;const current=new Date(Math.floor((Date.now()+3600000)/60000)*60000).toISOString();let limit=new Date(Date.parse(current)+5400000).toISOString();let end=current;
  await c.route('**/*',async route=>{const request=route.request(),u=new URL(request.url());if(!['localhost','127.0.0.1'].includes(u.hostname))return route.abort();const json=(body:unknown,status=200)=>route.fulfill({status,json:body});
  const school={id:schoolId,official_name:'연장 검증 학교',display_name:'연장 검증 학교',type:'HIGH',region:'test',status:'APPROVED',features:['gpu_compute','school_life','projects','community','ai'],life_capabilities:{timetable:true,meal:true,news:true},brand_color:'#3182f6',logo_path:null};const member={id:'synthetic-member',user_id:session.user.id,school_id:schoolId,membership_type:'STUDENT',status:'ACTIVE',verified:true,school_roles:[],school};
  if(u.pathname==='/api/auth/shared-session')return json({state:'active',value:JSON.stringify(session)});
