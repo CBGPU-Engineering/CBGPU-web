@@ -1,5 +1,6 @@
 'use client';
 
+import GpuReservationExtension from '@/components/gpu/GpuReservationExtension';
 import GpuQueueHint from '@/components/ai/GpuQueueHint';
 import { useEffect, useState, useRef, Fragment } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -57,6 +58,8 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [clientToday, setClientToday] = useState<Date | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarRevision,setCalendarRevision]=useState(0);
+  const [extendingIds,setExtendingIds]=useState<string[]>([]);
 
 
   const monthStart = startOfMonth(currentMonth);
@@ -81,7 +84,7 @@ export default function Dashboard() {
     };
     void fetchCalendar();
     return () => { current = false; };
-  }, [gridStart.getTime(), gridEnd.getTime()]);
+  }, [gridStart.getTime(), gridEnd.getTime(),calendarRevision]);
   const calendarDays: Date[] = [];
   for (let cursor = gridStart; cursor <= gridEnd; cursor = addDays(cursor, 1)) calendarDays.push(cursor);
 
@@ -291,7 +294,7 @@ export default function Dashboard() {
   const isPastReservation = (r: any) => r.status === 'rejected' || currentTime > new Date(r.end_time);
   const activeReservations = myReservations.filter(r => !isPastReservation(r));
   const pastReservations = myReservations.filter(isPastReservation);
-  const shownReservations = [...activeReservations, ...pastReservations.slice(0, pastShown)];
+  const shownReservations = [...activeReservations, ...pastReservations.filter((res,index)=>index<pastShown||extendingIds.includes(res.id))];
 
   return (
     <div className="cb-page-content space-y-12 md:space-y-20 transition-colors duration-500">
@@ -559,7 +562,8 @@ export default function Dashboard() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto">
+                    <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                      {(isApproved||extendingIds.includes(res.id))&&<GpuReservationExtension available={canStart} onInteractionChange={active=>setExtendingIds(previous=>active?[...new Set([...previous,res.id])]:previous.filter(id=>id!==res.id))} reservationId={res.id} apiBase={'/api/compute/legacy/reservations/'+res.id} onExtended={end=>{setMyReservations(previous=>previous.map(item=>item.id===res.id?{...item,end_time:end}:item));setSelectedRes((previous:Record<string,unknown>|null)=>previous?.id===res.id?{...previous,end_time:end}:previous);setCalendarRevision(value=>value+1);void fetchMyReservations()}}/>}
                       {(isPending || (isApproved && !isStarted)) && (
                         <Button
                           variant="ghost"
