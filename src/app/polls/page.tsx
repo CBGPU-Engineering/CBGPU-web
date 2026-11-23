@@ -432,6 +432,7 @@ function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const actor = useRef(user?.id); actor.current = user?.id;
+  useEffect(() => { actor.current = user?.id; return () => { actor.current = undefined; }; }, [user?.id]);
   const closed = isClosed(poll);
 
   const visibleQs = questions.filter(q => isVisible(q, answers));
@@ -603,36 +604,65 @@ function PollsSession() {
   const responseCheck = useRef(false);
   const [checkingResponse, setCheckingResponse] = useState(false);
   const currentActor = useRef(user?.id); currentActor.current = user?.id;
+  const rowActions = useRef(new Set<string>());
+  const [busyRows, setBusyRows] = useState(new Set<string>());
+  const loadGeneration = useRef(0);
+  const loadRequest = useRef<AbortController | null>(null);
+  const openRequest = useRef<AbortController | null>(null);
+  const [openingPoll, setOpeningPoll] = useState(false);
 
   const loadPolls = useCallback(async () => {
-    setLoading(true); setLoadError('');
-    const { data, error } = await supabase.from('polls').select('*').order('created_at', { ascending: false }).limit(500);
-    if (error?.message?.includes('does not exist')) { setDbMissing(true); setLoading(false); return; }
-    if (error) { setLoadError('투표를 불러오지 못했어요. 연결을 확인한 뒤 다시 불러와 주세요.'); setLoading(false); return; }
-    setPolls((data ?? []) as Poll[]);
-    if (user) {
-      const { data: resps } = await supabase.from('poll_responses').select('poll_id').eq('user_id', user.id);
-      setMyResponses((resps ?? []).map(r => r.poll_id));
+    const ticket = ++loadGeneration.current;
+    loadRequest.current?.abort(); openRequest.current?.abort(); setOpeningPoll(false);
+    const controller = new AbortController(); loadRequest.current = controller;
+    setLoading(true); setLoadError(''); setJustFinished(false);
+    try {
+      const result = await boundedClientRequest(async signal => {
+        const polls = await supabase.from('polls').select('*').order('created_at', { ascending: false }).limit(500).abortSignal(signal);
+        if (polls.error) throw polls.error;
+        if (!Array.isArray(polls.data)) throw new Error('Poll list unconfirmed');
+        const responses = user ? await supabase.from('poll_responses').select('poll_id').eq('user_id', user.id).abortSignal(signal) : { data: [], error: null };
+        if (responses.error) throw responses.error;
+        if (!Array.isArray(responses.data)) throw new Error('Response list unconfirmed');
+        return { polls: polls.data as Poll[], responses: responses.data.map(row => row.poll_id) };
+      }, controller.signal);
+      if (ticket !== loadGeneration.current || controller.signal.aborted) return;
+      setPolls(result.polls); setMyResponses(result.responses); setDbMissing(false);
+      setJustFinished(true);
+      setTimeout(() => { if (ticket === loadGeneration.current) setJustFinished(false); }, 600);
+    } catch (error) {
+      if (ticket !== loadGeneration.current || controller.signal.aborted) return;
+      const problem = error as { code?: string; message?: string };
+      if (problem?.code === '42P01' || problem?.message?.includes('does not exist')) setDbMissing(true);
+      else setLoadError('투표와 내 응답을 확인하지 못했어요. 연결을 확인한 뒤 다시 불러와 주세요.');
+    } finally {
+      if (ticket === loadGeneration.current && !controller.signal.aborted) setLoading(false);
     }
-    setLoading(false);
-    setJustFinished(true);
-    setTimeout(() => setJustFinished(false), 600);
-  }, [user]);
+  }, [user?.id]);
 
-  useEffect(() => { loadPolls(); }, [loadPolls]);
+  useEffect(() => { void loadPolls(); }, [loadPolls]);
+  useEffect(() => {
+    currentActor.current = user?.id;
+    return () => { currentActor.current = undefined; ++loadGeneration.current; loadRequest.current?.abort(); openRequest.current?.abort(); };
+  }, [user?.id]);
 
   const openPoll = async (poll: Poll) => {
     if (!poll.show_results && !isAdmin && (myResponses.includes(poll.id) || isClosed(poll))) {
       showError(myResponses.includes(poll.id) ? '결과를 공개하지 않는 투표예요. 내 응답 확인으로 등록 여부를 확인해 주세요.' : '결과를 공개하지 않는 투표예요. 목록에서 다른 투표를 확인해 주세요.');
       return;
     }
-    const { data: qs } = await supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num');
-    const questions = (qs ?? []).map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} })) as Question[];
-    if (myResponses.includes(poll.id) || isClosed(poll)) {
-      setView({ type: 'results', poll, questions });
-    } else {
-      setView({ type: 'form', poll, questions });
-    }
+    openRequest.current?.abort(); const controller = new AbortController(); openRequest.current = controller;
+    const owner = user?.id; setOpeningPoll(true);
+    try {
+      const { data, error } = await boundedClientRequest(signal => supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num').abortSignal(signal), controller.signal);
+      if (error) throw error;
+      if (!Array.isArray(data)) throw new Error('Questions unconfirmed');
+      if (controller.signal.aborted || openRequest.current !== controller || currentActor.current !== owner) return;
+      const questions = data.map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} })) as Question[];
+      setView({ type: myResponses.includes(poll.id) || isClosed(poll) ? 'results' : 'form', poll, questions });
+    } catch {
+      if (!controller.signal.aborted && openRequest.current === controller && currentActor.current === owner) showError('질문을 불러오지 못했어요. 투표를 다시 눌러 확인해 주세요.');
+    } finally { if (openRequest.current === controller && !controller.signal.aborted) setOpeningPoll(false); }
   };
 
   const checkMyResponse = async (poll: Poll) => {
@@ -659,17 +689,28 @@ function PollsSession() {
     finally { responseCheck.current = false; setCheckingResponse(false); }
   };
 
-  const closePoll = async (pollId: string) => {
-    const { error } = await supabase.from('polls').update({ is_active: false }).eq('id', pollId);
-    if (error) { showError('투표를 마감하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    showSuccess('마감했어요.'); loadPolls();
+  const mutatePoll = async (pollId: string, remove: boolean) => {
+    const owner = user?.id;
+    if (!owner || rowActions.current.has(pollId)) return;
+    rowActions.current.add(pollId); setBusyRows(new Set(rowActions.current));
+    try {
+      const { data, error } = await boundedClientRequest(async signal => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (signal.aborted || currentActor.current !== owner || session?.user.id !== owner) throw new Error('Account changed');
+        return (remove ? supabase.from('polls').delete() : supabase.from('polls').update({ is_active: false })).eq('id', pollId).select('id').abortSignal(signal);
+      }, undefined, 30_000);
+      if (error || data?.length !== 1 || data[0].id !== pollId) throw new Error('Poll mutation not confirmed');
+      if (currentActor.current !== owner) return;
+      showSuccess(remove ? '삭제했어요.' : '마감했어요.');
+      void loadPolls().catch(() => { if (currentActor.current === owner) showError('처리는 반영됐지만 목록을 불러오지 못했어요. 투표 목록을 다시 열어 주세요.'); });
+    } catch {
+      if (currentActor.current === owner) showError(remove ? '삭제 결과를 확인하지 못했어요. 목록을 다시 불러와 삭제 여부를 확인해 주세요.' : '마감 결과를 확인하지 못했어요. 목록을 다시 불러와 상태를 확인해 주세요.');
+    } finally {
+      rowActions.current.delete(pollId); setBusyRows(new Set(rowActions.current));
+    }
   };
-
-  const deletePoll = async (pollId: string) => {
-    const { error } = await supabase.from('polls').delete().eq('id', pollId);
-    if (error) { showError('투표를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    showSuccess('삭제했어요.'); loadPolls();
-  };
+  const closePoll = (pollId: string) => mutatePoll(pollId, false);
+  const deletePoll = (pollId: string) => mutatePoll(pollId, true);
 
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
@@ -727,6 +768,7 @@ function PollsSession() {
         onChange={(v) => setTab(v as 'active' | 'closed')}
       />
 
+      {openingPoll && <p role="status" className="text-sm text-muted-foreground">질문을 불러오고 있어요.</p>}
       {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="투표 불러오는 중" /></div>
       : loadError ? <div role="alert" className="space-y-3 rounded-xl border border-border bg-card p-5"><p className="text-sm">{loadError}</p><Button variant="outline" onClick={() => void loadPolls()}>투표 다시 불러오기</Button></div> : shown.length === 0 ? (
         <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground font-medium">
@@ -761,8 +803,8 @@ function PollsSession() {
                     {isAdmin && (
                       <>
                         <Button variant="ghost" size="icon" aria-label="투표 수정" className="size-11" onClick={() => setView({ type: 'builder', poll })}><Edit3 className="size-3.5" /></Button>
-                        {poll.is_active && !closed && <Button variant="ghost" size="icon" aria-label="투표 마감" className="size-11 text-amber-600 dark:text-amber-400" onClick={() => closePoll(poll.id)}><Lock className="size-3.5" /></Button>}
-                        <Button variant="ghost" size="icon" aria-label="투표 삭제" className="size-11 text-destructive" onClick={() => setConfirmDeleteId(poll.id)}><Trash2 className="size-3.5" /></Button>
+                        {poll.is_active && !closed && <Button variant="ghost" size="icon" aria-label="투표 마감" disabled={busyRows.has(poll.id)} className="size-11 text-amber-600 dark:text-amber-400" onClick={() => closePoll(poll.id)}><Lock className="size-3.5" /></Button>}
+                        <Button variant="ghost" size="icon" aria-label="투표 삭제" disabled={busyRows.has(poll.id)} className="size-11 text-destructive" onClick={() => setConfirmDeleteId(poll.id)}><Trash2 className="size-3.5" /></Button>
                       </>
                     )}
                   </div>
