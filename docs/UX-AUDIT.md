@@ -350,8 +350,14 @@ ongoing root capacity still needs monitoring. No deployment guard was lowered.
 Long-label tests also found fixed portal menus extending beyond a 320px or
 390px viewport without increasing document.scrollWidth. The common Select now
 limits its painted width and wraps option text without removing the full label.
-Eighteen real-component cases cover 80/150-character URLs and long Korean labels
-across Dropdown, popper and item-aligned positioning, including selection and
-reopening. Menu bounds and every painted text line are checked independently of
+Thirty-six real-component cases cover 80/150-character URLs and long Korean
+labels across Dropdown, popper and item-aligned positioning at 320/390px widths
+and 850/240px heights, including selection and reopening. Menu bounds and every painted text line are checked independently of
 document overflow. Styling is inherited from the option wrapper because the
 installed Radix ItemText intentionally omits className/style props.
+
+Short-height tests also reproduced menu bottoms below the visible window when
+fixed height caps overrode Radix availability, plus an item-aligned inline minimum
+that exceeded its viewport maximum. Existing height caps now take the smaller
+available height, and the targeted native wrapper permits that maximum to win.
+The normal alignment API, selection callbacks and complete labels are retained.

@@ -54,7 +54,7 @@ export function Dropdown({ value, onChange, children, className, disabled, requi
       <SelectTrigger id={id} aria-label={rest["aria-label"]} className={cn("min-h-11 w-fit min-w-24 rounded-lg border bg-background px-3 text-sm", className, "flex")}>
         <SelectValue>{options.find(option => encode(option.value) === current)?.label}</SelectValue>
       </SelectTrigger>
-      <SelectContent position="popper" sideOffset={6} className="max-h-72 min-w-(--radix-select-trigger-width)">
+      <SelectContent position="popper" sideOffset={6} className="max-h-[min(18rem,var(--radix-select-content-available-height,18rem))] min-w-[min(var(--radix-select-trigger-width),calc(100vw-2rem))]">
         {options.map(option => (
           <SelectItem key={option.value} value={encode(option.value)} disabled={option.disabled} className="min-h-11 text-sm">
             {option.label}

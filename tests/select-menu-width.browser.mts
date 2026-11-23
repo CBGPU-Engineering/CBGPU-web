@@ -42,12 +42,13 @@ async function assertMenu(page:Page,option:Locator,label:string,phase:string){
   const textIds=(item.getAttribute('aria-labelledby')||'').split(/\s+/);
   const text=textIds.map(id=>document.getElementById(id)).find(node=>node&&item.contains(node))||item.lastElementChild;
   if(!menu||!text)throw Error('Expected actual Select menu and ItemText');
-  const box=(node:Element)=>{const r=node.getBoundingClientRect();return{left:r.left,right:r.right,width:r.width,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth}};
+  const box=(node:Element)=>{const r=node.getBoundingClientRect();return{left:r.left,right:r.right,top:r.top,bottom:r.bottom,height:r.height,width:r.width,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth}};
   const range=document.createRange();range.selectNodeContents(text);
-  return{viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,menu:box(menu),item:box(item),text:box(text),textStyle:{display:getComputedStyle(text).display,minWidth:getComputedStyle(text).minWidth,width:getComputedStyle(text).width,maxWidth:getComputedStyle(text).maxWidth,overflowWrap:getComputedStyle(text).overflowWrap,whiteSpace:getComputedStyle(text).whiteSpace,flexShrink:getComputedStyle(text).flexShrink},itemStyle:{display:getComputedStyle(item).display,minWidth:getComputedStyle(item).minWidth,width:getComputedStyle(item).width,padding:getComputedStyle(item).padding},content:text.textContent,lines:Array.from(range.getClientRects(),rect=>({left:rect.left,right:rect.right,width:rect.width}))};
+  return{viewport:innerWidth,viewportHeight:innerHeight,documentWidth:document.documentElement.scrollWidth,menu:box(menu),item:box(item),text:box(text),textStyle:{display:getComputedStyle(text).display,minWidth:getComputedStyle(text).minWidth,width:getComputedStyle(text).width,maxWidth:getComputedStyle(text).maxWidth,overflowWrap:getComputedStyle(text).overflowWrap,whiteSpace:getComputedStyle(text).whiteSpace,flexShrink:getComputedStyle(text).flexShrink},itemStyle:{display:getComputedStyle(item).display,minWidth:getComputedStyle(item).minWidth,width:getComputedStyle(item).width,padding:getComputedStyle(item).padding},content:text.textContent,lines:Array.from(range.getClientRects(),rect=>({left:rect.left,right:rect.right,width:rect.width}))};
  });
  const detail=phase+': '+JSON.stringify(geometry);
  assert.ok(geometry.menu.left>=-1&&geometry.menu.right<=geometry.viewport+1,'Menu must fit viewport '+detail);
+ assert.ok(geometry.menu.top>=-1&&geometry.menu.bottom<=geometry.viewportHeight+1,'Menu must fit viewport height '+detail);
  assert.ok(geometry.item.left>=geometry.menu.left-1&&geometry.item.right<=geometry.menu.right+1,'Option must fit menu '+detail);
  assert.equal(geometry.content,label,'The full label must remain in ItemText '+detail);
  assert.ok(geometry.text.scrollWidth<=geometry.text.clientWidth+1,'ItemText must wrap rather than clip horizontally '+detail);
@@ -65,12 +66,12 @@ let browser:Awaited<ReturnType<typeof chromium.launch>>|undefined;
 const results:Array<Record<string,unknown>>=[];
 try{
  browser=await chromium.launch({headless:true,...(process.env.CBGPU_BROWSER_EXECUTABLE?{executablePath:process.env.CBGPU_BROWSER_EXECUTABLE}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
- for(const width of[320,390])for(const widget of['dropdown','popper','item-aligned'])for(const label of labels){
-  const context=await browser.newContext({viewport:{width,height:850},reducedMotion:'reduce'});
+ for(const width of[320,390])for(const height of[850,240])for(const widget of['dropdown','popper','item-aligned'])for(const label of labels){
+  const context=await browser.newContext({viewport:{width,height},reducedMotion:'reduce'});
   const page=await context.newPage(),errors:string[]=[];let externalRequests=0;
   page.on('pageerror',error=>errors.push(error.message));
   await context.route('**/*',route=>{if(new URL(route.request().url()).origin!==origin){externalRequests++;return route.abort();}return route.continue();});
-  const caseId=widget+'-'+width+'-'+label.id;
+  const caseId=widget+'-'+width+'x'+height+'-'+label.id;
   try{
    await page.goto(origin+'/?'+new URLSearchParams({widget,label:label.id}));
    const trigger=page.getByRole('combobox',{name:'작업 선택',exact:true});await trigger.click();
@@ -86,7 +87,7 @@ try{
    assert.equal(await option.getAttribute('data-state'),'checked','Long selection stays selected when reopened');
    await page.keyboard.press('Escape');await page.getByRole('listbox').waitFor({state:'hidden'});await assertTrigger(page,trigger,width);
    assert.equal(externalRequests,0);assert.deepEqual(errors,[]);
-   results.push({width,widget,label:label.id,labelLength:label.text.length,opened,reopened});
+   results.push({width,height,widget,label:label.id,labelLength:label.text.length,opened,reopened});
   }finally{await context.close();}
  }
  await fs.writeFile(path.join(output,'results.json'),JSON.stringify(results,null,2));
