@@ -198,7 +198,7 @@ export default function FlappyBird(props: RankedGameProps) {
           </div>
         )}
       </div>
-      <p className="text-xs text-muted-foreground font-medium">탭 또는 스페이스바로 점프</p>
+      <p className="text-sm text-muted-foreground font-medium">탭 또는 스페이스바로 점프</p>
     </div>
   );
 }

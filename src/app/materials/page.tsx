@@ -146,7 +146,7 @@ function MaterialsSession() {
         <h1 className="cb-page-title">자료 공유</h1>
         <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
       </div>
-      <Button asChild size="sm" className="shrink-0 gap-1.5 font-semibold text-xs active:scale-95">
+      <Button asChild size="sm" className="shrink-0 gap-1.5 font-semibold text-sm active:scale-95">
         <Link href="/materials/new"><Plus className="size-3.5" />새 자료</Link>
       </Button>
     </div>
@@ -155,8 +155,8 @@ function MaterialsSession() {
       <SegmentedTabs items={[{ value: 'all', label: '공유됨' }, { value: 'mine', label: '내 자료' }]} value={tab} onChange={value => setTab(value as 'all' | 'mine')} />
       <div className="relative sm:w-64">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 파일명, 태그 검색" aria-label="자료 검색" className="h-9 pl-9 pr-8" />
-        {query && <button type="button" onClick={() => setQuery('')} aria-label="검색어 지우기" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
+        <Input value={query} onChange={event => setQuery(event.target.value)} placeholder="제목, 파일명, 태그 검색" aria-label="자료 검색" className="min-h-11 pl-9 pr-12" />
+        {query && <button type="button" onClick={() => setQuery('')} aria-label="검색어 지우기" className="absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"><X className="size-3.5" /></button>}
       </div>
     </div>
 
@@ -166,7 +166,7 @@ function MaterialsSession() {
       {[null, ...availableTags].map(tag => {
         const active = selectedTag === tag;
         return <button key={tag ?? '__all'} type="button" aria-pressed={active} onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
+          className={`shrink-0 min-h-11 rounded-full px-3 py-2 text-sm font-semibold transition-colors ${active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'}`}>
           {tag ? `#${tag}` : '전체'}
         </button>;
       })}
@@ -190,20 +190,20 @@ function MaterialsSession() {
               <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><Icon className="size-5" /></div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-semibold leading-tight" title={material.title}><Link href={'/materials/'+material.id} className="hover:text-primary">{material.title}</Link></h2>
-                <p className="mt-1 truncate text-xs text-muted-foreground" title={material.file_name}>{material.file_name}</p>
+                <p className="mt-1 truncate text-sm text-muted-foreground" title={material.file_name}>{material.file_name}</p>
               </div>
               {mine && <button type="button" disabled={busy} aria-label={`${material.title} 삭제`} onClick={() => setDeleteTarget(material)}
-                className="-mr-1 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50">
+                className="-mr-1 -mt-1 flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50">
                 <Trash2 className="size-4" />
               </button>}
             </div>
             <div className="flex min-h-5 flex-wrap items-center gap-1.5">
               {material.tags.slice(0, 3).map(tag => <Badge key={tag} className="normal-case tracking-normal">#{tag}</Badge>)}
-              {material.tags.length > 3 && <span className="text-xs font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
+              {material.tags.length > 3 && <span className="text-sm font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
             </div>
-            <Link href={'/materials/'+material.id} className="min-h-8 text-xs font-medium text-primary">자세히 보기 · AI 요약 →</Link><div className="mt-auto flex items-center justify-between gap-3">
-              <span className="text-xs text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
-              <Button variant="outline" size="sm" className="gap-1.5 font-semibold text-xs" disabled={busy} onClick={() => void download(material)}>
+            <Link href={'/materials/'+material.id} className="inline-flex min-h-11 items-center text-sm font-medium text-primary">자세히 보기 · AI 요약 →</Link><div className="mt-auto flex items-center justify-between gap-3">
+              <span className="text-sm text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
+              <Button variant="outline" size="sm" className="gap-1.5 font-semibold text-sm" disabled={busy} onClick={() => void download(material)}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}받기
               </Button>
             </div>
@@ -213,8 +213,8 @@ function MaterialsSession() {
         <FolderOpen className="mx-auto mb-4 size-12 opacity-20" />
         <p className="text-sm font-semibold">{filtering ? '조건에 맞는 자료가 없어요' : '아직 공유된 자료가 없어요'}</p>
         {filtering
-          ? <Button variant="ghost" size="sm" className="mt-3 text-xs font-bold" onClick={() => { setQuery(''); setSelectedTag(null); setTab('all'); }}>필터 초기화</Button>
-          : <Button asChild size="sm" className="mt-4 gap-1.5 font-semibold text-xs"><Link href="/materials/new"><Plus className="size-3.5" />첫 자료 올리기</Link></Button>}
+          ? <Button variant="ghost" size="sm" className="mt-3 text-sm font-bold" onClick={() => { setQuery(''); setSelectedTag(null); setTab('all'); }}>필터 초기화</Button>
+          : <Button asChild size="sm" className="mt-4 gap-1.5 font-semibold text-sm"><Link href="/materials/new"><Plus className="size-3.5" />첫 자료 올리기</Link></Button>}
       </div>}
 
     {hasMore && <div className="text-center"><Button variant="outline" disabled={loading} onClick={() => void load(materials.length)}>{loading && <Loader2 className="size-4 animate-spin" />}자료 더 보기</Button></div>}

@@ -1,0 +1,25 @@
+{
+  "scope": "Synthetic local route and actual-component fixtures, before/after. No real accounts or private records; development-only banners/indicators are not production UI. Full source coverage and limits are in ../page-coverage.json.",
+  "images": [
+    {
+      "label": "signup-390-light",
+      "before": "before-signup-390-light.png",
+      "after": "after-signup-390-light.png"
+    },
+    {
+      "label": "print-390-light",
+      "before": "before-print-390-light.png",
+      "after": "after-print-390-light.png"
+    },
+    {
+      "label": "school-directory-1280-dark",
+      "before": "before-school-directory-1280-dark.png",
+      "after": "after-school-directory-1280-dark.png"
+    },
+    {
+      "label": "ai-1280-light",
+      "before": "before-ai-1280-light.png",
+      "after": "after-ai-1280-light.png"
+    }
+  ]
+}

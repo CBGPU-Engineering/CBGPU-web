@@ -104,8 +104,8 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
       <div className="flex items-center gap-3 flex-wrap justify-center">
         <div className="flex gap-1">
           {[6, 8, 12].map(p => (
-            <button key={p} onClick={() => { setPairs(p); start(p); }}
-              className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+            <button key={p} type="button" aria-pressed={pairs === p} onClick={() => { setPairs(p); start(p); }}
+              className={`min-h-11 px-3 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${
                 pairs === p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}>
               {p === 6 ? '쉬움' : p === 8 ? '보통' : '어려움'}
@@ -113,11 +113,11 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
           ))}
         </div>
         <div className="flex gap-3 text-sm font-black">
-          <span className="text-muted-foreground uppercase tracking-widest text-xs">⏱ {fmt(time)}</span>
-          <span className="text-muted-foreground uppercase tracking-widest text-xs">🔄 {moves}</span>
-          <span className="text-muted-foreground uppercase tracking-widest text-xs">✅ {matched}/{pairs}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-sm">⏱ {fmt(time)}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-sm">🔄 {moves}</span>
+          <span className="text-muted-foreground uppercase tracking-widest text-sm">✅ {matched}/{pairs}</span>
         </div>
-        <Button variant="outline" size="sm" onClick={() => start()} className="font-black text-xs uppercase">다시 하기</Button>
+        <Button variant="outline" size="sm" onClick={() => start()} className="font-black text-sm uppercase">다시 하기</Button>
       </div>
 
       {/* grid — 뷰포트 너비에 맞춰 카드 크기가 줄어들도록 vw로 상한을 둔다 */}
@@ -168,13 +168,13 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
 
       {done && (
         <div className="text-center space-y-2 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl">
-          <p className="font-black text-green-500 uppercase tracking-widest text-lg">🎉 클리어!</p>
+          <p className="font-black text-green-700 dark:text-green-400 uppercase tracking-widest text-lg">🎉 클리어!</p>
           <p className="text-sm text-muted-foreground font-medium">{fmt(time)} · {moves}회 시도</p>
           <Button onClick={() => start()} className="font-black uppercase tracking-widest mt-1">다시 하기</Button>
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground font-medium">카드를 눌러 같은 그림을 맞춰 보세요</p>
+      <p className="text-sm text-muted-foreground font-medium">카드를 눌러 같은 그림을 맞춰 보세요</p>
     </div>
   );
 }

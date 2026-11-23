@@ -1,0 +1,2575 @@
+{
+  "date": "2026-11-24",
+  "scope": "Every current Next page source audited, plus separate backend developer/careers portals. Source coverage is not a claim that every permission-sensitive or dynamic record was opened with production data.",
+  "pageCount": 114,
+  "preserved": [
+    "Existing branding and primary blue",
+    "Student home greeting and feature order",
+    "Single existing advertisement position and eligibility guards",
+    "School/app Korean and desktop platform/developer English",
+    "Existing APIs, membership authorization and personal/project data"
+  ],
+  "verificationSafety": "Browser actions used synthetic local fixtures. No real registrations, uploads, private SQL writes, deployments, mail, or GPU jobs were submitted. Production verification uses normal anonymous browsing and health/asset reads.",
+  "limitations": [
+    "Some dynamic pages require valid record fixtures; invalid IDs are not content verification.",
+    "Feature-flag-disabled public routes remain disabled; a deliberate 404 is not reported as a successful content render.",
+    "Independent visual review does not prove WCAG compliance across all real user content.",
+    "A responsive improvement is not a measured conversion or revenue improvement."
+  ],
+  "routes": [
+    {
+      "route": "/admin/accounts",
+      "source": "src/app/admin/accounts/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/accounts",
+          "implementation": [
+            "src/app/admin/accounts/page.tsx",
+            "src/app/admin/page.tsx"
+          ],
+          "status": "stable_route_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/accounts/PASSED.json",
+            "/tmp/cbgpu-oil-operations/before/locale/accounts-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/accounts-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/accounts-desktop-dark.png",
+            "/tmp/cbgpu-oil-operations/after/locale/PASSED.json",
+            "/tmp/cbgpu-oil-operations/stable-accounts/PASSED.json",
+            "/tmp/cbgpu-oil-operations/stable-accounts/SAFETY.json",
+            "/tmp/cbgpu-oil-operations/stable-accounts/allowed-app-dark.png",
+            "/tmp/cbgpu-oil-operations/stable-accounts/denied-desktop-light.png",
+            "/tmp/cbgpu-oil-operations/stable-error/ERROR-LOCALE.json",
+            "/tmp/cbgpu-oil-operations/shared-alert-language/PASSED.json",
+            "/tmp/cbgpu-oil-operations/stable-final-summary.json",
+            "/tmp/cbgpu-oil-operations/stable-final-accounts/PASSED.json",
+            "/tmp/cbgpu-oil-operations/stable-final-error/ERROR-LOCALE.json",
+            "/tmp/cbgpu-oil-operations/stable-final-query-lang/PASSED.json",
+            "/tmp/cbgpu-oil-operations/stable-final-sid-mismatch/PASSED.json"
+          ],
+          "reason": "Actual Next optimized f6ac8e5 build with matching 14000/14001 build/runtime ports: real Supabase JS and login form, strict portal session ID, school affiliation filters/search/clear, in-memory legacy approval/review actions and non-admin denial. Eight role/frame/theme cases pass. Forced app 503 now renders Korean; WebView and query-only desktop-UA app html lang are ko. Mismatched portal session ID blocks before account list reads or account patches. No external requests or real private writes. API responses are isolated mocks, not server-side authorization proof; multi-school flag is disabled in the demo. Earlier dev routeLoading did not reproduce in optimized builds.",
+          "stable_checkpoint": "f6ac8e5",
+          "latest_component_checkpoint": "d7bdad3"
+        }
+      ]
+    },
+    {
+      "route": "/admin/ad-revenue",
+      "source": "src/app/admin/ad-revenue/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/ad-revenue",
+          "implementation": [
+            "src/app/admin/ad-revenue/page.tsx",
+            "src/components/admin/revenue/AdRevenueDashboard.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/locale/revenue-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/revenue-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/PASSED.json"
+          ],
+          "reason": "Actual enabled analytics UI and GET report read verified in synthetic fixture; Korean labels keep original CONFIRMED API code and dates. No report import/experiment mutations."
+        }
+      ]
+    },
+    {
+      "route": "/admin/careers",
+      "source": "src/app/admin/careers/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/careers",
+          "implementation": [
+            "src/app/admin/careers/page.tsx",
+            "src/components/admin/admin-language.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/careers/390-light.png",
+            "/tmp/cbgpu-oil-operations/after/careers/390-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/careers-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/PASSED.json"
+          ],
+          "reason": "Actual career inbox, expanded response, search no-match and retry error verified; desktop English/app Korean with applicant content preserved."
+        }
+      ]
+    },
+    {
+      "route": "/admin/central-cpu",
+      "source": "src/app/admin/central-cpu/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/central-cpu",
+          "implementation": [
+            "src/app/admin/central-cpu/page.tsx",
+            "src/components/schools/PlatformCPUPool.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/feature-requests",
+      "source": "src/app/admin/feature-requests/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/feature-requests",
+          "implementation": [
+            "src/app/admin/feature-requests/page.tsx",
+            "src/components/admin/admin-language.tsx",
+            "src/components/schools/PlatformFeatureRequests.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/gpu",
+      "source": "src/app/admin/gpu/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/gpu",
+          "implementation": [
+            "src/app/admin/gpu/page.tsx"
+          ],
+          "status": "unchanged_redirect",
+          "evidence": [],
+          "reason": "Existing destination and authorization boundary retained; no standalone page UI."
+        }
+      ]
+    },
+    {
+      "route": "/admin/m",
+      "source": "src/app/admin/m/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/m",
+          "implementation": [
+            "src/app/admin/m/page.tsx",
+            "src/components/admin/admin-language.tsx",
+            "src/components/ConfirmDialog.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/manufacture",
+      "source": "src/app/admin/manufacture/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/manufacture",
+          "implementation": [
+            "src/app/admin/manufacture/page.tsx",
+            "src/app/admin/page.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/manufacturing/laser/[id]",
+      "source": "src/app/admin/manufacturing/laser/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/manufacturing/laser/[id]",
+          "implementation": [
+            "src/app/admin/manufacturing/laser/[id]/page.tsx",
+            "src/components/admin/LaserJobDetails.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/manufacturing",
+      "source": "src/app/admin/manufacturing/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/manufacturing",
+          "implementation": [
+            "src/app/admin/manufacturing/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/manufacturing/print/[id]",
+      "source": "src/app/admin/manufacturing/print/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/manufacturing/print/[id]",
+          "implementation": [
+            "src/app/admin/manufacturing/print/[id]/page.tsx",
+            "src/components/admin/PrintJobDetails.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/materials",
+      "source": "src/app/admin/materials/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/materials",
+          "implementation": [
+            "src/app/admin/materials/page.tsx",
+            "src/app/admin/page.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/message-reports",
+      "source": "src/app/admin/message-reports/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/message-reports",
+          "implementation": [
+            "src/app/admin/message-reports/page.tsx",
+            "src/components/admin/MessageReportManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin",
+      "source": "src/app/admin/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin",
+          "implementation": [
+            "src/app/admin/page.tsx",
+            "src/components/admin/admin-language.tsx",
+            "src/components/admin/AccountSchoolDetails.tsx",
+            "src/components/schools/SchoolAdminHub.tsx",
+            "src/components/manufacturing/PersonSearchSelect.tsx",
+            "src/components/ConfirmDialog.tsx",
+            "src/components/admin/MaterialsStorage.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/polls",
+      "source": "src/app/admin/polls/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/polls",
+          "implementation": [
+            "src/app/admin/polls/page.tsx",
+            "src/components/admin/PollsManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/school-applications",
+      "source": "src/app/admin/school-applications/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/school-applications",
+          "implementation": [
+            "src/app/admin/school-applications/page.tsx",
+            "src/components/schools/PlatformSchoolApplications.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/schools/[id]/central-cpu",
+      "source": "src/app/admin/schools/[id]/central-cpu/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/schools/[id]/central-cpu",
+          "implementation": [
+            "src/app/admin/schools/[id]/central-cpu/page.tsx",
+            "src/components/schools/SchoolCPUAllocation.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/schools/[id]/life-sources",
+      "source": "src/app/admin/schools/[id]/life-sources/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/schools/[id]/life-sources",
+          "implementation": [
+            "src/app/admin/schools/[id]/life-sources/page.tsx",
+            "src/components/schools/SchoolLifeSettings.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/schools/[id]/manage",
+      "source": "src/app/admin/schools/[id]/manage/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/schools/[id]/manage",
+          "implementation": [
+            "src/app/admin/schools/[id]/manage/page.tsx"
+          ],
+          "status": "unchanged_redirect",
+          "evidence": [],
+          "reason": "Existing destination and authorization boundary retained; no standalone page UI."
+        }
+      ]
+    },
+    {
+      "route": "/admin/schools/[id]",
+      "source": "src/app/admin/schools/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/schools/[id]",
+          "implementation": [
+            "src/app/admin/schools/[id]/page.tsx",
+            "src/components/schools/SchoolAdminHub.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/schools",
+      "source": "src/app/admin/schools/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/schools",
+          "implementation": [
+            "src/app/admin/schools/page.tsx",
+            "src/components/schools/SchoolAdminHub.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/server",
+      "source": "src/app/admin/server/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/server",
+          "implementation": [
+            "src/app/admin/server/page.tsx",
+            "src/app/admin/page.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/study",
+      "source": "src/app/admin/study/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/study",
+          "implementation": [
+            "src/app/admin/study/page.tsx",
+            "src/components/admin/admin-language.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/timetable",
+      "source": "src/app/admin/timetable/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/timetable",
+          "implementation": [
+            "src/app/admin/timetable/page.tsx",
+            "src/components/admin/TimetableManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/admin/wakeup",
+      "source": "src/app/admin/wakeup/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/admin/wakeup",
+          "implementation": [
+            "src/app/admin/wakeup/page.tsx",
+            "src/components/admin/admin-language.tsx",
+            "src/components/ConfirmDialog.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/ai/chat",
+      "source": "src/app/ai/chat/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/ai/chat",
+          "kind": "page",
+          "source": "src/app/ai/chat/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/ai/layout.tsx",
+            "src/app/ai/chat/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "AiWorkspace actual-component fixture; draft suggestion only; no AI job",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/ai/cli",
+      "source": "src/app/ai/cli/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/ai/cli",
+          "kind": "page",
+          "source": "src/app/ai/cli/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/ai/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "AiWorkspace actual-component fixture; draft suggestion only; no AI job",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/ai",
+      "source": "src/app/ai/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/ai",
+          "kind": "page",
+          "source": "src/app/ai/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/ai/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "AiWorkspace actual-component fixture; draft suggestion only; no AI job",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/arxiv/[id]",
+      "source": "src/app/arxiv/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/arxiv/[id]",
+          "kind": "page",
+          "source": "src/app/arxiv/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/arxiv/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "PaperIndex/PaperDetail actual-component synthetic fixture; no PDF download or research submission",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/arxiv",
+      "source": "src/app/arxiv/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/arxiv",
+          "kind": "page",
+          "source": "src/app/arxiv/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/arxiv/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "PaperIndex/PaperDetail actual-component synthetic fixture; no PDF download or research submission",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/arxiv/submit",
+      "source": "src/app/arxiv/submit/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/arxiv/submit",
+          "kind": "page",
+          "source": "src/app/arxiv/submit/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/arxiv/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "PaperIndex/PaperDetail actual-component synthetic fixture; no PDF download or research submission",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/auth/callback",
+      "source": "src/app/auth/callback/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/callback",
+          "source": "src/app/auth/callback/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "audited-unchanged",
+          "reason": "Existing session callback immediately routes to safe authorized destination; retained logic and loading status.",
+          "components": [],
+          "browserEvidence": [],
+          "limitation": "Callback is an immediate redirect; audited source contract, not a stable screenshot."
+        }
+      ]
+    },
+    {
+      "route": "/auth/forgot-password",
+      "source": "src/app/auth/forgot-password/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/forgot-password",
+          "source": "src/app/auth/forgot-password/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-through-auth-frame",
+          "reason": "Kept accurate request/conditional-delivery wording; shared AuthFrame refined.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_auth_forgot-password-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_forgot-password-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_auth_forgot-password-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_forgot-password-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_forgot-password-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_forgot-password-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_forgot-password-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_forgot-password-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/auth/login",
+      "source": "src/app/auth/login/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/login",
+          "source": "src/app/auth/login/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-through-auth-frame",
+          "reason": "Kept handler and copy; shared AuthFrame now readable recovery helpers and 44px links.",
+          "components": [
+            "AuthFrame",
+            "AuthSubmit",
+            "AuthFlowLink",
+            "AuthGate"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_auth_login-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_login-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_auth_login-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_login-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_login-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_login-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_login-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_login-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/auth/reset-password",
+      "source": "src/app/auth/reset-password/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/reset-password",
+          "source": "src/app/auth/reset-password/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-through-auth-frame",
+          "reason": "Recovery-session and password validation unchanged; shared AuthFrame refined.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_auth_reset-password-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_reset-password-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_auth_reset-password-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_reset-password-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_reset-password-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_reset-password-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_reset-password-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_reset-password-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/auth/signup",
+      "source": "src/app/auth/signup/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/signup",
+          "source": "src/app/auth/signup/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-through-auth-frame",
+          "reason": "Kept identity/consent/business validation; shared AuthFrame readable helpers and 44px links.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_auth_signup-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_signup-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_auth_signup-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_signup-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_signup-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_signup-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_signup-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_signup-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/auth/transfer",
+      "source": "src/app/auth/transfer/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/auth/transfer",
+          "source": "src/app/auth/transfer/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_auth_transfer-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_transfer-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_auth_transfer-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_auth_transfer-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_transfer-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_transfer-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_auth_transfer-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_auth_transfer-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/clubs",
+      "source": "src/app/clubs/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/clubs",
+          "implementation": [
+            "src/app/clubs/page.tsx",
+            "src/components/clubs/ClubWorkspace.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/community",
+      "source": "src/app/community/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/community",
+          "implementation": [
+            "src/app/community/page.tsx",
+            "src/components/public-browsing/CommunityEntry.tsx",
+            "src/components/public-browsing/PublicViews.tsx"
+          ],
+          "status": "shared_component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/messages-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/messages-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/messages-1280-dark.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Actual authenticated MessageCenter tested filters/no-match, source copy and responsive toolbars. /messages retains feature-flag 404; /community public/anonymous collection is a separate PublicViews implementation, not covered by these member-component screenshots."
+        }
+      ]
+    },
+    {
+      "route": "/compute",
+      "source": "src/app/compute/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/compute",
+          "kind": "page",
+          "source": "src/app/compute/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/contact",
+      "source": "src/app/contact/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contact",
+          "kind": "page",
+          "source": "src/app/contact/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contact/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "ContactPage actual-component fixture; fields/category, no request sent",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/contests/[id]/manage",
+      "source": "src/app/contests/[id]/manage/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contests/[id]/manage",
+          "kind": "page",
+          "source": "src/app/contests/[id]/manage/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contests/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next direct localhost synthetic valid-owner management:4 cases desktop/App UA ×light/dark, no runtime errors and no registration writes.",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/contests/[id]",
+      "source": "src/app/contests/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contests/[id]",
+          "kind": "page",
+          "source": "src/app/contests/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contests/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Removed redundant English eyebrow and clarified that the participation link opens applicant information/forms, preserving registration guards and permissions.",
+          "contentProof": "Full Next premium-browser synthetic valid contest detail and registration; all writes intercepted",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/contests/api",
+      "source": "src/app/contests/api/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contests/api",
+          "kind": "page",
+          "source": "src/app/contests/api/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contests/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next premium-browser synthetic valid contest detail and registration; all writes intercepted",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/contests/new",
+      "source": "src/app/contests/new/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contests/new",
+          "kind": "page",
+          "source": "src/app/contests/new/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contests/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next premium-browser synthetic valid contest detail and registration; all writes intercepted",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/contests",
+      "source": "src/app/contests/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/contests",
+          "kind": "page",
+          "source": "src/app/contests/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/contests/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Compressed discovery header, removed redundant anchor CTA and obsolete 360px phone/tablet minimum height; retained filters, create action and visibility rules.",
+          "contentProof": "Full Next premium-browser synthetic valid contest detail and registration; all writes intercepted",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/dashboard",
+      "source": "src/app/dashboard/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/dashboard",
+          "kind": "page",
+          "source": "src/app/dashboard/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/dashboard/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ],
+          "readRecoveryEvidence": "/tmp/cbgpu-oil-research/recovery/PASSED.json",
+          "accountIsolation": "UI session keyed by account ID; in-flight list reads use a request generation guard."
+        }
+      ]
+    },
+    {
+      "route": "/dashboard/ssh-guide",
+      "source": "src/app/dashboard/ssh-guide/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/dashboard/ssh-guide",
+          "kind": "page",
+          "source": "src/app/dashboard/ssh-guide/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/dashboard/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/demo",
+      "source": "src/app/demo/page.tsx",
+      "audit": [
+        {
+          "domain": "shared",
+          "status": "audited-unchanged",
+          "reason": "Local contributor demo instructions; retained synthetic-only documentation and existing English code/commands. No operational user action or production configuration changed.",
+          "sourceAudited": true
+        }
+      ]
+    },
+    {
+      "route": "/deploy/[id]",
+      "source": "src/app/deploy/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/deploy/[id]",
+          "kind": "page",
+          "source": "src/app/deploy/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "deploy/domain/team actual-component fixture; no workload writes",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/deploy/new",
+      "source": "src/app/deploy/new/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/deploy/new",
+          "kind": "page",
+          "source": "src/app/deploy/new/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "deploy/domain/team actual-component fixture; no workload writes",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/deploy",
+      "source": "src/app/deploy/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/deploy",
+          "kind": "page",
+          "source": "src/app/deploy/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "deploy/domain/team actual-component fixture; no workload writes",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/docs/[slug]",
+      "source": "src/app/docs/[slug]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/docs/[slug]",
+          "kind": "page",
+          "source": "src/app/docs/[slug]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/docs/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "DocsIndex actual-component fixture; search, reset, Escape and focus",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/docs",
+      "source": "src/app/docs/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/docs",
+          "kind": "page",
+          "source": "src/app/docs/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/docs/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "DocsIndex actual-component fixture; search, reset, Escape and focus",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/download",
+      "source": "src/app/download/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/download",
+          "kind": "page",
+          "source": "src/app/download/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/download/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/explore/contests/[id]",
+      "source": "src/app/explore/contests/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/explore/contests/[id]",
+          "kind": "page",
+          "source": "src/app/explore/contests/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/explore/contests",
+      "source": "src/app/explore/contests/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/explore/contests",
+          "kind": "page",
+          "source": "src/app/explore/contests/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/explore/schools/[id]",
+      "source": "src/app/explore/schools/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/explore/schools/[id]",
+          "kind": "page",
+          "source": "src/app/explore/schools/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/explore/schools",
+      "source": "src/app/explore/schools/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/explore/schools",
+          "kind": "page",
+          "source": "src/app/explore/schools/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/explore/services/[service]",
+      "source": "src/app/explore/services/[service]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/explore/services/[service]",
+          "kind": "page",
+          "source": "src/app/explore/services/[service]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/feed",
+      "source": "src/app/feed/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/feed",
+          "source": "src/app/feed/page.tsx",
+          "wrapper": "src/app/feed/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [
+            "SchoolNews",
+            "TechNews",
+            "Graveyard",
+            "HeadlineTrend"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_feed-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_feed-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_feed-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_feed-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_feed-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_feed-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_feed-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_feed-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/games",
+      "source": "src/app/games/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/games",
+          "source": "src/app/games/page.tsx",
+          "wrapper": "src/app/games/layout.tsx",
+          "status": "audited-unchanged",
+          "reason": "Refined helper/control text,44pxbounded Mines board with actual touchpan gesture,accessible difficulty/flag controls,number/tile contrast and Korean Stop action;game rules/ranking/seed protocol unchanged.",
+          "components": [
+            "FlappyBird",
+            "MemoryMatch",
+            "Minesweeper",
+            "Snake",
+            "Tetris",
+            "Game2048",
+            "GameLeaderboard"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_games-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_games-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_games-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_games-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_games-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_games-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_games-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_games-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access.",
+          "additionalEvidence": [
+            "/tmp/cbgpu-oil-student/games-before/results.json",
+            "/tmp/cbgpu-oil-student/games-after/results.json",
+            "/tmp/cbgpu-oil-student/gameplay.json",
+            "/tmp/cbgpu-oil-student/arcade-regression.log"
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/latex",
+      "source": "src/app/latex/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/latex",
+          "kind": "page",
+          "source": "src/app/latex/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "LatexProjects actual-component fixture; search and list refresh; no upload/compile",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ],
+          "readRecoveryEvidence": "/tmp/cbgpu-oil-research/recovery/PASSED.json",
+          "accountIsolation": "UI session keyed by account ID; in-flight list reads use a request generation guard."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/filament",
+      "source": "src/app/manage/manufacturing/filament/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/filament",
+          "implementation": [
+            "src/app/manage/manufacturing/filament/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/laser/[id]",
+      "source": "src/app/manage/manufacturing/laser/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/laser/[id]",
+          "implementation": [
+            "src/app/manage/manufacturing/laser/[id]/page.tsx",
+            "src/components/admin/LaserJobDetails.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/materials",
+      "source": "src/app/manage/manufacturing/materials/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/materials",
+          "implementation": [
+            "src/app/manage/manufacturing/materials/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing",
+      "source": "src/app/manage/manufacturing/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing",
+          "implementation": [
+            "src/app/manage/manufacturing/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/print/[id]",
+      "source": "src/app/manage/manufacturing/print/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/print/[id]",
+          "implementation": [
+            "src/app/manage/manufacturing/print/[id]/page.tsx",
+            "src/components/admin/PrintJobDetails.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/queues",
+      "source": "src/app/manage/manufacturing/queues/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/queues",
+          "implementation": [
+            "src/app/manage/manufacturing/queues/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manage/manufacturing/requests",
+      "source": "src/app/manage/manufacturing/requests/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manage/manufacturing/requests",
+          "implementation": [
+            "src/app/manage/manufacturing/requests/page.tsx",
+            "src/components/admin/ManufacturingManagement.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/locale/workshop-app-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/workshop-app-dark.png",
+            "/tmp/cbgpu-oil-operations/after/locale/workshop-desktop-light.png",
+            "/tmp/cbgpu-oil-operations/after/locale/PASSED.json"
+          ],
+          "reason": "Actual ManufacturingManagement print requests branch, synthetic job, mobile cards and desktop table; status/actions kept together. Other equipment/panel branches are source-audited only. Accepted/queued print jobs link to the existing printer queue; no new job execution handler."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/laser/[id]",
+      "source": "src/app/manufacturing/laser/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/laser/[id]",
+          "implementation": [
+            "src/app/manufacturing/laser/[id]/page.tsx",
+            "src/components/ConfirmDialog.tsx",
+            "src/components/manufacturing/DxfPreview.tsx",
+            "src/components/manufacturing/LocateStudentButton.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/laser/new",
+      "source": "src/app/manufacturing/laser/new/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/laser/new",
+          "implementation": [
+            "src/app/manufacturing/laser/new/page.tsx",
+            "src/components/schools/SchoolResourceScope.tsx",
+            "src/components/manufacturing/PersonSearchSelect.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/laserform-390-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/laserform-390-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/laserform-320-dark-file.png",
+            "/tmp/cbgpu-oil-operations/after/laserform-844-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Actual form, mode selection, synthetic local file selection/removal and responsive field layout. No requests submitted."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/laser",
+      "source": "src/app/manufacturing/laser/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/laser",
+          "implementation": [
+            "src/app/manufacturing/laser/page.tsx",
+            "src/components/manufacturing/ManufacturingPage.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing",
+      "source": "src/app/manufacturing/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing",
+          "implementation": [
+            "src/app/manufacturing/page.tsx"
+          ],
+          "status": "unchanged_redirect",
+          "evidence": [],
+          "reason": "Existing destination and authorization boundary retained; no standalone page UI."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/print/[id]",
+      "source": "src/app/manufacturing/print/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/print/[id]",
+          "implementation": [
+            "src/app/manufacturing/print/[id]/page.tsx",
+            "src/components/ConfirmDialog.tsx",
+            "src/components/manufacturing/Model3MFViewer.tsx",
+            "src/components/manufacturing/LocateStudentButton.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/print/new",
+      "source": "src/app/manufacturing/print/new/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/print/new",
+          "implementation": [
+            "src/app/manufacturing/print/new/page.tsx",
+            "src/components/schools/SchoolResourceScope.tsx",
+            "src/components/manufacturing/PersonSearchSelect.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/printform-390-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/printform-390-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/printform-320-dark-file.png",
+            "/tmp/cbgpu-oil-operations/after/printform-844-light-file.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Actual form, mode selection, synthetic local file selection/removal and responsive field layout. No requests submitted."
+        }
+      ]
+    },
+    {
+      "route": "/manufacturing/print",
+      "source": "src/app/manufacturing/print/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/manufacturing/print",
+          "implementation": [
+            "src/app/manufacturing/print/page.tsx",
+            "src/components/manufacturing/ManufacturingPage.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/match",
+      "source": "src/app/match/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/match",
+          "source": "src/app/match/page.tsx",
+          "wrapper": "src/app/match/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_match-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_match-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_match-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_match-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_match-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_match-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_match-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_match-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access.",
+          "additionalEvidence": [
+            "/tmp/cbgpu-oil-student/match-shortviewport-fixture.png",
+            "/tmp/cbgpu-oil-student/failures.json",
+            "/tmp/cbgpu-oil-student/fixtures.json"
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/materials/[id]",
+      "source": "src/app/materials/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/materials/[id]",
+          "source": "src/app/materials/[id]/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_materials_demo-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials_demo-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_materials_demo-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials_demo-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials_demo-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials_demo-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials_demo-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials_demo-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/materials/new",
+      "source": "src/app/materials/new/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/materials/new",
+          "source": "src/app/materials/new/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_materials_new-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials_new-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_materials_new-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials_new-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials_new-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials_new-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials_new-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials_new-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/materials",
+      "source": "src/app/materials/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/materials",
+          "source": "src/app/materials/page.tsx",
+          "wrapper": "src/app/materials/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_materials-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_materials-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_materials-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_materials-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_materials-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/meal",
+      "source": "src/app/meal/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/meal",
+          "source": "src/app/meal/page.tsx",
+          "wrapper": "src/app/meal/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_meal-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_meal-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_meal-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_meal-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_meal-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_meal-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_meal-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_meal-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/messages",
+      "source": "src/app/messages/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/messages",
+          "implementation": [
+            "src/app/messages/page.tsx",
+            "src/components/schools/MessageCenter.tsx"
+          ],
+          "status": "shared_component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/messages-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/messages-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/messages-1280-dark.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Actual authenticated MessageCenter tested filters/no-match, source copy and responsive toolbars. /messages retains feature-flag 404; /community public/anonymous collection is a separate PublicViews implementation, not covered by these member-component screenshots."
+        }
+      ]
+    },
+    {
+      "route": "/notebooks/[jobId]/lab",
+      "source": "src/app/notebooks/[jobId]/lab/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/notebooks/[jobId]/lab",
+          "implementation": [
+            "src/app/notebooks/[jobId]/lab/page.tsx",
+            "src/components/schools/NotebookFrame.tsx"
+          ],
+          "status": "component_security_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/notebook/390-light-loaded.png",
+            "/tmp/cbgpu-oil-operations/after/notebook/390-light-loaded.png",
+            "/tmp/cbgpu-oil-operations/after/notebook/native-12-dark.png",
+            "/tmp/cbgpu-oil-operations/after/notebook/native-13-light.png",
+            "/tmp/cbgpu-oil-operations/after/notebook/1280-dark-denied.png",
+            "/tmp/cbgpu-oil-operations/after/notebook/PASSED.json"
+          ],
+          "reason": "Actual NotebookFrame tested synthetic invalid/expired origin bootstrap, POST-only token exchange, isolation, revocation, modern native build13 and legacy/unknown fallback; no actual notebook or GPU execution. Next wrapper UUID/notFound remains source-audited."
+        }
+      ]
+    },
+    {
+      "route": "/notes",
+      "source": "src/app/notes/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/notes",
+          "kind": "page",
+          "source": "src/app/notes/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/notes/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "Full Next synthetic persistence browser test; intercepted writes only",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/",
+      "source": "src/app/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/",
+          "source": "src/app/page.tsx",
+          "wrapper": "src/app/layout.tsx",
+          "status": "audited-unchanged",
+          "reason": "Kept greeting, single ad immediately afterward, compact two-column everyday directory before AI/community; shared home/chrome owned by root.",
+          "components": [
+            "HomeEntry",
+            "PublicHomeSwitch",
+            "WorkspaceHome"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_workspace-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/polls",
+      "source": "src/app/polls/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/polls",
+          "source": "src/app/polls/page.tsx",
+          "wrapper": "src/app/polls/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_polls-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_polls-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_polls-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_polls-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_polls-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_polls-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_polls-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_polls-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/privacy",
+      "source": "src/app/privacy/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/privacy",
+          "kind": "page",
+          "source": "src/app/privacy/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/profile",
+      "source": "src/app/profile/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/profile",
+          "source": "src/app/profile/page.tsx",
+          "wrapper": "src/app/profile/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [
+            "ProfileSchoolIdentity (school agent owned)"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_profile-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_profile-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_profile-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_profile-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_profile-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_profile-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_profile-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_profile-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/projects/[id]",
+      "source": "src/app/projects/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/projects/[id]",
+          "kind": "page",
+          "source": "src/app/projects/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/projects",
+      "source": "src/app/projects/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/projects",
+          "kind": "page",
+          "source": "src/app/projects/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/publications",
+      "source": "src/app/publications/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/publications",
+          "kind": "page",
+          "source": "src/app/publications/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/schedule",
+      "source": "src/app/schedule/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/schedule",
+          "source": "src/app/schedule/page.tsx",
+          "wrapper": "src/app/schedule/layout.tsx",
+          "status": "audited-unchanged",
+          "reason": "Existing server redirect to /dashboard; no duplicate calendar screen introduced.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_schedule-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_schedule-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_schedule-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_schedule-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_schedule-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_schedule-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_schedule-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_schedule-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/school-admin",
+      "source": "src/app/school-admin/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/school-admin",
+          "implementation": [
+            "src/app/school-admin/page.tsx",
+            "src/components/schools/SchoolAdminEntry.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/[id]/access",
+      "source": "src/app/schools/[id]/access/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/[id]/access",
+          "implementation": [
+            "src/app/schools/[id]/access/page.tsx",
+            "src/components/schools/SchoolGuestAccess.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/[id]/admin",
+      "source": "src/app/schools/[id]/admin/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/[id]/admin",
+          "implementation": [
+            "src/app/schools/[id]/admin/page.tsx",
+            "src/components/schools/SchoolAdministration.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "shared_component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/after/school-390-dark.png",
+            "/tmp/cbgpu-oil-operations/after/clubs-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/clubs-390-light-edit.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Overview and club recruitment panels verified directly; other exact section implementations remain source-audited. Role checks, school ID and action handlers retained."
+        }
+      ]
+    },
+    {
+      "route": "/schools/[id]/affiliation",
+      "source": "src/app/schools/[id]/affiliation/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/[id]/affiliation",
+          "implementation": [
+            "src/app/schools/[id]/affiliation/page.tsx",
+            "src/components/schools/SchoolAffiliation.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/[id]/features",
+      "source": "src/app/schools/[id]/features/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/[id]/features",
+          "implementation": [
+            "src/app/schools/[id]/features/page.tsx",
+            "src/components/schools/SchoolFeatureRequests.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/[id]/verification",
+      "source": "src/app/schools/[id]/verification/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/[id]/verification",
+          "implementation": [
+            "src/app/schools/[id]/verification/page.tsx",
+            "src/components/schools/SchoolReverification.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/applications/[id]",
+      "source": "src/app/schools/applications/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/applications/[id]",
+          "implementation": [
+            "src/app/schools/applications/[id]/page.tsx",
+            "src/components/schools/SchoolApplicationEditor.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools/new",
+      "source": "src/app/schools/new/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools/new",
+          "implementation": [
+            "src/app/schools/new/page.tsx",
+            "src/components/schools/SchoolApplicationEditor.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "source_audited",
+          "evidence": [],
+          "reason": "Route wrapper and feature/auth boundaries preserved. Underlying distinct content is not claimed browser-verified solely from shared styles."
+        }
+      ]
+    },
+    {
+      "route": "/schools",
+      "source": "src/app/schools/page.tsx",
+      "audit": [
+        {
+          "domain": "operations",
+          "route": "/schools",
+          "implementation": [
+            "src/app/schools/page.tsx",
+            "src/components/schools/SchoolDirectory.tsx",
+            "src/components/schools/SchoolFeatureBoundary.tsx"
+          ],
+          "status": "component_verified",
+          "evidence": [
+            "/tmp/cbgpu-oil-operations/before/directory-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/directory-390-light.png",
+            "/tmp/cbgpu-oil-operations/after/directory-390-light-join.png",
+            "/tmp/cbgpu-oil-operations/after/PASSED.json"
+          ],
+          "reason": "Actual SchoolDirectory and join dialog tested with synthetic schools; Next route feature flag itself remains unchanged."
+        }
+      ]
+    },
+    {
+      "route": "/server/[id]/open",
+      "source": "src/app/server/[id]/open/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/server/[id]/open",
+          "kind": "page",
+          "source": "src/app/server/[id]/open/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/server/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "serverNew/server actual-component fixture; no real deployment",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/server/[id]",
+      "source": "src/app/server/[id]/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/server/[id]",
+          "kind": "page",
+          "source": "src/app/server/[id]/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/server/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "serverNew/server actual-component fixture; no real deployment",
+          "dynamicLimit": "Missing-ID route screenshots establish unavailable/not-found state only; component fixture or synthetic valid-content browser evidence listed separately.",
+          "fullNextRouteCases": 0,
+          "fullNextRouteStatuses": []
+        }
+      ]
+    },
+    {
+      "route": "/server/new",
+      "source": "src/app/server/new/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/server/new",
+          "kind": "page",
+          "source": "src/app/server/new/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/server/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "serverNew/server actual-component fixture; no real deployment",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/server",
+      "source": "src/app/server/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/server",
+          "kind": "page",
+          "source": "src/app/server/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/server/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "refined",
+          "reason": "Domain interface typography, language, focus and responsive/task hierarchy refined; auth/data/permission handlers preserved.",
+          "contentProof": "serverNew/server actual-component fixture; no real deployment",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/services",
+      "source": "src/app/services/page.tsx",
+      "audit": [
+        {
+          "domain": "research",
+          "route": "/services",
+          "kind": "page",
+          "source": "src/app/services/page.tsx",
+          "wrappers": [
+            "src/app/layout.tsx",
+            "src/app/services/layout.tsx"
+          ],
+          "sourceAudited": true,
+          "implementation": "audited unchanged",
+          "reason": "Existing route delegates to an owned domain component, redirects to its existing workspace, or owns metadata/guarded data fetching; retained routing, permissions and feature gates. Shared owned domain styling may affect its rendered content.",
+          "contentProof": "Full Next synthetic route audit; unavailable/disabled public routes retained as guarded states.",
+          "dynamicLimit": null,
+          "fullNextRouteCases": 4,
+          "fullNextRouteStatuses": [
+            200
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/study/contribute",
+      "source": "src/app/study/contribute/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/study/contribute",
+          "source": "src/app/study/contribute/page.tsx",
+          "wrapper": "src/app/study/contribute/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_study_contribute-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_study_contribute-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_study_contribute-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_study_contribute-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study_contribute-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_study_contribute-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study_contribute-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_study_contribute-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/study/link",
+      "source": "src/app/study/link/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/study/link",
+          "source": "src/app/study/link/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_study_link-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_study_link-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_study_link-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_study_link-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study_link-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_study_link-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study_link-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_study_link-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/study",
+      "source": "src/app/study/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/study",
+          "source": "src/app/study/page.tsx",
+          "wrapper": "src/app/study/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [
+            "StudyRequestPanel",
+            "StudySeatBrowser",
+            "StudyAutoSettings",
+            "SelfStudyReminderSettings",
+            "SchoolAccountLink",
+            "SupervisorCard"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_study-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_study-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_study-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_study-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_study-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_study-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_study-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/timetable",
+      "source": "src/app/timetable/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/timetable",
+          "source": "src/app/timetable/page.tsx",
+          "wrapper": "src/app/timetable/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_timetable-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_timetable-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_timetable-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_timetable-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_timetable-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_timetable-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_timetable-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_timetable-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/tools",
+      "source": "src/app/tools/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/tools",
+          "source": "src/app/tools/page.tsx",
+          "wrapper": "src/app/tools/layout.tsx",
+          "status": "refined-directly",
+          "reason": "Content-first header,readable tabs,44pxemoji controls,proper labels,local-storage failure preserves input and existing list;save/reload/delete confirmed.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_tools-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_tools-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_tools-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_tools-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_tools-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_tools-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_tools-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_tools-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access.",
+          "additionalEvidence": [
+            "/tmp/cbgpu-oil-student/tools-storage.json"
+          ]
+        }
+      ]
+    },
+    {
+      "route": "/wakeup",
+      "source": "src/app/wakeup/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/wakeup",
+          "source": "src/app/wakeup/page.tsx",
+          "wrapper": "inherits root app layout",
+          "status": "refined-directly",
+          "reason": "Refined readable hierarchy, helper copy and controls; existing business rules, authorization and endpoints preserved.",
+          "components": [],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_wakeup-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_wakeup-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_wakeup-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_wakeup-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_wakeup-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_wakeup-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_wakeup-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_wakeup-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    },
+    {
+      "route": "/workspace",
+      "source": "src/app/workspace/page.tsx",
+      "audit": [
+        {
+          "domain": "student",
+          "route": "/workspace",
+          "source": "src/app/workspace/page.tsx",
+          "wrapper": "src/app/workspace/layout.tsx",
+          "status": "audited-unchanged",
+          "reason": "Same HomeEntry/WorkspaceHome as root route; kept existing hierarchy, favorites and account guards.",
+          "components": [
+            "WorkspaceHome",
+            "HomeAiSearch",
+            "ServiceDirectory",
+            "HomeServiceGrid (unused export; no consumer)"
+          ],
+          "browserEvidence": [
+            "/tmp/cbgpu-oil-student/before/_workspace-390-light.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-390-dark.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-1280-light.png",
+            "/tmp/cbgpu-oil-student/before/_workspace-1280-dark.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-390-light.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-390-dark.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-1280-light.png",
+            "/tmp/cbgpu-oil-student/after/_workspace-1280-dark.png"
+          ],
+          "limitation": "Default synthetic demo plus browser-only fixture metadata; no real account or service access."
+        }
+      ]
+    }
+  ],
+  "portalEvidence": "CBGPU-backend docs/screenshots/oil-ui-portals-20261124/coverage.json"
+}

@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 const labelCls = "text-sm font-semibold text-muted-foreground mb-1.5 block";
-const inputCls = "h-9 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm font-bold outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
+const inputCls = "h-9 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base font-normal outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors";
 
 type Runtime = ServerRuntime;
 type AccessScope = 'private' | 'school' | 'public';
@@ -227,9 +227,9 @@ export default function ServerDetailPage() {
       <div>
         <button
           onClick={() => router.push('/server')}
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
-          <ArrowLeft className="size-3" /> Back to Projects
+          <ArrowLeft className="size-3" /> 서버 목록으로
         </button>
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -249,7 +249,7 @@ export default function ServerDetailPage() {
               {project.status !== 'deleted' && (
                 <Button
                   variant="outline"
-                  className="font-semibold text-xs gap-1.5 h-9"
+                  className="font-semibold text-sm gap-1.5 h-9"
                   onClick={openRedeploy}
                 >
                   <RotateCcw className="size-3.5" /> 설정 수정
@@ -257,7 +257,7 @@ export default function ServerDetailPage() {
               )}
               {isOwner&&(<Button
                 variant="destructive"
-                className="font-semibold text-xs gap-1.5 h-9"
+                className="font-semibold text-sm gap-1.5 h-9"
                 onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="size-3.5" /> 삭제
@@ -267,13 +267,13 @@ export default function ServerDetailPage() {
         </div>
       </div>
 
-      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">서버 주소</h2><p className="text-xs text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-xs text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
+      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">서버 주소</h2><p className="text-sm text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-sm text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
       {isCompose&&<ComposeStatus id={project.id}/>}
       <ProjectTeam kind="server" id={project.id}/><ProjectDomains kind="server" id={project.id}/>
       {/* 접근 정보 — 실행 중일 때만 */}
       {isRunning && (
         <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-          <p className="text-xs font-semibold text-emerald-600 mb-3">Access</p>
+          <p className="text-sm font-semibold text-emerald-600 mb-3">접속</p>
           <div className="flex flex-wrap items-center gap-2">
             <code className="min-w-0 break-all text-sm font-semibold text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
               {serverUrl ?? (isPublic ? '공개 주소 발급 중… 잠시 후 새로고침해 주세요' : `포트 ${project.host_port}`)}
@@ -287,7 +287,7 @@ export default function ServerDetailPage() {
               <ExternalLink className="size-3.5" />
             </Button>}
           </div>
-          <p className="text-xs text-muted-foreground mt-2 opacity-60">
+          <p className="text-sm text-muted-foreground mt-2 opacity-60">
             {project.access_scope === 'private' && '※ Tailscale VPN 연결 시에만 접근 가능합니다'}
             {project.access_scope === 'school'  && '※ 교내 네트워크에서 접근 가능합니다'}
             {project.access_scope === 'public'  && '※ 공개 주소를 통해 인터넷에서 접근할 수 있어요'}
@@ -298,12 +298,12 @@ export default function ServerDetailPage() {
       {/* 설정 정보 */}
       <div className="border rounded-2xl overflow-hidden bg-card">
         <div className="px-6 py-4 border-b bg-muted/20">
-          <p className="font-semibold text-xs">Configuration</p>
+          <p className="font-semibold text-sm">서버 설정</p>
         </div>
         <div className="p-5 sm:p-6 grid min-w-0 gap-5">
           {/* 배포 방식 */}
           <div>
-            <label className={labelCls}>Deploy Type</label>
+            <label className={labelCls}>배포 방식</label>
             <div className="flex items-center gap-2">
               {project.deploy_type === 'docker'
                 ? <Container className="size-4 text-muted-foreground" />
@@ -314,13 +314,13 @@ export default function ServerDetailPage() {
 
           {project.deploy_type === 'docker' ? (
             <div>
-              <label className={labelCls}>Docker Image</label>
+              <label className={labelCls}>Docker 이미지</label>
               <code className="block break-all font-medium text-sm">{project.docker_image}</code>
             </div>
           ) : (
             <>
               <div>
-                <label className={labelCls}>Git Repository</label>
+                <label className={labelCls}>Git 저장소</label>
                 <a
                   href={project.git_url}
                   target="_blank"
@@ -332,7 +332,7 @@ export default function ServerDetailPage() {
               </div>
               <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-4">
                 <div>
-                  <label className={labelCls}>Branch</label>
+                  <label className={labelCls}>브랜치</label>
                   <span className="font-bold text-sm">{project.git_branch || 'main'}</span>
                 </div>
                 <div>
@@ -340,8 +340,8 @@ export default function ServerDetailPage() {
                   <span className="font-bold text-sm">{isCompose?'Docker Compose':RUNTIMES.find(r=>r.value===serverRuntimeOf(project))?.label||serverRuntimeOf(project)}</span>
                 </div>
                 <div>
-                  <label className={labelCls}>프로젝트 폴더</label><p className="text-sm font-mono mb-4 break-all">{serverRootOf(project)}</p><label className={labelCls}>Run Command</label>
-                  <code className="block break-all whitespace-pre-wrap font-medium text-xs">{project.run_command || '—'}</code>
+                  <label className={labelCls}>프로젝트 폴더</label><p className="text-sm font-mono mb-4 break-all">{serverRootOf(project)}</p><label className={labelCls}>실행 명령어</label>
+                  <code className="block break-all whitespace-pre-wrap font-medium text-sm">{project.run_command || '—'}</code>
                 </div>
               </div>
             </>
@@ -349,14 +349,14 @@ export default function ServerDetailPage() {
 
           {/* 포트 */}
           <div>
-            <label className={labelCls}>Port Mapping</label>
+            <label className={labelCls}>포트 연결</label>
             <code className="font-bold text-sm">{project.host_port}:{project.container_port}</code>
-            <span className="text-xs text-muted-foreground ml-2 opacity-60">(host:container)</span>
+            <span className="text-sm text-muted-foreground ml-2 opacity-60">(호스트:컨테이너)</span>
           </div>
 
           {/* 접근 범위 */}
           <div>
-            <label className={labelCls}>Access Scope</label>
+            <label className={labelCls}>접근 범위</label>
             <div className="flex items-center gap-1.5">
               {project.access_scope === 'private' && <Lock className="size-3.5 text-muted-foreground" />}
               {project.access_scope === 'school'  && <School className="size-3.5 text-blue-500" />}
@@ -368,14 +368,14 @@ export default function ServerDetailPage() {
           {/* 리소스 */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelCls}>CPU Limit</label>
+              <label className={labelCls}>CPU 제한</label>
               <div className="flex items-center gap-1.5">
                 <Cpu className="size-3.5 text-muted-foreground" />
-                <span className="font-bold text-sm">{project.cpu_limit} core(s)</span>
+                <span className="font-bold text-sm">{project.cpu_limit} 코어</span>
               </div>
             </div>
             <div>
-              <label className={labelCls}>Memory Limit</label>
+              <label className={labelCls}>메모리 제한</label>
               <div className="flex items-center gap-1.5">
                 <MemoryStick className="size-3.5 text-muted-foreground" />
                 <span className="font-bold text-sm">{formatMemoryLimit(project.memory_limit)}</span>
@@ -389,7 +389,7 @@ export default function ServerDetailPage() {
               <label className={labelCls}>환경변수</label>
               <div className="space-y-1.5">
                 {envEntries.map(([k, v]) => (
-                  <div key={k} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-1.5 font-mono text-xs">
+                  <div key={k} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-1.5 font-mono text-sm">
                     <span className="font-bold text-primary">{k}</span>
                     <span className="text-muted-foreground">=</span>
                     <span className="opacity-70">{v}</span>
@@ -402,15 +402,15 @@ export default function ServerDetailPage() {
           {/* 타임스탬프 */}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/40">
             <div>
-              <label className={labelCls}>Created</label>
-              <span className="text-xs font-bold text-muted-foreground">
+              <label className={labelCls}>생성일</label>
+              <span className="text-sm font-bold text-muted-foreground">
                 {new Date(project.created_at).toLocaleString('ko-KR')}
               </span>
             </div>
             {project.deployed_at && (
               <div>
-                <label className={labelCls}>Last Deployed</label>
-                <span className="text-xs font-bold text-muted-foreground">
+                <label className={labelCls}>최근 배포</label>
+                <span className="text-sm font-bold text-muted-foreground">
                   {new Date(project.deployed_at).toLocaleString('ko-KR')}
                 </span>
               </div>
@@ -424,7 +424,7 @@ export default function ServerDetailPage() {
         <DialogContent className="max-w-lg rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-semibold text-xl">서버 설정 수정</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">
+            <DialogDescription className="text-sm font-bold opacity-60">
               설정만 저장하거나, 변경사항을 저장하고 바로 재배포할 수 있습니다. 재배포 중에는 잠시 연결이 끊길 수 있습니다.
             </DialogDescription>
           </DialogHeader>
@@ -435,7 +435,7 @@ export default function ServerDetailPage() {
               <div><label className={labelCls} htmlFor="server-edit-description">설명</label><Input id="server-edit-description" value={form.description} onChange={e=>set('description',e.target.value)} maxLength={2000}/></div>
               {project.deploy_type === 'docker' ? (
                 <div>
-                  <label className={labelCls}>Docker Image</label>
+                  <label className={labelCls}>Docker 이미지</label>
                   <Input
                     placeholder="nginx:latest"
                     value={form.dockerImage}
@@ -447,7 +447,7 @@ export default function ServerDetailPage() {
                   <div><label className={labelCls} htmlFor="server-edit-git-url">GitHub 저장소</label><Input id="server-edit-git-url" value={form.gitUrl} onChange={e=>set('gitUrl',e.target.value)} placeholder="https://github.com/owner/repository"/></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelCls}>Branch</label>
+                      <label className={labelCls}>브랜치</label>
                       <Input placeholder="main" value={form.gitBranch} onChange={e => set('gitBranch', e.target.value)} />
                     </div>
                     <div>
@@ -464,13 +464,13 @@ export default function ServerDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls} htmlFor="redeploy-root-directory">프로젝트 폴더</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-xs text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더입니다.</p>{!isCompose&&<><label className={labelCls}>Run Command</label>
+                    <label className={labelCls} htmlFor="redeploy-root-directory">프로젝트 폴더</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더입니다.</p>{!isCompose&&<><label className={labelCls}>실행 명령어</label>
                     <Input
                       placeholder="npm start"
                       value={form.runCommand}
                       onChange={e => set('runCommand', e.target.value)}
                     /></>}
-                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose 파일</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">Gateway Service</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">Persistent Storage (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-xs text-muted-foreground">재배포해도 기존 데이터 볼륨을 유지합니다.</p></div>}
+                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose 파일</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">게이트웨이 서비스</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">영구 저장공간 (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-sm text-muted-foreground">재배포해도 기존 데이터 볼륨을 유지합니다.</p></div>}
                   </div>
                 </div>
               )}
@@ -478,27 +478,27 @@ export default function ServerDetailPage() {
               <hr className="border-border/40" />
 
               <div>
-                <label className={labelCls}>Port Mapping</label>
+                <label className={labelCls}>포트 연결</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <p className="text-xs font-semibold opacity-70 mb-1">Host Port</p>
+                    <p className="text-sm font-semibold opacity-70 mb-1">호스트 포트</p>
                     <Input type="number" value={form.hostPort} onChange={e => set('hostPort', e.target.value)} />
                   </div>
                   <span className="text-muted-foreground font-bold mt-5">:</span>
                   <div className="flex-1">
-                    <p className="text-xs font-semibold opacity-70 mb-1">Container Port</p>
+                    <p className="text-sm font-semibold opacity-70 mb-1">컨테이너 포트</p>
                     <Input type="number" value={form.containerPort} onChange={e => set('containerPort', e.target.value)} />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className={labelCls}>Access Scope</label>
+                <label className={labelCls}>접근 범위</label>
                 <ResourceSelection label="서버 접근 범위 선택"
                   items={[
-                    { value: 'private', label: 'Private' },
-                    { value: 'school',  label: 'School'  },
-                    { value: 'public',  label: 'Public'  },
+                    { value: 'private', label: '비공개' },
+                    { value: 'school',  label: '교내·VPN'  },
+                    { value: 'public',  label: '공개'  },
                   ]}
                   value={form.accessScope}
                   onChange={v => set('accessScope', v as AccessScope)}
@@ -507,11 +507,11 @@ export default function ServerDetailPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>CPU Cores</label>
+                  <label className={labelCls}>CPU 코어</label>
                   <Input placeholder="1" value={form.cpuLimit} onChange={e => set('cpuLimit', e.target.value)} />
                 </div>
                 <div>
-                  <label className={labelCls}>Memory</label>
+                  <label className={labelCls}>메모리</label>
                   <Select value={form.memoryLimit} onValueChange={v => set('memoryLimit', v as MemoryLimit)}>
                     <SelectTrigger className="h-9">
                       <SelectValue />
@@ -532,18 +532,18 @@ export default function ServerDetailPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className={labelCls}>환경변수</label>
-                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-xs font-semibold gap-1">
-                    <Plus className="size-3" /> Add
+                  <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-sm font-semibold gap-1">
+                    <Plus className="size-3" /> 추가
                   </Button>
                 </div>
                 {form.envVars.length === 0 ? (
-                  <p className="text-xs text-muted-foreground opacity-50">환경변수 없음</p>
+                  <p className="text-sm text-muted-foreground opacity-50">환경변수 없음</p>
                 ) : (
                   <div className="space-y-2">
                     {form.envVars.map((e, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <Input placeholder="KEY" value={e.key} onChange={ev => updateEnvVar(i, 'key', ev.target.value)} className="flex-1 font-mono text-xs" />
-                        <Input placeholder="VALUE" value={e.value} onChange={ev => updateEnvVar(i, 'value', ev.target.value)} className="flex-1 font-mono text-xs" />
+                        <Input placeholder="KEY" value={e.key} onChange={ev => updateEnvVar(i, 'key', ev.target.value)} className="flex-1 font-mono text-sm" />
+                        <Input placeholder="VALUE" value={e.value} onChange={ev => updateEnvVar(i, 'value', ev.target.value)} className="flex-1 font-mono text-sm" />
                         <button onClick={() => removeEnvVar(i)} className="text-muted-foreground hover:text-destructive transition-colors text-lg leading-none px-1">×</button>
                       </div>
                     ))}
@@ -554,9 +554,9 @@ export default function ServerDetailPage() {
           )}
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-semibold text-xs" onClick={() => setRedeployOpen(false)}>취소</Button>
-            <Button variant="outline" className="font-semibold text-xs" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
-            <Button className="font-semibold text-xs" onClick={()=>void handleRedeploy(true)} disabled={submitting||project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:permission.enabled&&!permission.canExecute)}>
+            <Button variant="outline" className="font-semibold text-sm" onClick={() => setRedeployOpen(false)}>취소</Button>
+            <Button variant="outline" className="font-semibold text-sm" onClick={()=>void handleRedeploy(false)} disabled={submitting}>설정만 저장</Button>
+            <Button className="font-semibold text-sm" onClick={()=>void handleRedeploy(true)} disabled={submitting||project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:permission.enabled&&!permission.canExecute)}>
               {submitting ? '요청 중...' : '저장 후 재배포'}
             </Button>
           </DialogFooter>
@@ -575,8 +575,8 @@ export default function ServerDetailPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-semibold text-xs" onClick={() => setDeleteOpen(false)}>취소</Button>
-            <Button variant="destructive" className="font-semibold text-xs" onClick={handleDelete}>삭제하기</Button>
+            <Button variant="outline" className="font-semibold text-sm" onClick={() => setDeleteOpen(false)}>취소</Button>
+            <Button variant="destructive" className="font-semibold text-sm" onClick={handleDelete}>삭제하기</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

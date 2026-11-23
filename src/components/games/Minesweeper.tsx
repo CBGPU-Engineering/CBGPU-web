@@ -60,7 +60,7 @@ function flood(grid: Grid, r: number, c: number, rows: number, cols: number): Gr
   return g;
 }
 
-const ADJ_COLORS = ['', '#3b82f6','#22c55e','#ef4444','#8b5cf6','#f97316','#06b6d4','#e11d48','#6b7280'];
+const ADJ_CLASSES = ['', 'text-blue-700 dark:text-blue-300', 'text-green-700 dark:text-green-300', 'text-red-700 dark:text-red-300', 'text-violet-700 dark:text-violet-300', 'text-orange-800 dark:text-orange-300', 'text-cyan-800 dark:text-cyan-300', 'text-rose-700 dark:text-rose-300', 'text-gray-700 dark:text-gray-300'];
 
 export default function Minesweeper(props: RankedGameProps = {}) {
   const { run, pending, start, finish, statusText, retryButton } = useArcadeRun('mines', props);
@@ -128,7 +128,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
     else reveal(r, c);
   }, [flagMode, flag, reveal]);
 
-  const maxBoardPx = (level === 'hard' ? 28 : level === 'medium' ? 32 : 38) * cfg.cols;
+  const cellSize = 44;
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -137,35 +137,36 @@ export default function Minesweeper(props: RankedGameProps = {}) {
       {/* difficulty + hud */}
       <div className="flex items-center gap-2 flex-wrap justify-center">
         {(Object.keys(LEVELS) as Level[]).map(lv => (
-          <button key={lv} onClick={() => { setLevel(lv); reset(lv); }}
-            className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+          <button key={lv} type="button" aria-pressed={level === lv} onClick={() => { setLevel(lv); reset(lv); }}
+            className={`min-h-11 px-3 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${
               level === lv ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>{lv === 'easy' ? '쉬움' : lv === 'medium' ? '보통' : '어려움'}</button>
         ))}
-        <span className="text-xs font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
-        <span className="text-xs font-black text-muted-foreground">⏱ {time}s</span>
-        <Button variant="outline" size="sm" className="font-black text-xs uppercase" onClick={() => reset()}>다시 하기</Button>
+        <span className="text-sm font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
+        <span className="text-sm font-black text-muted-foreground">⏱ {time}s</span>
+        <Button variant="outline" size="sm" className="font-black text-sm uppercase" onClick={() => reset()}>다시 하기</Button>
       </div>
 
       {/* flag toggle (touch mode) */}
       <button
-        onClick={() => setFlagMode(f => !f)}
-        className={`px-4 py-1.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
-          flagMode ? 'bg-amber-500 text-white shadow-md' : 'bg-muted text-muted-foreground'
+        type="button" aria-pressed={flagMode} onClick={() => setFlagMode(f => !f)}
+        className={`min-h-11 px-4 py-2 rounded-xl font-black text-sm uppercase tracking-widest transition-all ${
+          flagMode ? 'bg-amber-300 text-gray-900 shadow-md' : 'bg-muted text-muted-foreground'
         }`}
       >
         {flagMode ? '🚩 깃발 모드 ON' : '👆 클릭 모드'}
       </button>
 
-      {/* board — 뷰포트보다 넓어지면 cols당 폭이 줄어들도록 vw로 상한을 둔다 */}
-      <div
-        className="grid border-2 border-border/50 rounded-xl overflow-hidden shadow-lg"
-        style={{ maxWidth: '100%', gridTemplateColumns: `repeat(${cfg.cols}, 1fr)`, width: `min(${maxBoardPx}px, 94vw)` }}
+      <p className="w-full text-sm text-muted-foreground">밀어서 이동 · 탭으로 열기 · 깃발 모드로 표시</p>
+      {/* Keep cells tappable; larger boards scroll inside the playfield. */}
+      <div role="region" aria-label="지뢰찾기 보드, 가로세로 스크롤 가능" tabIndex={0} className="max-h-[55dvh] w-full max-w-full overflow-auto overscroll-contain rounded-xl border-2 border-border/50 focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"><div
+        className="grid w-max touch-auto"
+        style={{ gridTemplateColumns: `repeat(${cfg.cols}, ${cellSize}px)` }}
         onContextMenu={e => e.preventDefault()}
       >
         {grid.map((row, r) => row.map((cell, c) => {
-          let bg = 'bg-muted/30 hover:bg-muted/60';
-          if (cell.revealed) bg = cell.mine ? 'bg-red-500/80' : 'bg-muted/10';
+          let bg = 'bg-muted hover:bg-accent';
+          if (cell.revealed) bg = cell.mine ? 'bg-red-500/80' : 'bg-card';
 
           return (
             <Button
@@ -173,25 +174,24 @@ export default function Minesweeper(props: RankedGameProps = {}) {
               variant="ghost"
               aria-label={`${r + 1}행 ${c + 1}열 · ${cell.revealed ? (cell.mine ? '지뢰' : `열림 ${cell.adj}`) : cell.flagged ? '깃발' : '닫힘'}`}
               key={`${r}-${c}`}
-              style={{ aspectRatio: '1 / 1', fontSize: `min(${maxBoardPx / cfg.cols * 0.45}px, ${94 / cfg.cols * 0.45}vw)` }}
-              className={`h-auto min-h-0 min-w-0 w-full p-0 rounded-none flex items-center justify-center font-black border border-border/20 cursor-pointer select-none transition-colors touch-none ${bg}`}
+              style={{ width: cellSize, height: cellSize, fontSize: 18 }}
+              className={`h-auto min-h-0 min-w-0 w-full p-0 rounded-none flex items-center justify-center font-black border border-border cursor-pointer select-none transition-colors touch-auto ${bg}`}
               onClick={e => handleCell(e, r, c)}
-              onTouchStart={e => handleCell(e, r, c)}
               onContextMenu={e => { e.preventDefault(); flag(r, c); }}
             >
               {cell.flagged && !cell.revealed ? '🚩' :
                cell.revealed && cell.mine ? '💣' :
                cell.revealed && cell.adj > 0 ? (
-                 <span style={{ color: ADJ_COLORS[cell.adj] }}>{cell.adj}</span>
+                 <span className={ADJ_CLASSES[cell.adj]}>{cell.adj}</span>
                ) : null}
             </Button>
           );
         }))}
-      </div>
+      </div></div>
 
       {(phase === 'won' || phase === 'lost') && (
         <div className={`text-center p-4 rounded-2xl border ${phase === 'won' ? 'bg-green-500/10 border-green-500/30' : 'bg-destructive/10 border-destructive/30'}`}>
-          <p className={`font-black uppercase tracking-widest text-lg ${phase === 'won' ? 'text-green-500' : 'text-destructive'}`}>
+          <p className={`font-black uppercase tracking-widest text-lg ${phase === 'won' ? 'text-green-700 dark:text-green-400' : 'text-destructive'}`}>
             {phase === 'won' ? '🎉 클리어!' : '💥 폭발!'}
           </p>
           <p className="text-sm text-muted-foreground mt-1 font-medium">{time}초</p>
@@ -199,8 +199,8 @@ export default function Minesweeper(props: RankedGameProps = {}) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground font-medium">
-        탭=열기 · 우클릭/깃발모드=깃발 · 숫자=인접 지뢰 수
+      <p className="text-sm text-muted-foreground font-medium">
+        숫자는 이웃한 지뢰 수예요. 우클릭으로도 깃발을 표시할 수 있어요.
       </p>
     </div>
   );

@@ -8,8 +8,8 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 
 const TABS = [
   { id: 'school',    label: '🏫 학교 소식',   desc: '우리 학교 공지·학사일정' },
-  { id: 'news',      label: '📡 Tech News',   desc: 'AI · Hacking · Embedded' },
-  { id: 'graveyard', label: '🪦 Graveyard',   desc: '서비스 장례식' },
+  { id: 'news',      label: '📡 기술 소식',   desc: 'AI · 보안 · 임베디드' },
+  { id: 'graveyard', label: '🪦 서비스 종료',   desc: '서비스 장례식' },
 ] as const;
 
 type TabId = typeof TABS[number]['id'];
@@ -18,19 +18,19 @@ export default function FeedPage() {
   const [tab, setTab] = useState<TabId>('school');
 
   return (
-    <section className="cb-page-content min-h-screen px-4 py-10 flex flex-col items-center gap-8">
-      <div className="text-center space-y-1">
-        <h1 className="cb-page-title">Feed</h1>
-        <p className="cb-page-sub mt-1">AI 학습 대기 중 읽을거리</p>
+    <section className="cb-page-content mx-auto max-w-3xl min-w-0 space-y-6 py-4">
+      <div className="space-y-1">
+        <h1 className="cb-page-title">소식</h1>
+        <p className="cb-page-sub mt-1">학교 공지부터 기술 소식까지 한곳에서 확인해요.</p>
       </div>
 
       <SegmentedTabs
         items={TABS.map(t => ({
           value: t.id,
           label: (
-            <span className="flex flex-col items-center gap-0.5">
+            <span className="flex flex-col items-center gap-0.5 text-center">
               <span>{t.label}</span>
-              <span className="text-xs font-medium opacity-70">{t.desc}</span>
+              <span className="text-sm font-medium">{t.desc}</span>
             </span>
           ),
         }))}
@@ -38,7 +38,7 @@ export default function FeedPage() {
         onChange={(v) => setTab(v as TabId)}
       />
 
-      <div className="w-full max-w-2xl">
+      <div className="w-full min-w-0">
         {tab === 'school'    && <SchoolNews />}
         {tab === 'news'      && <TechNews />}
         {tab === 'graveyard' && <Graveyard />}

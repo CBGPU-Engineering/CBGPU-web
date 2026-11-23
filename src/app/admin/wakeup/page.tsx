@@ -1,9 +1,10 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { addDays, format } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { enUS,ko } from 'date-fns/locale';
 import { ShieldAlert, X, Play, Pause, Square, SkipForward, ListMusic, ExternalLink, ListPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ function tomorrowStr() {
 }
 
 export default function AdminWakeupPage() {
+  const {t,app}=useAdminLanguage();
   const { user, isAdmin, isWakeupManager, isLoading: authLoading } = useAuth();
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
@@ -118,7 +120,7 @@ export default function AdminWakeupPage() {
     // RLS blocking this silently returns success with 0 rows changed, not an
     // error — so a failure here is worth surfacing loudly rather than eating
     // it, since it means the student-facing status just silently didn't move.
-    if (error) showError(`Could not update status (${song.title}): ${englishError(error.message, 'The update failed.')}`);
+    if (error) showError(adminNotice(`Could not update status (${song.title}): ${englishError(error.message, 'The update failed.')}`));
   };
 
   const startSession = async () => {
@@ -133,7 +135,7 @@ export default function AdminWakeupPage() {
       if (!data?.videoId) { unresolvedTitle = song.title; break; }
       today.push({ ...song, youtube_video_id: data.videoId });
     }
-    if (today.length !== SONGS_PER_DAY) { showError(`Could not prepare a YouTube video${unresolvedTitle ? `: ${unresolvedTitle}` : ''}.`); return; }
+    if (today.length !== SONGS_PER_DAY) { showError(adminNotice(`Could not prepare a YouTube video${unresolvedTitle ? `: ${unresolvedTitle}` : ''}.`)); return; }
     const playableToday = today;
     setSession(playableToday);
     setSessionIndex(0);
@@ -173,7 +175,7 @@ export default function AdminWakeupPage() {
       await setSongStatus(session[nextIndex], 'playing');
     } else {
       endSession();
-      if (markCurrentPlayed) showSuccess("Today's playback is complete.");
+      if (markCurrentPlayed) showSuccess(adminNotice("Today's playback is complete."));
       fetchAll();
     }
   };
@@ -244,10 +246,10 @@ export default function AdminWakeupPage() {
     const data = await response.json().catch(() => null);
     setFillingSongs(false);
     setFillProgress(null);
-    if (!response.ok) { showError(englishError(data?.message, 'Could not fill recommended tracks.')); return []; }
+    if (!response.ok) { showError(adminNotice(englishError(data?.message, 'Could not fill recommended tracks.'))); return []; }
     const items: any[] = data?.items ?? [];
     setAiFillers(items);
-    if (items.length !== needed) showError(`Only ${items.length} of ${needed} tracks are ready. Try again to fill the remaining slots.`);
+    if (items.length !== needed) showError(adminNotice(`Only ${items.length} of ${needed} tracks are ready. Try again to fill the remaining slots.`));
     return items;
   };
 
@@ -259,16 +261,16 @@ export default function AdminWakeupPage() {
 
   const reject = async (id: string) => {
     const { error } = await supabase.from('wakeup_songs').update({ status: 'rejected', reject_reason: rejectReason.trim() || null }).eq('id', id);
-    if (error) showError('Could not reject the request: ' + englishError(error.message, 'The update failed.'));
-    else { showSuccess('Request rejected.'); setRejectingId(null); setRejectReason(''); fetchAll(); }
+    if (error) showError(adminNotice('Could not reject the request: ' + englishError(error.message, 'The update failed.')));
+    else { showSuccess(adminNotice('Request rejected.')); setRejectingId(null); setRejectReason(''); fetchAll(); }
   };
 
   const createSpotifyPlaylist = async () => {
     const fillers = await generateAiFillers();
     const tracks = [...todayLineup.slice(0, SONGS_PER_DAY), ...fillers].slice(0, SONGS_PER_DAY).map(song => song.spotify_uri).filter((uri): uri is string => typeof uri === 'string');
-    if (tracks.length !== SONGS_PER_DAY) { showError(`Prepare exactly ${SONGS_PER_DAY} tracks before creating a playlist.`); return; }
+    if (tracks.length !== SONGS_PER_DAY) { showError(adminNotice(`Prepare exactly ${SONGS_PER_DAY} tracks before creating a playlist.`)); return; }
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { showError('Please sign in.'); return; }
+    if (!session) { showError(adminNotice('Please sign in.')); return; }
     setCreatingPlaylist(true);
     const response = await fetch('/api/wakeup/spotify/playlist', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
@@ -278,38 +280,38 @@ export default function AdminWakeupPage() {
     if (!response.ok || !data?.url) {
       setCreatingPlaylist(false);
       if (response.status === 401) { window.location.assign('/api/wakeup/spotify/connect'); return; }
-      showError(englishError(data?.message, 'Could not create the Spotify playlist.'));
+      showError(adminNotice(englishError(data?.message, 'Could not create the Spotify playlist.')));
       return;
     }
     const { error } = await supabase.from('wakeup_playlists').upsert({ dorm, play_date: todayStr(), spotify_playlist_id: data.id, spotify_playlist_url: data.url, created_by: user?.id }, { onConflict: 'dorm,play_date' });
     setCreatingPlaylist(false);
-    if (error) { showError(`Could not save the playlist link: ${englishError(error.message, 'The update failed.')}`); return; }
+    if (error) { showError(adminNotice(`Could not save the playlist link: ${englishError(error.message, 'The update failed.')}`)); return; }
     setPlaylistUrl(data.url);
-    showSuccess('Spotify playlist link created.');
+    showSuccess(adminNotice('Spotify playlist link created.'));
   };
 
   const createTomorrowPlaylist = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { showError('Please sign in.'); return; }
+    if (!session) { showError(adminNotice('Please sign in.')); return; }
     let fillers: any[] = [];
     const needed = Math.max(0, SONGS_PER_DAY - tomorrowLineup.length);
     if (needed) {
       const fillResponse = await fetch('/api/wakeup/ai-fill', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ count: needed, usedUris: tomorrowLineup.map(song => song.spotify_uri).filter((uri): uri is string => typeof uri === 'string') }) });
       const fillData = await fillResponse.json().catch(() => null);
-      if (!fillResponse.ok) { showError(englishError(fillData?.message, 'Could not fill tomorrow’s recommended tracks.')); return; }
+      if (!fillResponse.ok) { showError(adminNotice(englishError(fillData?.message, 'Could not fill tomorrow’s recommended tracks.'))); return; }
       fillers = fillData?.items ?? [];
     }
     const tracks = [...tomorrowLineup, ...fillers].slice(0, SONGS_PER_DAY).map(song => song.spotify_uri).filter((uri): uri is string => typeof uri === 'string');
-    if (tracks.length !== SONGS_PER_DAY) { showError(`Tomorrow's playlist also needs exactly ${SONGS_PER_DAY} tracks.`); return; }
+    if (tracks.length !== SONGS_PER_DAY) { showError(adminNotice(`Tomorrow's playlist also needs exactly ${SONGS_PER_DAY} tracks.`)); return; }
     setCreatingPlaylist(true);
     const response = await fetch('/api/wakeup/spotify/playlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ name: `${dorm} 기상송 · ${format(addDays(new Date(), 1), 'M월 d일', { locale: enUS })}`, tracks }) });
     const data = await response.json().catch(() => null);
-    if (!response.ok || !data?.url) { setCreatingPlaylist(false); if (response.status === 401) { window.location.assign('/api/wakeup/spotify/connect'); return; } showError(englishError(data?.message, 'Could not create tomorrow’s playlist.')); return; }
+    if (!response.ok || !data?.url) { setCreatingPlaylist(false); if (response.status === 401) { window.location.assign('/api/wakeup/spotify/connect'); return; } showError(adminNotice(englishError(data?.message, 'Could not create tomorrow’s playlist.'))); return; }
     const { error } = await supabase.from('wakeup_playlists').upsert({ dorm, play_date: tomorrowStr(), spotify_playlist_id: data.id, spotify_playlist_url: data.url, created_by: user?.id }, { onConflict: 'dorm,play_date' });
     setCreatingPlaylist(false);
-    if (error) { showError(`Could not save tomorrow's playlist link: ${englishError(error.message, 'The update failed.')}`); return; }
+    if (error) { showError(adminNotice(`Could not save tomorrow's playlist link: ${englishError(error.message, 'The update failed.')}`)); return; }
     setTomorrowPlaylistUrl(data.url);
-    showSuccess("Tomorrow's Spotify playlist link created.");
+    showSuccess(adminNotice("Tomorrow's Spotify playlist link created."));
   };
 
   const deleteLegacyRequests = async () => {
@@ -317,8 +319,8 @@ export default function AdminWakeupPage() {
     const { error } = await supabase.from('wakeup_songs').delete().is('spotify_uri', null);
     setDeletingLegacy(false);
     setLegacyDeleteOpen(false);
-    if (error) { showError(`Could not delete legacy requests: ${englishError(error.message, 'The delete request failed.')}`); return; }
-    showSuccess('All legacy YouTube requests were deleted.');
+    if (error) { showError(adminNotice(`Could not delete legacy requests: ${englishError(error.message, 'The delete request failed.')}`)); return; }
+    showSuccess(adminNotice('All legacy YouTube requests were deleted.'));
     fetchAll();
   };
 
@@ -330,8 +332,8 @@ export default function AdminWakeupPage() {
     return (
       <div className="max-w-sm mx-auto mt-16 text-center space-y-4">
         <ShieldAlert className="size-12 mx-auto text-destructive" />
-        <p className="font-bold">This page is restricted to administrators and wake-up music managers.</p>
-        <Button onClick={() => router.push('/')}>Return home</Button>
+        <p className="font-bold">{t("This page is restricted to administrators and wake-up music managers.")}</p>
+        <Button onClick={() => router.push('/')}>{t("Return home")}</Button>
       </div>
     );
   }
@@ -339,27 +341,27 @@ export default function AdminWakeupPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-10">
       <div className="space-y-3">
-        <h1 className="cb-page-title">Wake-up music</h1>
-        <SegmentedTabs label="Dormitory" items={DORMS.map(d => ({ value: d, label: DORM_LABELS[d] }))} value={dorm} onChange={changeDorm} />
+        <h1 className="cb-page-title">{t("Wake-up music")}</h1>
+        <SegmentedTabs label={t("Dormitory")} items={DORMS.map(d => ({ value: d, label: app?d:DORM_LABELS[d] }))} value={dorm} onChange={changeDorm} />
       </div>
 
-      {loadError && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm"><p>{loadError}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => { setLoading(true); void fetchAll(); }}>Retry loading</Button></div>}
+      {loadError && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm"><p>{loadError}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => { setLoading(true); void fetchAll(); }}>{t("Retry loading")}</Button></div>}
 
       {/* ── 재생 ─────────────────────────────────────────────────────── */}
       <section className="rounded-[28px] border border-primary/15 bg-card p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <ListMusic className="size-5 text-primary" />
-          <h2 className="text-lg font-black">{DORM_LABELS[dorm]} · Today&apos;s playback</h2>
-          <Badge variant="default">{Math.min(SONGS_PER_DAY, todayLineup.length + aiFillers.length)}/{SONGS_PER_DAY} tracks</Badge>
+          <h2 className="text-lg font-black">{app?dorm:DORM_LABELS[dorm]}  {t("· Today's playback")}</h2>
+          <Badge variant="default">{Math.min(SONGS_PER_DAY, todayLineup.length + aiFillers.length)}/{SONGS_PER_DAY}  {t("tracks")}</Badge>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={generateAiFillers} disabled={fillingSongs || queue.length >= SONGS_PER_DAY} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{fillingSongs ? `Checking recommendations (${fillProgress?.done ?? 0}/${fillProgress?.total ?? 0})` : 'Fill remaining tracks'}</Button>
-          <Button variant="secondary" onClick={createSpotifyPlaylist} disabled={creatingPlaylist} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{creatingPlaylist ? 'Creating Spotify playlist…' : 'Create Spotify playlist'}</Button>
-          {playlistUrl && <Button asChild variant="secondary"><a href={playlistUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-1.5" />Open playlist</a></Button>}
+          <Button variant="secondary" onClick={generateAiFillers} disabled={fillingSongs || queue.length >= SONGS_PER_DAY} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{fillingSongs ? `Checking recommendations (${fillProgress?.done ?? 0}/${fillProgress?.total ?? 0})` : t('Fill remaining tracks')}</Button>
+          <Button variant="secondary" onClick={createSpotifyPlaylist} disabled={creatingPlaylist} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{creatingPlaylist ? t('Creating Spotify playlist…') : t('Create Spotify playlist')}</Button>
+          {playlistUrl && <Button asChild variant="secondary"><a href={playlistUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-1.5" />{t("Open playlist")}</a></Button>}
         </div>
-        {aiFillers.length > 0 && <p className="text-xs text-[#1DB954] font-medium">Added {aiFillers.length} tracks from the configured recommendations.</p>}
-        {fillingSongs && <p className="text-xs text-muted-foreground">Filling empty slots from the configured Spotify recommendations. Please wait.</p>}
+        {aiFillers.length > 0 && <p className="text-xs text-[#1DB954] font-medium">{t("Added")} {aiFillers.length}  {t("tracks from the configured recommendations.")}</p>}
+        {fillingSongs && <p className="text-xs text-muted-foreground">{t("Filling empty slots from the configured Spotify recommendations. Please wait.")}</p>}
 
         <ul className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
             {[...todayLineup.slice(0, SONGS_PER_DAY), ...aiFillers].slice(0, SONGS_PER_DAY).map((song, i) => (
@@ -375,20 +377,20 @@ export default function AdminWakeupPage() {
       <section className="rounded-[28px] border border-primary/15 bg-card p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <ListMusic className="size-5 text-primary" />
-          <h2 className="text-lg font-black">{DORM_LABELS[dorm]} · Tomorrow&apos;s playback</h2>
-          <Badge variant="default">{Math.min(SONGS_PER_DAY, tomorrowLineup.length)}/{SONGS_PER_DAY} tracks</Badge>
+          <h2 className="text-lg font-black">{app?dorm:DORM_LABELS[dorm]}  {t("· Tomorrow's playback")}</h2>
+          <Badge variant="default">{Math.min(SONGS_PER_DAY, tomorrowLineup.length)}/{SONGS_PER_DAY}  {t("tracks")}</Badge>
         </div>
-        <p className="text-xs text-muted-foreground">Prepare tomorrow&apos;s morning playlist in advance.</p>
+        <p className="text-xs text-muted-foreground">{t("Prepare tomorrow's morning playlist in advance.")}</p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={createTomorrowPlaylist} disabled={creatingPlaylist} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{creatingPlaylist ? 'Creating Spotify playlist…' : "Create tomorrow's playlist"}</Button>
-          {tomorrowPlaylistUrl && <Button asChild variant="secondary"><a href={tomorrowPlaylistUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-1.5" />Open playlist</a></Button>}
+          <Button variant="secondary" onClick={createTomorrowPlaylist} disabled={creatingPlaylist} className="min-w-[160px] flex-1 whitespace-normal"><ListPlus className="size-4 mr-1.5" />{creatingPlaylist ? t('Creating Spotify playlist…') : t("Create tomorrow's playlist")}</Button>
+          {tomorrowPlaylistUrl && <Button asChild variant="secondary"><a href={tomorrowPlaylistUrl} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-1.5" />{t("Open playlist")}</a></Button>}
         </div>
       </section>
 
       <section className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-black">Song requests</h2><Badge variant="default">{allApproved.length} tracks</Badge><Button size="sm" variant="destructive" className="ml-auto" onClick={() => setLegacyDeleteOpen(true)}>Delete legacy YouTube requests</Button></div>
-        <p className="text-xs text-muted-foreground">Review and reject requests scheduled for today or any future date.</p>
-        {allApproved.length === 0 && <p className="text-sm text-muted-foreground">No song requests.</p>}
+        <div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-black">{t("Song requests")}</h2><Badge variant="default">{allApproved.length}  {t("tracks")}</Badge><Button size="sm" variant="destructive" className="ml-auto" onClick={() => setLegacyDeleteOpen(true)}>{t("Delete legacy YouTube requests")}</Button></div>
+        <p className="text-xs text-muted-foreground">{t("Review and reject requests scheduled for today or any future date.")}</p>
+        {allApproved.length === 0 && <p className="text-sm text-muted-foreground">{t("No song requests.")}</p>}
         {Object.entries(
           allApproved.reduce<Record<string, any[]>>((groups, song) => {
             (groups[song.play_date] ??= []).push(song);
@@ -397,7 +399,7 @@ export default function AdminWakeupPage() {
         ).map(([date, songs]) => (
           <div key={date} className="space-y-2">
             <p className="text-xs font-black uppercase tracking-widest text-primary">
-              {format(new Date(date + 'T00:00:00'), 'MMM d (EEE)', { locale: enUS })}{date === todayStr() ? ' · Today' : ''}
+              {format(new Date(date + 'T00:00:00'), app?'M월 d일 (EEE)':'MMM d (EEE)', { locale: app?ko:enUS })}{date === todayStr() ? t(' · Today') : ''}
             </p>
             {songs.map((song) => (
               <div key={song.id} className="rounded-2xl bg-card ring-1 ring-border/60 p-3 space-y-2">
@@ -405,25 +407,25 @@ export default function AdminWakeupPage() {
                   {song.thumbnail_url && <Image src={song.thumbnail_url} alt={song.title} width={56} height={42} className="rounded-lg object-cover shrink-0" />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold truncate">{song.title}</p>
-                    {song.spotify_url && <a href={song.spotify_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#1DB954] hover:underline">Open in Spotify</a>}
+                    {song.spotify_url && <a href={song.spotify_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#1DB954] hover:underline">{t("Open in Spotify")}</a>}
                     <p className="text-xs text-muted-foreground truncate">{song.profiles?.full_name} ({song.profiles?.student_id})</p>
                   </div>
                 </div>
                 {rejectingId === song.id ? (
                   <div className="flex flex-wrap gap-2">
-                    <Input placeholder="Rejection reason (optional)" value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} className="flex-1" />
-                    <Button size="sm" variant="destructive" onClick={() => reject(song.id)}>Confirm rejection</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>Cancel</Button>
+                    <Input placeholder={t("Rejection reason (optional)")} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} className="flex-1" />
+                    <Button size="sm" variant="destructive" onClick={() => reject(song.id)}>{t("Confirm rejection")}</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectReason(''); }}>{t("Cancel")}</Button>
                   </div>
                 ) : (
-                  <Button size="sm" variant="destructive" onClick={() => setRejectingId(song.id)} className="w-full"><X className="size-3.5 mr-1" /> Reject</Button>
+                  <Button size="sm" variant="destructive" onClick={() => setRejectingId(song.id)} className="w-full"><X className="size-3.5 mr-1" />  {t("Reject")}</Button>
                 )}
               </div>
             ))}
           </div>
         ))}
       </section>
-      <ConfirmDialog open={legacyDeleteOpen} title="Delete all legacy YouTube requests?" description="All legacy requests without Spotify information will be deleted. This cannot be undone." confirmLabel={deletingLegacy ? 'Deleting…' : 'Delete all'} onConfirm={deleteLegacyRequests} onCancel={() => setLegacyDeleteOpen(false)} />
+      <ConfirmDialog open={legacyDeleteOpen} title={t("Delete all legacy YouTube requests?")} description={t("All legacy requests without Spotify information will be deleted. This cannot be undone.")} confirmLabel={deletingLegacy ? t('Deleting…') : t('Delete all')} onConfirm={deleteLegacyRequests} onCancel={() => setLegacyDeleteOpen(false)} />
     </div>
   );
 }

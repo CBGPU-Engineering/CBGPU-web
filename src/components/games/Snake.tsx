@@ -158,7 +158,7 @@ export default function Snake(props: RankedGameProps) {
       {arcade.retryButton}
       <div className="flex items-center gap-4">
         <span className="text-sm font-black uppercase tracking-widest">점수: {score}</span>
-        {started && !gameOver && <Button variant="outline" size="sm" onClick={() => { gRef.current.running = false; arcade.run.current?.record('stop'); arcade.finish(); if (intervalRef.current) clearInterval(intervalRef.current); setGameOver(true); }}>Stop</Button>}
+        {started && !gameOver && <Button variant="outline" size="sm" onClick={() => { gRef.current.running = false; arcade.run.current?.record('stop'); arcade.finish(); if (intervalRef.current) clearInterval(intervalRef.current); setGameOver(true); }}>그만하기</Button>}
       </div>
       <canvas
         ref={canvasRef} width={COLS * CELL} height={ROWS * CELL}
@@ -173,7 +173,7 @@ export default function Snake(props: RankedGameProps) {
           <Button onClick={start} className="font-black uppercase tracking-widest">{gameOver ? '다시 하기' : '게임 시작'}</Button>
         </div>
       )}
-      <p className="text-xs text-muted-foreground font-medium">화살표/WASD 또는 화면에서 스와이프로 이동</p>
+      <p className="text-sm text-muted-foreground font-medium">화살표/WASD 또는 화면에서 스와이프로 이동</p>
     </div>
   );
 }

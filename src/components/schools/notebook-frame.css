@@ -3,3 +3,5 @@
 
 /* Shared controls keep the app minimum touch target while retaining their token styles. */
 .cb-notebook-frame button,.cb-notebook-frame nav a,.cb-notebook-copy-url{min-height:44px}
+
+.cb-notebook-frame>a{display:inline-flex;align-items:center;min-height:44px;align-self:flex-start}.cb-notebook-copy-url{font-size:16px}

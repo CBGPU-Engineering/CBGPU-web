@@ -11,16 +11,16 @@ function Command({ value }: { value: string }) {
   async function copy() {
     try {
       await navigator.clipboard.writeText(value);
-      showSuccess('명령어를 복사했습니다.');
+      showSuccess('명령어를 복사했어요.');
     } catch {
-      showError('복사하지 못했습니다. 명령어를 직접 선택해 주세요.');
+      showError('복사하지 못했어요. 명령어를 직접 선택해 주세요.');
     }
   }
 
   return (
     <div className="flex items-center gap-2 rounded-2xl border bg-muted/30 px-3 py-2">
       <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-sm">{value}</code>
-      <Button type="button" size="sm" variant="ghost" onClick={copy} className="shrink-0 gap-1.5 text-xs">
+      <Button type="button" size="sm" variant="ghost" onClick={copy} className="shrink-0 gap-1.5 text-sm">
         <Copy className="size-3.5" /> 복사
       </Button>
     </div>
@@ -76,31 +76,31 @@ export default function GpuSshGuidePage() {
       const response = await fetch(SKILL_PATH);
       if (!response.ok) throw new Error('스킬 문서를 불러오지 못했습니다.');
       await navigator.clipboard.writeText(await response.text());
-      showSuccess('AI Agent 스킬 문서를 복사했습니다.');
+      showSuccess('AI Agent 스킬 문서를 복사했어요.');
     } catch {
-      showError('스킬 문서를 복사하지 못했습니다. 파일 받기를 이용해 주세요.');
+      showError('스킬 문서를 복사하지 못했어요. 파일 받기를 이용해 주세요.');
     }
   }
 
   async function copyConfig(value: string) {
     try {
       await navigator.clipboard.writeText(value);
-      showSuccess('SSH 설정을 복사했습니다.');
+      showSuccess('SSH 설정을 복사했어요.');
     } catch {
-      showError('복사하지 못했습니다. 설정을 직접 선택해 주세요.');
+      showError('복사하지 못했어요. 설정을 직접 선택해 주세요.');
     }
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground">
+      <Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> GPU 예약으로 돌아가기
       </Link>
 
       <header className="space-y-3">
         <div className="flex items-center gap-2 text-primary">
           <Terminal className="size-6" />
-          <span className="text-xs font-semibold">GPU SSH</span>
+          <span className="text-sm font-semibold">GPU SSH</span>
         </div>
         <h1 className="cb-page-title">SSH 접속 방법</h1>
         <p className="text-sm text-muted-foreground">키와 접속 설정을 한 번 등록하면 예약한 GPU 컨테이너에 서버 비밀번호 없이 접속할 수 있습니다.</p>
@@ -115,13 +115,13 @@ export default function GpuSshGuidePage() {
           <div className="space-y-3">
             {step.commands.map((command) => (
               <div key={command.label} className="space-y-1.5">
-                <p className="text-xs font-bold text-muted-foreground">{command.label}</p>
+                <p className="text-sm font-bold text-muted-foreground">{command.label}</p>
                 <Command value={command.value} />
               </div>
             ))}
           </div>
           {step.title.startsWith('2.') && (
-            <p className="text-xs text-muted-foreground">Linux에서는 표시된 한 줄을 직접 복사하세요.</p>
+            <p className="text-sm text-muted-foreground">Linux에서는 표시된 한 줄을 직접 복사하세요.</p>
           )}
         </section>
       ))}
@@ -141,9 +141,9 @@ export default function GpuSshGuidePage() {
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 설정 복사</Button>
           </div>
-          <pre className="overflow-x-auto p-4 text-xs leading-relaxed"><code>{SSH_CONFIG}</code></pre>
+          <pre className="overflow-x-auto p-4 text-sm leading-relaxed"><code>{SSH_CONFIG}</code></pre>
         </div>
-        <p className="text-xs text-muted-foreground">설정 전 <code>openssl version</code>으로 설치 여부를 확인하세요. 처음 연결할 때 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
+        <p className="text-sm text-muted-foreground">설정 전 <code>openssl version</code>으로 설치 여부를 확인하세요. 처음 연결할 때 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
@@ -153,9 +153,9 @@ export default function GpuSshGuidePage() {
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SCHOOL_SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 교내망 설정 복사</Button>
           </div>
-          <pre className="overflow-x-auto p-4 text-xs leading-relaxed"><code>{SCHOOL_SSH_CONFIG}</code></pre>
+          <pre className="overflow-x-auto p-4 text-sm leading-relaxed"><code>{SCHOOL_SSH_CONFIG}</code></pre>
         </div>
-        <p className="text-xs text-muted-foreground">예약한 GPU 번호로 <code>ssh cbgpu-gpu4-school</code>처럼 접속하세요. 처음 표시되는 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
+        <p className="text-sm text-muted-foreground">예약한 GPU 번호로 <code>ssh cbgpu-gpu4-school</code>처럼 접속하세요. 처음 표시되는 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
@@ -164,12 +164,12 @@ export default function GpuSshGuidePage() {
         <div className="space-y-3">
           {[1, 2, 3, 4].map((gpu) => (
             <div key={gpu} className="space-y-1.5">
-              <p className="text-xs font-bold text-muted-foreground">GPU #{gpu}</p>
+              <p className="text-sm font-bold text-muted-foreground">GPU #{gpu}</p>
               <Command value={`ssh cbgpu-gpu${gpu}`} />
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">접속 권한은 승인된 예약 시간에만 적용됩니다. 공개키 저장 후 반영까지 약 30초 걸릴 수 있습니다. 이미 연결된 Tailscale 기기에서는 기존 <code>ssh -p 2201 root@100.100.136.37</code> 방식도 이용할 수 있습니다.</p>
+        <p className="text-sm text-muted-foreground">접속 권한은 승인된 예약 시간에만 적용됩니다. 공개키 저장 후 반영까지 약 30초 걸릴 수 있습니다. 이미 연결된 Tailscale 기기에서는 기존 <code>ssh -p 2201 root@100.100.136.37</code> 방식도 이용할 수 있습니다.</p>
       </section>
 
       <div className="flex gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">

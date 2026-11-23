@@ -32,11 +32,20 @@ const GPU_COLORS: Record<number, { bg: string; text: string; border: string; dot
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
 
 export default function Dashboard() {
+  const {user}=useAuth();
+  return <DashboardSession key={user?.id||'anonymous'}/>;
+}
+
+function DashboardSession() {
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [myReservations, setMyReservations] = useState<any[]>([]);
   const [gpuPasswords, setGpuPasswords] = useState<{[key: number]: string}>({});
   const [loading, setLoading] = useState(true);
+  const [reservationError,setReservationError]=useState('');
+  const [reservationRefreshing,setReservationRefreshing]=useState(false);
+  const reservationRequest=useRef(0);
+  useEffect(()=>()=>{reservationRequest.current++},[]);
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [pastShown, setPastShown] = useState(5);
@@ -58,6 +67,8 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [clientToday, setClientToday] = useState<Date | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarLoaded,setCalendarLoaded]=useState(false);
+  const [calendarError,setCalendarError]=useState('');
   const [calendarRevision,setCalendarRevision]=useState(0);
   const [extendingIds,setExtendingIds]=useState<string[]>([]);
 
@@ -75,12 +86,20 @@ export default function Dashboard() {
     let current = true;
     const fetchCalendar = async () => {
       setCalendarLoading(true);
-      const { data } = await supabase.rpc('get_gpu_reservation_schedule', {
-        p_from: gridStart.toISOString(), p_to: gridEnd.toISOString(), p_gpu_id: null,
-      });
-      if (!current) return;
-      setCalendarReservations(data ?? []);
-      setCalendarLoading(false);
+      try {
+        const { data,error } = await supabase.rpc('get_gpu_reservation_schedule', {
+          p_from: gridStart.toISOString(), p_to: gridEnd.toISOString(), p_gpu_id: null,
+        });
+        if (!current) return;
+        if (error || !Array.isArray(data)) throw error || new Error('Invalid reservation schedule');
+        setCalendarReservations(data);
+        setCalendarLoaded(true);
+        setCalendarError('');
+      } catch {
+        if (current) setCalendarError('예약 현황을 불러오지 못했어요. 기존에 보이는 예약은 최신 정보가 아닐 수 있어요. 다시 불러온 뒤 시간을 확인해 주세요.');
+      } finally {
+        if (current) setCalendarLoading(false);
+      }
     };
     void fetchCalendar();
     return () => { current = false; };
@@ -142,14 +161,24 @@ export default function Dashboard() {
   const fetchMyReservations = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error) setMyReservations(data || []);
-    setLoading(false);
+    const request=++reservationRequest.current;
+    setReservationRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if(request!==reservationRequest.current)return;
+      if (error || !Array.isArray(data)) throw error || new Error('Invalid reservation list');
+      setMyReservations(data);
+      setReservationError('');
+    } catch {
+      if(request!==reservationRequest.current)return;
+      setReservationError('내 예약을 불러오지 못했어요. 기존 내역은 그대로 두었어요. 다시 불러와 신청·이용 상태를 확인해 주세요.');
+    } finally {
+      if(request===reservationRequest.current){setLoading(false);setReservationRefreshing(false);}
+    }
   };
 
   const handleCancel = async () => {
@@ -310,7 +339,7 @@ export default function Dashboard() {
               return (
                 <ResourceStatus key={id} value={st||'unknown'} className="inline-flex items-center gap-1.5 px-2.5 py-2 bg-muted rounded-xl border border-border/40">
                   {st === 'online' ? <Wifi className="size-3 text-emerald-600" aria-hidden="true"/> : st === 'offline' ? <WifiOff className="size-3 text-destructive" aria-hidden="true"/> : <span className="size-2 rounded-full bg-muted-foreground/50" aria-hidden="true"/>}
-                  <span className="text-xs font-semibold text-muted-foreground">GPU {id} · {st==='checking'?'확인 중':st==='online'?'연결됨':st==='offline'?'연결 끊김':'확인 불가'}</span>
+                  <span className="text-sm font-semibold text-muted-foreground">GPU {id} · {st==='checking'?'확인 중':st==='online'?'연결됨':st==='offline'?'연결 끊김':'확인 불가'}</span>
                 </ResourceStatus>
               );
             })}
@@ -320,13 +349,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <p className="mb-5 -mt-3 text-xs text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인하세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
+        <p className="mb-5 -mt-3 text-sm text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인하세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
         {/* 전체 GPU 예약 현황 캘린더 — 구 /schedule, 누구나 볼 수 있게 항상 공개 */}
-        {calendarLoading ? (
+        {calendarError&&<div role="alert" className="mb-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{calendarError}</p><Button variant="outline" className="mt-3" disabled={calendarLoading} onClick={()=>setCalendarRevision(value=>value+1)}>예약 현황 다시 불러오기</Button></div>}
+        {calendarLoading&&calendarLoaded&&<p role="status" className="mb-3 text-sm text-muted-foreground">예약 현황을 갱신하고 있어요.</p>}
+        {calendarLoading&&!calendarLoaded ? (
           <div className="py-16 flex items-center justify-center">
             <LoadingSpinner size={56} label="예약 현황 불러오는 중" />
           </div>
-        ) : (
+        ) : calendarError&&!calendarLoaded ? null : (
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="w-full md:flex-1 md:min-w-0 border rounded-2xl overflow-hidden bg-card shadow-sm">
               <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b">
@@ -342,11 +373,11 @@ export default function Dashboard() {
                 </Button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 border-b bg-muted/20"><span className="text-xs font-medium text-muted-foreground">예약할 GPU</span><ResourceSelection label="캘린더에서 예약할 GPU 선택" value={String(selectedGpuId)} onChange={value=>setSelectedGpuId(Number(value))} items={[1,2,3,4].map(id=>({value:String(id),label:<span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={cn('size-1.5 rounded-full',GPU_COLORS[id].dot)}/>#{id}</span>}))}/></div>
+              <div className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 border-b bg-muted/20"><span className="text-sm font-medium text-muted-foreground">예약할 GPU</span><ResourceSelection label="캘린더에서 예약할 GPU 선택" value={String(selectedGpuId)} onChange={value=>setSelectedGpuId(Number(value))} items={[1,2,3,4].map(id=>({value:String(id),label:<span className="inline-flex items-center gap-1.5"><span aria-hidden="true" className={cn('size-1.5 rounded-full',GPU_COLORS[id].dot)}/>#{id}</span>}))}/></div>
 
               <div className="grid grid-cols-7 border-b">
                 {WEEKDAYS.map(d => (
-                  <div key={d} className="py-2 text-center text-xs font-semibold text-muted-foreground">
+                  <div key={d} className="py-2 text-center text-sm font-semibold text-muted-foreground">
                     {d}
                   </div>
                 ))}
@@ -372,7 +403,7 @@ export default function Dashboard() {
                       )}
                     >
                       <span className={cn(
-                        'text-xs font-semibold inline-flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-full mb-1',
+                        'text-sm font-semibold inline-flex items-center justify-center w-5 h-5 md:w-6 md:h-6 rounded-full mb-1',
                         isTodayDate && 'bg-primary text-primary-foreground',
                         !isTodayDate && isCurrentMonth && 'text-foreground',
                       )}>
@@ -384,7 +415,7 @@ export default function Dashboard() {
                           return (
                             <Fragment key={j}>
                               <span className={cn('md:hidden size-1.5 rounded-full mt-0.5', c.dot)} />
-                              <span className={cn('hidden md:inline text-xs font-semibold px-1.5 py-0.5 rounded-md border', c.bg, c.text, c.border)}>
+                              <span className={cn('hidden md:inline text-sm font-semibold px-1.5 py-0.5 rounded-md border', c.bg, c.text, c.border)}>
                                 #{res.gpu_id}
                               </span>
                             </Fragment>
@@ -407,21 +438,21 @@ export default function Dashboard() {
                     <p className="font-semibold text-sm">
                       {format(selectedDay, 'M월 d일 (eee)', { locale: ko })}
                     </p>
-                    <p className="text-xs text-muted-foreground font-bold opacity-70">예약 현황</p>
+                    <p className="text-sm text-muted-foreground font-bold opacity-70">예약 현황</p>
                   </div>
                   <div className="p-4 space-y-3">
                     {selectedDayReservations.length === 0 ? (
-                      <p className="text-muted-foreground font-bold text-xs opacity-50 py-4 text-center">예약 없음</p>
+                      <p className="text-muted-foreground font-bold text-sm opacity-50 py-4 text-center">{calendarError?'예약 정보를 다시 확인해 주세요.':'예약 없음'}</p>
                     ) : (
                       selectedDayReservations.map((res) => {
                         const c = GPU_COLORS[res.gpu_id];
                         return (
                           <div key={res.id} className="relative pl-4 pr-3 py-3 rounded-2xl border border-border/40 bg-card overflow-hidden tilt-3d transition-all">
                             <span className={cn('absolute inset-y-0 left-0 w-1', c.dot)} />
-                            <div className={cn('text-xs font-semibold mb-1.5', c.text)}>GPU #{res.gpu_id}</div>
-                            <div className="text-xs font-bold space-y-0.5 text-foreground">
+                            <div className={cn('text-sm font-semibold mb-1.5', c.text)}>GPU #{res.gpu_id}</div>
+                            <div className="text-sm font-bold space-y-0.5 text-foreground">
                               <p>예약됨</p>
-                              <p className="opacity-40 text-xs">
+                              <p className="opacity-40 text-sm">
                                 {format(parseISO(res.start_time), 'M/d')} – {format(parseISO(res.end_time), 'M/d')}
                               </p>
                             </div>
@@ -445,7 +476,7 @@ export default function Dashboard() {
         <div className="lg:w-[420px] lg:shrink-0 space-y-6 mb-10 lg:mb-0">
           <div className="flex flex-col gap-2">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">예약하기</h2>
-            <p className="text-xs text-muted-foreground font-bold">GPU를 선택하고 예약을 신청하세요</p>
+            <p className="text-sm text-muted-foreground font-bold">GPU를 선택하고 예약을 신청하세요</p>
           </div>
           <ResourceSelection label="GPU 예약 선택"
             items={[1,2,3,4].map(id => ({ value: String(id), label: `GPU #${id}` }))}
@@ -469,21 +500,21 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex flex-col">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">내 예약</h2>
-            <p className="text-xs text-muted-foreground font-bold">Manage your active sessions</p>
+            <p className="text-sm text-muted-foreground font-bold">사용 중인 예약을 확인하고 관리해요</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" size="sm" onClick={exportIcal} className="font-semibold text-xs gap-1.5 h-8">
+            <Button variant="outline" size="sm" onClick={exportIcal} className="font-semibold text-sm gap-1.5 h-8">
               <Download className="size-3" /> iCal
             </Button>
             <Button
               variant="outline" size="sm"
               onClick={notifPerm === 'granted' ? undefined : requestNotif}
-              className={`font-semibold text-xs gap-1.5 h-8 ${notifPerm === 'granted' ? 'text-green-500 border-green-500/30' : ''}`}
+              className={`font-semibold text-sm gap-1.5 h-8 ${notifPerm === 'granted' ? 'text-green-500 border-green-500/30' : ''}`}
             >
               {notifPerm === 'granted' ? <Bell className="size-3" /> : <BellOff className="size-3" />}
               {notifPerm === 'granted' ? '알림 ON' : '알림 설정'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10 font-bold text-xs gap-2 h-8">
+            <Button variant="ghost" size="sm" onClick={fetchMyReservations} disabled={reservationRefreshing} aria-label="내 예약 다시 불러오기" className="hover:bg-primary/10 font-bold text-sm gap-2 h-8">
               <RefreshCw className="size-3" />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
@@ -494,7 +525,7 @@ export default function Dashboard() {
         {statsData.length > 0 && (
           <div className="mb-8 p-4 bg-muted/20 border border-border/40 rounded-2xl">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-muted-foreground">GPU 점유율 (최근 30일)</p>
+              <p className="text-sm font-semibold text-muted-foreground">GPU 점유율 (최근 30일)</p>
               <Button variant="ghost" size="icon" className="size-6" onClick={fetchStats}><RefreshCw className="size-2.5" /></Button>
             </div>
             <div className="space-y-2">
@@ -503,14 +534,14 @@ export default function Dashboard() {
                 const pct = max > 0 ? (s.hours / max) * 100 : 0;
                 return (
                   <div key={s.gpu_id} className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-muted-foreground w-10 shrink-0">GPU {s.gpu_id}</span>
+                    <span className="text-sm font-semibold text-muted-foreground w-10 shrink-0">GPU {s.gpu_id}</span>
                     <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary rounded-full transition-all duration-700"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold text-muted-foreground w-12 text-right shrink-0">{s.hours}h</span>
+                    <span className="text-sm font-semibold text-muted-foreground w-12 text-right shrink-0">{s.hours}h</span>
                   </div>
                 );
               })}
@@ -518,14 +549,15 @@ export default function Dashboard() {
           </div>
         )}
 
+        {reservationError&&<div role="alert" className="mb-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{reservationError}</p><Button variant="outline" className="mt-3" disabled={reservationRefreshing} onClick={()=>void fetchMyReservations()}>내 예약 다시 확인</Button></div>}
         {loading ? (
           <div className="py-16 flex items-center justify-center">
             <LoadingSpinner size={56} label="예약 내역 불러오는 중" />
           </div>
-        ) : myReservations.length === 0 ? (
+        ) : reservationError&&myReservations.length===0 ? null : myReservations.length === 0 ? (
           <div className="text-center py-20 border border-dashed rounded-2xl text-muted-foreground transition-colors duration-500 font-medium bg-muted/10 pop-in-3d">
             <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">💻</p>
-            No active reservations found.
+            아직 신청한 예약이 없어요.
           </div>
         ) : (
           <>
@@ -555,7 +587,7 @@ export default function Dashboard() {
                         {isApproved && isStarted && !isEnded && <Badge variant="success">Active Now</Badge>}
                         {isApproved && isEnded && <Badge variant="muted">Finished</Badge>}
                       </div>
-                      <p className="text-xs md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
+                      <p className="text-sm md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
                         {start.toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         <span className="mx-2 opacity-30">→</span>
                         {end.toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -575,7 +607,7 @@ export default function Dashboard() {
                         </Button>
                       )}
                       <Button
-                        className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-semibold px-8 transition-all duration-300 text-xs h-11 gap-2"
+                        className="flex-grow md:flex-grow-0 min-w-[140px] md:min-w-[180px] font-semibold px-8 transition-all duration-300 text-sm h-11 gap-2"
                         variant={canStart ? "default" : "secondary"}
                         disabled={!canStart}
                         onClick={() => setSelectedRes(selectedRes?.id === res.id ? null : res)}
@@ -595,7 +627,7 @@ export default function Dashboard() {
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="flex flex-col gap-4 rounded-2xl border bg-background p-4">
                             <div>
-                              <span className="text-xs font-semibold opacity-70">Password</span>
+                              <span className="text-sm font-semibold opacity-70">접속 비밀번호</span>
                               <div className="flex items-center justify-between gap-2 mt-1">
                                 <code className={password ? "min-w-0 truncate text-lg font-bold text-blue-500" : "text-sm font-bold text-muted-foreground animate-pulse"}>
                                   {password || "비밀번호 준비 중..."}
@@ -607,13 +639,13 @@ export default function Dashboard() {
                                 )}
                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground font-medium">
+                            <p className="text-sm text-muted-foreground font-medium">
                               예약 시간에만 유효합니다.
                             </p>
                             {gpuInfo?.jupyterhubUrl && (
                               <Button
                                 asChild
-                                className="mt-auto w-full font-semibold text-xs h-11 border hover:bg-foreground hover:text-background transition-all"
+                                className="mt-auto w-full font-semibold text-sm h-11 border hover:bg-foreground hover:text-background transition-all"
                                 variant="outline"
                               >
                                 <a href={gpuInfo.jupyterhubUrl} target="_blank" rel="noopener noreferrer">
@@ -624,26 +656,26 @@ export default function Dashboard() {
                           </div>
                           <div className="flex flex-col gap-4 rounded-2xl border bg-background p-4">
                             <div>
-                              <span className="text-xs font-semibold opacity-70">SSH</span>
+                              <span className="text-sm font-semibold opacity-70">SSH</span>
                               <div className="flex items-center gap-2 mt-1 rounded-lg border bg-muted/30 pl-3 pr-1 min-h-11">
                                 <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-sm font-bold" title={`ssh cbgpu-gpu${res.gpu_id}`}>
                                   ssh cbgpu-gpu{res.gpu_id}
                                 </code>
-                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`ssh cbgpu-gpu${res.gpu_id}`)} className="h-9 shrink-0 gap-1.5 px-2 text-xs font-bold" aria-label="SSH 명령어 복사">
+                                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(`ssh cbgpu-gpu${res.gpu_id}`)} className="h-9 shrink-0 gap-1.5 px-2 text-sm font-bold" aria-label="SSH 명령어 복사">
                                   <Copy className="size-3.5" /> 복사
                                 </Button>
                               </div>
                             </div>
-                            <p className="text-xs text-muted-foreground font-medium">
+                            <p className="text-sm text-muted-foreground font-medium">
                               최초 1회 SSH 설정 · 예약 시간에 이용 · <a href="/dashboard/ssh-guide" className="text-primary underline underline-offset-2">사용법</a>
                             </p>
-                            <Button asChild variant="outline" className="mt-auto w-full h-11 border text-xs font-semibold">
+                            <Button asChild variant="outline" className="mt-auto w-full h-11 border text-sm font-semibold">
                               <a href="/profile#gpu-ssh-key">SSH 공개키 등록</a>
                             </Button>
                           </div>
                         </div>
                         <Button
-                          className="w-full font-semibold text-xs h-11 gap-2"
+                          className="w-full font-semibold text-sm h-11 gap-2"
                           variant="destructive"
                           onClick={() => setEndTarget(res.id)}
                         >
@@ -681,10 +713,10 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-semibold text-xs" onClick={() => setEndTarget(null)}>
+            <Button variant="outline" className="font-semibold text-sm" onClick={() => setEndTarget(null)}>
               돌아가기
             </Button>
-            <Button variant="destructive" className="font-semibold text-xs" onClick={handleEndSession}>
+            <Button variant="destructive" className="font-semibold text-sm" onClick={handleEndSession}>
               종료하기
             </Button>
           </DialogFooter>
@@ -705,10 +737,10 @@ export default function Dashboard() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-semibold text-xs" onClick={() => setCancelTarget(null)}>
+            <Button variant="outline" className="font-semibold text-sm" onClick={() => setCancelTarget(null)}>
               돌아가기
             </Button>
-            <Button variant="destructive" className="font-semibold text-xs" onClick={handleCancel}>
+            <Button variant="destructive" className="font-semibold text-sm" onClick={handleCancel}>
               취소하기
             </Button>
           </DialogFooter>

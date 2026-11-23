@@ -1,3 +1,5 @@
+'use client';
+import {useAdminLanguage} from '@/components/admin/admin-language';
 import Link from 'next/link';
 import {LockKeyhole, ShieldAlert, RefreshCw} from 'lucide-react';
 import {Button} from '@/components/ui/button';
@@ -9,15 +11,16 @@ const content = {
   error: {Icon: ShieldAlert, title: 'Access check could not finish', description: 'Your account or equipment permissions could not be confirmed. Check your connection and try again.'},
 };
 export default function EquipmentAccessStatus({state, onRetry}: {state: State; onRetry: () => void}) {
-  if (state === 'loading') return <div className="flex min-h-[50vh] items-center justify-center"><LoadingSpinner size={56} label="Checking equipment access…"/></div>;
+  const {t}=useAdminLanguage();
+  if (state === 'loading') return <div className="flex min-h-[50vh] items-center justify-center"><LoadingSpinner size={56} label={t("Checking equipment access…")}/></div>;
   const {Icon, title, description} = content[state];
   return <section role={state === 'error' || state === 'denied' ? 'alert' : 'status'} aria-live="polite" className="surface mx-auto mt-6 w-full max-w-xl p-6 sm:p-8">
     <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-muted text-primary"><Icon aria-hidden="true" className="size-6"/></div>
-    <h1 className="text-xl font-semibold">{title}</h1>
-    <p className="mt-3 max-w-prose text-sm leading-6 text-muted-foreground">{description}</p>
+    <h1 className="text-xl font-semibold">{t(title)}</h1>
+    <p className="mt-3 max-w-prose text-sm leading-6 text-muted-foreground">{t(description)}</p>
     <div className="mt-6 flex flex-wrap gap-3">
-      {state === 'sign-in' && <Button asChild><Link href="/auth/login">Sign in</Link></Button>}
-      {(state === 'error' || state === 'denied') && <Button variant="outline" onClick={onRetry}><RefreshCw aria-hidden="true" className="size-4"/>Try again</Button>}
+      {state === 'sign-in' && <Button asChild><Link href="/auth/login">{t("Sign in")}</Link></Button>}
+      {(state === 'error' || state === 'denied') && <Button variant="outline" onClick={onRetry}><RefreshCw aria-hidden="true" className="size-4"/>{t("Try again")}</Button>}
     </div>
   </section>;
 }

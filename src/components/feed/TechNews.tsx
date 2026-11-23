@@ -9,27 +9,27 @@ import HeadlineTrend from './HeadlineTrend';
 // ─── category config ──────────────────────────────────────────────────────────
 const CATEGORIES = [
   {
-    id: 'ai', label: 'AI / LLM',
+    id: 'ai', label: 'AI · 언어 모델',
     hn: 'LLM GPT Claude artificial intelligence machine learning agent 2025',
     google: 'AI LLM ChatGPT Claude machine learning 2025',
   },
   {
-    id: 'security', label: 'Security',
+    id: 'security', label: '보안',
     hn: 'hacking CVE exploit vulnerability malware ransomware zero-day',
     google: 'CVE vulnerability exploit hacking cybersecurity 2025',
   },
   {
-    id: 'embedded', label: 'Embedded',
+    id: 'embedded', label: '임베디드',
     hn: 'embedded firmware microcontroller IoT RTOS ESP32 RISC-V bare-metal',
     google: 'embedded systems firmware microcontroller IoT RTOS 2025',
   },
   {
-    id: 'research', label: 'Research',
+    id: 'research', label: '연구',
     hn: 'arxiv paper preprint neural network deep learning research',
     google: 'machine learning research paper arxiv preprint 2025',
   },
   {
-    id: 'oss', label: 'Open Source',
+    id: 'oss', label: '오픈 소스',
     hn: 'open source release github rust golang typescript new version',
     google: 'open source release new version programming 2025',
   },
@@ -117,8 +117,8 @@ export default function TechNews() {
       setRefreshed(new Date());
     } catch (e) {
       setError(source === 'hn'
-        ? 'Hacker News를 불러오지 못했습니다.'
-        : 'Google News를 불러오지 못했습니다.');
+        ? 'Hacker News를 불러오지 못했어요. 다시 불러와 주세요.'
+        : 'Google News를 불러오지 못했어요. 다시 불러와 주세요.');
     } finally {
       setLoading(false);
       setJustFinished(true);
@@ -143,8 +143,9 @@ export default function TechNews() {
         {CATEGORIES.map(c => (
           <button
             key={c.id}
+            type="button" aria-pressed={cat === c.id}
             onClick={() => setCat(c.id)}
-            className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+            className={`min-h-11 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
  cat === c.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/70'
  }`}
           >
@@ -154,7 +155,7 @@ export default function TechNews() {
       </div>
 
       {/* source + refresh */}
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <SegmentedTabs
             items={[{ value: 'google', label: '🔍 Google' }, { value: 'hn', label: '🔶 HN' }]}
@@ -162,24 +163,24 @@ export default function TechNews() {
             onChange={(v) => setSrc(v as Source)}
           />
           {total > 0 && (
-            <span className="text-xs text-muted-foreground self-center ml-1 font-medium">{total}건</span>
+            <span className="text-sm text-muted-foreground self-center ml-1 font-medium">{total}건</span>
           )}
         </div>
         <div className="flex items-center gap-2">
           {refreshed && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
               <Zap className="size-2.5 text-green-500" />
               {refreshed.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
-          <Button variant="ghost" size="icon" className="size-7" onClick={() => load(cat, src)} disabled={loading}>
+          <Button variant="ghost" size="icon" aria-label="기술 소식 새로고침" className="size-11" onClick={() => load(cat, src)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
       {error && (
-        <p className="text-destructive text-xs font-bold p-3 bg-destructive/10 rounded-lg">{error}</p>
+        <div role="alert" className="space-y-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm"><p className="text-destructive">{error}</p><Button variant="outline" onClick={() => load(cat, src)} disabled={loading}>뉴스 다시 불러오기</Button></div>
       )}
 
       {(loading || justFinished) && (
@@ -199,10 +200,10 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-lg border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-sm font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{s.title}</p>
-                <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
+                <p className="text-sm font-bold leading-snug group-hover:text-primary transition-colors">{s.title}</p>
+                <div className="flex items-center gap-2.5 mt-1 text-sm text-muted-foreground flex-wrap">
                   <span className="flex items-center gap-0.5"><ChevronUp className="size-2.5" />{s.points ?? 0}</span>
                   <span className="flex items-center gap-0.5"><MessageSquare className="size-2.5" />{s.num_comments ?? 0}</span>
                   {domain(s.url) && <span className="opacity-60 truncate max-w-[150px]">{domain(s.url)}</span>}
@@ -224,10 +225,10 @@ export default function TechNews() {
               target="_blank" rel="noopener noreferrer"
               className="flex gap-3 items-start p-3 rounded-lg border border-border/40 hover:bg-muted/40 hover:border-border transition-all group"
             >
-              <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
+              <span className="text-sm font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i + 1}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
-                <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
+                <p className="text-sm font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
+                <div className="flex items-center gap-2.5 mt-1 text-sm text-muted-foreground flex-wrap">
                   {item.source && <span className="font-medium opacity-70 truncate max-w-[180px]">{item.source}</span>}
                   {item.pubDate && <span className="opacity-40">{ago(item.pubDate)}</span>}
                 </div>
@@ -239,11 +240,11 @@ export default function TechNews() {
       )}
 
       {!loading && total === 0 && !error && (
-        <p className="text-center text-sm text-muted-foreground py-8">결과가 없습니다.</p>
+        <p className="text-center text-sm text-muted-foreground py-8">아직 표시할 뉴스가 없어요. 다른 주제나 출처를 선택해 보세요.</p>
       )}
 
       {total > 0 && (
-        <p className="text-center text-xs text-muted-foreground pt-2">
+        <p className="text-center text-sm text-muted-foreground pt-2">
           {src === 'hn'
             ? <>Via <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">Hacker News</a></>
             : '🔍 Google News · 5분마다 자동 갱신'}

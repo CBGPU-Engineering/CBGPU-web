@@ -23,7 +23,7 @@ const STATUS_BADGE: Record<string, { variant: any; label: string }> = {
   pending:  { variant: 'warning',  label: '준비 중'  },
   approved: { variant: 'success',  label: '배포 준비' },
   rejected: { variant: 'danger',   label: '배포 실패' },
-  deleted:  { variant: 'muted',    label: 'Deleted'  },
+  deleted:  { variant: 'muted',    label: '삭제됨'  },
 };
 
 const SCOPE_ICON: Record<AccessScope, React.ReactNode> = {
@@ -68,12 +68,12 @@ export default function ServerPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="cb-page-title">Login Required</h1>
+          <h1 className="cb-page-title">로그인이 필요해요</h1>
           <p className="cb-page-sub mt-1">
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">
+        <Button onClick={() => router.push('/auth/login?next=%2Fserver')} className="font-semibold px-10 h-12">
           Login
         </Button>
       </div>
@@ -85,9 +85,9 @@ export default function ServerPage() {
       {/* 헤더 */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="cb-page-title">Server Deploy</h1>
+          <h1 className="cb-page-title">서버 프로젝트</h1>
           <p className="cb-page-sub mt-1">
-            남는 CPU 자원으로 가벼운 서버를 배포하세요
+            학교 자원에 맞춰 서버 프로젝트를 만들고 관리해요.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +95,7 @@ export default function ServerPage() {
             <RefreshCw className="size-3.5" />
           </Button>
           <Button
-            className="font-semibold text-xs gap-1.5 h-9"
+            className="font-semibold text-sm gap-1.5 min-h-11"
             onClick={() => router.push('/server/new')}
           >
             <Plus className="size-3.5" /> 새 프로젝트
@@ -134,13 +134,13 @@ export default function ServerPage() {
                       <ResourceStatus value={`${proj.status}:${proj.deployed_at||''}`}><Badge variant={badge.variant as any}>{isRunning?'최근 배포 완료':badge.label}</Badge></ResourceStatus>
                     </div>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      <span className="min-w-0 break-all text-xs font-medium text-muted-foreground">
+                      <span className="min-w-0 break-all text-sm font-medium text-muted-foreground">
                         {proj.deploy_type === 'docker' ? proj.docker_image : proj.git_url?.replace('https://', '')}
                       </span>
-                      <span className="text-xs font-bold text-muted-foreground opacity-50">
+                      <span className="text-sm font-bold text-muted-foreground opacity-50">
                         :{proj.host_port}
                       </span>
-                      <span className="flex items-center gap-0.5 text-xs font-bold text-muted-foreground opacity-50">
+                      <span className="flex items-center gap-0.5 text-sm font-bold text-muted-foreground opacity-50">
                         {SCOPE_ICON[proj.access_scope as AccessScope]}
                         {proj.access_scope}
                       </span>

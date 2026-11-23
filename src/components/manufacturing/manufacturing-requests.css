@@ -1,0 +1,17 @@
+/* Request identity, status and its next action remain together on a phone. */
+@media(max-width:640px){
+ .cb-manufacturing-requests{display:block;width:100%;min-width:0;table-layout:auto}
+ .cb-manufacturing-requests thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .cb-manufacturing-requests tbody{display:block;width:100%}
+ .cb-manufacturing-requests tbody>tr{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:18px 16px;max-width:100%;border-bottom:1px solid var(--border)}
+ .cb-manufacturing-requests tbody>tr:last-child{border-bottom:0}
+ .cb-manufacturing-requests tbody>tr>td{display:block;width:100%;max-width:100%;min-width:0;height:auto;padding:0!important;white-space:normal;overflow-wrap:anywhere;text-align:left;font-family:inherit;font-size:14px;line-height:1.6}
+ .cb-manufacturing-requests td[data-label]:has(>.flex:empty){display:none}
+ .cb-manufacturing-requests td[data-label]::before{content:attr(data-label);display:block;margin-bottom:5px;font-size:14px;font-weight:500;color:var(--muted-foreground)}
+ .cb-manufacturing-requests td [class~="uppercase"]{text-transform:none;letter-spacing:normal}
+ .cb-manufacturing-requests td .flex{min-width:0;max-width:100%}
+ .cb-manufacturing-requests td:last-child>.flex{justify-content:flex-start;flex-wrap:wrap}
+ .cb-manufacturing-requests td :is(a,button){max-width:100%;white-space:normal;overflow-wrap:anywhere}
+ .cb-manufacturing-requests td>button{min-height:44px}
+ .admin-developer-shell main [data-slot=table-container]:has(>.cb-manufacturing-requests),[data-slot=table-container]:has(>.cb-manufacturing-requests){max-height:none;overflow:visible;border-radius:0}
+}

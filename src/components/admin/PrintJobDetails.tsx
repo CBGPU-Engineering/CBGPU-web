@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import{manufacturingProfiles,manufacturingJobSelect,attachManufacturingManagers}from'@/lib/scopedProfiles';
 import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
 import {useManufacturingFile} from '@/lib/manufacturing/useManufacturingFile';
@@ -31,6 +32,7 @@ const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: 
 };
 
 export default function PrintJobDetailPage() {
+  const {t,app}=useAdminLanguage();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
@@ -52,8 +54,8 @@ export default function PrintJobDetailPage() {
     const current=()=>request===generation.current&&expected===currentViewer.current;
     const { data, error } = await supabase.from('print_jobs').select(manufacturingJobSelect(', preferred_printer:preferred_printer_id(name)')).eq('id', id).single().returns<any>();
     if(!current())return;
-    if (error) { showError("Request not found."); router.push(managementBase); return; }
-    const labels=await attachManufacturingManagers(supabase,'print',[data]);if(!current())return;setJobState({viewer:expected,id,value:labels.data[0]});setRequester(null);if(labels.error)showError('Manager display details are unavailable.');
+    if (error) { showError(adminNotice("Request not found.")); router.push(managementBase); return; }
+    const labels=await attachManufacturingManagers(supabase,'print',[data]);if(!current())return;setJobState({viewer:expected,id,value:labels.data[0]});setRequester(null);if(labels.error)showError(adminNotice('Manager display details are unavailable.'));
     setLoading(false);
     if (!scopedFiles&&data.file_path) {
       const { data: signed } = await supabase.storage.from('manufacturing').createSignedUrl(data.file_path, 3600);
@@ -63,7 +65,7 @@ export default function PrintJobDetailPage() {
     }
     if (data.user_id !== user?.id) {
       const { data: profiles,error:profileError } = await manufacturingProfiles(supabase,'print',[data.user_id]);
-      if(!current())return;setRequester(profiles?.[0]||null);if(profileError)showError('Requester details are unavailable.');
+      if(!current())return;setRequester(profiles?.[0]||null);if(profileError)showError(adminNotice('Requester details are unavailable.'));
     }
   };
 
@@ -71,24 +73,24 @@ export default function PrintJobDetailPage() {
 
   const handleCancel = async () => {
     const { error } = await supabase.from('print_jobs').update({ status: 'canceled' }).eq('id', job.id);
-    if (error) showError("Could not cancel: " + error.message);
-    else { showSuccess("Request canceled."); setCancelOpen(false); fetchJob(); }
+    if (error) showError(adminNotice("Could not cancel this request. Refresh its status and try again."));
+    else { showSuccess(adminNotice("Request canceled.")); setCancelOpen(false); fetchJob(); }
   };
 
   const handleMarkDelivered = async () => {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Operation failed: " + error.message); return; }
+    if (error) { showError(adminNotice("Could not save this change. Refresh the job status and try again.")); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess("Marked as delivered.");
+    showSuccess(adminNotice("Marked as delivered."));
     fetchJob();
   };
 
   if (loading||!job) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={56} label="Loading" />
+        <LoadingSpinner size={56} label={t("Loading")} />
       </div>
     );
   }
@@ -103,150 +105,147 @@ export default function PrintJobDetailPage() {
       <div>
         <button
           onClick={() => router.push(managementBase)}
-          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6 min-h-11"
         >
-          <ArrowLeft className="size-3" /> Back
-        </button>
+          <ArrowLeft className="size-3" />  {t("Back")} </button>
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h1 className="cb-page-title">3D print request</h1>
-              <Badge variant={statusInfo.variant} icon={statusInfo.icon}>{statusInfo.label}</Badge>
+              <h1 className="cb-page-title">{t("3D print request")}</h1>
+              <Badge variant={statusInfo.variant} icon={statusInfo.icon}>{t(statusInfo.label)}</Badge>
               {job.status === 'done' && job.delivered_at && (
-                <Badge variant="success" icon={<PackageCheck className="size-3" />}>Delivered</Badge>
+                <Badge variant="success" icon={<PackageCheck className="size-3" />}>{t("Delivered")}</Badge>
               )}
             </div>
-            <p className="text-sm text-muted-foreground font-bold opacity-70">{job.file_name || "No file"}</p>
+            <p className="text-sm text-muted-foreground font-bold opacity-70">{job.file_name || t("No file")}</p>
           </div>
 
           {isOwner && job.status === 'pending' && (
             <Button variant="destructive" className="font-black text-xs uppercase gap-1.5 h-9" onClick={() => setCancelOpen(true)}>
-              <Trash2 className="size-3.5" />  Cancel request
-            </Button>
+              <Trash2 className="size-3.5" />   {t("Cancel request")} </Button>
           )}
           {!isOwner && job.status === 'done' && !job.delivered_at && (
             <div className="flex items-center gap-2">
               <LocateStudentButton studentId={requester?.student_id} studentName={requester?.full_name} />
               <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase gap-1.5 h-9" onClick={handleMarkDelivered}>
-                <PackageCheck className="size-3.5" />  Hand delivered
-              </Button>
+                <PackageCheck className="size-3.5" />   {t("Hand delivered")} </Button>
             </div>
           )}
         </div>
       </div>
 
-      {scopedFiles&&file.error&&<div role="alert" className="rounded-xl border p-4 text-sm space-y-2"><p>Current file access could not be verified. The request is preserved; sign in again or check your equipment permissions.</p><Button type="button" variant="outline" size="sm" onClick={file.reload}>Retry file access</Button></div>}
+      {scopedFiles&&file.error&&<div role="alert" className="rounded-xl border p-4 text-sm space-y-2"><p>{t("Current file access could not be verified. The request is preserved; sign in again or check your equipment permissions.")}</p><Button type="button" variant="outline" size="sm" onClick={file.reload}>{t("Retry file access")}</Button></div>}
       {previewUrl && job.file_name?.toLowerCase().endsWith('.3mf') && (
-        <Model3MFViewer src={previewUrl} english />
+        <Model3MFViewer src={previewUrl} english={!app} />
       )}
 
       <div className="border-2 rounded-3xl overflow-hidden bg-card">
         <div className="px-6 py-4 border-b-2 bg-muted/20">
-          <p className="font-black uppercase tracking-widest text-xs">Details</p>
+          <p className="font-black uppercase tracking-widest text-xs">{t("Details")}</p>
         </div>
         <div className="p-6 grid gap-5">
           {requester && (
             <div>
-              <label className={labelCls}>Requester</label>
-              <span className="font-bold text-sm">{requester.full_name || 'Unknown'} {requester.student_id ? `(${requester.student_id})` : ''}</span>
+              <label className={labelCls}>{t("Requester")}</label>
+              <span className="font-bold text-sm">{requester.full_name || t('Unknown')} {requester.student_id ? `(${requester.student_id})` : ''}</span>
             </div>
           )}
           <div>
-            <label className={labelCls}>Mode</label>
-            <span className="font-bold text-sm">{job.mode === 'beginner' ? "Beginner (manager prepares slicing)" : "Advanced (requester provides a sliced file)"}</span>
+            <label className={labelCls}>{t("Mode")}</label>
+            <span className="font-bold text-sm">{job.mode === 'beginner' ? t("Beginner (manager prepares slicing)") : t("Advanced (requester provides a sliced file)")}</span>
           </div>
           <div className="grid grid-cols-4 gap-4">
             <div>
-              <label className={labelCls}>Quantity</label>
+              <label className={labelCls}>{t("Quantity")}</label>
               <span className="font-bold text-sm">{job.quantity}</span>
             </div>
             <div>
-              <label className={labelCls}>Plates</label>
+              <label className={labelCls}>{t("Plates")}</label>
               <span className="font-bold text-sm">
-                {job.plate_count} files{job.plate_count > 1 && job.status === 'printing' ? ` (${job.plates_completed} completed)` : ''}
+                {job.plate_count}  {t("files")}{job.plate_count > 1 && job.status === 'printing' ? ` (${job.plates_completed} completed)` : ''}
               </span>
             </div>
             <div>
-              <label className={labelCls}>Material</label>
-              <span className="font-bold text-sm">{job.material || "Any"}</span>
+              <label className={labelCls}>{t("Material")}</label>
+              <span className="font-bold text-sm">{job.material || t("Any")}</span>
             </div>
             <div>
-              <label className={labelCls}>Color</label>
-              <span className="font-bold text-sm">{job.color || "Any"}</span>
+              <label className={labelCls}>{t("Color")}</label>
+              <span className="font-bold text-sm">{job.color || t("Any")}</span>
             </div>
           </div>
           {job.purpose && (
             <div>
-              <label className={labelCls}>Purpose</label>
+              <label className={labelCls}>{t("Purpose")}</label>
               <p className="text-sm font-bold whitespace-pre-wrap">{job.purpose}</p>
             </div>
           )}
           {job.preferred_printer?.name && (
             <div>
-              <label className={labelCls}>Preferred printer</label>
+              <label className={labelCls}>{t("Preferred printer")}</label>
               <span className="font-bold text-sm">{job.preferred_printer.name}</span>
             </div>
           )}
           {job.manager?.full_name && (
             <div>
-              <label className={labelCls}>Manager</label>
+              <label className={labelCls}>{t("Manager")}</label>
               <span className="font-bold text-sm">{job.manager.full_name} {job.manager.student_id ? `(${job.manager.student_id})` : ''}</span>
             </div>
           )}
           {job.status === 'rejected' && job.reject_reason && (
             <div>
-              <label className={labelCls}>Rejection reason</label>
+              <label className={labelCls}>{t("Rejection reason")}</label>
               <p className="text-sm font-bold text-destructive whitespace-pre-wrap">{job.reject_reason}</p>
             </div>
           )}
           {(scopedFiles?job.file_path:downloadUrl) && (
             <div>
-              <label className={labelCls}>Model file</label>
-              {scopedFiles?<Button type="button" variant="link" className="h-auto p-0 text-sm" disabled={file.downloading||file.loading} onClick={()=>void file.download(job.file_name||'manufacturing-file')}><Download className="size-3.5"/>{file.downloading?'Downloading…':job.file_name}</Button>:<a href={downloadUrl||undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+              <label className={labelCls}>{t("Model file")}</label>
+              {scopedFiles?<Button type="button" variant="link" className="h-auto p-0 text-sm" disabled={file.downloading||file.loading} onClick={()=>void file.download(job.file_name||'manufacturing-file')}><Download className="size-3.5"/>{file.downloading?t('Downloading…'):job.file_name}</Button>:<a href={downloadUrl||undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
                 <Download className="size-3.5" /> {job.file_name}
               </a>}
             </div>
           )}
           {job.notes && (
             <div>
-              <label className={labelCls}>Notes</label>
+              <label className={labelCls}>{t("Notes")}</label>
               <p className="text-sm font-bold whitespace-pre-wrap">{job.notes}</p>
             </div>
           )}
           {job.printer_id && (
             <div>
-              <label className={labelCls}>Printer</label>
-              <span className="font-bold text-sm">Printer {job.printer_id}</span>
+              <label className={labelCls}>{t("Printer")}</label>
+              <span className="font-bold text-sm">{t("Printer")} {job.printer_id}</span>
             </div>
           )}
           {job.estimated_end_at && job.status === 'printing' && (
             <div>
-              <label className={labelCls}>Estimated finish</label>
-              <span className="font-bold text-sm">{new Date(job.estimated_end_at).toLocaleString('en-US')}</span>
+              <label className={labelCls}>{t("Estimated finish")}</label>
+              <span className="font-bold text-sm">{new Date(job.estimated_end_at).toLocaleString(app?'ko-KR':'en-US')}</span>
             </div>
           )}
           <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/40">
             <div>
-              <label className={labelCls}>Requested</label>
-              <span className="text-xs font-bold text-muted-foreground">{new Date(job.created_at).toLocaleString('en-US')}</span>
+              <label className={labelCls}>{t("Requested")}</label>
+              <span className="text-xs font-bold text-muted-foreground">{new Date(job.created_at).toLocaleString(app?'ko-KR':'en-US')}</span>
             </div>
             {job.completed_at && (
               <div>
-                <label className={labelCls}>Completed</label>
-                <span className="text-xs font-bold text-muted-foreground">{new Date(job.completed_at).toLocaleString('en-US')}</span>
+                <label className={labelCls}>{t("Completed")}</label>
+                <span className="text-xs font-bold text-muted-foreground">{new Date(job.completed_at).toLocaleString(app?'ko-KR':'en-US')}</span>
               </div>
             )}
             {job.collected_at && (
               <div>
-                <label className={labelCls}>Collected</label>
-                <span className="text-xs font-bold text-muted-foreground">{new Date(job.collected_at).toLocaleString('en-US')}</span>
+                <label className={labelCls}>{t("Collected")}</label>
+                <span className="text-xs font-bold text-muted-foreground">{new Date(job.collected_at).toLocaleString(app?'ko-KR':'en-US')}</span>
               </div>
             )}
             {job.delivered_at && (
               <div>
-                <label className={labelCls}>Delivered</label>
-                <span className="text-xs font-bold text-muted-foreground">{new Date(job.delivered_at).toLocaleString('en-US')}</span>
+                <label className={labelCls}>{t("Delivered")}</label>
+                <span className="text-xs font-bold text-muted-foreground">{new Date(job.delivered_at).toLocaleString(app?'ko-KR':'en-US')}</span>
               </div>
             )}
           </div>
@@ -255,9 +254,9 @@ export default function PrintJobDetailPage() {
 
       <ConfirmDialog
         open={cancelOpen}
-        title="Cancel request"
-        description="This cancels the 3D print request. This action cannot be undone."
-        confirmLabel="Cancel request"
+        title={t("Cancel request")}
+        description={t("This cancels the 3D print request. This action cannot be undone.")}
+        confirmLabel={t("Cancel request")}
         onConfirm={handleCancel}
         onCancel={() => setCancelOpen(false)}
       />

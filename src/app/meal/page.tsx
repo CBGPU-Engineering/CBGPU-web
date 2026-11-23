@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback,useRef } from 'react';
 import { ChevronLeft, ChevronRight, Sunrise, Sun, Moon, UtensilsCrossed, Bell, BellOff } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { getNativeBridge, onNativeBridgeReady } from '@/lib/nativeBridge';
+import { Button } from '@/components/ui/button';
 import { TimePicker } from '@/components/ui/time-picker';
 
 interface MealItem {
@@ -160,9 +161,9 @@ function MealPageContent() {
   }
 
   return (
-    <section className="cb-page-content max-w-2xl mx-auto px-4 py-8 space-y-8">
+    <section className="cb-page-content max-w-2xl mx-auto py-4 space-y-6">
       <div className="space-y-1">
-        <p className="text-xs font-semibold text-muted-foreground">{scope.status==='legacy'?'충북과학고 학교급식':(scope.school?.official_name||'선택한 학교')+' 학교급식'}</p>
+        <p className="text-sm font-semibold text-muted-foreground">{scope.status==='legacy'?'충북과학고 학교급식':(scope.school?.official_name||'선택한 학교')+' 학교급식'}</p>
         <h1 className="cb-page-title">오늘 뭐 나와요?</h1>
       </div>
 
@@ -170,7 +171,7 @@ function MealPageContent() {
         <div className="flex items-center gap-3 p-4 rounded-2xl bg-card ring-1 ring-foreground/5">
           <button
             onClick={toggleMealAlarm}
-            className={`flex items-center justify-center size-10 rounded-lg shrink-0 transition-colors ${
+            className={`flex items-center justify-center size-11 rounded-lg shrink-0 transition-colors ${
  alarmOn ? 'bg-primary/15 text-primary' : 'bg-foreground/5 text-muted-foreground'
  }`}
             aria-pressed={alarmOn}
@@ -179,7 +180,7 @@ function MealPageContent() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold">매일 급식 알림</p>
-            <p className="text-xs text-muted-foreground">{alarmOn ? `매일 ${alarmTime}에 알려드려요` : '꺼져 있어요'}</p>
+            <p className="text-sm text-muted-foreground">{alarmOn ? `매일 ${alarmTime}에 알려드려요` : '꺼져 있어요'}</p>
           </div>
           <TimePicker value={alarmTime} disabled={!alarmOn} onChange={changeMealAlarmTime} />
         </div>
@@ -188,19 +189,19 @@ function MealPageContent() {
       {/* 날짜 네비게이션 — 큰 날짜 카드, 좌우로 물리적으로 밀어내는 느낌 */}
       <div className="flex items-center gap-3">
         <button
-          onClick={() => navigate(-1)}
+          aria-label="이전 날 급식" onClick={() => navigate(-1)}
           className="flex items-center justify-center size-12 rounded-full bg-card ring-1 ring-foreground/5 shadow-sm shrink-0 active:scale-90 transition-transform"
         >
           <ChevronLeft className="size-5" />
         </button>
 
         <div key={date} className={`flex-1 text-center overflow-hidden ${slideDir === 'left' ? 'animate-in slide-in-from-right-8' : 'animate-in slide-in-from-left-8'} fade-in duration-300 ease-[var(--ease-spring)]`}>
-          <p className="text-2xl font-semibold tracking-tight">{full} <span className="text-muted-foreground font-bold">{dow}</span></p>
-          <p className="text-xs font-bold text-muted-foreground/70">{year}</p>
+          <p className="text-xl sm:text-2xl font-semibold tracking-tight">{full} <span className="text-muted-foreground font-bold">{dow}</span></p>
+          <p className="text-sm font-bold text-muted-foreground">{year}</p>
         </div>
 
         <button
-          onClick={() => navigate(1)}
+          aria-label="다음 날 급식" onClick={() => navigate(1)}
           className="flex items-center justify-center size-12 rounded-full bg-card ring-1 ring-foreground/5 shadow-sm shrink-0 active:scale-90 transition-transform"
         >
           <ChevronRight className="size-5" />
@@ -210,7 +211,7 @@ function MealPageContent() {
       {date !== today && (
         <button
           onClick={() => { setSlideDir(date > today ? 'right' : 'left'); setDate(today); }}
-          className="block mx-auto text-xs font-semibold text-primary active:scale-95 transition-transform"
+          className="block min-h-11 mx-auto text-sm font-semibold text-primary active:scale-95 transition-transform"
         >
           ← 오늘로 돌아가기
         </button>
@@ -222,7 +223,7 @@ function MealPageContent() {
           <LoadingSpinner done={justLoaded} size={64} label="급식 정보 불러오는 중" />
         </div>
       ) : data?.error ? (
-        <Empty icon={<UtensilsCrossed className="size-10 mx-auto mb-3 opacity-30" />} title={data.error} />
+        <div role="alert" className="space-y-3 rounded-2xl border border-border bg-card p-6 text-center"><p className="font-medium">{data.error}</p><Button variant="outline" onClick={() => void load(date)}>급식 다시 불러오기</Button></div>
       ) : !data?.meals?.length ? (
         <Empty
           icon={<UtensilsCrossed className="size-10 mx-auto mb-3 opacity-30" />}
@@ -247,7 +248,7 @@ function MealPageContent() {
                     <p className="font-semibold text-lg tracking-tight">{meal.type}</p>
                   </div>
                   {meal.calories && (
-                    <span className="text-xs font-bold text-muted-foreground">{meal.calories}</span>
+                    <span className="text-sm font-bold text-muted-foreground">{meal.calories}</span>
                   )}
                 </div>
                 <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5">
@@ -272,7 +273,7 @@ function Empty({ icon, title, sub }: { icon: React.ReactNode; title: string; sub
     <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground">
       {icon}
       <p className="font-semibold text-base">{title}</p>
-      {sub && <p className="text-xs mt-1 opacity-60">{sub}</p>}
+      {sub && <p className="text-sm mt-2 leading-relaxed">{sub}</p>}
     </div>
   );
 }
