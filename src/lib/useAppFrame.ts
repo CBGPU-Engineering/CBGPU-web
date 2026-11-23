@@ -7,10 +7,15 @@ export const APP_FLAG='cbgpu-return-to-app';
  */
 export function useAppFrame(server:boolean){
  const [flag,setFlag]=useState(false);
- useEffect(()=>{try{
-  if(new URL(location.href).searchParams.get('from')==='app')sessionStorage.setItem(APP_FLAG,'1');
-  if(/;\s*wv\)/.test(navigator.userAgent))sessionStorage.setItem(APP_FLAG,'1');
-  setFlag(sessionStorage.getItem(APP_FLAG)==='1');
- }catch{}},[]);
+ useEffect(()=>{
+  const explicit=new URL(location.href).searchParams.get('from')==='app'||/;\s*wv\)/.test(navigator.userAgent);
+  let remembered=false;
+  try{
+   if(explicit)sessionStorage.setItem(APP_FLAG,'1');
+   remembered=sessionStorage.getItem(APP_FLAG)==='1';
+  }catch{}
+  // A storage restriction must not erase an explicit WebView/app request.
+  setFlag(explicit||remembered);
+ },[]);
  return server||flag;
 }

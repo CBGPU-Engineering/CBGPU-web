@@ -107,12 +107,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const adminSite = host === 'admin.cbgpu.com';
   const appWebView=/;\s*wv\)/.test(requestHeaders.get('user-agent')||'');
   const manufacturingSite=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host||'');
+  const englishManagement=(adminSite||manufacturingSite)&&!appWebView&&!appSite;
   // The equipment gateway (portal) adds this header only while its separate login is in front of the site (never trust it elsewhere).
   const portalGate = adminSite || (manufacturingSite && requestHeaders.get('x-cbgpu-portal-gate') === '1');
   const publicSite = section === 'docs' || section === 'arxiv' || host === 'docs.cbgpu.com' || host === 'arxiv.cbgpu.com';
 
   return (
-    <html lang={adminSite||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
+    <html lang={englishManagement ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
       <head>
         {portalGate&&<script dangerouslySetInnerHTML={{ __html: 'window.__CBGPU_PORTAL_GATE=true' }} />}
         {process.env.CBGPU_DEMO!=='1'&&<link rel="preconnect" href="https://cdn.jsdelivr.net" />}
@@ -133,7 +134,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
-            <AdIdentityBoundary><SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||manufacturingSite}>
+            <AdIdentityBoundary><SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={englishManagement}>
               {adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : schoolAdminPage ? <ScopedSchoolAdminShell appWebView={appSite||appWebView}><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : publicBrowsingPage ? <PublicShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite} sessionHint={sessionHint}><AuthGate workspaceSite>{children}</AuthGate></PublicShell> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}

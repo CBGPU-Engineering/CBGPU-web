@@ -8,6 +8,7 @@ import {AnimatePresence,motion,useReducedMotion} from 'motion/react';
 import {productSpring} from '@/lib/motion';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { Input } from '@/components/ui/input';
+import { useAppFrame } from '@/lib/useAppFrame';
 
 type AlertType = 'success' | 'error' | 'info';
 
@@ -40,7 +41,9 @@ interface AlertCtx {
 
 const Ctx = createContext<AlertCtx | null>(null);
 
-export function AlertProvider({ children, english = false }: { children: ReactNode; english?: boolean }) {
+export function AlertProvider({ children, english: englishInterface = false }: { children: ReactNode; english?: boolean }) {
+  const appFrame=useAppFrame(false);
+  const english=englishInterface&&!appFrame;
   const [s, setS] = useState<AlertState>({ open: false, title: '', message: '', type: 'info' });
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastId = useRef(0);
