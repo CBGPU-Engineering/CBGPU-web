@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { boundedSchoolBody } from '@/lib/schoolsProxySecurity';
 
 export const dynamic = 'force-dynamic';
+const responseHeaders = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
+const MAX_FEED_BYTES = 1_048_576;
 
 interface NewsItem {
   title: string;
@@ -42,8 +45,8 @@ export async function GET(request: NextRequest) {
   const hl = searchParams.get('hl') || 'en-US';
 
   try {
-    const rssUrl =
-      `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=${hl}&gl=US&ceid=US:en&num=50`;
+    const rssUrl = new URL('https://news.google.com/rss/search');
+    rssUrl.search = new URLSearchParams({ q, hl, gl: 'US', ceid: 'US:en', num: '50' }).toString();
 
     const res = await fetch(rssUrl, {
       headers: {
@@ -52,14 +55,22 @@ export async function GET(request: NextRequest) {
         Accept: 'application/rss+xml, application/xml, text/xml, */*',
       },
       next: { revalidate: 300 },
+      redirect: 'error',
+      signal: AbortSignal.timeout(8000),
     });
 
-    if (!res.ok) throw new Error(`RSS ${res.status}`);
-    const xml = await res.text();
+    const mime = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
+    if (!res.ok || mime && !['application/rss+xml', 'application/xml', 'text/xml'].includes(mime) || Number(res.headers.get('content-length') || 0) > MAX_FEED_BYTES) {
+      void res.body?.cancel().catch(() => {});
+      throw new Error('News feed unavailable');
+    }
+    const xml = await boundedSchoolBody(res.body, MAX_FEED_BYTES);
+    // A challenge/error page or truncated feed is an outage, not zero matches.
+    if (!/^\s*(?:<\?xml[^>]*\?>\s*)?(?:<!--[\s\S]*?-->\s*)*<rss(?:\s|>)/i.test(xml) || !/<channel(?:\s|>)/i.test(xml) || !/<\/channel>\s*<\/rss>\s*$/i.test(xml)) throw new Error('Invalid RSS envelope');
     const items = parseRSS(xml);
-    return NextResponse.json({ items });
-  } catch (err) {
-    console.error('[news/route]', err);
-    return NextResponse.json({ items: [], error: String(err) }, { status: 500 });
+    if (/<item(?:\s|>)/i.test(xml) && !items.length) throw new Error('News items unavailable');
+    return NextResponse.json({ items }, { headers: responseHeaders });
+  } catch {
+    return NextResponse.json({ items: [], error: '뉴스를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.' }, { status: 502, headers: responseHeaders });
   }
 }
