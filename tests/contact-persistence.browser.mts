@@ -5,7 +5,7 @@ import fs from 'node:fs';
 const origin = process.env.CBGPU_CONTACT_TEST_ORIGIN || 'http://localhost:13980';
 assert.match(origin, /^http:\/\/(localhost|127\.0\.0\.1):\d+$/);
 const output = '/tmp/cbgpu-contact-persistence'; fs.mkdirSync(output, { recursive: true });
-const browser = await chromium.launch({ headless: true, executablePath: '/tmp/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const browser = await chromium.launch({ headless: true, ...(process.env.CBGPU_BROWSER_EXECUTABLE ? { executablePath: process.env.CBGPU_BROWSER_EXECUTABLE } : {}), args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 try {
 for (const config of [
  { name: 'desktop-light', width: 1440, height: 1000, colorScheme: 'light' },

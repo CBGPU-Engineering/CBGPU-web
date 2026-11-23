@@ -19,7 +19,7 @@ const built = await build({ stdin: { contents: fixture, resolveDir: process.cwd(
 const js = built.outputFiles.find(f => f.path.endsWith('.js'))!.text;
 const css = (await postcss([tailwind()]).process(fs.readFileSync('src/app/globals.css', 'utf8'), { from: path.resolve('src/app/globals.css') })).css;
 const out = '/tmp/cbgpu-polls-atomic-browser';fs.mkdirSync(out,{recursive:true});
-const browser=await chromium.launch({executablePath:'/tmp/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+const browser=await chromium.launch({...(process.env.CBGPU_BROWSER_EXECUTABLE?{executablePath:process.env.CBGPU_BROWSER_EXECUTABLE}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
 try { for(const config of [{width:390,dark:false,app:false},{width:390,dark:true,app:false},{width:1280,dark:false,app:false},{width:1280,dark:true,app:false},{width:393,dark:true,app:true}]) {
  const page=await browser.newPage({viewport:{width:config.width,height:950},colorScheme:config.dark?'dark':'light',reducedMotion:'reduce',...(config.app?{userAgent:'Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 Version/4.0 Chrome/131.0.0.0 Mobile Safari/537.36'}:{})});
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));

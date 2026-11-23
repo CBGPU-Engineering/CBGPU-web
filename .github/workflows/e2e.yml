@@ -29,6 +29,15 @@ jobs:
         run: node tests/manufacturing/queue-select-browser.mts
       - name: School scope loading and permission isolation
         run: node tests/schools/scope-loading-browser.mts
+      - name: Persistence and private-result UI regression
+        run: |
+          node tests/polls-editor-atomic.browser.mts
+          node tests/polls-response-atomic.browser.mts
+          node tests/polls-read-recovery.browser.mts
+          node tests/polls-mutation-ack.browser.mts
+          node tests/materials-uncertain-upload.browser.mts
+          node tests/ui/admin-alert-language.browser.mts
+          node tests/ui/oil-ui-controls.browser.mts
       - name: Browser demo
         id: browser_demo
         run: |
