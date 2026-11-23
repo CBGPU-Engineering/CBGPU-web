@@ -36,3 +36,7 @@
 
 /* Result count and its scope note sit in the free space right of the sort/rows/density controls. */
 .admin-developer-shell .admin-list-options .admin-list-summary{margin-left:auto;display:grid;gap:2px;text-align:right;max-width:100%}.admin-developer-shell .admin-list-summary p{margin:0}@media(max-width:720px){.admin-developer-shell .admin-list-options .admin-list-summary{margin-left:0;text-align:left;width:100%}}
+
+/* GPU history keeps identity, purpose and actions readable together; smaller screens use cards. */
+.admin-developer-shell .admin-gpu-history-table{table-layout:fixed;min-width:0}
+.admin-developer-shell .admin-gpu-history-table :is(td,th){white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;max-width:none;font-size:14px;padding:14px 16px!important}

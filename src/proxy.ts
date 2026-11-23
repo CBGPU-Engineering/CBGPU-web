@@ -20,7 +20,8 @@ export function proxy(request: NextRequest) {
     if(path==='/api'||path.startsWith('/api/')||path.startsWith('/backend/'))return NextResponse.rewrite(new URL(request.nextUrl.pathname+request.nextUrl.search,'http://127.0.0.1:'+Number(process.env.CBGPU_DEMO_API_PORT||54329)));
     // Loopback-only visual checks can exercise the real desktop frame as well as the app.
     const mode=request.nextUrl.searchParams.get('mode')==='researcher'?'researcher':'student',desktop=request.nextUrl.searchParams.get('demo-frame')==='web';
-    const h=new Headers(request.headers);h.set('x-cbgpu-public-host',desktop?mode+'.cbgpu.com':'app.cbgpu.com');h.set('x-cbgpu-app',desktop?'0':'1');h.set('x-cbgpu-path',path);h.set('x-cbgpu-mode',mode);
+    const adminPreview=request.nextUrl.searchParams.get('demo-frame')==='admin'&&(path==='/admin'||path.startsWith('/admin/')); // Synthetic loopback only; production does not enter this branch.
+    const h=new Headers(request.headers);h.set('x-cbgpu-public-host',adminPreview?'admin.cbgpu.com':desktop?mode+'.cbgpu.com':'app.cbgpu.com');h.set('x-cbgpu-app',adminPreview||desktop?'0':'1');h.set('x-cbgpu-path',path);h.set('x-cbgpu-mode',mode);
     const response=path==='/'?NextResponse.rewrite(new URL('/workspace'+request.nextUrl.search,request.url),{request:{headers:h}}):NextResponse.next({request:{headers:h}});
     response.headers.set('Content-Security-Policy',`default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws://localhost:${Number(process.env.CBGPU_DEMO_PORT||3100)} ws://127.0.0.1:${Number(process.env.CBGPU_DEMO_PORT||3100)}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'`);
     response.headers.set('X-Robots-Tag','noindex, nofollow');return response;

@@ -21,6 +21,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import { PersonSearchSelect } from '@/components/manufacturing/PersonSearchSelect';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import MaterialsStorage from '@/components/admin/MaterialsStorage';
+import {filterAdminGpuReservations,matchesAdminGpuView,adminGpuViews,adminGpuHistoryBefore} from '@/lib/adminGpuReservations';
 import { Trash2 } from 'lucide-react';
 
 type AdminTab = 'gpu' | 'server' | 'accounts' | 'manufacture' | 'materials';
@@ -35,7 +36,7 @@ export default function AdminPage({sectionOverride}:{sectionOverride?:AdminTab})
 
 function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialReview:boolean}) {
   const { isAdmin, isLoading: authLoading } = useAuth();
-  const { showError, showSuccess } = useAlert();
+  const { showError, showSuccess, confirm } = useAlert();
   const [tab, setTab] = useState<AdminTab>(initialTab);
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
@@ -85,27 +86,52 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const [reservations, setReservations] = useState<any[]>([]);
   const [gpuLoading, setGpuLoading] = useState(true);
   const [gpuJustFinished, setGpuJustFinished] = useState(false);
+  const [gpuHasMore,setGpuHasMore]=useState(false);
+  const [gpuLoadingMore,setGpuLoadingMore]=useState(false);
+  const gpuReadVersion=useRef(0);
+  const [clockNow,setClockNow]=useState(Date.now);
+  useEffect(()=>{const timer=setInterval(()=>setClockNow(Date.now()),30000);return()=>clearInterval(timer)},[]);
 
   const fetchReservations = async () => {
+    const version=++gpuReadVersion.current;
     setGpuLoading(true);
     setLoadErrors(v => ({ ...v, gpu: undefined }));
     try {
     const { data, error } = await supabase
       .from('reservations')
       .select(`*, profiles:user_id (full_name, student_id)`)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false, nullsFirst:false }).order('id',{ascending:false})
       .limit(1000);
 
+    if(version!==gpuReadVersion.current)return;
     if (error) { setLoadErrors(v => ({ ...v, gpu: "Could not load GPU reservations." })); showError("Could not load data."); }
-    else { setReservations(data || []); }
-    } catch { setLoadErrors(v => ({ ...v, gpu: "Could not load the list. Please try again." })); }
+    else { setReservations(data || []); setGpuHasMore((data?.length||0)===1000); }
+    } catch { if(version===gpuReadVersion.current)setLoadErrors(v => ({ ...v, gpu: "Could not load the list. Please try again." })); }
+    if(version!==gpuReadVersion.current)return;
     setGpuLoading(false);
     setGpuJustFinished(true);
     setTimeout(() => setGpuJustFinished(false), 600);
   };
 
+  async function loadOlderReservations(){
+    if(gpuLoading||gpuLoadingMore||!gpuHasMore)return;
+    const version=gpuReadVersion.current,last=reservations.at(-1);if(!last)return;
+    setGpuLoadingMore(true);
+    try{
+      const {data,error}=await supabase.from('reservations').select('*, profiles:user_id (full_name, student_id)').order('created_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).or(adminGpuHistoryBefore(last)).limit(1000);
+      if(version!==gpuReadVersion.current)return;
+      if(error)throw error;
+      setReservations(previous=>[...new Map([...previous,...(data||[])].map(row=>[row.id,row])).values()]);
+      setGpuHasMore((data?.length||0)===1000);setLoadErrors(previous=>({...previous,gpu:undefined}));
+    }catch{if(version===gpuReadVersion.current)setLoadErrors(previous=>({...previous,gpu:'Could not load older reservations. Your loaded records are still available.'}))}
+    finally{setGpuLoadingMore(false)}
+  }
+
   async function updateStatus(id: string, newStatus: 'approved' | 'rejected' | 'pending', gpuId?: number) {
     return runRowAction('gpu:' + id, async () => {
+    const observed=reservations.find(row=>row.id===id);
+    if(!observed){showError('Reservation no longer loaded. Refresh the list.');return;}
+    if(newStatus==='pending'&&!await confirm({title:'Return this reservation to pending?',message:'This removes its approval. The user may lose GPU access, including an active session. The reservation record is retained.',confirmLabel:'Return to pending',cancelLabel:'Keep current status'}))return;
     if (newStatus === 'approved' && gpuId === undefined) { showError("A GPU number is required."); return; }
     if (newStatus === 'approved' && gpuId !== undefined) {
       const target = reservations.find(r => r.id === id);
@@ -124,7 +150,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       else { showSuccess("Reservation approved."); await fetchReservations(); }
       return;
     }
-    const { data, error } = await supabase.from('reservations').update({ status: newStatus }).eq('id', id).select('id');
+    const { data, error } = await supabase.from('reservations').update({ status: newStatus }).eq('id', id).eq('status',observed.status).eq('end_time',observed.end_time).gt('end_time',new Date().toISOString()).select('id');
     if (error || !data?.length) showError("Operation failed: " + (error?.message || "No reservations were changed."));
     else { showSuccess(`Status changed to ${newStatus}.`); await fetchReservations(); }
     });
@@ -399,7 +425,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     new Date(r.end_time) > new Date(target.start_time)
   );
   const matchesQuery = (...values: unknown[]) => values.some(value => String(value ?? '').toLocaleLowerCase().includes(deferredQuery.trim().toLocaleLowerCase()));
-  const filteredReservations = reservations.filter(r => (!needsReviewOnly || (r.status === 'pending' && new Date(r.end_time) > new Date())) && (gpuFilter === 'all' || String(r.gpu_id) === gpuFilter) && (statusFilter === 'all' || (statusFilter === 'ended' ? new Date(r.end_time) <= new Date() : r.status === statusFilter)) && matchesQuery(r.profiles?.full_name, r.profiles?.student_id, r.gpu_id, r.purpose));
+  const gpuView=needsReviewOnly?'pending':statusFilter;
+  const filteredReservations = filterAdminGpuReservations(reservations,{view:gpuView,gpu:gpuFilter,query:deferredQuery,now:clockNow});
+  const gpuViewLabels:Record<string,string>={all:'All reservations',pending:'Pending approval',approved:'Approved',active:'In use',upcoming:'Upcoming',ended:'Ended',rejected:'Rejected'};
   const filteredProjects = cpuProjects.filter(p => (!needsReviewOnly || p.status === 'pending') && (statusFilter === 'all' || p.status === statusFilter) && matchesQuery(p.name, p.user_email, p.profiles?.full_name, p.profiles?.student_id));
   const schoolOptions=accountSchoolOptions(profiles);
   const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || accountState(p)!=='approved') && (statusFilter==='all'||accountState(p)===statusFilter) && (roleFilter==='all'||(['student','teacher','external'].includes(roleFilter)?accountSchools(p).some(school=>(schoolFilter==='all'||school.school_id===schoolFilter)&&school.membership_type===roleFilter.toUpperCase()):roleFilter==='admin'?p.is_admin===true:p.is_laser_cut_manager===true||p.is_wakeup_manager===true)) && matchesQuery(p.full_name,accountStudentNumberDisplay(p,schoolFilter),p.email,...accountSchoolSearch(p)));
@@ -427,12 +455,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       <section>
         <div className="page-heading">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">Administration</h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{tab==='gpu'?'GPU reservations':tab==='server'?'Server deployments':tab==='accounts'?'Accounts & memberships':'Administration'}</h1>
           </div>
 
         </div>
 
-        <div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Review queues">
+        {tab!=='gpu'&&<div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Review queues">
           {([
             ['gpu', "Upcoming GPU requests", pendingGpuCount, gpuLoading],
             ['server', "Pending deployments", pendingCpuCount, cpuLoading],
@@ -445,16 +473,17 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
               <span className="mt-2 block text-xs text-muted-foreground">Review list →</span>
             </button>
           ))}
-        </div>
+        </div>}
 
 
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
-          <h2 className="font-semibold text-lg">{tab === 'gpu' ? "GPU reservations" : tab === 'server' ? "Server deployments" : "Accounts & school membership"}</h2>
+          {tab!=='gpu'&&<h2 className="font-semibold text-lg">{tab === 'server' ? "Server deployments" : "Accounts & school membership"}</h2>}
+          {tab==='gpu'&&<><p className="text-sm text-muted-foreground">Chungbuk Science High School · GPU #1–4 · All approvals and reservation history</p><div className="flex flex-wrap gap-2" role="group" aria-label="Reservation views">{adminGpuViews.map(view=><Button key={view} type="button" variant={gpuView===view?'secondary':'outline'} className="min-h-11 gap-2" aria-pressed={gpuView===view} aria-label={gpuViewLabels[view]} onClick={()=>{setNeedsReviewOnly(false);setStatusFilter(view);setPage(1)}}>{view==='all'?'All':view==='pending'?'Pending':gpuViewLabels[view]}<span className="tabular-nums">{reservations.filter(row=>matchesAdminGpuView(row,view,clockNow)).length}</span></Button>)}</div>{gpuView!=='all'&&<p role="status" className="text-sm">Showing {gpuViewLabels[gpuView]||gpuView}. <Button variant="link" className="min-h-11 px-1" onClick={()=>{setNeedsReviewOnly(false);setStatusFilter('all')}}>Show all reservations</Button></p>}</>}
           <div className="flex flex-wrap items-end gap-3">
-            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU or purpose"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
-            <Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>
+            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU, purpose or reservation ID"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
+            {tab!=='gpu'&&<Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>}
             {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all' || schoolFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>Clear filters</Button>}
-            <label className="text-xs font-semibold space-y-2"><span className="block">Status</span><Dropdown aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option>{tab === 'gpu' && <option value="ended">Ended</option>}</>}</Dropdown></label>
+            {tab!=='gpu'&&<label className="text-xs font-semibold space-y-2"><span className="block">Status</span><Dropdown aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option></>}</Dropdown></label>}
             {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label="Filter by GPU" value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All GPUs</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>GPU #{id}</option>)}</Dropdown></label>}
             {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">School</span><Dropdown aria-label="Filter accounts by school" value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">All schools</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">No school affiliation</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">School information unavailable</option>}</Dropdown></label>}
             {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><Dropdown aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="external">External collaborators</option><option value="admin">Platform administrators</option><option value="manager">Laser and music managers</option></Dropdown></label>}
@@ -466,7 +495,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             <label>Density<Dropdown aria-label="Table density" value={density} onChange={e => setDensity(e.target.value)}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></Dropdown></label>
             <div className="admin-list-summary">
             <p role="status" className="text-sm text-foreground">{listError ? "Could not refresh the list." : listLoading ? "Loading records…" : `${resultCount} results · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)} shown`}</p>
-            {tab !== 'accounts' && <p className="text-xs text-muted-foreground">Search and counts cover the most recent 1,000 loaded records.</p>}
+            {tab === 'server' && <p className="text-xs text-muted-foreground">Search and counts cover the most recent 1,000 loaded records.</p>}
+            {tab==='gpu'&&<p className="text-sm text-muted-foreground">{reservations.length.toLocaleString()} loaded{gpuHasMore?' · Load older records below':!listLoading&&!listError?' · End of history':''}. Search covers loaded records.</p>}
             </div>
           </div>
           {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{listError}</p><p className="mt-2 text-muted-foreground">Previously loaded records remain below. Refresh to try again.</p></div>}
@@ -479,7 +509,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         {tab === 'gpu' && (
           <div className="border rounded-3xl bg-card overflow-hidden shadow-sm">
             {/* 모바일: 가로 스크롤 없이 바로 승인/거절 — 카드 목록 */}
-            <div className="md:hidden divide-y">
+            <div className="xl:hidden divide-y">
               {gpuLoading || gpuJustFinished ? (
                 <div className="py-16 flex items-center justify-center"><LoadingSpinner done={gpuJustFinished} size={48} label="Loading reservations" /></div>
               ) : visibleReservations.length === 0 ? (
@@ -488,19 +518,20 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                 visibleReservations.map((res) => {
                   const start = new Date(res.start_time);
                   const end = new Date(res.end_time);
-                  const isEnded = new Date() > end;
+                  const isEnded = matchesAdminGpuView(res,'ended',clockNow);
                   const hasConflict = conflictsWithApproved(res);
                   const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
                   return (
-                    <div key={res.id} className="p-4 space-y-3">
+                    <article key={res.id} aria-label={'GPU #'+res.gpu_id+' reservation'} className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex flex-col min-w-0">
                           <span className="font-black text-sm uppercase tracking-tight truncate">{res.profiles?.full_name || "Account unavailable"}</span>
-                          <span className="text-[10px] text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
+                          <span className="text-sm text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
                         </div>
                         <span className="font-black italic text-primary text-sm shrink-0">GPU #{res.gpu_id}</span>
                       </div>
-                      <div className="bg-muted/50 px-3 py-2 rounded-xl border border-border/50 text-[11px] font-bold leading-tight">
+                      <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||'No purpose provided'}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">Reservation details</summary><dl className="space-y-1 break-all"><div><dt>Reservation ID</dt><dd>{res.id}</dd></div><div><dt>Requested</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString('en-US'):'Unavailable'}</dd></div></dl></details>
+                      <div className="bg-muted/50 px-3 py-2 rounded-xl border border-border/50 text-sm leading-relaxed">
                         {start.toLocaleString('en-US', dateOptions)}
                         <span className="opacity-30 mx-1">→</span>
                         {end.toLocaleString('en-US', dateOptions)}
@@ -509,37 +540,37 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         <div>
                           {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
                           {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">Conflicts with an approved reservation</p>}
-                          {res.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
+                          {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?'Ended':start.getTime()>clockNow?'Upcoming':'In use'}</p></>}
                           {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
                         </div>
                         {isEnded ? (
-                          <span className="text-[10px] font-black uppercase opacity-30">Session Finished</span>
+                          <span className="text-sm font-black uppercase opacity-30">Session Finished</span>
                         ) : res.status === 'pending' ? (
                           <div className="flex gap-2">
-                            <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
-                            <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
+                            <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
+                            <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
                           </div>
                         ) : (
-                          <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
+                          <Button size="sm" variant="outline" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
                             <Undo2 className="size-3" /> Reset
                           </Button>
                         )}
                       </div>
-                    </div>
+                    </article>
                   );
                 })
               )}
             </div>
 
-            <div className="hidden md:block overflow-x-auto">
-              <Table className="data-table">
+            <div className="hidden xl:block overflow-x-auto">
+              <Table className="data-table admin-gpu-history-table"><colgroup><col className="w-[27%]"/><col className="w-[11%]"/><col className="w-[27%]"/><col className="w-[15%]"/><col className="w-[20%]"/></colgroup>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">Applicant</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">GPU Unit</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Time Frame</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">Actions</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6">Applicant</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">GPU Unit</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">Time Frame</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">Status</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -551,7 +582,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                     visibleReservations.map((res) => {
                       const start = new Date(res.start_time);
                       const end = new Date(res.end_time);
-                      const isEnded = new Date() > end;
+                      const isEnded = matchesAdminGpuView(res,'ended',clockNow);
                       const hasConflict = conflictsWithApproved(res);
                       const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
                       return (
@@ -559,11 +590,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           <TableCell className="py-5 px-6">
                             <div className="flex flex-col">
                               <span className="font-black text-sm uppercase tracking-tight">{res.profiles?.full_name || "Account unavailable"}</span>
-                              <span className="text-[10px] text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
+                              <span className="text-sm text-muted-foreground">{res.profiles?.student_id || res.user_email}</span>
+                              <p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||'No purpose provided'}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">Reservation details</summary><dl className="space-y-1 break-all"><div><dt>Reservation ID</dt><dd>{res.id}</dd></div><div><dt>Requested</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString('en-US'):'Unavailable'}</dd></div></dl></details>
                             </div>
                           </TableCell>
                           <TableCell className="font-black italic text-primary">GPU #{res.gpu_id}</TableCell>
-                          <TableCell className="text-[11px] font-bold leading-tight py-5">
+                          <TableCell className="text-sm font-bold leading-tight py-5">
                             <div className="bg-muted/50 px-3 py-2 rounded-xl inline-block border border-border/50">
                               {start.toLocaleString('en-US', dateOptions)} <br/>
                               <span className="opacity-30 mx-1">to</span> {end.toLocaleString('en-US', dateOptions)}
@@ -572,20 +604,20 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           <TableCell className="py-5">
                             {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
                             {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">Conflicts with an approved reservation</p>}
-                            {res.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
+                            {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?'Ended':start.getTime()>clockNow?'Upcoming':'In use'}</p></>}
                             {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
                           </TableCell>
                           <TableCell className="text-right py-5 px-6">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex flex-wrap justify-end gap-2">
                               {isEnded ? (
-                                <span className="text-[10px] font-black uppercase opacity-30 px-4">Session Finished</span>
+                                <span className="text-sm font-black uppercase opacity-30 px-4">Session Finished</span>
                               ) : res.status === 'pending' ? (
                                 <>
-                                  <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
-                                  <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
+                                  <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
+                                  <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
                                 </>
                               ) : (
-                                <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
+                                <Button size="sm" variant="outline" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
                                   <Undo2 className="size-3" /> Reset
                                 </Button>
                               )}
@@ -601,6 +633,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           </div>
         )}
 
+        {tab==='gpu'&&gpuHasMore&&<div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={gpuLoading||gpuLoadingMore} onClick={()=>void loadOlderReservations()}>{gpuLoadingMore?'Loading older reservations…':'Load older reservations'}</Button><p className="text-sm text-muted-foreground">Adds the next 1,000 records without changing your filters.</p></div>}
         {/* ── 서버 배포 탭 ── */}
         {tab === 'server' && (
           <div className="border rounded-3xl bg-card overflow-hidden shadow-sm">
