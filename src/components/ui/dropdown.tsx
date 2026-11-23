@@ -45,7 +45,12 @@ export function Dropdown({ value, onChange, children, className, disabled, requi
   const options = collect(children)
   const current = encode(String(value))
   return (
-    <Select value={current} onValueChange={next => onChange({ target: { value: decode(next) } })} disabled={disabled} required={required} name={name}>
+    <Select value={current} onValueChange={next => {
+      // The hidden native select can emit stale/empty values as options change.
+      // An explicit empty option is encoded as EMPTY, never the raw empty string.
+      if (disabled || !options.some(option => !option.disabled && encode(option.value) === next)) return
+      onChange({ target: { value: decode(next) } })
+    }} disabled={disabled} required={required} name={name}>
       <SelectTrigger id={id} aria-label={rest["aria-label"]} className={cn("min-h-11 w-fit min-w-24 rounded-lg border bg-background px-3 text-sm", className, "flex")}>
         <SelectValue>{options.find(option => encode(option.value) === current)?.label}</SelectValue>
       </SelectTrigger>
