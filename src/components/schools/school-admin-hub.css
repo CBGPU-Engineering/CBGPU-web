@@ -10,3 +10,10 @@
 
 /* The shell resets paragraph margins; the count line must still breathe above the school cards. */
 .admin-developer-shell .cb-school-admin-hub .cb-admin-school-count{margin:18px 0 16px;font-size:14px}
+/* School operators use the same readable controls on desktop and in the app. */
+.cb-school-scoped-shell .cb-admin-school-context>span,
+.cb-school-scoped-shell .cb-admin-school-context p{font-size:14px;line-height:1.6;letter-spacing:normal;text-transform:none}
+.cb-school-scoped-shell .cb-admin-school-context strong{font-size:16px;line-height:1.5}
+.cb-school-scoped-shell .cb-admin-school-context [data-slot=select-trigger]{min-height:44px;font-size:14px}
+.cb-school-scoped-shell .cb-admin-school-tools p,
+.cb-school-scoped-shell .cb-admin-muted{font-size:14px}
