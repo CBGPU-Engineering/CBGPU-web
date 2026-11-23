@@ -269,7 +269,9 @@ Follow-up findings from actual rendering and synthetic races:
   71 phone/desktop/theme/WebView cases, including range repair and submission.
 - **Error recovery / news:** HTML challenge pages, incomplete feeds, redirects,
   oversized bodies and stalled responses are failures, not successful empty
-  results. Bound requests and preserve normal RSS fields and upstream caching.
+  results. Bound requests and preserve normal RSS fields and the existing upstream cache option. A single
+  credential-free read using the revised handler also received valid XML/HTTP 200
+  from the real public RSS provider; provider availability is not guaranteed.
   Category/source/generation checks prevent late headlines and AI summaries from
   replacing the currently selected view. Thirty real-component synthetic race
   cases verify stale successes/errors, source switches and concurrent refreshes;
@@ -277,7 +279,13 @@ Follow-up findings from actual rendering and synthetic races:
 
 Anonymous live Axe checks found no automated WCAG-tag violations in the tested
 signup, app login, school directory, services, web home and app home views.
-Services has six contrast checks requiring manual review; this is not an AA
+Services initially had six contrast checks requiring manual review. Manual
+inspection found translucent counter text and the selected mobile navigation
+label below 4.5:1. Three CSS declarations now use opaque existing semantic pairs.
+Thirty-two interaction states and six Axe checks verify counters at 6.38:1 or
+better and selected navigation at 11.73:1 or better; 184 sampled glyph/background
+regions match the rendered CSS colors. One mobile pseudo-background check remains
+automatically incomplete and passes manual verification. This is not an AA
 certification. Two equipment sign-in contrast failures led to the action-color
 fix above. Further read-only checks covered 16 public documentation/recruitment
 paths and six additional rendered mobile/tablet views: links, document search,
@@ -292,3 +300,12 @@ row-policy boundary with live-shaped table grants. No real account was
 impersonated or used to create a production response during this verification.
 Physical Android devices, real email delivery, external invitation acceptance,
 real GPU jobs and real-user performance/abandonment remain outside this run.
+
+Further synthetic school-switch checks exercised three existing management
+screens in 30 late-success/late-failure cases. Prior-school responses did not
+replace the current school heading, history or draft; no source fix was needed.
+This tests local component transitions, not real router/server authorization.
+A separate read-only mobile school-directory check returned one result each for
+Chungbuk Science, Danjae and Gyeongbuk Drone schools while preserving search focus.
+Observed search-to-display times were about 0.8s in that single laboratory run,
+including debounce; these are not field performance measurements.
