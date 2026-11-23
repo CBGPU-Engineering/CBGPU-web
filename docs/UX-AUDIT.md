@@ -1,6 +1,6 @@
 # CBGPU experience audit and implementation record
 
-Audit date: 2026-11-17. Evidence: current route/component source, existing synthetic
+Audit date: 2026-11-17; full-route refinement and reliability review: 2026-11-24. Evidence: current route/component source, existing synthetic
 journey tests, and browser screenshots. Findings are expert-review hypotheses,
 not measured improvements in conversion or real-user task completion.
 
@@ -8,9 +8,10 @@ not measured improvements in conversion or real-user task completion.
 
 CBGPU has school-life and research/development spaces, a mobile app origin,
 competitions, public Docs/preprints, and separate administrator/equipment/developer
-portals. Keep those distinctions and existing permissions. Student-facing Korean
-and administrator English remain deliberate. Existing account-v2 candidates stay
-disabled until the separately coordinated backend rollout.
+portals. Keep those distinctions and existing permissions. Student and school-management screens, including app administration, are Korean.
+Desktop platform/developer administration remains English. Preserve existing feature
+flags and authentication boundaries; disabled or unavailable dynamic routes are
+recorded honestly rather than opened for a screenshot.
 
 ## Prioritized journeys
 
@@ -188,3 +189,48 @@ These changes apply recognition over recall, accessible target sizing and error
 recovery. Their effect on real student task time remains a hypothesis until
 measured with users. Browser coverage is specific to the fixtures above; it does
 not certify every route, every screen reader or physical devices.
+
+
+## Full-route oil-ui refinement — 2026-11-24
+
+The installed oil-ui and ux-writing-kr skills were applied to the existing product,
+without replacing its brand, navigation spaces or business APIs. All 114 current
+Next page sources were assigned and audited. The per-route source, wrapper,
+verification evidence and limitations are recorded in
+[page-coverage.json](./ux/oil-ui-20261124/page-coverage.json). Separate developer and
+recruitment assets are maintained in CBGPU-backend; their public-runtime differences
+were checked before release. Source coverage does not imply that every dynamic
+record or permission combination was opened with live user data.
+
+| Observed issue | Implemented response | UX/HCI basis |
+| --- | --- | --- |
+| Laptop navigation labels wrapped vertically | A bounded menu retains all destinations until the full rail fits; keyboard close restores focus | Predictability and recognition |
+| Small, low-contrast form controls | Shared reachable controls, readable helper text, input boundaries, app time selectors and stable selected-tab contrast | Fitts's law and accessibility |
+| Phone printing forms and action tables were cramped | Stack task choices and field groups; keep row actions visible in phone request cards | Grouping and responsive task hierarchy |
+| Platform/app interface languages diverged | Authored interface copy is English on desktop platform management and Korean in the app; dynamic user content and API values are preserved | Comprehension and consistency |
+| Failed research reads looked like empty collections | Domain-specific retry states retain same-account content and search; account-keyed caches discard late responses after switching users | Error recovery and privacy |
+| Contact and study operations could lose context or claim success without an affected row | Preserve changed drafts, reject duplicate pending actions, check actual row acknowledgements and recover rejected promises | Accurate feedback and error prevention |
+| An uncertain upload could enter destructive cleanup | Retain the same upload identity/file and use explicit read-only reconciliation before a same-identity resume; no ambiguous cleanup | User data preservation |
+| Poll editing replaced questions and cascaded through answers | Atomic invoker RPC, revision checks and question/option identity guards; preserve drafts on rejection | Trust and recoverability |
+| Poll response header/answer writes could partially succeed | Atomic current-question validation, explicit receipt inspection, safe owned-empty reuse and confirmed row acknowledgements | Accurate completion feedback |
+| Hidden poll results relied on interface behavior | Server-side restrictive result/participation visibility and live-session policies, plus matching UI gates | Permissions are server responsibilities |
+| Developer status errors could remain loading or expose raw exceptions | Distinguish missing/malformed sections from empty data and provide a Refresh recovery path | Clear system status |
+
+Verification used actual components and an isolated production demo build with
+synthetic transports, never real private writes. The final integrated build,
+TypeScript, 653 standard tests (651 passed, two intentional skips) and study contracts
+passed. Real Next/Supabase-JS synthetic sign-in, school filters, search, role denial,
+portal-session mismatch, app error language and document language were exercised.
+Shared controls were checked at phone/desktop sizes, navigation at nine widths in
+both themes, and important failure paths in WebView contexts. Backend poll integrity
+uses three real network-isolated PostgreSQL suites, including rollback, concurrent
+writers, legacy races, result privacy and unchanged data after repeated policies.
+
+Before/after screenshots for shared chrome are in
+`docs/screenshots/oil-ui-foundation-20261124/`; app feedback evidence is in
+`docs/screenshots/app-management-feedback-20261124/`. Domain fixture evidence and
+explicit source-only/feature-flag limitations are linked by the route inventory.
+Motion stays purpose-specific and respects reduced-motion settings. No conversion,
+revenue, task-time improvement percentage or universal accessibility certification
+is claimed. Live role-sensitive mutations, real GPU jobs and third-party provider
+failures remain separate operational checks.
