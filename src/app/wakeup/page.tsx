@@ -125,7 +125,7 @@ export default function WakeupSongPage() {
     if (!deleteTarget) return;
     const { error } = await supabase.from('wakeup_songs').delete().eq('id', deleteTarget.id);
     setDeleteTarget(null);
-    if (error) { showError('삭제하지 못했어요. ' + error.message); return; }
+    if (error) { showError('신청을 삭제하지 못했어요. 신청 내역을 확인한 뒤 다시 시도해 주세요.'); return; }
     showSuccess('신청을 삭제했어요.');
     fetchAll();
   };
@@ -158,8 +158,8 @@ export default function WakeupSongPage() {
       message: message.trim(),
     });
     setSubmitting(false);
-    if (error) { showError('신청하지 못했어요. ' + error.message); return; }
-    showSuccess(`${format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열에 바로 올라갔어요!`);
+    if (error) { showError('곡을 신청하지 못했어요. 신청 내역을 확인한 뒤 다시 시도해 주세요.'); return; }
+    showSuccess(`${format(selectedDate, 'M/d(eee)', { locale: ko })} 재생 대기열에 추가했어요.`);
     setMessage('');
     setPreview(null);
     fetchAll();
@@ -174,7 +174,7 @@ export default function WakeupSongPage() {
       <div className="space-y-3">
         <div className="space-y-1">
           <h1 className="cb-page-title">기상송 신청</h1>
-          <p className="text-sm text-muted-foreground font-medium">듣고 싶은 노래를 신청하면 바로 그날 아침 대기열에 올라가요.</p>
+          <p className="text-sm text-muted-foreground font-medium">신청한 곡은 선택한 날짜의 아침 재생 대기열에 올라가요.</p>
         </div>
         <SegmentedTabs items={DORMS.map(d => ({ value: d, label: d }))} value={dorm} onChange={changeDorm} />
       </div>
@@ -210,7 +210,7 @@ export default function WakeupSongPage() {
         <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-semibold">{dorm}에 신청하기</h2></div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-semibold text-muted-foreground ml-1">틀어줄 날짜</label>
+          <label className="text-sm font-semibold text-muted-foreground ml-1">재생 신청 날짜</label>
           <div className="flex gap-1.5 overflow-x-auto py-1 -mx-1 px-1">
             {NEXT_14_DAYS.map((day, i) => {
               const isSelected = isSameDay(day, selectedDate);

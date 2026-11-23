@@ -35,12 +35,12 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
   return (
     <>
       <Button size="sm" variant="outline" className="font-black text-xs uppercase gap-1.5" onClick={handleOpen}>
-        <MapPin className="size-3.5" />   {t("Locate requester")} </Button>
+        <MapPin className="size-3.5" />   {t("Estimate requester location")} </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{studentName || t("Requester")}   {t("location")}</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">{t("Estimated location based on the current time.")}</DialogDescription>
+            <DialogDescription className="text-xs font-bold opacity-60">{t("Estimated from the timetable and study-room requests for the current time.")}</DialogDescription>
           </DialogHeader>
           <div className="py-2">
             {loading ? (

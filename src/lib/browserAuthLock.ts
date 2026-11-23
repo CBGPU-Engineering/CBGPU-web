@@ -2,7 +2,7 @@ import {processLock} from '@supabase/supabase-js';
 
 export class BrowserAuthLockTimeout extends Error {
  readonly isAcquireTimeout=true;
- constructor(){super('로그인 상태를 확인하는 중입니다. 잠시 후 다시 시도해 주세요.');this.name='BrowserAuthLockTimeout'}
+ constructor(){super('로그인 상태를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');this.name='BrowserAuthLockTimeout'}
 }
 /** Queue foreground/background session work without disabling cross-tab exclusion. */
 export async function browserAuthLock<T>(name:string,acquireTimeout:number,fn:()=>Promise<T>):Promise<T>{

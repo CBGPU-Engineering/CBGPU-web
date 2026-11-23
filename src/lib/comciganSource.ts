@@ -1,6 +1,6 @@
 /** Decode the provider's string encoding only. Never execute third-party JavaScript. */
 export function decodeComciganSource(html: string): string {
-  if (html.length > 2_000_000) throw new Error('시간표 제공처 응답이 너무 큽니다');
+  if (html.length > 2_000_000) throw new Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.');
   const decoded:string[]=[];const seen=new Set<string>();let layer=html,total=html.length;
   // Nested public wrappers have the same literal encoding. Decode data only;
   // never evaluate the provider's scripts or the functions inside them.
@@ -15,16 +15,16 @@ export function decodeComciganSource(html: string): string {
       }
       const tail=layer.slice(end).match(/^,\s*(\d+)\s*\);?/);if(!tail)continue;
       const literal=layer.slice(start,end),id=literal+':'+tail[1];if(seen.has(id))continue;seen.add(id);
-      let parts:unknown;try{parts=JSON.parse(literal)}catch{throw Error('잘못된 시간표 인코딩')}
-      const key=Number(tail[1]);if(!Array.isArray(parts)||parts.length>10000||!Number.isSafeInteger(key))throw Error('잘못된 시간표 인코딩');
+      let parts:unknown;try{parts=JSON.parse(literal)}catch{throw Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.')}
+      const key=Number(tail[1]);if(!Array.isArray(parts)||parts.length>10000||!Number.isSafeInteger(key))throw Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
       let source='';
       for(const part of parts){
-        if(!Array.isArray(part)||part.length!==2||![0,1].includes(part[0])||typeof part[1]!=='string')throw Error('잘못된 시간표 인코딩');
+        if(!Array.isArray(part)||part.length!==2||![0,1].includes(part[0])||typeof part[1]!=='string')throw Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
         const [plain,value]=part as [number,string];if(plain){source+=value;continue}
-        if(value.length%4||!/^[\da-f]*$/i.test(value))throw Error('잘못된 시간표 인코딩');
+        if(value.length%4||!/^[\da-f]*$/i.test(value))throw Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
         for(let offset=0;offset<value.length;offset+=4)source+=String.fromCharCode(parseInt(value.slice(offset,offset+4),16)^((key+offset/4*13)&255));
       }
-      total+=source.length;if(total>4_000_000)throw Error('시간표 제공처 응답이 너무 큽니다');next.push(source);
+      total+=source.length;if(total>4_000_000)throw Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.');next.push(source);
     }
     if(!next.length)break;decoded.push(...next);layer=next.join('\n');
   }
@@ -36,7 +36,7 @@ export function extractComciganMetadata(html: string) {
   const modern=source.match(/function\s+QAjaxSchool[\s\S]{0,300}?url\s*:\s*['"]\.?(\/\d+\?)['"][\s\S]{0,100}?btoa\(['"](\d+l)['"]/);
   const search = source.match(/function\s+school_ra\s*\(\s*sc\s*\)[\s\S]{0,200}?url\s*:\s*['"]\.?(\/\d+\?[^'"\s]+)['"]/i);
   const data = source.match(/sc_data\(\s*['"](\d+_)['"]\s*,[^,]+,\s*(\d+)/);
-  if ((!search&&!modern) || !data) throw new Error('시간표 제공처의 조회 정보를 찾지 못했습니다');
+  if ((!search&&!modern) || !data) throw new Error('시간표 제공처의 조회 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   return { extractCode: search?.[1]||(modern![1]+modern![2]), scPrefix: data[1], scSuffix: data[2] };
 }
 
@@ -52,7 +52,7 @@ export function extractComciganFields(html: string) {
   const fields={} as Record<keyof typeof patterns,string>;
   for(const [name,pattern] of Object.entries(patterns)){
     const match=source.match(pattern);
-    if(!match)throw new Error('시간표 제공처의 데이터 구조를 확인하지 못했습니다');
+    if(!match)throw new Error('시간표 제공처의 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
     fields[name as keyof typeof patterns]=match[1];
   }
   return fields;
@@ -70,7 +70,7 @@ export function extractComciganTransport(html:string){
   if(split){const values=[...split[2].matchAll(/['"]([\da-f]+)['"]/gi)].map(m=>m[1]);key=split[1].split('+').map(v=>values[Number(v.match(/a\[(\d+)\]/)?.[1])]).join('')}
  }
  const divisor=source.match(/Math\.floor\(학교명단\[i\]\[0\]\/(\d+)\)\+2/)?.[1];
- if(suffix&&(!key||!/^[\da-f]{64}$/i.test(key)))throw new Error('시간표 제공처의 응답 해석 정보를 찾지 못했습니다');
+ if(suffix&&(!key||!/^[\da-f]{64}$/i.test(key)))throw new Error('시간표 제공처의 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
  return {suffix,key:key||null,schoolCodeDivisor:divisor?Number(divisor):null};
 }
 
@@ -84,10 +84,10 @@ export function extractComciganCellKey(html:string):number[]|null{
  const source=decodeComciganSource(html);
  if(!/function\s+QnmsbChange\(/.test(source))return null;
  const match=source.match(/function\s+QnmsbChange\([^)]*\)\s*\{[\s\S]{0,300}?String\.fromCharCode\(([\d,\s]+)\)/);
- if(!match)throw new Error('시간표 제공처의 문자열 형식을 확인하지 못했습니다');
+ if(!match)throw new Error('시간표 제공처의 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
  const key=match[1].split(',').map(value=>Number(value.trim()));
  if(key.length<2||key.length>128||key.some(value=>!Number.isInteger(value)||value<0||value>255)){
-  throw new Error('잘못된 시간표 문자열 형식');
+  throw new Error('시간표 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
  }
  return key;
 }
@@ -95,19 +95,19 @@ export function extractComciganCellKey(html:string):number[]|null{
 export function decodeComciganCell(value:string,key:readonly number[]|null):string{
  if(!key||!value)return value;
  const bytes=Buffer.from(value,'base64');
- if(value.length>100000||!bytes.length||bytes.toString('base64')!==value)throw new Error('잘못된 시간표 문자열');
+ if(value.length>100000||!bytes.length||bytes.toString('base64')!==value)throw new Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
  for(let index=0;index<bytes.length;index++)bytes[index]^=key[index%key.length];
  return new TextDecoder('euc-kr',{fatal:true}).decode(bytes);
 }
 
 export function extractComciganSchools(value:unknown,divisor:number|null,key:readonly number[]|null=null){
- if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
+ if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
  return value.map(row=>{
-  if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록이 올바르지 않습니다');
+  if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const index=divisor?Math.floor(Number(row[0])/divisor)+2:3;
   const encoded=row[index];
   const code=key&&typeof encoded==='string'?Number(decodeComciganCell(encoded,key)):encoded;
-  if(!Number.isInteger(index)||index<3||!Number.isSafeInteger(code)||code<=0)throw new Error('시간표 제공처의 학교 코드가 올바르지 않습니다');
+  if(!Number.isInteger(index)||index<3||!Number.isSafeInteger(code)||code<=0)throw new Error('시간표 제공처의 학교 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   return {region:decodeComciganCell(row[1],key),name:decodeComciganCell(row[2],key),code:code as number};
  });
 }
@@ -117,7 +117,7 @@ export function extractComciganWeekField(html:string):string|null{
  const source=decodeComciganSource(html),fields=new Set<string>();
  const identifier='[A-Za-z_$가-힣][\\w$가-힣]*',value='(?:'+identifier+'\\s*\\(\\s*)?(?:자료|H시간표)\\.(자료\\d{1,4}|시작일)\\s*\\)?';
  for(const expression of [new RegExp('(?:var|let|const)\\s+시작일\\s*=\\s*new\\s+Date\\s*\\(\\s*'+value+'\\s*\\)','g'),new RegExp('요일출력하기\\s*\\(\\s*'+value+'\\s*\\)','g')]){
-  for(const match of source.matchAll(expression)){fields.add(match[1]);if(fields.size>1)throw Error('시간표의 주간 날짜 정의가 일치하지 않습니다');}
+  for(const match of source.matchAll(expression)){fields.add(match[1]);if(fields.size>1)throw Error('시간표 제공처의 주간 날짜 정보가 서로 달라요. 잠시 후 다시 조회해 주세요.');}
  }
  return fields.values().next().value??null;
 }

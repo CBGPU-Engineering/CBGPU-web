@@ -18,7 +18,7 @@ export function conversationStream(request:Request,owner:string,id:string,initia
     if(Date.now()-lastHeartbeat>10000){controller.enqueue(encoder.encode(': waiting\n\n'));lastHeartbeat=Date.now()}
     await new Promise(r=>setTimeout(r,180));if(closed)break;snapshot=await aiJson('chats/'+id+'/live',owner);
    }
-  }catch(e){send({type:'error',message:e instanceof Error?e.message:'실시간 연결을 다시 확인하고 있어요.'})}
+  }catch(e){send({type:'error',message:e instanceof Error?e.message:'실시간 연결을 확인하지 못했어요. 대화를 다시 열어 주세요.'})}
   finally{release();request.signal.removeEventListener('abort',stop);if(!closed){controller.enqueue(encoder.encode('data: [DONE]\n\n'));controller.close()}}
  },cancel(){closed=true;release()}});
  return new NextResponse(stream,{headers:{'Content-Type':'text/event-stream','Cache-Control':'no-store','X-Accel-Buffering':'no'}});

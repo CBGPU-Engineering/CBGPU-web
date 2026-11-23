@@ -144,10 +144,10 @@ function MaterialsSession() {
     <div className="flex items-end justify-between gap-4">
       <div className="min-w-0">
         <h1 className="cb-page-title">자료 공유</h1>
-        <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
+        <p className="cb-page-sub mt-1">학교 구성원이 공유한 학습·연구 자료를 찾아보세요.</p>
       </div>
       <Button asChild size="sm" className="shrink-0 gap-1.5 font-semibold text-sm active:scale-95">
-        <Link href="/materials/new"><Plus className="size-3.5" />새 자료</Link>
+        <Link href="/materials/new"><Plus className="size-3.5" />자료 올리기</Link>
       </Button>
     </div>
 
@@ -201,7 +201,7 @@ function MaterialsSession() {
               {material.tags.slice(0, 3).map(tag => <Badge key={tag} className="normal-case tracking-normal">#{tag}</Badge>)}
               {material.tags.length > 3 && <span className="text-sm font-bold text-muted-foreground">+{material.tags.length - 3}</span>}
             </div>
-            <Link href={'/materials/'+material.id} className="inline-flex min-h-11 items-center text-sm font-medium text-primary">자세히 보기 · AI 요약 →</Link><div className="mt-auto flex items-center justify-between gap-3">
+            <Link href={'/materials/'+material.id} className="inline-flex min-h-11 items-center text-sm font-medium text-primary">자료 보기 · AI 요약 →</Link><div className="mt-auto flex items-center justify-between gap-3">
               <span className="text-sm text-muted-foreground">{fileSize(material.size_bytes)} · {new Date(material.created_at).toLocaleDateString('ko-KR')}</span>
               <Button variant="outline" size="sm" className="gap-1.5 font-semibold text-sm" disabled={busy} onClick={() => void download(material)}>
                 {busy ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}받기

@@ -35,7 +35,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     { href: '/contests', label: '대회·행사', description: '행사 개설부터 참가·운영·작품 제출까지', icon: Trophy, keywords: '대회 행사 공모전 참가 신청 체크인 제출 파일 호스트' },
     { href: '/match', label: '스터디 매칭', description: '함께 공부할 친구 찾기', icon: Users, keywords: '모임 스터디 매칭' },
     { href: '/polls', label: '투표', description: '진행 중인 투표 참여', icon: Vote, keywords: '설문 의견 투표' },
-    { href: '/feed', label: '소식', description: '학교와 과학 소식 확인', icon: Newspaper, keywords: '피드 feed 소식' },
+    { href: '/feed', label: '소식', description: '학교·기술 소식 확인', icon: Newspaper, keywords: '피드 feed 소식' },
     { href: '/tools', label: '도구', description: '학교생활에 필요한 도구', icon: Wrench, keywords: '타이머 디데이 계산' },
     { href: '/games', label: '게임', description: '쉬는 시간에 즐기는 게임', icon: Gamepad2, keywords: '아케이드 arcade 게임' },
   ] },

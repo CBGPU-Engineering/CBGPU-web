@@ -167,7 +167,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const rawToken = getToken();
   const token = rawToken?.startsWith('Bearer ') ? rawToken.slice(7) : rawToken;
   const { data: { session } } = await studySession();
-  if (!session) throw new EdusetError('로그인이 필요합니다.');
+  if (!session) throw new EdusetError('CBGPU에 로그인해 주세요.');
 
   const res = await fetch(BASE_URL + path, {
     ...init,
@@ -195,7 +195,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function signIn(id: string, password: string, turnstileResponse?: string): Promise<void> {
   const { data: { session } } = await studySession();
-  if (!session) throw new Error('로그인이 필요합니다.');
+  if (!session) throw new Error('CBGPU에 로그인해 주세요.');
 
   const response = await fetch('/api/study/auth', {
     method: 'POST',
@@ -209,12 +209,12 @@ export async function signIn(id: string, password: string, turnstileResponse?: s
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(data?.message ?? '토큰 발급에 실패했습니다.');
+    throw new Error(data?.message ?? '학교 로그인 연결을 완료하지 못했어요. 다시 로그인해 주세요.');
   }
 
   const accessToken = data?.accessToken;
   if (!accessToken) {
-    throw new Error('토큰 응답이 비어 있습니다.');
+    throw new Error('학교 로그인 응답을 확인하지 못했어요. 다시 로그인해 주세요.');
   }
 
   setToken(accessToken);
@@ -222,7 +222,7 @@ export async function signIn(id: string, password: string, turnstileResponse?: s
 
 export async function getMe(): Promise<Me> {
   const token = getToken();
-  if (!token) throw new EdusetError('로그인이 필요합니다.');
+  if (!token) throw new EdusetError('CBGPU에 로그인해 주세요.');
   const userId = decodeUserId(token);
   const user = await apiFetch<EdusetUser>(`/users/${userId}`);
   if (user.role !== 'STUDENT') return user;

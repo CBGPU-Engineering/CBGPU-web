@@ -1,3 +1,4 @@
+import {userFacingError} from './userFacingError';
 import {supabase} from './supabase';
 import {deploymentResponse} from './deploymentResponse';
 export async function deploymentApi(path:string,method='GET',body?:unknown){
@@ -12,7 +13,8 @@ export async function deploymentApi(path:string,method='GET',body?:unknown){
  }catch(error){
   if(controller.signal.aborted)throw new Error('응답을 기다리는 시간이 길어졌어요. 목록에서 처리 상태를 확인한 뒤 다시 시도해 주세요.');
   if(error instanceof TypeError)throw new Error('배포 서비스에 연결하지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+  if(error instanceof Error)error.message=userFacingError(error.message,'배포 요청 결과를 확인하지 못했어요. 목록에서 처리 상태를 확인해 주세요.');
   throw error;
  }finally{clearTimeout(timer)}
 }
-export async function serverProjectRequest(id?:string,updates?:Record<string,unknown>,remove=false){try{const data=await deploymentApi('servers/projects'+(id?'/'+id:''),remove?'DELETE':updates?(id?'PATCH':'POST'):'GET',updates);return{data:id||updates?data.project:data.projects,error:null,deployment_requested:typeof data.deployment_requested==='boolean'?data.deployment_requested:undefined,warning:typeof data.warning==='string'?data.warning:null}}catch(e){return{data:null,error:{message:e instanceof Error?e.message:'서버 프로젝트를 불러오지 못했어요. 새로고침해 주세요.',code:''},deployment_requested:undefined,warning:null}}}
+export async function serverProjectRequest(id?:string,updates?:Record<string,unknown>,remove=false){try{const data=await deploymentApi('servers/projects'+(id?'/'+id:''),remove?'DELETE':updates?(id?'PATCH':'POST'):'GET',updates);return{data:id||updates?data.project:data.projects,error:null,deployment_requested:typeof data.deployment_requested==='boolean'?data.deployment_requested:undefined,warning:typeof data.warning==='string'?data.warning:null}}catch(e){return{data:null,error:{message:userFacingError(e instanceof Error?e.message:undefined,'서버 프로젝트를 불러오지 못했어요. 새로고침해 주세요.'),code:''},deployment_requested:undefined,warning:null}}}

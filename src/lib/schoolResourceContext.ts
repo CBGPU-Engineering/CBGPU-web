@@ -111,7 +111,7 @@ export function resourceReason(reason?: string) {
         NOT_CONFIGURED: "이 학교에는 아직 해당 자원이 연결되지 않았어요.",
         FEATURE_DISABLED: "이 학교에서 현재 해당 기능을 제공하지 않아요.",
         NOT_GRANTED: "승인된 자원 이용 범위에 포함되지 않아요.",
-        NO_CONTEXT: "이용할 학교 또는 승인된 임시 자원 이용을 선택해주세요.",
+        NO_CONTEXT: "이용할 학교 또는 승인된 임시 자원 이용을 선택해 주세요.",
         SCHOOL_UNAVAILABLE: "학교 자원을 현재 이용할 수 없어요.",
       } as Record<string, string>
     )[reason || ""] || "현재 학교 자원 이용 권한을 확인하지 못했어요."

@@ -22,7 +22,7 @@ const labelCls = 'text-xs font-semibold   text-muted-foreground mb-1 block';
 
 const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: string }> = {
   pending:     { icon: <Clock className="size-4" />,        variant: 'warning', label: '승인 대기' },
-  accepted:    { icon: <Boxes className="size-4" />,         variant: 'default', label: '대기중' },
+  accepted:    { icon: <Boxes className="size-4" />,         variant: 'default', label: '대기 중' },
   in_progress: { icon: <Scissors className="size-4" />,      variant: 'success', label: '작업 중' },
   done:        { icon: <CheckCircle2 className="size-4" />,  variant: 'success', label: '완료' },
   rejected:    { icon: <XCircle className="size-4" />,       variant: 'danger',  label: '거절됨' },
@@ -127,7 +127,7 @@ export default function LaserJobDetailPage() {
             <div className="flex items-center gap-2">
               <LocateStudentButton studentId={requester?.student_id} studentName={requester?.full_name} />
               <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 h-9" onClick={handleMarkDelivered}>
-                <PackageCheck className="size-3.5" /> 가져다 줌
+                <PackageCheck className="size-3.5" /> 전달 완료로 표시
               </Button>
             </div>
           )}
@@ -184,7 +184,7 @@ export default function LaserJobDetailPage() {
           )}
           {(scopedFiles?job.file_path:downloadUrl) && (
             <div>
-              <label className={labelCls}>설계 파일 (dxf)</label>
+              <label className={labelCls}>설계 파일 (DXF)</label>
               {scopedFiles?<Button type="button" variant="link" className="h-auto p-0 text-sm" disabled={file.downloading||file.loading} onClick={()=>void file.download(job.file_name||'manufacturing-file')}><Download className="size-3.5"/>{file.downloading?'다운로드 중…':job.file_name}</Button>:<a href={downloadUrl||undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
                 <Download className="size-3.5" /> {job.file_name}
               </a>}
@@ -221,7 +221,7 @@ export default function LaserJobDetailPage() {
         open={cancelOpen}
         title="신청 취소"
         description="이 레이저 커팅 신청을 취소해요. 취소한 신청은 되돌릴 수 없어요."
-        confirmLabel="취소하기"
+        confirmLabel="신청 취소"
         onConfirm={handleCancel}
         onCancel={() => setCancelOpen(false)}
       />

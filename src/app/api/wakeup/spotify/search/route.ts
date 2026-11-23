@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const token = await getSpotifyAppToken();
     // Spotify Search currently permits at most 10 results per request.
     const response = await spotifyApi(`/search?${new URLSearchParams({ q, type: 'track', limit: '10', market: 'KR' })}`, token);
-    if (!response.ok) return NextResponse.json({ message: 'Spotify 검색에 실패했어요.' }, { status: 502 });
+    if (!response.ok) return NextResponse.json({ message: 'Spotify에서 곡을 검색하지 못했어요. 잠시 후 다시 검색해 주세요.' }, { status: 502 });
     const data = await response.json();
     const items = ((data.tracks?.items ?? []) as SpotifyTrack[]).map((track) => ({
       id: track.id,

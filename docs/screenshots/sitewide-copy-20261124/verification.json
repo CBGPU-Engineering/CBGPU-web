@@ -1,0 +1,16 @@
+{
+  "scope": "Actual components with synthetic data and loopback-only/mocked responses. No real mail, device actions or production records.",
+  "screenshots": [
+    "gpu-mobile.png",
+    "deploy-desktop.png",
+    "laser-mobile.png",
+    "admin-desktop.png",
+    "ai-recovery-mobile.png",
+    "ai-tools-desktop.png"
+  ],
+  "researchConfigurations": 42,
+  "adminEquipmentConfigurations": 48,
+  "aiErrorConfigurations": 16,
+  "sourceReview": "docs/ux/sitewide-copy-20261124.json",
+  "limits": "Source and synthetic runtime coverage are not a physical-device or all-role production certification."
+}

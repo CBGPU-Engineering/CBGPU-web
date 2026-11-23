@@ -48,12 +48,12 @@ const isVisible = (q: Question, ans: Record<string, AnswerValue>) => {
 };
 
 const Q_TYPES: { id: QType; label: string; icon: any }[] = [
-  { id: 'choice',    label: '객관식 (단일)',   icon: Circle },
-  { id: 'checkbox',  label: '체크박스 (복수)', icon: CheckSquare },
-  { id: 'dropdown',  label: '드롭다운',        icon: List },
-  { id: 'text',      label: '단답형',          icon: Type },
-  { id: 'paragraph', label: '장문형',          icon: AlignLeft },
-  { id: 'scale',     label: '선형 배율',       icon: Star },
+  { id: 'choice',    label: '하나 선택',   icon: Circle },
+  { id: 'checkbox',  label: '여러 개 선택', icon: CheckSquare },
+  { id: 'dropdown',  label: '목록에서 선택',        icon: List },
+  { id: 'text',      label: '짧은 답변',          icon: Type },
+  { id: 'paragraph', label: '긴 답변',          icon: AlignLeft },
+  { id: 'scale',     label: '숫자 척도',       icon: Star },
 ];
 
 // ─── QuestionInput ─────────────────────────────────────────────────────────
@@ -246,8 +246,8 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
             <div className="grid grid-cols-2 gap-2">
               <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값</p><Input aria-label="최솟값" type="number" value={q.config.min===undefined?1:Number.isFinite(q.config.min)?q.config.min:''} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
               <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값</p><Input aria-label="최댓값" type="number" value={q.config.max===undefined?5:Number.isFinite(q.config.max)?q.config.max:''} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값 라벨</p><Input aria-label="최솟값 라벨" value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값 라벨</p><Input aria-label="최댓값 라벨" value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값 설명</p><Input aria-label="최솟값 설명" value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값 설명</p><Input aria-label="최댓값 설명" value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
             </div>
           )}
 
@@ -269,7 +269,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                   <Dropdown aria-label="표시 조건 답변" className="min-h-11 text-sm bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                     value={q.config.showIf.value}
                     onChange={e => onChange({ ...q, config: { ...q.config, showIf: { ...q.config.showIf!, value: e.target.value } } })}>
-                    <option value="">선택지 선택</option>
+                    <option value="">선택지 고르기</option>
                     {prevQs.find(p => p.id === q.config.showIf?.questionId)?.options.map(o => (
                       <option key={o.id} value={o.id}>{o.text}</option>
                     ))}
@@ -461,7 +461,7 @@ function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll
       if (reason.includes('POLL_CLOSED')) showError('투표가 마감됐어요. 목록에서 마감 상태와 내 응답을 확인해 주세요.');
       else if (reason.includes('POLL_EDIT_CONFLICT')) showError('질문이 변경됐어요. 작성한 답변을 따로 복사한 뒤 투표를 다시 열어 주세요.');
       else if (reason.includes('POLL_REQUIRED_ANSWER') || reason.includes('POLL_INVALID_ANSWER')) showError('필수 항목과 선택 가능한 값을 확인한 뒤 다시 제출해 주세요. 작성한 답변은 그대로 있어요.');
-      else if (reason.includes('POLL_RESPONSE_ALREADY_RECORDED')) showError('이미 등록된 답변이 있어요. 작성한 내용은 그대로 있으니 목록의 내 응답 확인으로 등록된 응답을 확인해 주세요.');
+      else if (reason.includes('POLL_RESPONSE_ALREADY_RECORDED')) showError('이미 제출한 답변이 있어요. 작성한 내용은 그대로 있어요. 목록에서 ‘내 응답 확인’을 눌러 확인해 주세요.');
       else showError('제출 결과를 확인하지 못했어요. 작성한 답변은 그대로 있어요. 목록의 내 응답 확인으로 저장 여부를 확인해 주세요.');
     } finally { submittingRef.current = false; setSubmitting(false); }
   };
@@ -700,7 +700,7 @@ function PollsSession() {
       if (error || data?.length !== 1 || data[0].id !== pollId) throw new Error('Poll mutation not confirmed');
       if (currentActor.current !== owner) return;
       showSuccess(remove ? '삭제했어요.' : '마감했어요.');
-      void loadPolls().catch(() => { if (currentActor.current === owner) showError('처리는 반영됐지만 목록을 불러오지 못했어요. 투표 목록을 다시 열어 주세요.'); });
+      void loadPolls().catch(() => { if (currentActor.current === owner) showError('변경사항은 저장했지만 목록을 불러오지 못했어요. 투표 목록을 다시 열어 주세요.'); });
     } catch {
       if (currentActor.current === owner) showError(remove ? '삭제 결과를 확인하지 못했어요. 목록을 다시 불러와 삭제 여부를 확인해 주세요.' : '마감 결과를 확인하지 못했어요. 목록을 다시 불러와 상태를 확인해 주세요.');
     } finally {
@@ -788,7 +788,7 @@ function PollsSession() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-sm leading-tight">{poll.title}</h3>
-                      {voted  && <Badge variant="success" icon={<CheckCircle2 className="size-2.5" />}>참여완료</Badge>}
+                      {voted  && <Badge variant="success" icon={<CheckCircle2 className="size-2.5" />}>참여 완료</Badge>}
                       {closed && <Badge variant="muted" icon={<Lock className="size-2.5" />}>마감</Badge>}
                     </div>
                     {poll.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{poll.description}</p>}

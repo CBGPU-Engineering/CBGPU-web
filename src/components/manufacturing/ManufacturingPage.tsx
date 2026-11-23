@@ -52,7 +52,7 @@ const PRINT_STATUS_INFO: Record<string, { variant: any; icon: React.ReactNode; l
 
 const LASER_STATUS_INFO: Record<string, { variant: any; icon: React.ReactNode; label: string }> = {
   pending:     { variant: 'warning', icon: <Clock className="size-3" />,        label: '승인 대기' },
-  accepted:    { variant: 'default', icon: <Boxes className="size-3" />,        label: '대기중' },
+  accepted:    { variant: 'default', icon: <Boxes className="size-3" />,        label: '대기 중' },
   in_progress: { variant: 'success', icon: <Scissors className="size-3" />,     label: '작업 중' },
   done:        { variant: 'success', icon: <CheckCircle2 className="size-3" />, label: '완료' },
   rejected:    { variant: 'danger',  icon: <XCircle className="size-3" />,      label: '거절됨' },
@@ -263,8 +263,8 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     if(!Number.isFinite(queueHours)||queueHours<=0){showError("예상 시간을 0보다 크게 입력해 주세요.");return}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
-      if(error){showError('인쇄를 시작하지 못했어요. 대기열을 확인하고 작업을 다시 선택해 주세요.');setQueueJobId('');await loadPrintManagerTab();return}
-      showSuccess("인쇄를 시작했어요.");setQueueDialogPrinter(null);await loadPrintManagerTab();
+      if(error){showError('인쇄 시작을 기록하지 못했어요. 대기열 상태를 확인해 주세요.');setQueueJobId('');await loadPrintManagerTab();return}
+      showSuccess("작업을 인쇄 중으로 기록했어요.");setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
 
@@ -309,11 +309,11 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         estimated_end_at: null,
       }).eq('id', printer.id);
       if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-      else showSuccess('인쇄 완료 처리했습니다. 회수하면 "회수함"을 눌러주세요.');
+      else showSuccess('프린터를 인쇄 완료로 표시했어요. 출력물을 회수한 뒤 회수 완료를 선택해 주세요.');
     } else {
       const { error } = await supabase.from('print_jobs').update({ plates_completed: newCompleted }).eq('id', job.id);
       if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-      else showSuccess(`${newCompleted}번 플레이트를 완료 처리했습니다.`);
+      else showSuccess(`${newCompleted}개 플레이트를 완료로 기록했어요.`);
     }
 
     setPlateCompleteTarget(null);
@@ -331,7 +331,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       estimated_end_at: null,
     }).eq('id', printer.id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('출력물 회수를 완료했어요. 프린터를 사용할 수 있어요.'); loadPrintManagerTab(); }
+    else { showSuccess('프린터를 사용 가능으로 표시했어요.'); loadPrintManagerTab(); }
   }
 
   async function markPrinterBroken(printer: any) {
@@ -352,13 +352,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       estimated_end_at: null,
     }).eq('id', printer.id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('고장으로 표시했습니다.'); loadPrintManagerTab(); }
+    else { showSuccess('프린터를 고장으로 표시했어요.'); loadPrintManagerTab(); }
   }
 
   async function repairPrinter(printer: any) {
     const { error } = await supabase.from('printers').update({ status: 'idle' }).eq('id', printer.id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('정상 상태로 복구했습니다.'); loadPrintManagerTab(); }
+    else { showSuccess('프린터를 사용 가능으로 표시했어요.'); loadPrintManagerTab(); }
   }
 
   // ── Laser manager ──────────────────────────────────────────────────────
@@ -419,7 +419,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
 
   async function addLaserCatalogEntry() {
     const thicknessNum = parseFloat(newCatalogThickness);
-    if (isNaN(thicknessNum) || thicknessNum <= 0) { showError('두께를 올바르게 입력해주세요.'); return; }
+    if (isNaN(thicknessNum) || thicknessNum <= 0) { showError('두께를 0보다 크게 입력해 주세요.'); return; }
     const { error } = await supabase.from('laser_materials').insert({ material: newCatalogMaterial, thickness_mm: thicknessNum });
     if (error) showError(error.code === '23505' ? '이미 등록된 재질과 색상이에요.' : '항목을 추가하지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.');
     else { showSuccess('재질을 등록했어요.'); fetchLaserCatalog(); }
@@ -510,7 +510,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 <div className="flex items-center justify-between">
                   <span className="font-black text-sm">{p.name}</span>
                   {p.status === 'printing'
-                    ? <Badge variant="success" icon={<Printer className="size-3" />}>사용중</Badge>
+                    ? <Badge variant="success" icon={<Printer className="size-3" />}>사용 중</Badge>
                     : p.status === 'done'
                       ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>회수 대기</Badge>
                       : p.status === 'maintenance'
@@ -522,7 +522,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                     {formatDistanceToNow(new Date(p.estimated_end_at), { locale: ko, addSuffix: true })} 완료 예정
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
+                <p className="text-xs text-muted-foreground opacity-70">대기 중인 플레이트 {plateBacklog[p.id] || 0}개</p>
               </Card>
             ))}
           </div>
@@ -676,29 +676,29 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                     <div className="flex items-center justify-between">
                       <span className="font-black text-sm">{p.name}</span>
                       {p.status === 'printing'
-                        ? <Badge variant="success" icon={<Printer className="size-3" />}>사용중</Badge>
+                        ? <Badge variant="success" icon={<Printer className="size-3" />}>사용 중</Badge>
                         : p.status === 'done'
                           ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>회수 대기</Badge>
                           : p.status === 'maintenance'
                             ? <Badge variant="danger">고장</Badge>
                             : <Badge variant="muted">대기</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
+                    <p className="text-xs text-muted-foreground opacity-70">대기 중인 플레이트 {plateBacklog[p.id] || 0}개</p>
 
                     {!isMine ? (
                       <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">담당 프린터가 아니에요</p>
                     ) : p.status === 'maintenance' ? (
                       <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => repairPrinter(p)}>
-                        <Undo2 className="size-3" /> 정상으로 복구
+                        <Undo2 className="size-3" /> 사용 가능으로 표시
                       </Button>
                     ) : p.status === 'done' ? (
                       <>
                         <p className="text-xs text-muted-foreground font-bold">인쇄를 마쳤어요. 출력물을 회수해 주세요.</p>
                         <Button size="sm" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => collectPrint(p)}>
-                          <CheckCircle2 className="size-3" /> 회수함
+                          <CheckCircle2 className="size-3" /> 회수 완료
                         </Button>
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" /> 고장 처리
+                          <Wrench className="size-3" /> 고장으로 표시
                         </Button>
                       </>
                     ) : p.status === 'printing' ? (
@@ -744,7 +744,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           );
                         })()}
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" /> 고장 처리
+                          <Wrench className="size-3" /> 고장으로 표시
                         </Button>
                       </>
                     ) : (
@@ -758,7 +758,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                           <Play className="size-3" /> 인쇄 시작
                         </Button>
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" /> 고장 처리
+                          <Wrench className="size-3" /> 고장으로 표시
                         </Button>
                       </>
                     )}
@@ -991,13 +991,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{queueDialogPrinter?.name} 인쇄 시작</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">대기열에서 작업을 선택하고 예상 소요 시간을 입력하세요.</DialogDescription>
+            <DialogDescription className="text-xs font-bold opacity-60">대기 작업을 선택하고 예상 소요 시간을 입력해 주세요.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
               <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">작업 선택</label>
               <Select value={queueJobId} onValueChange={setQueueJobId}>
-                <SelectTrigger aria-label="Queued print job" className="h-10 w-full text-sm"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
+                <SelectTrigger aria-label="인쇄 대기 작업" className="h-10 w-full text-sm"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
                 <SelectContent>
                   {idleJobsForQueue.map(j => (
                     <SelectItem key={j.id} value={j.id}>{requesterLabel(j)} · {j.file_name}</SelectItem>
@@ -1047,7 +1047,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">신청 거절</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">신청자가 볼 수 있는 거절 사유를 남겨주세요 (선택).</DialogDescription>
+            <DialogDescription className="text-xs font-bold opacity-60">신청자에게 표시할 거절 사유를 남겨 주세요. 선택 사항이에요.</DialogDescription>
           </DialogHeader>
           <textarea
             rows={3}

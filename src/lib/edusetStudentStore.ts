@@ -4,21 +4,21 @@ import {encryptToken,decryptToken} from './edusetTokenCrypto';
 import {StudyFailure,type StudyStudent} from './edusetStudent';
 export async function forgetSchoolConnection(owner:string){
  const {error}=await preprintsClient().from('eduset_student_connections').delete().eq('user_id',owner);
- if(error)throw new StudyFailure('학교 계정 연결을 해제하지 못했습니다.',503);
+ if(error)throw new StudyFailure('학교 계정 연결을 해제하지 못했어요. 연결 상태를 다시 확인해 주세요.',503);
  const {error:disabled}=await preprintsClient().from('study_auto_settings').update({enabled:false,updated_at:new Date().toISOString()}).eq('user_id',owner);
- if(disabled)throw new StudyFailure('학교 연결은 해제됐지만 자동신청 상태를 확인하지 못했습니다.',503);
+ if(disabled)throw new StudyFailure('학교 연결은 해제됐지만 자동신청 상태를 확인하지 못했어요. 자동신청 설정을 다시 확인해 주세요.',503);
 }
 export async function savedSchoolToken(owner:string):Promise<string|null>{
  const {data,error}=await preprintsClient().from('eduset_student_connections').select('student_id,token_enc,expires_at').eq('user_id',owner).maybeSingle();
- if(error)throw new StudyFailure('저장된 학교 연결을 확인하지 못했습니다.',503);
+ if(error)throw new StudyFailure('저장된 학교 연결을 확인하지 못했어요. 다시 연결해 주세요.',503);
  if(!data)return null;
  if(new Date(data.expires_at).getTime()<=Date.now()){await forgetSchoolConnection(owner);throw new StudyFailure('학교 EduSet 세션의 유효기간이 지났어요. 학교 계정만 다시 로그인해 주세요.',401,'school_connection_expired')}
  try{const value=JSON.parse(decryptToken(data.token_enc));if(value.scope!=='personal-student-v1'||value.owner!==owner||String(value.studentId)!==data.student_id||typeof value.accessToken!=='string')throw Error();return value.accessToken}catch{await forgetSchoolConnection(owner);return null}
 }
 export async function rememberSchoolConnection(owner:string,accessToken:string,student:StudyStudent){
- let exp:number;try{exp=JSON.parse(Buffer.from(accessToken.split('.')[1],'base64url').toString()).exp}catch{throw new StudyFailure('학교 세션 만료 시각을 확인하지 못했습니다.',400)}
+ let exp:number;try{exp=JSON.parse(Buffer.from(accessToken.split('.')[1],'base64url').toString()).exp}catch{throw new StudyFailure('학교 로그인 만료 시각을 확인하지 못했어요. 다시 연결해 주세요.',400)}
  if(typeof exp!=='number'||!Number.isFinite(exp)||exp*1000<=Date.now()+30000)throw new StudyFailure('학교 로그인을 다시 진행해 주세요.',401);
  const token_enc=encryptToken(JSON.stringify({scope:'personal-student-v1',owner,studentId:student.id,accessToken}));
  const {error}=await preprintsClient().from('eduset_student_connections').upsert({user_id:owner,student_id:String(student.id),token_enc,expires_at:new Date(exp*1000).toISOString(),connected_at:new Date().toISOString()});
- if(error)throw new StudyFailure('학교 연결을 저장하지 못했습니다.',503);
+ if(error)throw new StudyFailure('학교 연결을 저장하지 못했어요. 다시 연결해 주세요.',503);
 }

@@ -277,8 +277,8 @@ export default function ManufacturingPage() {
     if(!Number.isFinite(queueHours)||queueHours<=0){showError(adminNotice("Enter a positive estimated duration."));return}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
-      if(error){showError(adminNotice("Could not start this print. Refresh the queue and select the job again."));setQueueJobId('');await loadPrintManagerTab();return}
-      showSuccess(adminNotice("Print started."));setQueueDialogPrinter(null);await loadPrintManagerTab();
+      if(error){showError(adminNotice("Could not record the print start. Refresh the queue and check its status."));setQueueJobId('');await loadPrintManagerTab();return}
+      showSuccess(adminNotice("Job marked as printing."));setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
 
@@ -323,7 +323,7 @@ export default function ManufacturingPage() {
         estimated_end_at: null,
       }).eq('id', printer.id);
       if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
-      else showSuccess(adminNotice("Print completed. Select Collected after collecting the item."));
+      else showSuccess(adminNotice("Printer marked as awaiting collection. Select Collected after collecting the item."));
     } else {
       const { error } = await supabase.from('print_jobs').update({ plates_completed: newCompleted }).eq('id', job.id);
       if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
@@ -345,7 +345,7 @@ export default function ManufacturingPage() {
       estimated_end_at: null,
     }).eq('id', printer.id);
     if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
-    else { showSuccess(adminNotice("Item collected. The printer is now available.")); loadPrintManagerTab(); }
+    else { showSuccess(adminNotice("Printer marked as available.")); loadPrintManagerTab(); }
   }
 
   async function markPrinterBroken(printer: any) {
@@ -372,7 +372,7 @@ export default function ManufacturingPage() {
   async function repairPrinter(printer: any) {
     const { error } = await supabase.from('printers').update({ status: 'idle' }).eq('id', printer.id);
     if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
-    else { showSuccess(adminNotice("Printer restored to service.")); loadPrintManagerTab(); }
+    else { showSuccess(adminNotice("Printer marked as available.")); loadPrintManagerTab(); }
   }
 
   // ── Laser manager ──────────────────────────────────────────────────────

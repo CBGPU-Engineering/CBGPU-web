@@ -14,7 +14,7 @@ function client(key:string){
 /** Only the fresh caller identity is authority. expected_user_id is an intent assertion, never a target. */
 export async function POST(request:NextRequest){
  const token=request.headers.get('authorization')?.match(/^Bearer ([^\s,]{1,8192})$/i)?.[1];
- if(!token)return fail('로그인이 필요합니다.',401);
+ if(!token)return fail('로그인 후 다시 시도해 주세요.',401);
  const anon=process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,service=process.env.SUPABASE_SERVICE_ROLE_KEY;
  if(!anon||!service)return fail('계정 서비스를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',503);
  let expected:unknown;
@@ -31,7 +31,7 @@ export async function POST(request:NextRequest){
  try{
   const{data,error}=await client(anon).auth.getUser(token);
   if(error)return fail('로그인 상태를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',error.status&&error.status>=400&&error.status<500&&error.status!==429?401:503);
-  if(!data.user||!uuid(data.user.id))return fail('로그인이 필요합니다.',401);
+  if(!data.user||!uuid(data.user.id))return fail('로그인 후 다시 시도해 주세요.',401);
   userId=data.user.id;
   if(expected!==undefined&&expected!==userId)return fail('계정이 바뀌었어요. 현재 계정에서 다시 확인해 주세요.',409);
   if(!await activeDeploymentSession(request,userId))return fail('로그인 세션이 종료됐어요. 다시 로그인해 주세요.',401);

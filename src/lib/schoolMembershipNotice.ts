@@ -33,7 +33,7 @@ export function schoolMembershipNotice(
           label: "소속 확인 상태 보기",
         }
       : {
-          text: `${school} 소속 이용이 제한되어 있어요. 학교 관리자에게 확인해주세요.`,
+          text: `${school} 소속 이용이 제한되어 있어요. 학교 관리자에게 확인해 주세요.`,
           href: "/schools",
           label: "내 학교 보기",
         };

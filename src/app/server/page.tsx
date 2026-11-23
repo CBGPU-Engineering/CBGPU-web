@@ -44,7 +44,7 @@ export default function ServerPage() {
     if (!user) return;
     setLoading(true);
     const {data,error}=await serverProjectRequest();
-    if(error)setListError('프로젝트 목록을 불러오지 못했습니다: '+error.message);
+    if(error)setListError('프로젝트 목록을 불러오지 못했어요. 연결을 확인한 뒤 다시 불러와 주세요.');
     else{setProjects(data||[]);setListError('')}
     setLoading(false);
   };
@@ -70,11 +70,11 @@ export default function ServerPage() {
         <div className="space-y-2">
           <h1 className="cb-page-title">로그인이 필요해요</h1>
           <p className="cb-page-sub mt-1">
-            로그인 후 이용할 수 있습니다.
+            로그인하면 내 서버 프로젝트를 확인하고 관리할 수 있어요.
           </p>
         </div>
         <Button onClick={() => router.push('/auth/login?next=%2Fserver')} className="font-semibold px-10 h-12">
-          Login
+          로그인
         </Button>
       </div>
     );

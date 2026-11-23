@@ -19,15 +19,15 @@ export function createStudyLinkHandler(deps:{authorize:(request:Request)=>Promis
    if(body.action==='receive'){
     const ip=request.headers.get('cf-connecting-ip')||'local';if(!deps.limit('receive:'+ip))throw new StudyFailure('잠시 후 다시 연결해 주세요.',429);
     if(!/^[A-F0-9]{16}$/.test(id))throw new StudyFailure('연결 코드를 확인해 주세요.');
-    const entry=entries.get(id);if(!entry)throw new StudyFailure('연결 코드가 만료됐거나 올바르지 않습니다.',404);
-    if(entry.token)throw new StudyFailure('이미 전달된 연결입니다. CBGPU에서 학생 정보를 확인해 주세요.',409);
+    const entry=entries.get(id);if(!entry)throw new StudyFailure('연결 코드가 만료됐거나 올바르지 않아요. CBGPU에서 다시 연결해 주세요.',404);
+    if(entry.token)throw new StudyFailure('이미 계정을 전달했어요. CBGPU에서 학생 정보를 확인해 주세요.',409);
     if(++entry.attempts>5){entries.delete(id);throw new StudyFailure('새 연결 코드를 만들어 주세요.',429)}
     const token=typeof body.accessToken==='string'?body.accessToken:'';
     if(!token||token.length>8192)throw new StudyFailure('공식 사이트에 다시 로그인해 주세요.',401);
     const student=await deps.verify(token);
     // Check expiry and identity again after external verification.
-    if(entries.get(id)!==entry||entry.expires<=now())throw new StudyFailure('연결 코드가 만료됐습니다.',410);
-    if(entry.token)throw new StudyFailure('이미 전달된 연결입니다.',409);
+    if(entries.get(id)!==entry||entry.expires<=now())throw new StudyFailure('연결 코드가 만료됐어요. CBGPU에서 다시 연결해 주세요.',410);
+    if(entry.token)throw new StudyFailure('이미 계정을 전달했어요.',409);
     entry.student=student;entry.token=token;
     return reply({ok:true});
    }
@@ -38,17 +38,17 @@ export function createStudyLinkHandler(deps:{authorize:(request:Request)=>Promis
     for(const [key,e]of entries)if(e.owner===owner)entries.delete(key);
     const id=randomBytes(8).toString('hex').toUpperCase(),expires=now()+5*60_000;entries.set(id,{owner,expires,attempts:0});return reply({id,expires});
    }
-   const entry=entries.get(id);if(!entry||entry.owner!==owner)throw new StudyFailure('연결 코드가 만료됐거나 올바르지 않습니다.',404);
+   const entry=entries.get(id);if(!entry||entry.owner!==owner)throw new StudyFailure('연결 코드가 만료됐거나 올바르지 않아요. CBGPU에서 다시 연결해 주세요.',404);
    if(body.action==='poll')return reply({ready:!!entry.token,student:entry.student??null,expires:entry.expires});
    if(body.action==='cancel'){entries.delete(id);return reply({ok:true})}
    if(body.action==='claim'){
     if(!entry.token||!entry.student)throw new StudyFailure('공식 사이트에서 계정을 먼저 연결해 주세요.',409);
     if(String(body.studentId as StudyId)!==String(entry.student.id))throw new StudyFailure('표시된 학생 정보를 다시 확인해 주세요.',409);
     const student=await deps.verify(entry.token);
-    if(entries.get(id)!==entry||entry.expires<=now())throw new StudyFailure('연결 코드가 만료됐습니다.',410);
+    if(entries.get(id)!==entry||entry.expires<=now())throw new StudyFailure('연결 코드가 만료됐어요. CBGPU에서 다시 연결해 주세요.',410);
     entries.delete(id);return reply({accessToken:entry.token,student});
    }
-   throw new StudyFailure('지원하지 않는 요청입니다.');
-  }catch(e){if(e instanceof StudyFailure)return reply({message:e.message},e.status);const status=(e as {status?:number})?.status;return reply({message:'연결 결과를 확인하지 못했습니다. 다시 시도해 주세요.'},status===413?413:503)}
+   throw new StudyFailure('지원하지 않는 요청이에요. 화면을 새로고침해 주세요.');
+  }catch(e){if(e instanceof StudyFailure)return reply({message:e.message},e.status);const status=(e as {status?:number})?.status;return reply({message:'연결 결과를 확인하지 못했어요. 연결 상태를 확인한 뒤 다시 시도해 주세요.'},status===413?413:503)}
  };
 }

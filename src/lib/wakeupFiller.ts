@@ -7,7 +7,7 @@ export function makeFillerSong(index: number) {
   return {
     id: null,
     isFiller: true as const,
-    title: 'AI 추천곡 자동 채움',
+    title: '최근 신청곡으로 자동 채움',
     thumbnail_url: null,
     youtube_video_id: '',
     status: 'approved' as const,

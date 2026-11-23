@@ -349,7 +349,7 @@ function DashboardSession() {
           </div>
         </div>
 
-        <p className="mb-5 -mt-3 text-sm text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인하세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
+        <p className="mb-5 -mt-3 text-sm text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인해 주세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
         {/* 전체 GPU 예약 현황 캘린더 — 구 /schedule, 누구나 볼 수 있게 항상 공개 */}
         {calendarError&&<div role="alert" className="mb-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{calendarError}</p><Button variant="outline" className="mt-3" disabled={calendarLoading} onClick={()=>setCalendarRevision(value=>value+1)}>예약 현황 다시 불러오기</Button></div>}
         {calendarLoading&&calendarLoaded&&<p role="status" className="mb-3 text-sm text-muted-foreground">예약 현황을 갱신하고 있어요.</p>}
@@ -476,7 +476,7 @@ function DashboardSession() {
         <div className="lg:w-[420px] lg:shrink-0 space-y-6 mb-10 lg:mb-0">
           <div className="flex flex-col gap-2">
             <h2 className="text-xl md:text-2xl font-semibold tracking-tight">예약하기</h2>
-            <p className="text-sm text-muted-foreground font-bold">GPU를 선택하고 예약을 신청하세요</p>
+            <p className="text-sm text-muted-foreground font-bold">GPU와 이용 시간을 선택해 예약을 신청해 주세요.</p>
           </div>
           <ResourceSelection label="GPU 예약 선택"
             items={[1,2,3,4].map(id => ({ value: String(id), label: `GPU #${id}` }))}
@@ -493,7 +493,7 @@ function DashboardSession() {
       {!user ? (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[30vh] text-center space-y-4">
           <h2 className="text-2xl font-semibold">로그인 후 예약해 주세요</h2>
-          <p className="text-muted-foreground">Please sign in to view your reservations.</p>
+          <p className="text-muted-foreground">로그인하면 신청한 예약과 이용 상태를 확인할 수 있어요.</p>
         </div>
       ) : (
       <div id="my-gpu-reservations" className="flex-1 min-w-0 scroll-mt-24">
@@ -516,7 +516,7 @@ function DashboardSession() {
             </Button>
             <Button variant="ghost" size="sm" onClick={fetchMyReservations} disabled={reservationRefreshing} aria-label="내 예약 다시 불러오기" className="hover:bg-primary/10 font-bold text-sm gap-2 h-8">
               <RefreshCw className="size-3" />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">새로고침</span>
             </Button>
           </div>
         </div>
@@ -581,11 +581,11 @@ function DashboardSession() {
                     <div className="space-y-2 mb-4 md:mb-0 w-full md:w-auto">
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="text-lg md:text-xl font-bold text-primary">GPU #{res.gpu_id}</span>
-                        {isPending && <Badge variant="warning">Pending</Badge>}
-                        {isRejected && <Badge variant="danger">Rejected</Badge>}
-                        {isApproved && !isStarted && <Badge variant="default">Upcoming</Badge>}
-                        {isApproved && isStarted && !isEnded && <Badge variant="success">Active Now</Badge>}
-                        {isApproved && isEnded && <Badge variant="muted">Finished</Badge>}
+                        {isPending && <Badge variant="warning">승인 대기</Badge>}
+                        {isRejected && <Badge variant="danger">거절됨</Badge>}
+                        {isApproved && !isStarted && <Badge variant="default">이용 예정</Badge>}
+                        {isApproved && isStarted && !isEnded && <Badge variant="success">이용 중</Badge>}
+                        {isApproved && isEnded && <Badge variant="muted">종료됨</Badge>}
                       </div>
                       <p className="text-sm md:text-sm text-muted-foreground font-bold bg-muted/50 inline-block px-2 py-1 rounded-md">
                         {start.toLocaleString('ko-KR', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -612,7 +612,7 @@ function DashboardSession() {
                         disabled={!canStart}
                         onClick={() => setSelectedRes(selectedRes?.id === res.id ? null : res)}
                       >
-                        {isRejected ? "Access Denied" : isApproved && !isStarted ? "Waiting" : isApproved && isEnded ? "Session Ended" : isApproved ? (selectedRes?.id === res.id ? "Close Guide" : "Start Session") : "Under Review"}
+                        {isRejected ? "예약 거절됨" : isApproved && !isStarted ? "이용 시간 전" : isApproved && isEnded ? "이용 종료됨" : isApproved ? (selectedRes?.id === res.id ? "접속 안내 닫기" : "접속 안내 보기") : "승인 대기 중"}
                       </Button>
                     </div>
                   </div>
@@ -622,7 +622,7 @@ function DashboardSession() {
                     <div className="mt-6 p-6 bg-muted/30 border border-dashed border-primary/20 rounded-2xl animate-in slide-in-from-top-4 duration-500">
                       <div className="space-y-4">
                         <h3 className="flex items-center gap-2 font-semibold text-primary">
-                          <Key className="size-4" /> Access Credentials
+                          <Key className="size-4" /> 접속 정보
                         </h3>
                         <div className="grid gap-4 md:grid-cols-2">
                           <div className="flex flex-col gap-4 rounded-2xl border bg-background p-4">
@@ -640,7 +640,7 @@ function DashboardSession() {
                               </div>
                             </div>
                             <p className="text-sm text-muted-foreground font-medium">
-                              예약 시간에만 유효합니다.
+                              예약 시간에만 사용할 수 있어요.
                             </p>
                             {gpuInfo?.jupyterhubUrl && (
                               <Button
@@ -649,7 +649,7 @@ function DashboardSession() {
                                 variant="outline"
                               >
                                 <a href={gpuInfo.jupyterhubUrl} target="_blank" rel="noopener noreferrer">
-                                  Open Jupyter Notebook
+                                  Jupyter Notebook 열기
                                 </a>
                               </Button>
                             )}
@@ -709,7 +709,7 @@ function DashboardSession() {
               사용 중단
             </DialogTitle>
             <DialogDescription className="text-sm font-bold pt-1">
-              지금 세션을 종료하시겠습니까? 컨테이너가 초기화되며 작업 내용이 삭제됩니다.
+              GPU 이용을 종료할까요? 컨테이너가 초기화되고 작업 내용이 삭제돼요. 필요한 파일을 먼저 내려받아 주세요.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -728,11 +728,11 @@ function DashboardSession() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 font-semibold">
               <AlertTriangle className="size-5 text-destructive" />
-              Cancel Reservation
+              예약 취소
             </DialogTitle>
             <DialogDescription className="text-sm font-bold pt-1">
               {cancelTarget?.status === 'approved'
-                ? "이 예약은 이미 승인된 상태입니다. 정말 취소하시겠습니까?"
+                ? "이미 승인된 예약이에요. 예약을 취소할까요?"
                 : "예약을 취소하시겠습니까?"}
             </DialogDescription>
           </DialogHeader>

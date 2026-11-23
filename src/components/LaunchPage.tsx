@@ -38,10 +38,10 @@ const OVERVIEW = [
 ];
 
 const APP_PERKS = [
-  { Icon: BellRing, label: '놓치지 않는 알림', desc: '자습신청 마감, 급식시간, 제작 완료까지 정확한 시각에 알려줘요. 앱을 꺼둬도 동작해요.' },
+  { Icon: BellRing, label: '놓치지 않는 알림', desc: '앱에서 알림 권한을 켜고 신청·제작 관련 알림을 받아요. 기기의 알림 설정에 따라 표시가 달라질 수 있어요.' },
   { Icon: LayoutGrid, label: '홈 화면 위젯', desc: 'GPU 상태, 3D프린터 현황, 오늘 시간표·급식을 앱을 열지 않고 홈 화면에서 바로 확인해요.' },
   { Icon: Zap, label: '한 번에 실행', desc: '브라우저 주소창 검색 없이, 홈 화면 아이콘 탭 한 번으로 바로 CBGPU를 열어요.' },
-  { Icon: KeyRound, label: '로그인 유지', desc: '매번 다시 로그인할 필요 없이, 앱을 열면 바로 이용할 수 있어요.' },
+  { Icon: KeyRound, label: '로그인 유지', desc: '로그인 상태를 저장해 다음에도 이어서 이용해요. 인증이 만료되면 다시 로그인해야 해요.' },
 ];
 
 export default function LaunchPage() {
@@ -51,7 +51,7 @@ export default function LaunchPage() {
       <section className="px-6 pt-20 pb-24 md:pt-32 md:pb-36 text-center space-y-8 max-w-3xl mx-auto">
         <CBGPULogo  alt="CBGPU" width={72} height={72} className="mx-auto" />
         <div className="space-y-3">
-          <p className="text-sm font-semibold tracking-normal text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
+          <p className="text-sm font-semibold tracking-normal text-muted-foreground">학교생활과 프로젝트를 함께하는 CBGPU</p>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight leading-[1.15]">
             학교 앱,<br />몇 개나 깔았어요?
           </h1>
@@ -131,7 +131,7 @@ export default function LaunchPage() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.25]">GPU 서버부터<br />3D프린터까지</h2>
             <p className="text-muted-foreground text-base sm:text-lg font-normal leading-[1.65]">
               GPU 사용 시간을 직접 예약하고, 3D프린터·레이저 커팅 신청부터 완료까지
-              진행 상황을 실시간으로 확인할 수 있어요.
+              진행 상황을 확인할 수 있어요.
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function LaunchPage() {
         <div className="max-w-3xl mx-auto space-y-10">
           <div className="text-center space-y-2">
             <h2 className="text-3xl font-semibold tracking-tight">앱 {OVERVIEW.length}개 깔 필요 없이, 이거 하나</h2>
-            <p className="text-muted-foreground font-medium">학교생활에 필요한 거의 모든 것이 여기 다 있어요</p>
+            <p className="text-muted-foreground font-medium">학교에 연결된 기능을 한곳에서 이용해요</p>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {OVERVIEW.map(({ href, label, icon: Icon, img }) => (
@@ -220,7 +220,7 @@ export default function LaunchPage() {
       {/* ── Closing CTA ────────────────────────────────────────────────── */}
       <section className="py-24 px-6 text-center space-y-6">
         <h2 className="text-4xl md:text-5xl font-semibold tracking-tight">지금 바로 시작해보세요</h2>
-        <p className="text-muted-foreground font-medium">가입은 1분이면 충분해요. 웹으로 바로, 또는 앱으로.</p>
+        <p className="text-muted-foreground font-medium">웹에서 시작하거나 Android 앱을 설치해 주세요.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/auth/signup"

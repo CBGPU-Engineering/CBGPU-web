@@ -4,10 +4,10 @@ const allowedPath=/^\/(?:users\/[A-Za-z0-9_-]+|students\/[A-Za-z0-9_-]+|policies
 export async function sendSchoolStudent(path:string,token:string,method='GET',body?:unknown){
  const occupation=path.match(/^\/rooms\/[A-Za-z0-9_-]+\/seats\/occupations\?date=\d{4}-\d{2}-\d{2}$/);
  const seatHold=method==='POST'&&/^\/rooms\/[A-Za-z0-9_-]+\/seats\/[A-Za-z0-9_-]+\/occupy$/.test(path);
- if(!(method==='GET'&&occupation)&&!seatHold&&!allowedPath.test(path))throw new StudyFailure('지원하지 않는 요청입니다.',400);
+ if(!(method==='GET'&&occupation)&&!seatHold&&!allowedPath.test(path))throw new StudyFailure('지원하지 않는 요청이에요. 화면을 새로고침해 주세요.',400);
  const challenge=path==='/auth/signin'&&(body as {turnstileResponse?:string})?.turnstileResponse;
  const response=await fetch('https://api.cbsh.edu-set.com'+path,{method,headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token,'x-jwt':token}:{}),...(challenge?{'X-Turnstile-Response':challenge}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15_000)});
  const data=await response.json().catch(()=>null);
- if(!response.ok){const message=Array.isArray(data?.message)?data.message.join(' · '):data?.message;throw new StudyFailure(typeof message==='string'?message.slice(0,600):'EduSet에서 요청을 거절했습니다.',response.status>=500?502:response.status)}
+ if(!response.ok){const message=Array.isArray(data?.message)?data.message.join(' · '):data?.message;throw new StudyFailure(typeof message==='string'?message.slice(0,600):'EduSet에서 요청을 거절했어요. 입력 내용과 학교 계정 상태를 확인해 주세요.',response.status>=500?502:response.status)}
  return data;
 }

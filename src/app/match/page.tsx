@@ -76,7 +76,7 @@ function PostCard({
         <div className="border-t border-border/20 p-4 space-y-3">
           {post.description && <p className="text-sm text-muted-foreground">{post.description}</p>}
           <div className="space-y-1.5">
-            <p className="text-sm font-semibold text-muted-foreground">참여 멤버 ({cnt}/{post.max_members})</p>
+            <p className="text-sm font-semibold text-muted-foreground">참여자 ({cnt}/{post.max_members})</p>
             <div className="flex flex-wrap gap-1.5">
               {allMemberIds.map(id => {
                 const avatar = profileMap.get(id)?.avatar_url;
@@ -96,7 +96,7 @@ function PostCard({
           </div>
           {post.is_open && !isOwner && (
             joined
-              ? <Button variant="outline" size="sm" onClick={onLeave} className="font-semibold text-sm gap-1.5"><X className="size-3" />탈퇴</Button>
+              ? <Button variant="outline" size="sm" onClick={onLeave} className="font-semibold text-sm gap-1.5"><X className="size-3" />스터디 나가기</Button>
               : <Button size="sm" onClick={onJoin} disabled={full} className="font-semibold text-sm gap-1.5">
                   <Plus className="size-3" />{full ? '정원 초과' : '참여하기'}
                 </Button>
@@ -319,7 +319,7 @@ export default function MatchPage() {
           <h1 className="cb-page-title">스터디 매칭</h1>
           <p className="cb-page-sub mt-1">같이 공부할 사람 구하기</p>
         </div>
-        {user && <Button onClick={() => setCreating(true)} className="font-semibold gap-2"><Plus className="size-4" />만들기</Button>}
+        {user && <Button onClick={() => setCreating(true)} className="font-semibold gap-2"><Plus className="size-4" />스터디 만들기</Button>}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -338,7 +338,7 @@ export default function MatchPage() {
         </div>
       </div>
 
-      {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="모집글 불러오는 중" /></div>
+      {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="모집 글을 불러오는 중" /></div>
       : loadError ? <div role="alert" className="space-y-3 rounded-xl border border-border bg-card p-5"><p className="text-sm">{loadError}</p><Button variant="outline" onClick={() => void load()}>스터디 다시 불러오기</Button></div> : shown.length === 0 ? (
         <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground font-medium">아직 표시할 스터디가 없어요. 다른 과목을 선택하거나 새 스터디를 만들어 보세요.</div>
       ) : (

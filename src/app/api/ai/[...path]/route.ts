@@ -63,7 +63,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    if(isKey)throw new AiFailure('자료를 열 수 있는 CBGPU 계정 로그인이 필요해요.',403);
    const client=aiUserClient(token),{data:material,error}=await client.from('shared_materials').select('id,title,file_name,status').eq('id',path[1]).eq('status','ready').maybeSingle();if(error||!material)throw new AiFailure('자료를 찾을 수 없어요.',404);
    const file=await fetch('http://127.0.0.1:8421/materials/'+path[1]+'/content',{headers:{Authorization:'Bearer '+token},signal:AbortSignal.timeout(60_000)});if(!file.ok||!file.body)throw new AiFailure('원본 파일을 읽지 못했어요.',502);
-   const uploadResponse=await aiInternal('uploads',owner,'POST',undefined,file.body,'?name='+encodeURIComponent(material.file_name));const upload=await uploadResponse.json();if(!uploadResponse.ok)throw new AiFailure(upload.message||'문서가 너무 커요.',uploadResponse.status);
+   const uploadResponse=await aiInternal('uploads',owner,'POST',undefined,file.body,'?name='+encodeURIComponent(material.file_name));const upload=await uploadResponse.json();if(!uploadResponse.ok)throw new AiFailure(upload.message||'자료 파일을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.',uploadResponse.status);
    return NextResponse.json(await aiJson('jobs',owner,'POST',{kind:'document',title:'자료 요약: '+material.title,input:{upload_id:upload.id}}),{status:202});
   }
   if(path[0]==='v1'){

@@ -274,8 +274,8 @@ export default function TechNews() {
       {total > 0 && (
         <p className="text-center text-sm text-muted-foreground pt-2">
           {src === 'hn'
-            ? <>Via <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">Hacker News</a></>
-            : '🔍 Google News · 5분마다 자동 갱신'}
+            ? <>출처 <a href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">Hacker News</a></>
+            : 'Google News · 5분마다 새 소식 확인'}
         </p>
       )}
     </div>

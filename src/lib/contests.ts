@@ -153,7 +153,7 @@ export function isHttpUrl(value: string) {
 }
 
 export function fileError(file: Pick<File, 'name' | 'size'>, field: ContestField) {
-  if (!file.size) return '빈 파일은 제출할 수 없어요.';
+  if (!file.size) return '내용이 있는 파일을 선택해 주세요.';
   if (file.size > field.max_size_mb * 1024 * 1024) return `${field.label}: 파일은 ${field.max_size_mb}MB 이하여야 해요.`;
   const allowed = field.extensions.split(',').map(ext => ext.trim().toLowerCase()).filter(Boolean);
   if (allowed.length && !allowed.some(ext => file.name.toLowerCase().endsWith(ext))) {

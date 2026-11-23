@@ -36,6 +36,6 @@ ${options.bodyHtml || ''}
 ${options.afterButtonHtml || ''}
 ${options.note ? `<p style="margin:0;font-size:13px;line-height:1.8;color:#6b7280;">${esc(options.note)}</p>` : ''}
 </td></tr>
-<tr><td style="padding:22px 32px;border-top:1px solid #edf0f5;background:#fafbfe;border-radius:0 0 20px 20px;"><p style="margin:0 0 8px;font-size:12px;line-height:1.7;color:#6b7280;">충북과학고 학생 생활 플랫폼 · CBGPU</p><a href="mailto:${SUPPORT_EMAIL}" style="font-size:12px;line-height:1.8;color:#004fe8;text-decoration:underline;">${SUPPORT_EMAIL}</a><span style="padding:0 8px;color:#c3c9d3;">·</span><a href="${SITE_URL}" style="font-size:12px;color:#6b7280;text-decoration:underline;">cbgpu.com</a></td></tr>
+<tr><td style="padding:22px 32px;border-top:1px solid #edf0f5;background:#fafbfe;border-radius:0 0 20px 20px;"><p style="margin:0 0 8px;font-size:12px;line-height:1.7;color:#6b7280;">학교생활과 프로젝트를 함께하는 CBGPU</p><a href="mailto:${SUPPORT_EMAIL}" style="font-size:12px;line-height:1.8;color:#004fe8;text-decoration:underline;">${SUPPORT_EMAIL}</a><span style="padding:0 8px;color:#c3c9d3;">·</span><a href="${SITE_URL}" style="font-size:12px;color:#6b7280;text-decoration:underline;">cbgpu.com</a></td></tr>
 </table></td></tr></table></body></html>`;
 }

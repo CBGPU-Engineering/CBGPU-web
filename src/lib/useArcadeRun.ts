@@ -43,7 +43,7 @@ export function useArcadeRun(game: ArcadeGame, { ranked = false, onRecord }: Ran
     });
   }, []);
   const statusText = pending ? '게임을 준비하고 있어요.' : !attempted ? (ranked ? '시작하면 기록 모드를 준비해요.' : '연습 모드 · 기록은 저장하지 않아요.') : ({
-    local: ranked ? '기록 서버에 연결하지 못해 연습 모드로 진행해요. 새 게임에서 다시 시도하세요.' : '연습 모드 · 기록은 저장하지 않아요.',
+    local: ranked ? '기록 서버에 연결하지 못해 연습 모드로 진행해요. 새 게임에서 다시 시도해 주세요.' : '연습 모드 · 기록은 저장하지 않아요.',
     ranked: '기록 모드 · 플레이를 검증한 후 저장해요.',
     saving: '플레이를 검증하고 있어요.',
     saved: '검증한 기록을 저장했어요.',

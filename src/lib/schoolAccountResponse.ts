@@ -1,7 +1,7 @@
 import {boundedSchoolBody} from './schoolsProxySecurity.ts';
 /** One bounded request, including its body. Mutations are never retried. */
 export async function schoolAccountResponse(url:string,init:RequestInit,timeoutMs=30000,fetcher:typeof fetch=fetch){
- const unavailable='학교 요청 결과를 확인하지 못했어요. 새로고침 후 상태를 확인해주세요.';
+ const unavailable='학교 요청 결과를 확인하지 못했어요. 새로고침 후 상태를 확인해 주세요.';
  if(!url.startsWith('/api/schools/')||url.includes('#'))throw Error(unavailable);
  const controller=new AbortController();let response:Response|undefined,timer:ReturnType<typeof setTimeout>|undefined;
  const abort=()=>controller.abort();

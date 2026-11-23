@@ -146,12 +146,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         if (conflict) { showError(adminNotice("Cannot approve: this overlaps an approved reservation.")); return; }
       }
       const { error } = await supabase.rpc('approve_gpu_reservation', { p_reservation_id: id });
-      if (error) showError(adminNotice("Operation failed: " + error.message));
+      if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
       else { showSuccess(adminNotice("Reservation approved.")); await fetchReservations(); }
       return;
     }
     const { data, error } = await supabase.from('reservations').update({ status: newStatus }).eq('id', id).eq('status',observed.status).eq('end_time',observed.end_time).gt('end_time',new Date().toISOString()).select('id');
-    if (error || !data?.length) showError(adminNotice("Operation failed: " + (error?.message || "No reservations were changed.")));
+    if (error || !data?.length) showError(adminNotice("No reservation change was confirmed. Refresh the list before retrying."));
     else { showSuccess(adminNotice(`Status changed to ${newStatus}.`)); await fetchReservations(); }
     });
   }
@@ -186,7 +186,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       updates.deploy_requested_at = new Date().toISOString();
     }
     const { error } = await supabase.from('cpu_projects').update(updates).eq('id', id);
-    if (error) showError(adminNotice("Operation failed: " + error.message));
+    if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
     else { showSuccess(adminNotice(`Status changed to ${newStatus}.`)); await fetchCpuProjects(); }
     });
   }
@@ -220,7 +220,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError(adminNotice('School membership is managed in the authorized school workspace.'));return;}
     return runRowAction('account:' + id, async () => {
     const { error } = await supabase.from('profiles').update({ is_approved: approved }).eq('id', id);
-    if (error) showError(adminNotice("Operation failed: " + error.message));
+    if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
     else {
       showSuccess(adminNotice(approved ? t("Account approved.") : t("Account marked for identity review.")));
       await fetchProfiles();
@@ -256,7 +256,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   async function toggleLaserManager(id: string, current: boolean) {
     const { error } = await supabase.from('profiles').update({ is_laser_cut_manager: !current }).eq('id', id);
-    if (error) showError(adminNotice("Operation failed: " + error.message));
+    if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
     else {
       showSuccess(adminNotice(!current ? t("Laser manager assigned.") : t("Laser manager removed.")));
       fetchProfiles();
@@ -309,13 +309,13 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     const userId = addPrinterManagerSelect[printerId];
     if (!userId) { showError(adminNotice("Select a person to assign.")); return; }
     const { error } = await supabase.from('printer_managers').insert({ printer_id: printerId, user_id: userId });
-    if (error) showError(adminNotice("Could not add: " + error.message));
+    if (error) showError(adminNotice("Could not confirm the manager assignment. Refresh the manager list before retrying."));
     else { showSuccess(adminNotice("Manager added.")); setAddPrinterManagerSelect(s => ({ ...s, [printerId]: '' })); fetchPrinterManagers(); }
   }
 
   async function removePrinterManager(printerId: number, userId: string) {
     const { error } = await supabase.from('printer_managers').delete().eq('printer_id', printerId).eq('user_id', userId);
-    if (error) showError(adminNotice("Could not remove: " + error.message));
+    if (error) showError(adminNotice("Could not confirm the manager removal. Refresh the manager list before retrying."));
     else { showSuccess(adminNotice("Manager removed.")); fetchPrinterManagers(); }
   }
 
@@ -338,7 +338,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   async function toggleWakeupManager(id: string, current: boolean) {
     const { error } = await supabase.from('profiles').update({ is_wakeup_manager: !current }).eq('id', id);
-    if (error) showError(adminNotice("Operation failed: " + error.message));
+    if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
     else { showSuccess(adminNotice(!current ? t("Wake-up music manager assigned.") : t("Wake-up music manager removed."))); fetchWakeupManagers(); }
   }
 
@@ -369,7 +369,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     const { error } = await supabase
       .from('site_banner')
       .upsert({ id: 1, message: bannerMessage, is_active: active }, { onConflict: 'id' });
-    if (error) showError(adminNotice("Could not save: " + error.message));
+    if (error) showError(adminNotice("Could not confirm the announcement change. Refresh its status before retrying."));
     else {
       setBannerActive(active);
       showSuccess(adminNotice(active ? t("Announcement enabled.") : t("Announcement disabled.")));

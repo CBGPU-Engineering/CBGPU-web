@@ -16,14 +16,14 @@ export function useManufacturingFile(viewer:string|undefined,path:string|null|un
  const [busy,setBusy]=useState({key:'',value:false});
  useLayoutEffect(()=>{
   current.current=key;controller.invalidate();const ownedTimers=timers.current,live=()=>current.current===key;
-  if(viewer&&path)void controller.preview(fileClient,viewer,path,live).then(url=>{if(live())setPreview({key,url,error:''})}).catch(error=>{if(live())setPreview({key,url:null,error:error instanceof Error?error.message:'파일을 불러오지 못했습니다. 다시 시도해 주세요.'})});
+  if(viewer&&path)void controller.preview(fileClient,viewer,path,live).then(url=>{if(live())setPreview({key,url,error:''})}).catch(error=>{if(live())setPreview({key,url:null,error:error instanceof Error?error.message:'파일을 불러오지 못했어요. 다시 시도해 주세요.'})});
   return()=>{current.current=null;controller.invalidate();for(const timer of ownedTimers)clearTimeout(timer);ownedTimers.clear();};
  },[controller,key,viewer,path,fileClient]);
  const reload=useCallback(()=>setRevision(value=>value+1),[]);
  const download=useCallback(async(name:string)=>{
   const live=()=>current.current===key;if(!viewer||!path||!live()||busy.key===key&&busy.value)return;setBusy({key,value:true});
   try{const url=await controller.download(fileClient,viewer,path,live);if(url&&live())save(controller,url,name,timers.current);}
-  catch(error){if(live()){controller.invalidate();setPreview({key,url:null,error:error instanceof Error?error.message:'파일 다운로드 권한을 확인하지 못했습니다. 다시 시도해 주세요.'});}}
+  catch(error){if(live()){controller.invalidate();setPreview({key,url:null,error:error instanceof Error?error.message:'파일 다운로드 권한을 확인하지 못했어요. 다시 시도해 주세요.'});}}
   finally{if(live())setBusy({key,value:false});}
  },[viewer,path,key,busy,controller,fileClient]);
  const ready=preview.key===key;

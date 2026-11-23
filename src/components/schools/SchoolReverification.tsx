@@ -9,13 +9,13 @@ import { Input } from "@/components/ui/input";
 import { InlineFeedback } from "@/components/ui/product-motion";
 function verificationError(message: string) {
   if (message.includes("DUPLICATE_STUDENT_NUMBER"))
-    return "이 학교와 학년도에 이미 등록된 학번이에요. 본인의 학번을 확인해주세요.";
+    return "이 학교와 학년도에 이미 등록된 학번이에요. 본인의 학번을 확인해 주세요.";
   if (message.includes("INVALID_STUDENT_NUMBER"))
-    return "요구되는 새 학년과 학년도에 맞는 학번을 입력해주세요.";
+    return "요구되는 새 학년과 학년도에 맞는 학번을 입력해 주세요.";
   if (message.includes("REVERIFICATION_NOT_REQUIRED"))
-    return "현재 이 학교 소속은 학번 재인증 대상이 아니에요. 학교 목록에서 상태를 확인해주세요.";
+    return "현재 이 학교 소속은 학번 재인증 대상이 아니에요. 학교 목록에서 상태를 확인해 주세요.";
   if (message.includes("UNSUPPORTED_ACADEMIC_POLICY"))
-    return "이 학교의 학번 정책은 아직 지원하지 않아요. 학교 관리자에게 문의해주세요.";
+    return "이 학교의 학번 정책은 아직 지원하지 않아요. 학교 관리자에게 문의해 주세요.";
   return message;
 }
 export default function SchoolReverification({
@@ -75,7 +75,7 @@ function Verification({ schoolId }: { schoolId: string }) {
       !/^[1-3][1-3]\d{2}$/.test(number) ||
       Number(number[0]) !== member.required_grade
     ) {
-      setError("학교에서 요구하는 새 학년과 4자리 학번을 확인해주세요.");
+      setError("학교에서 요구하는 새 학년과 4자리 학번을 확인해 주세요.");
       return;
     }
     setBusy(true);
@@ -98,7 +98,7 @@ function Verification({ schoolId }: { schoolId: string }) {
         value.membership.user_id !== user?.id ||
         value.requires_review !== true
       )
-        throw Error("학교 소속 응답을 확인하지 못했어요. 다시 조회해주세요.");
+        throw Error("학교 소속 응답을 확인하지 못했어요. 다시 조회해 주세요.");
       setMember({ ...member, ...value.membership, school: member.school });
       setNumber("");
       setNotice(
@@ -117,7 +117,7 @@ function Verification({ schoolId }: { schoolId: string }) {
     return (
       <p>
         <Link href="/auth/login" className="text-primary underline">
-          로그인 후 학교 소속을 확인해주세요.
+          로그인 후 학교 소속을 확인해 주세요.
         </Link>
       </p>
     );
@@ -178,7 +178,7 @@ function Verification({ schoolId }: { schoolId: string }) {
           ) : member.status === "REVERIFICATION_REQUIRED" ? (
             <p className="text-sm">
               이 학교의 학번 정책은 아직 지원하지 않아요. 학교 관리자에게
-              문의해주세요.
+              문의해 주세요.
             </p>
           ) : null}
         </div>

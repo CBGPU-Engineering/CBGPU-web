@@ -81,12 +81,12 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
   const submitRequest = async () => {
     setCompletedRequest('');
     if (!await gpuPermission.verify()) {
-      showError(gpuPermission.enabled?gpuPermission.reason:'학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
+      showError(gpuPermission.enabled?gpuPermission.reason:'이름과 학번을 확인해야 예약할 수 있어요. 프로필에서 정보를 확인해 주세요.'); return;
     }
     if (selectedWeeks.length === 0) { showError('주차를 선택해 주세요.'); return; }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { showError('로그인이 필요합니다.'); return; }
+    if (!user) { showError('로그인한 뒤 다시 신청해 주세요.'); return; }
 
     setIsSubmitting(true);
     try {
@@ -149,7 +149,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
 
         if (adjustedStart >= end) {
           setIsSubmitting(false);
-          showError(`${format(start, 'M월 d일', { locale: ko })} 주는 남은 기간이 없습니다.`); return;
+          showError(`${format(start, 'M월 d일', { locale: ko })} 주는 예약할 수 있는 시간이 남아 있지 않아요. 다른 주를 선택해 주세요.`); return;
         }
 
         const hasConflict = existing?.some((res: { start_time: string; end_time: string }) => {
@@ -160,7 +160,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
 
         if (hasConflict) {
           setIsSubmitting(false);
-          showError(`${format(start, 'M월 d일', { locale: ko })} 주에는 이미 대기 또는 확정된 예약이 있습니다.`); return;
+          showError(`${format(start, 'M월 d일', { locale: ko })} 주에는 대기 중이거나 승인된 예약이 있어요. 다른 주를 선택해 주세요.`); return;
         }
 
         records.push({
@@ -180,7 +180,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
       setSelectedWeeks([]);
       fetchApprovedReservations();
     } catch (err: any) {
-      showError(err?.code === '23P01' ? '해당 시간에 이미 대기 또는 확정된 GPU 예약이 있습니다.' : '예약 실패: ' + err.message);
+      showError(err?.code === '23P01' ? '선택한 시간에 대기 중이거나 승인된 GPU 예약이 있어요. 다른 시간을 선택해 주세요.' : '예약 신청 결과를 확인하지 못했어요. 내 예약에서 상태를 확인한 뒤 다시 신청해 주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -205,12 +205,12 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
             className="text-xs font-semibold h-6 bg-background/80 backdrop-blur-sm shadow-sm"
             aria-expanded={showSchedule} aria-label={showSchedule?`GPU ${id} 예약 입력으로 돌아가기`:`GPU ${id} 예약 일정 보기`} onClick={() => setShowSchedule(!showSchedule)}
           >
-            {showSchedule ? 'CLOSE SCHEDULE' : 'VIEW CALENDAR'}
+            {showSchedule ? '예약 현황 닫기' : '예약 현황 보기'}
           </Button>
         </div>
         <div className="absolute top-2 left-2">
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-violet-500/80 text-white backdrop-blur-sm">
-            WEEKLY
+            주 단위
           </span>
         </div>
       </CardHeader>
@@ -234,7 +234,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
             </p>
             <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
               {approvedReservations.length === 0 ? (
-                <p className="text-xs text-muted-foreground/50 pl-1">No approved reservations</p>
+                <p className="text-xs text-muted-foreground/50 pl-1">승인된 예약이 없어요</p>
               ) : (
                 approvedReservations.map((res, i) => (
                   <div key={i} className="text-xs p-2.5 bg-muted/30 rounded-2xl border border-border/30">
@@ -244,7 +244,7 @@ export default function WeeklyGPUCard({ id, name }: { id: number; name: string }
                         <span className="mx-1 opacity-40">–</span>
                         {format(parseISO(res.end_time), 'M/d (eee)', { locale: ko })}
                       </span>
-                      <span className="text-emerald-600">Reserved</span>
+                      <span className="text-emerald-600">예약됨</span>
                     </div>
                   </div>
                 ))

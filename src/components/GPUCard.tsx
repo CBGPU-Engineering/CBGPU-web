@@ -85,7 +85,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
   const submitRequest = async () => {
     setCompletedRequest('');
     if (!await gpuPermission.verify()) {
-      showError(gpuPermission.enabled?gpuPermission.reason:'학번 또는 이름 확인이 필요해 예약할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return;
+      showError(gpuPermission.enabled?gpuPermission.reason:'이름과 학번을 확인해야 예약할 수 있어요. 프로필에서 정보를 확인해 주세요.'); return;
     }
 
     if (showSchedule) {
@@ -94,11 +94,11 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
     }
 
     if (start <= new Date()) {
-      showError('시작 시간은 현재 시간보다 늦어야 합니다.'); return;
+      showError('현재 시간보다 늦은 시작 시각을 선택해 주세요.'); return;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { showError('로그인이 필요합니다.'); return; }
+    if (!user) { showError('로그인한 뒤 다시 신청해 주세요.'); return; }
 
     setIsSubmitting(true);
 
@@ -117,7 +117,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
 
       if (hasConflict) {
         setIsSubmitting(false);
-        showError('해당 시간에는 이미 대기 또는 확정된 예약이 있습니다.'); return;
+        showError('선택한 시간에 대기 중이거나 승인된 예약이 있어요. 다른 시간을 선택해 주세요.'); return;
       }
 
       const { error } = await supabase
@@ -138,7 +138,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
       fetchApprovedReservations();
     } catch (error: any) {
       console.error('Reservation Error:', error);
-      showError(error?.code === '23P01' ? '해당 시간에 이미 대기 또는 확정된 GPU 예약이 있습니다.' : '예약 실패: ' + error.message);
+      showError(error?.code === '23P01' ? '선택한 시간에 대기 중이거나 승인된 GPU 예약이 있어요. 다른 시간을 선택해 주세요.' : '예약 신청 결과를 확인하지 못했어요. 내 예약에서 상태를 확인한 뒤 다시 신청해 주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +176,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                 className="text-xs font-semibold h-6 bg-background/80 backdrop-blur-sm shadow-sm"
                 aria-expanded={showSchedule} aria-label={showSchedule?`GPU ${id} 예약 입력으로 돌아가기`:`GPU ${id} 예약 일정 보기`} onClick={() => setShowSchedule(!showSchedule)}
             >
-                {showSchedule ? "CLOSE SCHEDULE" : "VIEW CALENDAR"}
+                {showSchedule ? "예약 현황 닫기" : "예약 현황 보기"}
             </Button>
         </div>
       </CardHeader>
@@ -206,7 +206,7 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                       <div className="h-[1px] flex-grow bg-border/50"></div>
                     </div>
                     {dayReservations.length === 0 ? (
-                      <p className="text-xs text-muted-foreground/50 pl-2">No reservations</p>
+                      <p className="text-xs text-muted-foreground/50 pl-2">예약이 없어요</p>
                     ) : (
                       dayReservations.map((res, i) => {
                         const s = parseISO(res.start_time);
@@ -220,8 +220,8 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
                               <span>
                                 {isStart ? format(s, 'HH:mm') : '00:00'} - {isEnd ? format(e, 'HH:mm') : '23:59'}
                               </span>
-                              {!isStart && !isEnd && <span className="text-xs bg-primary/20 text-primary px-1 rounded">ALL DAY</span>}
-                              <span className="text-xs text-muted-foreground opacity-70">Reserved</span>
+                              {!isStart && !isEnd && <span className="text-xs bg-primary/20 text-primary px-1 rounded">종일</span>}
+                              <span className="text-xs text-muted-foreground opacity-70">예약됨</span>
                             </div>
                           </div>
                         );

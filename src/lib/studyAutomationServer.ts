@@ -8,9 +8,9 @@ import {reserveStudySubmission,releaseStudyPeriod} from './studySubmissionStore'
 /** Owner originates only from a trusted saved automation row, never a caller header/body. */
 export async function requireAutomaticStudyOwner(owner:string){
  if(!studyScopedMode())return;
- if(!/^[a-f0-9-]{36}$/i.test(owner))throw new StudyFailure('자동신청 계정을 확인하지 못했습니다.',403);
- try{const {data,error}=await preprintsClient().rpc('cbgpu_service_can_use_resource',{user_id:owner,resource:'study',target_school:'cbsh'});if(error)throw new StudyFailure('자습 권한 확인 서버에 연결하지 못했습니다.',503);if(data!==true)throw new StudyFailure('자습 권한이 만료되거나 회수되었습니다.',403);}
- catch(error){if(error instanceof StudyFailure)throw error;throw new StudyFailure('자습 권한 확인 서버에 연결하지 못했습니다.',503);}
+ if(!/^[a-f0-9-]{36}$/i.test(owner))throw new StudyFailure('자동신청 계정을 확인하지 못했어요. CBGPU에 다시 로그인해 주세요.',403);
+ try{const {data,error}=await preprintsClient().rpc('cbgpu_service_can_use_resource',{user_id:owner,resource:'study',target_school:'cbsh'});if(error)throw new StudyFailure('자습 이용 권한을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',503);if(data!==true)throw new StudyFailure('자습 이용 권한이 만료됐거나 회수됐어요. 이용 권한을 확인해 주세요.',403);}
+ catch(error){if(error instanceof StudyFailure)throw error;throw new StudyFailure('자습 이용 권한을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',503);}
 }
 export async function automaticSchoolRequest(owner:string,body?:unknown){
  await requireAutomaticStudyOwner(owner);
@@ -20,5 +20,5 @@ export async function automaticSchoolRequest(owner:string,body?:unknown){
 }
 export async function automaticStudyContext(owner:string):Promise<StudyContext>{const response=await automaticSchoolRequest(owner);const body=await response.json();if(!response.ok)throw new StudyFailure(body.message||'학교 계정 연결을 확인해 주세요.',response.status,body.code);return body}
 export async function personalSchoolRead(owner:string,path:string,method='GET',body?:unknown){await requireAutomaticStudyOwner(owner);const token=await savedSchoolToken(owner);if(!token)throw new StudyFailure('학교 계정을 다시 연결해 주세요.',401);return sendSchoolStudent(path,token,method,body)}
-export async function automationRuns(owner:string){const {data,error}=await preprintsClient().from('study_auto_runs').select('study_date,period,status,message,room_name,seat_name,started_at,finished_at').eq('user_id',owner).order('study_date',{ascending:false}).order('period',{ascending:true}).limit(24);if(error)throw new StudyFailure('자동신청 기록을 확인하지 못했습니다.',503);return data||[]}
+export async function automationRuns(owner:string){const {data,error}=await preprintsClient().from('study_auto_runs').select('study_date,period,status,message,room_name,seat_name,started_at,finished_at').eq('user_id',owner).order('study_date',{ascending:false}).order('period',{ascending:true}).limit(24);if(error)throw new StudyFailure('자동신청 기록을 확인하지 못했어요. 다시 불러와 주세요.',503);return data||[]}
 export function sortedPeriods(values:unknown):number[]{return Array.isArray(values)?[...new Set(values.filter((v):v is number=>Number.isInteger(v)&&v>0))].sort((a,b)=>a-b):[]}

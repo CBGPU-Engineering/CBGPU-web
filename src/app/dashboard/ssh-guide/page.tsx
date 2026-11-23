@@ -30,12 +30,12 @@ function Command({ value }: { value: string }) {
 const STEPS = [
   {
     title: '1. SSH 키 만들기',
-    body: 'Windows는 PowerShell, macOS·Linux는 터미널을 열고 실행하세요. 기본 저장 위치는 Enter로 선택할 수 있습니다. 같은 이름의 키가 이미 있으면 덮어쓰지 마세요.',
+    body: 'Windows는 PowerShell, macOS·Linux는 터미널을 열고 실행해 주세요. Enter를 누르면 기본 위치에 저장해요. 같은 이름의 키가 이미 있으면 덮어쓰지 마세요.',
     commands: [{ label: '모든 운영체제', value: 'ssh-keygen -t ed25519' }],
   },
   {
     title: '2. 공개키 복사하기',
-    body: '.pub으로 끝나는 파일이 공개키입니다. 사용하는 운영체제의 명령어를 실행하세요.',
+    body: '.pub으로 끝나는 파일이 공개키예요. 사용하는 운영체제의 명령어를 실행해 주세요.',
     commands: [
       { label: 'Windows PowerShell', value: 'Get-Content $env:USERPROFILE\\.ssh\\id_ed25519.pub | Set-Clipboard' },
       { label: 'macOS', value: 'pbcopy < ~/.ssh/id_ed25519.pub' },
@@ -74,7 +74,7 @@ export default function GpuSshGuidePage() {
   async function copySkill() {
     try {
       const response = await fetch(SKILL_PATH);
-      if (!response.ok) throw new Error('스킬 문서를 불러오지 못했습니다.');
+      if (!response.ok) throw new Error('스킬 문서를 불러오지 못했어요. 파일 받기로 다시 확인해 주세요.');
       await navigator.clipboard.writeText(await response.text());
       showSuccess('AI Agent 스킬 문서를 복사했어요.');
     } catch {
@@ -103,7 +103,7 @@ export default function GpuSshGuidePage() {
           <span className="text-sm font-semibold">GPU SSH</span>
         </div>
         <h1 className="cb-page-title">SSH 접속 방법</h1>
-        <p className="text-sm text-muted-foreground">키와 접속 설정을 한 번 등록하면 예약한 GPU 컨테이너에 서버 비밀번호 없이 접속할 수 있습니다.</p>
+        <p className="text-sm text-muted-foreground">키와 접속 설정을 한 번 등록하면 예약한 GPU 컨테이너에 서버 비밀번호 없이 접속할 수 있어요.</p>
       </header>
 
       {STEPS.map((step) => (
@@ -136,31 +136,31 @@ export default function GpuSshGuidePage() {
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-bold">4. SSH 접속 설정하기</h2>
-        <p className="text-sm text-muted-foreground">OpenSSL을 사용할 수 있는 터미널에서 아래 내용을 <code>~/.ssh/config</code>에 추가하세요. Windows에서는 Git Bash의 <code>~/.ssh/config</code>를 사용합니다. 기존 설정이 있다면 끝에 추가하고 덮어쓰지 마세요.</p>
+        <p className="text-sm text-muted-foreground">OpenSSL을 사용할 수 있는 터미널에서 아래 내용을 <code>~/.ssh/config</code>에 추가하세요. Windows에서는 Git Bash의 <code>~/.ssh/config</code>를 사용해요. 기존 설정이 있다면 끝에 추가하고 덮어쓰지 마세요.</p>
         <div className="overflow-hidden rounded-2xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 설정 복사</Button>
           </div>
           <pre className="overflow-x-auto p-4 text-sm leading-relaxed"><code>{SSH_CONFIG}</code></pre>
         </div>
-        <p className="text-sm text-muted-foreground">설정 전 <code>openssl version</code>으로 설치 여부를 확인하세요. 처음 연결할 때 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
+        <p className="text-sm text-muted-foreground">설정 전 <code>openssl version</code>으로 설치 여부를 확인하세요. 처음 연결할 때 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>예요.</p>
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-bold">교내망에서 접속할 때</h2>
-        <p className="text-sm text-muted-foreground">학교 Wi-Fi·유선망에서 공개 주소가 연결되지 않으면 아래 설정을 추가하세요. 이 경로는 Tailscale 설정을 요구하지 않습니다. 교내 방화벽이 포트를 막으면 학교 네트워크 담당자의 확인이 필요합니다.</p>
+        <p className="text-sm text-muted-foreground">학교 Wi-Fi·유선망에서 공개 주소에 연결되지 않으면 아래 설정을 추가해 주세요. 이 경로에는 Tailscale 설정이 필요 없어요. 교내 방화벽이 포트를 막으면 학교 네트워크 담당자에게 확인을 요청해 주세요.</p>
         <div className="overflow-hidden rounded-2xl border bg-muted/30">
           <div className="flex justify-end border-b px-2 py-1">
             <Button type="button" size="sm" variant="ghost" onClick={() => copyConfig(SCHOOL_SSH_CONFIG)} className="gap-1.5"><Copy className="size-3.5" /> 교내망 설정 복사</Button>
           </div>
           <pre className="overflow-x-auto p-4 text-sm leading-relaxed"><code>{SCHOOL_SSH_CONFIG}</code></pre>
         </div>
-        <p className="text-sm text-muted-foreground">예약한 GPU 번호로 <code>ssh cbgpu-gpu4-school</code>처럼 접속하세요. 처음 표시되는 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>입니다.</p>
+        <p className="text-sm text-muted-foreground">예약한 GPU 번호로 <code>ssh cbgpu-gpu4-school</code>처럼 접속하세요. 처음 표시되는 게이트웨이 키 지문은 <code>SHA256:f0MfUHiEtvydl+erJ8c79MkiuUDvqdamm1X9jVB+n8k</code>예요.</p>
       </section>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-bold">5. 예약한 GPU에 접속하기</h2>
-        <p className="text-sm text-muted-foreground">승인된 예약 시간에 해당 GPU의 명령어를 실행하세요. Tailscale 초대는 필요하지 않습니다.</p>
+        <p className="text-sm text-muted-foreground">승인된 예약 시간에 해당 GPU의 명령어를 실행해 주세요. Tailscale 초대는 필요 없어요.</p>
         <div className="space-y-3">
           {[1, 2, 3, 4].map((gpu) => (
             <div key={gpu} className="space-y-1.5">
@@ -169,12 +169,12 @@ export default function GpuSshGuidePage() {
             </div>
           ))}
         </div>
-        <p className="text-sm text-muted-foreground">접속 권한은 승인된 예약 시간에만 적용됩니다. 공개키 저장 후 반영까지 약 30초 걸릴 수 있습니다. 이미 연결된 Tailscale 기기에서는 기존 <code>ssh -p 2201 root@100.100.136.37</code> 방식도 이용할 수 있습니다.</p>
+        <p className="text-sm text-muted-foreground">접속 권한은 승인된 예약 시간에만 적용돼요. 공개키 저장 후 반영까지 약 30초 걸릴 수 있어요. 이미 연결된 Tailscale 기기에서는 기존 <code>ssh -p 2201 root@100.100.136.37</code> 방식도 이용할 수 있어요.</p>
       </section>
 
       <div className="flex gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm">
         <ShieldCheck className="mt-0.5 size-5 shrink-0 text-primary" />
-        <p><strong>개인키는 본인 기기에만 보관하세요.</strong> 사이트에는 <code>.pub</code> 파일 내용만 입력합니다. SSH의 <code>root</code> 권한은 해당 GPU 컨테이너 내부에만 적용됩니다.</p>
+        <p><strong>개인키는 본인 기기에만 보관하세요.</strong> 사이트에는 <code>.pub</code> 파일 내용만 입력해 주세요. SSH의 <code>root</code> 권한은 해당 GPU 컨테이너 내부에만 적용돼요.</p>
       </div>
 
       <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
@@ -182,7 +182,7 @@ export default function GpuSshGuidePage() {
           <FileText className="size-5 text-primary" />
           <h2 className="text-lg font-bold">AI Agent용 스킬</h2>
         </div>
-        <p className="text-sm text-muted-foreground">에이전트가 키 생성과 GPU 접속을 도울 때 사용할 <code>SKILL.md</code>입니다. 내용을 복사해 전달하거나 파일로 받으세요.</p>
+        <p className="text-sm text-muted-foreground">에이전트가 키 생성과 GPU 접속을 도울 때 사용할 <code>SKILL.md</code>예요. 내용을 복사해 전달하거나 파일로 받아 주세요.</p>
         <div className="flex flex-wrap gap-2">
           <Button type="button" onClick={copySkill} className="gap-2"><Copy className="size-4" /> 내용 복사</Button>
           <Button asChild variant="outline" className="gap-2">
