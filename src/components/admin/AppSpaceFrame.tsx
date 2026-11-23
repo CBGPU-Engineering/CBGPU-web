@@ -26,6 +26,7 @@ const appHome=(id:string)=>siteHref(`https://app.cbgpu.com/?mode=${id}`);
 export default function AppSpaceFrame({current,nav,activeId,children}:{current:SpaceId;nav:SpaceNavItem[];activeId:string;children:React.ReactNode}){
  const {resolvedTheme,setTheme}=useTheme(),roleSites=useSchoolRoleSites(),navRef=useRef<HTMLElement>(null);
  const [mounted,setMounted]=useState(false);useEffect(()=>setMounted(true),[]);
+ useEffect(()=>{const previous=document.documentElement.lang;document.documentElement.lang='ko';return()=>{if(document.documentElement.lang==='ko')document.documentElement.lang=previous}},[]);
  const currentSite=roleSites.find(site=>site.id===current),currentLabel=currentSite?.label||{admin:'관리',manufacturing:'제작',wakeup:'기상송'}[current];
  useEffect(()=>{navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({inline:'center',block:'nearest'})},[activeId]);
  return <div className="cb-workspace cb-app" style={{'--workspace-accent':'var(--primary)'} as React.CSSProperties}>
