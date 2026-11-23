@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import {Dropdown} from '@/components/ui/dropdown';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -35,7 +36,7 @@ interface Poll {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 10);
-const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('en-US', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+const fmtDate = (s: string | null,korean=false) => s ? new Date(s).toLocaleDateString(korean?'ko-KR':'en-US', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
 const isClosed = (p: Poll) => !p.is_active || (!!p.ends_at && new Date(p.ends_at) < new Date());
 const isVisible = (q: Question, ans: Record<string, AnswerValue>) => {
   const si = q.config.showIf;
@@ -55,6 +56,7 @@ const Q_TYPES: { id: QType; label: string; icon: any }[] = [
 
 // ─── QuestionInput ─────────────────────────────────────────────────────────
 function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue; onChange: (v: AnswerValue) => void }) {
+  const {t}=useAdminLanguage();
   const sel = Array.isArray(value) ? value : [];
   switch (q.type) {
     case 'choice':
@@ -90,9 +92,9 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
         </div>
       );
     case 'text':
-      return <Input value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} placeholder="Enter your answer" className="font-medium" />;
+      return <Input value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} placeholder={t("Enter your answer")} className="font-medium" />;
     case 'paragraph':
-      return <textarea value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} rows={4} placeholder="Enter your answer"
+      return <textarea value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} rows={4} placeholder={t("Enter your answer")}
         className="w-full px-3 py-2 text-sm bg-muted/30 border border-border/50 rounded-xl outline-none focus:border-primary resize-none font-medium" />;
     case 'scale': {
       const { min = 1, max = 5, minLabel, maxLabel } = q.config;
@@ -118,6 +120,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
 
 // ─── ResultChart ──────────────────────────────────────────────────────────────
 function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id: string; value: any }[] }) {
+  const {t}=useAdminLanguage();
   const qAnswers = allAnswers.filter(a => a.question_id === q.id).map(a => a.value);
   const total = qAnswers.length;
 
@@ -125,11 +128,11 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const texts = qAnswers.filter(Boolean).map(v => typeof v === 'string' ? v : JSON.stringify(v));
     return (
       <div className="space-y-1.5">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}  {t("responses")}</p>
         {texts.slice(0, 20).map((t, i) => (
           <p key={i} className="text-sm bg-muted/30 border border-border/30 rounded-xl px-3 py-2 font-medium">{t}</p>
         ))}
-        {texts.length > 20 && <p className="text-xs text-muted-foreground">+{texts.length - 20} more…</p>}
+        {texts.length > 20 && <p className="text-xs text-muted-foreground">+{texts.length - 20}  {t("more…")}</p>}
       </div>
     );
   }
@@ -140,7 +143,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
     const { min = 1, max = 5 } = q.config;
     return (
       <div className="space-y-2">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses · Average <span className="text-primary">{avg}</span></p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}  {t("responses · Average")} <span className="text-primary">{avg}</span></p>
         <div className="flex gap-2">
           {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => {
             const cnt = nums.filter(v => v === n).length;
@@ -168,7 +171,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
   });
   return (
     <div className="space-y-2">
-      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total} responses</p>
+      <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{total}  {t("responses")}</p>
       {q.options.map(o => {
         const cnt = countMap[o.id] ?? 0;
         const pct = total ? Math.round(cnt / total * 100) : 0;
@@ -176,7 +179,7 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
           <div key={o.id} className="space-y-1">
             <div className="flex justify-between text-xs font-bold">
               <span>{o.text}</span>
-              <span className="text-muted-foreground">{cnt} responses ({pct}%)</span>
+              <span className="text-muted-foreground">{cnt}  {t("responses (")}{pct}%)</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
@@ -193,6 +196,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
   q: Question; idx: number; total: number; prevQs: Question[];
   onChange: (q: Question) => void; onDelete: () => void; onMove: (dir: -1 | 1) => void;
 }) {
+  const {t}=useAdminLanguage();
   const [open, setOpen] = useState(true);
   const addOption  = () => onChange({ ...q, options: [...q.options, { id: uid(), text: '' }] });
   const delOption  = (id: string) => onChange({ ...q, options: q.options.filter(o => o.id !== id) });
@@ -212,7 +216,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
         <Icon className="size-3.5 text-muted-foreground shrink-0" />
         <span className="text-xs text-muted-foreground font-black uppercase tracking-widest shrink-0">{idx + 1}.</span>
         <span className="text-sm font-bold flex-1 truncate">{q.title || "(Untitled)"}</span>
-        {q.required && <span className="text-xs text-destructive font-black">Required</span>}
+        {q.required && <span className="text-xs text-destructive font-black">{t("Required")}</span>}
         <button onClick={e => { e.stopPropagation(); onDelete(); }} className="text-muted-foreground/40 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
       </div>
 
@@ -220,38 +224,38 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
         <div className="border-t border-border/30 p-4 space-y-3">
           {/* type selector */}
           <div className="flex gap-1 flex-wrap">
-            {Q_TYPES.map(t => (
-              <button key={t.id} onClick={() => onChange({ ...q, type: t.id, config: t.id === 'scale' ? { min: 1, max: 5, minLabel: "Very low", maxLabel: "Very high" } : {} })}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 ${q.type === t.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
-                <t.icon className="size-2.5" />{t.label}
+            {Q_TYPES.map(typeOption => (
+              <button key={typeOption.id} onClick={() => onChange({ ...q, type: typeOption.id, config: typeOption.id === 'scale' ? { min: 1, max: 5, minLabel: "Very low", maxLabel: "Very high" } : {} })}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1 ${q.type === typeOption.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'}`}>
+                <typeOption.icon className="size-2.5" />{t(typeOption.label)}
               </button>
             ))}
           </div>
 
-          <Input value={q.title} onChange={e => onChange({ ...q, title: e.target.value })} placeholder="Question title *" className="font-bold" />
-          <Input value={q.description} onChange={e => onChange({ ...q, description: e.target.value })} placeholder="Question description (optional)" className="md:text-sm text-muted-foreground" />
+          <Input value={q.title} onChange={e => onChange({ ...q, title: e.target.value })} placeholder={t("Question title *")} className="font-bold" />
+          <Input value={q.description} onChange={e => onChange({ ...q, description: e.target.value })} placeholder={t("Question description (optional)")} className="md:text-sm text-muted-foreground" />
 
           {/* options */}
           {hasOptions && (
             <div className="space-y-1.5">
-              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Option</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("Option")}</p>
               {q.options.map((o, i) => (
                 <div key={o.id} className="flex gap-2">
-                  <Input value={o.text} onChange={e => setOptText(o.id, e.target.value)} placeholder={`Option ${i + 1}`} className="md:text-sm" />
+                  <Input value={o.text} onChange={e => setOptText(o.id, e.target.value)} placeholder={t(`Option ${i + 1}`)} className="md:text-sm" />
                   {q.options.length > 1 && <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={() => delOption(o.id)}><X className="size-3" /></Button>}
                 </div>
               ))}
-              <Button variant="outline" size="sm" onClick={addOption} className="w-full font-black text-xs gap-1.5"><Plus className="size-3" />Add option</Button>
+              <Button variant="outline" size="sm" onClick={addOption} className="w-full font-black text-xs gap-1.5"><Plus className="size-3" />{t("Add option")}</Button>
             </div>
           )}
 
           {/* scale config */}
           {isScale && (
             <div className="grid grid-cols-2 gap-2">
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Minimum</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Maximum</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Minimum label</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Maximum label</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">{t("Minimum")}</p><Input type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">{t("Maximum")}</p><Input type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">{t("Minimum label")}</p><Input value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">{t("Maximum label")}</p><Input value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
             </div>
           )}
 
@@ -259,11 +263,11 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
             {/* conditional show */}
             {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type) && p.options.length).length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground font-black uppercase tracking-widest">Show when:</span>
+                <span className="text-xs text-muted-foreground font-black uppercase tracking-widest">{t("Show when:")}</span>
                 <Dropdown className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                   value={q.config.showIf?.questionId ?? ''}
                   onChange={e => onChange({ ...q, config: { ...q.config, showIf: e.target.value ? { questionId: e.target.value, value: '' } : undefined } })}>
-                  <option value="">Always visible</option>
+                  <option value="">{t("Always visible")}</option>
                   {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type)).map(p => (
                     <option key={p.id} value={p.id}>{p.title || "(Untitled)"}</option>
                   ))}
@@ -272,7 +276,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                   <Dropdown className="text-xs bg-muted border border-border/50 rounded-lg px-2 py-1 font-medium"
                     value={q.config.showIf.value}
                     onChange={e => onChange({ ...q, config: { ...q.config, showIf: { ...q.config.showIf!, value: e.target.value } } })}>
-                    <option value="">Select an option</option>
+                    <option value="">{t("Select an option")}</option>
                     {prevQs.find(p => p.id === q.config.showIf?.questionId)?.options.map(o => (
                       <option key={o.id} value={o.id}>{o.text}</option>
                     ))}
@@ -285,7 +289,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                 className={`w-8 h-4 rounded-full relative transition-all ${q.required ? 'bg-primary' : 'bg-muted'}`}>
                 <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${q.required ? 'left-4' : 'left-0.5'}`} />
               </div>
-              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Required</span>
+              <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("Required")}</span>
             </label>
           </div>
         </div>
@@ -296,6 +300,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
 
 // ─── PollBuilder ──────────────────────────────────────────────────────────────
 function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => void; onBack: () => void }) {
+  const {t}=useAdminLanguage();
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [title, setTitle]   = useState(poll?.title ?? '');
@@ -326,7 +331,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
   };
 
   const save = async () => {
-    if (!title.trim()) { showError("Enter a title"); return; }
+    if (!title.trim()) { showError(adminNotice("Enter a title")); return; }
     setSaving(true);
     try {
       let pollId = poll?.id;
@@ -344,9 +349,9 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         const { error } = await supabase.from('poll_questions').insert(rows);
         if (error) throw error;
       }
-      showSuccess("Saved.");
+      showSuccess(adminNotice("Saved."));
       onSaved();
-    } catch (e: any) { showError(e.message); }
+    } catch (e: any) { showError(adminNotice(e.message)); }
     finally { setSaving(false); }
   };
 
@@ -354,18 +359,18 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
-        <h2 className="font-black text-xl uppercase tracking-tighter">{poll ? "Edit poll" : "Create poll"}</h2>
+        <h2 className="font-black text-xl uppercase tracking-tighter">{poll ? t("Edit poll") : t("Create poll")}</h2>
       </div>
       <div className="space-y-3 p-5 border border-border/50 rounded-2xl bg-card">
-        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Poll title *" className="text-lg font-black" />
-        <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Description (optional)" className="font-medium text-muted-foreground" />
+        <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={t("Poll title *")} className="text-lg font-black" />
+        <Input value={desc} onChange={e => setDesc(e.target.value)} placeholder={t("Description (optional)")} className="font-medium text-muted-foreground" />
         <div className="flex gap-3 flex-wrap">
-          <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">Closing date</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
+          <div><p className="text-xs font-black text-muted-foreground uppercase mb-1">{t("Closing date")}</p><Input type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-xs" /></div>
           <label className="flex items-center gap-2 mt-5 cursor-pointer">
             <div onClick={() => setShowRes(v => !v)} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
               <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
             </div>
-            <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">Show results</span>
+            <span className="text-xs font-black text-muted-foreground uppercase tracking-widest">{t("Show results")}</span>
           </label>
         </div>
       </div>
@@ -381,20 +386,20 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       </div>
 
       <div className="p-4 border-2 border-dashed border-border/40 rounded-2xl">
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 text-center">Add question</p>
+        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3 text-center">{t("Add question")}</p>
         <div className="flex gap-1.5 flex-wrap justify-center">
-          {Q_TYPES.map(t => (
-            <button key={t.id} onClick={() => addQ(t.id)}
+          {Q_TYPES.map(typeOption => (
+            <button key={typeOption.id} onClick={() => addQ(typeOption.id)}
               className="px-3 py-1.5 bg-muted hover:bg-muted/70 rounded-xl text-xs font-black uppercase tracking-widest text-muted-foreground transition-all flex items-center gap-1.5">
-              <t.icon className="size-3" />{t.label}
+              <typeOption.icon className="size-3" />{t(typeOption.label)}
             </button>
-          ))}
+            ))}
         </div>
       </div>
 
       <div className="flex gap-2 justify-end">
-        <Button variant="outline" onClick={onBack} className="font-black uppercase text-xs">Cancel</Button>
-        <Button onClick={save} disabled={saving} className="font-black uppercase text-xs">{saving ? "Saving…" : "Save"}</Button>
+        <Button variant="outline" onClick={onBack} className="font-black uppercase text-xs">{t("Cancel")}</Button>
+        <Button onClick={save} disabled={saving} className="font-black uppercase text-xs">{saving ? t("Saving…") : t("Save")}</Button>
       </div>
     </div>
   );
@@ -402,6 +407,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
 
 // ─── PollForm ─────────────────────────────────────────────────────────────────
 function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questions: Question[]; onSubmitted: () => void; onBack: () => void }) {
+  const {t,app}=useAdminLanguage();
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
@@ -415,7 +421,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
       if (!q.required) continue;
       const v = answers[q.id];
       const empty = v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length);
-      if (empty) { showError(`"${q.title || "Question"}" is required`); return; }
+      if (empty) { showError(adminNotice(`"${q.title || "Question"}" is required`)); return; }
     }
     setSubmitting(true);
     try {
@@ -424,9 +430,9 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
       const rows = visibleQs.map(q => ({ response_id: resp.id, question_id: q.id, value: answers[q.id] ?? null }));
       const { error: ae } = await supabase.from('poll_answers').insert(rows);
       if (ae) throw ae;
-      showSuccess("Response submitted.");
+      showSuccess(adminNotice("Response submitted."));
       onSubmitted();
-    } catch (e: any) { showError(e.message); }
+    } catch (e: any) { showError(adminNotice(e.message)); }
     finally { setSubmitting(false); }
   };
 
@@ -437,7 +443,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
         <div>
           <h2 className="font-black text-xl tracking-tighter">{poll.title}</h2>
           {poll.description && <p className="text-sm text-muted-foreground mt-0.5">{poll.description}</p>}
-          {poll.ends_at && <p className="text-xs text-muted-foreground font-medium mt-0.5">Closes: {fmtDate(poll.ends_at)}</p>}
+          {poll.ends_at && <p className="text-xs text-muted-foreground font-medium mt-0.5">{t("Closes:")} {fmtDate(poll.ends_at,app)}</p>}
         </div>
       </div>
 
@@ -452,14 +458,14 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
               {q.description && <p className="text-xs text-muted-foreground mt-0.5">{q.description}</p>}
             </div>
             {!closed && <QuestionInput q={q} value={answers[q.id] ?? null} onChange={v => setAnswers(a => ({ ...a, [q.id]: v }))} />}
-            {closed && <p className="text-sm text-muted-foreground italic">This poll is closed.</p>}
+            {closed && <p className="text-sm text-muted-foreground italic">{t("This poll is closed.")}</p>}
           </div>
         ))}
       </div>
 
       {!closed && (
         <Button onClick={submit} disabled={submitting} className="w-full font-black uppercase tracking-widest h-12">
-          {submitting ? "Submitting…" : "Submit"}
+          {submitting ? t("Submitting…") : t("Submit")}
         </Button>
       )}
     </div>
@@ -468,6 +474,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
 
 // ─── PollResults ──────────────────────────────────────────────────────────────
 function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Question[]; onBack: () => void }) {
+  const {t}=useAdminLanguage();
   const [allAnswers, setAllAnswers] = useState<any[]>([]);
   const [resCount,   setResCount]   = useState(0);
   const [insight, setInsight] = useState('');
@@ -520,11 +527,11 @@ ${lines.join('\n')}`).then(text => {
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
-          <h2 className="font-black text-xl tracking-tighter">{poll.title}  — Results</h2>
-          <p className="text-xs text-muted-foreground font-medium mt-0.5">Total {resCount} responses</p>
+          <h2 className="font-black text-xl tracking-tighter">{poll.title}   {t("— Results")}</h2>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">{t("Total")} {resCount}  {t("responses")}</p>
         </div>
       </div>
-      {insight && <p className="flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed" aria-label="AI summary"><Sparkles className="mt-0.5 size-4 shrink-0 text-primary" /><span>{insight} <span className="text-xs text-muted-foreground">Generated from aggregate results. Refer to the exact figures below.</span></span></p>}
+      {insight && <p className="flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm leading-relaxed" aria-label={t("AI summary")}><Sparkles className="mt-0.5 size-4 shrink-0 text-primary" /><span>{insight} <span className="text-xs text-muted-foreground">{t("Generated from aggregate results. Refer to the exact figures below.")}</span></span></p>}
       <div className="space-y-4">
         {questions.map((q, i) => (
           <div key={q.id} className="p-5 border border-border/50 rounded-2xl bg-card space-y-3">
@@ -541,6 +548,7 @@ ${lines.join('\n')}`).then(text => {
 type View = { type: 'list' } | { type: 'form'; poll: Poll; questions: Question[] } | { type: 'results'; poll: Poll; questions: Question[] } | { type: 'builder'; poll?: Poll };
 
 export default function PollsPage() {
+  const {t,app}=useAdminLanguage();
   const { user, isAdmin } = useAuth();
   const { showSuccess } = useAlert();
   const [polls,  setPolls]  = useState<Poll[]>([]);
@@ -579,21 +587,20 @@ export default function PollsPage() {
 
   const closePoll = async (pollId: string) => {
     await supabase.from('polls').update({ is_active: false }).eq('id', pollId);
-    showSuccess("Poll closed."); loadPolls();
+    showSuccess(adminNotice("Poll closed.")); loadPolls();
   };
 
   const deletePoll = async (pollId: string) => {
     await supabase.from('polls').delete().eq('id', pollId);
-    showSuccess("Deleted."); loadPolls();
+    showSuccess(adminNotice("Deleted.")); loadPolls();
   };
 
   if (dbMissing) return (
     <main className="px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">Database setup required</h2>
+      <h2 className="font-black text-xl uppercase tracking-tight">{t("Database setup required")}</h2>
       <p className="text-sm text-muted-foreground">
-        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_polls_migration.sql</code>in the SQL editor.
-      </p>
+        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_polls_migration.sql</code>{t("in the SQL editor.")} </p>
     </main>
   );
 
@@ -623,32 +630,32 @@ export default function PollsPage() {
     <main className="px-4 py-8 space-y-6 max-w-2xl mx-auto">
       <ConfirmDialog
         open={!!confirmDeleteId}
-        title="Delete this poll?"
-        description="This will permanently delete the poll and all responses."
+        title={t("Delete this poll?")}
+        description={t("This will permanently delete the poll and all responses.")}
         onConfirm={() => { deletePoll(confirmDeleteId!); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="cb-page-title">Polls</h1>
-          <p className="cb-page-sub mt-1">School events, competitions and surveys</p>
+          <h1 className="cb-page-title">{t("Polls")}</h1>
+          <p className="cb-page-sub mt-1">{t("School events, competitions and surveys")}</p>
         </div>
-        {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-black uppercase tracking-widest gap-2"><Plus className="size-4" />Create poll</Button>}
+        {isAdmin && <Button onClick={() => setView({ type: 'builder' })} className="font-black uppercase tracking-widest gap-2"><Plus className="size-4" />{t("Create poll")}</Button>}
       </div>
 
       <SegmentedTabs
-        items={(['active', 'closed'] as const).map(t => ({
-          value: t,
-          label: `${t === 'active' ? "Active" : "Closed"} (${polls.filter(p => t === 'active' ? (p.is_active && (!p.ends_at || new Date(p.ends_at) >= new Date())) : isClosed(p)).length})`,
+        items={(['active', 'closed'] as const).map(viewTab => ({
+          value: viewTab,
+          label: `${t(viewTab === 'active' ? "Active" : "Closed")} (${polls.filter(p => viewTab === 'active' ? (p.is_active && (!p.ends_at || new Date(p.ends_at) >= new Date())) : isClosed(p)).length})`,
         }))}
         value={tab}
         onChange={(v) => setTab(v as 'active' | 'closed')}
       />
 
-      {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="Loading polls" /></div>
+      {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label={t("Loading polls")} /></div>
       : shown.length === 0 ? (
         <div className="py-20 text-center border-2 border-dashed rounded-3xl text-muted-foreground font-medium">
-          {tab === 'active' ? "No active polls." : "No closed polls."}
+          {tab === 'active' ? t("No active polls.") : t("No closed polls.")}
         </div>
       ) : (
         <div className="space-y-3">
@@ -666,11 +673,11 @@ export default function PollsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-black text-sm leading-tight">{poll.title}</h3>
-                      {voted  && <Badge variant="success" icon={<CheckCircle2 className="size-2.5" />}>Responded</Badge>}
-                      {closed && <Badge variant="muted" icon={<Lock className="size-2.5" />}>Closed</Badge>}
+                      {voted  && <Badge variant="success" icon={<CheckCircle2 className="size-2.5" />}>{t("Responded")}</Badge>}
+                      {closed && <Badge variant="muted" icon={<Lock className="size-2.5" />}>{t("Closed")}</Badge>}
                     </div>
                     {poll.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{poll.description}</p>}
-                    {poll.ends_at && <p className="text-xs text-muted-foreground mt-1">~{fmtDate(poll.ends_at)}</p>}
+                    {poll.ends_at && <p className="text-xs text-muted-foreground mt-1">~{fmtDate(poll.ends_at,app)}</p>}
                   </div>
                   <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                     {(voted || closed) && poll.show_results && (

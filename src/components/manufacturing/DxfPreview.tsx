@@ -19,7 +19,7 @@ function bulgeArc(p1: Pt, p2: Pt, bulge: number) {
 
 /** Renders a .dxf drawing's 2D geometry (lines, arcs, circles, polylines) as an SVG.
  * Entity types outside that set (splines, text, block inserts, dimensions, ...) are skipped. */
-export function DxfPreview({ src }: { src: string }) {
+export function DxfPreview({ src,english=false }: { src: string;english?:boolean }) {
   const [paths, setPaths] = useState<string[] | null>(null);
   const [viewBox, setViewBox] = useState('0 0 100 100');
   const [strokeWidth, setStrokeWidth] = useState(0.5);
@@ -94,7 +94,7 @@ export function DxfPreview({ src }: { src: string }) {
         }
 
         if (cancelled) return;
-        if (segments.length === 0) { setError('미리보기 가능한 도형을 찾지 못했습니다.'); return; }
+        if (segments.length === 0) { setError(english?'No shapes are available for preview.':'미리볼 수 있는 도형을 찾지 못했어요.'); return; }
 
         const w = maxX - minX || 1;
         const h = maxY - minY || 1;
@@ -103,19 +103,19 @@ export function DxfPreview({ src }: { src: string }) {
         setStrokeWidth(Math.max(w, h) / 250);
         setPaths(segments);
       } catch {
-        if (!cancelled) setError('DXF 미리보기를 불러오지 못했습니다.');
+        if (!cancelled) setError(english?'Could not load the DXF preview.':'DXF 미리보기를 불러오지 못했어요.');
       }
     })();
 
     return () => { cancelled = true; };
-  }, [src]);
+  }, [src,english]);
 
   return (
     <div className="w-full rounded-2xl border-2 border-border/60 bg-white flex items-center justify-center overflow-hidden" style={{ height: 360 }}>
       {error ? (
         <p className="text-xs font-bold text-muted-foreground px-6 text-center">{error}</p>
       ) : !paths ? (
-        <LoadingSpinner size={36} label="도면 불러오는 중" />
+        <LoadingSpinner size={36} label={english?"Loading drawing":"도면 불러오는 중"} />
       ) : (
         <svg viewBox={viewBox} className="w-full h-full p-4">
           {paths.map((d, i) => (

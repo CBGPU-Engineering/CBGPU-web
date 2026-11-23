@@ -209,11 +209,11 @@ export default function NewLaserJobPage() {
                     {entry.convertedFrom && (
                       <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → dxf 변환됨</p>
                     )}
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="sm:col-span-2">
                         <label className={labelCls}>재질 / 두께</label>
                         <Select value={entry.catalogId} onValueChange={v => updateEntry(i, { catalogId: v })}>
-                          <SelectTrigger aria-label={`${entry.file.name} 재질과 두께`} className="h-11 w-full text-sm"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
+                          <SelectTrigger aria-label={`${entry.file.name} 재질과 두께`} className="h-11 w-full text-base"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
                           <SelectContent>
                             {catalog.map(c => (
                               <SelectItem key={c.id} value={c.id}>{c.material === 'mdf' ? 'MDF' : '아크릴'} {c.thickness_mm}mm</SelectItem>
@@ -223,7 +223,7 @@ export default function NewLaserJobPage() {
                       </div>
                       <div>
                         <label className={labelCls}>수량</label>
-                        <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
+                        <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-11 text-base" />
                       </div>
                     </div>
                   </div>
@@ -237,7 +237,7 @@ export default function NewLaserJobPage() {
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground">담당자 지정</h2>
         <div className="flex items-center gap-2">
-          <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="아무나 (자동 배정) — 이름/학번 검색" />
+          <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="이름 또는 학번 검색" />
         </div>
 
         <div>

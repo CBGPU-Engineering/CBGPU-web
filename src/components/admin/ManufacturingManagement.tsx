@@ -1,4 +1,6 @@
 'use client';
+import '@/components/manufacturing/manufacturing-requests.css';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
 import {useManufacturingDownloader} from '@/lib/manufacturing/useManufacturingFile';
 import{manufacturingProfiles,manufacturingJobSelect,scopedProfilesEnabled,attachManufacturingManagers}from'@/lib/scopedProfiles';
@@ -24,7 +26,7 @@ import { PrinterVisual } from '@/components/manufacturing/PrinterVisual';
 import { LocateStudentButton } from '@/components/admin/LocateStudentButton';
 import { deleteManufacturingFile } from '@/lib/manufacturing/storage';
 import { formatDistanceToNow } from 'date-fns';
-import { enUS } from 'date-fns/locale';
+import { enUS,ko } from 'date-fns/locale';
 import {
   Printer, Scissors, Plus, Clock, CheckCircle2, XCircle, ShieldAlert,
   Boxes, Play, Square, ExternalLink, Download, Wrench, Undo2, X, Layers, User, PackageCheck,
@@ -61,6 +63,7 @@ const LASER_STATUS_INFO: Record<string, { variant: any; icon: React.ReactNode; l
 };
 
 export default function ManufacturingPage() {
+  const {t,app}=useAdminLanguage();
   const { user, isAdmin: accountIsAdmin, is3DPrintManager, managedPrinterIds, isLaserCutManager, isLoading: authLoading } = useAuth();
   const freshFileDownload=useManufacturingDownloader(user?.id);
   const equipmentKind=useEquipmentKind();
@@ -94,7 +97,7 @@ export default function ManufacturingPage() {
       .select(manufacturingJobSelect())
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
-    if (!error) {const labels=await attachManufacturingManagers(supabase,'print',data||[]);setMyPrintJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');}
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'print',data||[]);setMyPrintJobs(labels.data);if(labels.error)showError(adminNotice('Could not load manager details. Refresh and try again.'));}
   };
 
   const [printQueueLength, setPrintQueueLength] = useState<number | null>(null);
@@ -132,7 +135,7 @@ export default function ManufacturingPage() {
       supabase.from('laser_jobs').select(manufacturingJobSelect()).eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.rpc('laser_queue_length'),
     ]);
-    if (!error) {const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setMyLaserJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');}
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setMyLaserJobs(labels.data);if(labels.error)showError(adminNotice('Could not load manager details. Refresh and try again.'));}
     if (!qlenError) setLaserQueueLength(qlen);
     setLaserLoading(false);
   };
@@ -146,9 +149,9 @@ export default function ManufacturingPage() {
   const [queueHours, setQueueHours] = useState(4);
 
   async function downloadFile(path: string,name?:string) {
-    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError((error as {status?:number}).status===401?'Sign in to CBGPU again before downloading this file.':'Current file access could not be verified. The request is preserved; check your permissions and try again.')}return;}
+    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError(adminNotice((error as {status?:number}).status===401?t('Sign in to CBGPU again before downloading this file.'):t('Current file access could not be verified. The request is preserved; check your permissions and try again.')))}return;}
     const { data, error } = await supabase.storage.from('manufacturing').createSignedUrl(path, 3600);
-    if (error || !data) { showError("Could not create a download link"); return; }
+    if (error || !data) { showError(adminNotice("Could not create a download link")); return; }
     window.open(data.signedUrl, '_blank');
   }
 
@@ -161,7 +164,7 @@ export default function ManufacturingPage() {
     const uniqueIds = [...new Set(userIds)];
     if (uniqueIds.length === 0) return;
     const { data,error } = await manufacturingProfiles(supabase,kind,uniqueIds);
-    if(error){setRequesterProfiles({});showError('Could not load requester details. Refresh and try again.');return;}
+    if(error){setRequesterProfiles({});showError(adminNotice('Could not load requester details. Refresh and try again.'));return;}
     setRequesterProfiles(prev => {
       const next:Record<string,{full_name:string|null;student_id:string|null}> = scopedProfilesEnabled()?{}:{ ...prev };
       for (const p of data || []) next[p.id] = { full_name: p.full_name, student_id: p.student_id };
@@ -186,7 +189,7 @@ export default function ManufacturingPage() {
     if(equipmentKind==='print'){const ids=managedPrinterIds.join(',');query=query.or(`preferred_printer_id.in.(${ids}),printer_id.in.(${ids})`)}
     const {data,error}=await query;
     if (!error) {
-      const labels=await attachManufacturingManagers(supabase,'print',data||[]);setAllPrintJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');
+      const labels=await attachManufacturingManagers(supabase,'print',data||[]);setAllPrintJobs(labels.data);if(labels.error)showError(adminNotice('Could not load manager details. Refresh and try again.'));
       fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'print');
     }
     setManagerPrintLoading(false);
@@ -208,13 +211,13 @@ export default function ManufacturingPage() {
   };
 
   async function addFilamentEntry() {
-    if (!newFilamentMaterial.trim()) { showError("Enter a material."); return; }
-    if (!newFilamentColor.trim()) { showError("Enter a color."); return; }
+    if (!newFilamentMaterial.trim()) { showError(adminNotice("Enter a material.")); return; }
+    if (!newFilamentColor.trim()) { showError(adminNotice("Enter a color.")); return; }
     const stock = parseInt(newFilamentStock);
-    if (isNaN(stock) || stock < 0) { showError("Enter a valid stock count."); return; }
+    if (isNaN(stock) || stock < 0) { showError(adminNotice("Enter a valid stock count.")); return; }
     const { error } = await supabase.from('print_materials').insert({ material: newFilamentMaterial.trim(), color: newFilamentColor.trim(), stock_count: stock });
-    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add this item. Check the values and try again.");
-    else { showSuccess("Filament added."); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
+    if (error) showError(adminNotice(error.code === '23505' ? t("This combination already exists.") : t("Could not add this item. Check the values and try again.")));
+    else { showSuccess(adminNotice("Filament added.")); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
   }
 
   async function adjustFilamentStock(id: string, delta: number) {
@@ -222,14 +225,14 @@ export default function ManufacturingPage() {
     if (!f) return;
     const next = Math.max(0, f.stock_count + delta);
     const { error } = await supabase.from('print_materials').update({ stock_count: next }).eq('id', id);
-    if (error) showError("Could not update stock. Refresh the current quantity and try again.");
+    if (error) showError(adminNotice("Could not update stock. Refresh the current quantity and try again."));
     else fetchFilamentCatalog();
   }
 
   async function removeFilamentEntry(id: string) {
     const { error } = await supabase.from('print_materials').delete().eq('id', id);
-    if (error) showError("Could not delete this item. Refresh the list and try again.");
-    else { showSuccess("Filament deleted."); fetchFilamentCatalog(); }
+    if (error) showError(adminNotice("Could not delete this item. Refresh the list and try again."));
+    else { showSuccess(adminNotice("Filament deleted.")); fetchFilamentCatalog(); }
   }
 
   async function updatePrintJobStatus(id: string, status: string) {
@@ -241,23 +244,23 @@ export default function ManufacturingPage() {
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('print_jobs').update(updates).eq('id', id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Status updated."); fetchAllPrintJobs(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Status updated.")); fetchAllPrintJobs(); }
   }
 
   async function rejectPrintJob(id: string, reason: string) {
     const { error } = await supabase.from('print_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Request rejected."); fetchAllPrintJobs(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Request rejected.")); fetchAllPrintJobs(); }
   }
 
   async function markPrintDelivered(job: any) {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Could not save this change. Refresh the job status and try again."); return; }
+    if (error) { showError(adminNotice("Could not save this change. Refresh the job status and try again.")); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess("Marked as delivered.");
+    showSuccess(adminNotice("Marked as delivered."));
     fetchAllPrintJobs();
   }
 
@@ -270,12 +273,12 @@ export default function ManufacturingPage() {
   async function startPrint() {
     if(startingPrint)return;
     const job=queuedPrintJobsForPrinter(allPrintJobs,queueDialogPrinter?.id).find(item=>item.id===queueJobId);
-    if(!queueDialogPrinter||!job){showError("Select a waiting job requested for this printer.");return}
-    if(!Number.isFinite(queueHours)||queueHours<=0){showError("Enter a positive estimated duration.");return}
+    if(!queueDialogPrinter||!job){showError(adminNotice("Select a waiting job requested for this printer."));return}
+    if(!Number.isFinite(queueHours)||queueHours<=0){showError(adminNotice("Enter a positive estimated duration."));return}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
-      if(error){showError("Could not start this print. Refresh the queue and select the job again.");setQueueJobId('');await loadPrintManagerTab();return}
-      showSuccess("Print started.");setQueueDialogPrinter(null);await loadPrintManagerTab();
+      if(error){showError(adminNotice("Could not start this print. Refresh the queue and select the job again."));setQueueJobId('');await loadPrintManagerTab();return}
+      showSuccess(adminNotice("Print started."));setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
 
@@ -319,12 +322,12 @@ export default function ManufacturingPage() {
         status: 'done',
         estimated_end_at: null,
       }).eq('id', printer.id);
-      if (error) showError("Could not save this change. Refresh the job status and try again.");
-      else showSuccess("Print completed. Select Collected after collecting the item.");
+      if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+      else showSuccess(adminNotice("Print completed. Select Collected after collecting the item."));
     } else {
       const { error } = await supabase.from('print_jobs').update({ plates_completed: newCompleted }).eq('id', job.id);
-      if (error) showError("Could not save this change. Refresh the job status and try again.");
-      else showSuccess(`${newCompleted}plate completed.`);
+      if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+      else showSuccess(adminNotice(`${newCompleted}plate completed.`));
     }
 
     setPlateCompleteTarget(null);
@@ -341,8 +344,8 @@ export default function ManufacturingPage() {
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Item collected. The printer is now available."); loadPrintManagerTab(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Item collected. The printer is now available.")); loadPrintManagerTab(); }
   }
 
   async function markPrinterBroken(printer: any) {
@@ -362,14 +365,14 @@ export default function ManufacturingPage() {
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Printer marked as faulty."); loadPrintManagerTab(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Printer marked as faulty.")); loadPrintManagerTab(); }
   }
 
   async function repairPrinter(printer: any) {
     const { error } = await supabase.from('printers').update({ status: 'idle' }).eq('id', printer.id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Printer restored to service."); loadPrintManagerTab(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Printer restored to service.")); loadPrintManagerTab(); }
   }
 
   // ── Laser manager ──────────────────────────────────────────────────────
@@ -384,7 +387,7 @@ export default function ManufacturingPage() {
       .order('created_at', { ascending: false })
       .limit(500);
     if (!error) {
-      const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setAllLaserJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');
+      const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setAllLaserJobs(labels.data);if(labels.error)showError(adminNotice('Could not load manager details. Refresh and try again.'));
       fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'laser');
     }
     setManagerLaserLoading(false);
@@ -398,23 +401,23 @@ export default function ManufacturingPage() {
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('laser_jobs').update(updates).eq('id', id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Status updated."); fetchAllLaserJobs(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Status updated.")); fetchAllLaserJobs(); }
   }
 
   async function rejectLaserJob(id: string, reason: string) {
     const { error } = await supabase.from('laser_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError("Could not save this change. Refresh the job status and try again.");
-    else { showSuccess("Request rejected."); fetchAllLaserJobs(); }
+    if (error) showError(adminNotice("Could not save this change. Refresh the job status and try again."));
+    else { showSuccess(adminNotice("Request rejected.")); fetchAllLaserJobs(); }
   }
 
   async function markLaserDelivered(job: any) {
     const { error } = await supabase.from('laser_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Could not save this change. Refresh the job status and try again."); return; }
+    if (error) { showError(adminNotice("Could not save this change. Refresh the job status and try again.")); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess("Marked as delivered.");
+    showSuccess(adminNotice("Marked as delivered."));
     fetchAllLaserJobs();
   }
 
@@ -430,16 +433,16 @@ export default function ManufacturingPage() {
 
   async function addLaserCatalogEntry() {
     const thicknessNum = parseFloat(newCatalogThickness);
-    if (isNaN(thicknessNum) || thicknessNum <= 0) { showError("Enter a valid thickness."); return; }
+    if (isNaN(thicknessNum) || thicknessNum <= 0) { showError(adminNotice("Enter a valid thickness.")); return; }
     const { error } = await supabase.from('laser_materials').insert({ material: newCatalogMaterial, thickness_mm: thicknessNum });
-    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add this item. Check the values and try again.");
-    else { showSuccess("Material added."); fetchLaserCatalog(); }
+    if (error) showError(adminNotice(error.code === '23505' ? t("This combination already exists.") : t("Could not add this item. Check the values and try again.")));
+    else { showSuccess(adminNotice("Material added.")); fetchLaserCatalog(); }
   }
 
   async function removeLaserCatalogEntry(id: string) {
     const { error } = await supabase.from('laser_materials').delete().eq('id', id);
-    if (error) showError("Could not delete this item. Refresh the list and try again.");
-    else { showSuccess("Material deleted."); fetchLaserCatalog(); }
+    if (error) showError(adminNotice("Could not delete this item. Refresh the list and try again."));
+    else { showSuccess(adminNotice("Material deleted.")); fetchLaserCatalog(); }
   }
 
   // ── Reject dialog (shared by both manager tabs) ──────────────────────────
@@ -469,7 +472,7 @@ export default function ManufacturingPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={56} label="Checking authentication" />
+        <LoadingSpinner size={56} label={t("Checking authentication")} />
       </div>
     );
   }
@@ -481,20 +484,18 @@ export default function ManufacturingPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="cb-page-title">Login Required</h1>
+          <h1 className="cb-page-title">{t("Login Required")}</h1>
           <p className="cb-page-sub mt-1">
 
-            Sign in to continue.
-          </p>
+             {t("Sign in to continue.")} </p>
         </div>
         <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">
-          Login
-        </Button>
+           {t("Login")} </Button>
       </div>
     );
   }
 
-  const tabItems = [...(canManagePrint?[{value:'print_manager',label:'3D printing'}]:[]),...(canManageLaser?[{value:'laser_manager',label:'Laser cutting'}]:[])];
+  const tabItems = [...(canManagePrint?[{value:'print_manager',label:t('3D printing')}]:[]),...(canManageLaser?[{value:'laser_manager',label:t('Laser cutting')}]:[])];
 
   // FIFO is independent for each requested printer.
   const idleJobsForQueue=queuedPrintJobsForPrinter(allPrintJobs,queueDialogPrinter?.id);
@@ -503,8 +504,8 @@ export default function ManufacturingPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="cb-page-title">{equipmentKind==='print'?'3D printing':equipmentKind==='laser'?'Laser cutting':'Manufacturing'}</h1>
-          <p className="cb-page-sub mt-1">3D Printing · Laser Cutting</p>
+          <h1 className="cb-page-title">{equipmentKind==='print'?t('3D printing'):equipmentKind==='laser'?t('Laser cutting'):t('Manufacturing')}</h1>
+          <p className="cb-page-sub mt-1">{t("3D Printing · Laser Cutting")}</p>
         </div>
       </div>
 
@@ -515,14 +516,13 @@ export default function ManufacturingPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <h2 className="font-black uppercase text-sm tracking-widest">Printers · Bambu Lab X1C</h2>
+              <h2 className="font-black uppercase text-sm tracking-widest">{t("Printers · Bambu Lab X1C")}</h2>
               {printQueueLength !== null && printQueueLength > 0 && (
-                <Badge variant="warning" icon={<Clock className="size-3" />}>Queued {printQueueLength} items</Badge>
+                <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Queued")} {printQueueLength}  {t("items")}</Badge>
               )}
             </div>
             <Button onClick={() => router.push('/manufacturing/print/new')} className="font-black text-xs uppercase gap-1.5 h-9">
-              <Plus className="size-3.5" />  New request
-            </Button>
+              <Plus className="size-3.5" />   {t("New request")} </Button>
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -532,55 +532,54 @@ export default function ManufacturingPage() {
                 <div className="flex items-center justify-between">
                   <span className="font-black text-sm">{p.name}</span>
                   {p.status === 'printing'
-                    ? <Badge variant="success" icon={<Printer className="size-3" />}>In use</Badge>
+                    ? <Badge variant="success" icon={<Printer className="size-3" />}>{t("In use")}</Badge>
                     : p.status === 'done'
-                      ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>Awaiting collection</Badge>
+                      ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>{t("Awaiting collection")}</Badge>
                       : p.status === 'maintenance'
-                        ? <Badge variant="danger">Faulty</Badge>
-                        : <Badge variant="muted">Available</Badge>}
+                        ? <Badge variant="danger">{t("Faulty")}</Badge>
+                        : <Badge variant="muted">{t("Available")}</Badge>}
                 </div>
                 {p.status === 'printing' && p.estimated_end_at && (
                   <p className="text-xs text-muted-foreground font-bold">
-                    {formatDistanceToNow(new Date(p.estimated_end_at), { locale: enUS, addSuffix: true })}  Estimated finish
-                  </p>
+                    {formatDistanceToNow(new Date(p.estimated_end_at), { locale: app?ko:enUS, addSuffix: true })}   {t("Estimated finish")} </p>
                 )}
-                <p className="text-xs text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
+                <p className="text-xs text-muted-foreground opacity-70">{t("Queued plates")} {plateBacklog[p.id] || 0}  {t("files")}</p>
               </Card>
             ))}
           </div>
 
-          <h2 className="font-black uppercase text-sm tracking-widest">My requests</h2>
+          <h2 className="font-black uppercase text-sm tracking-widest">{t("My requests")}</h2>
           <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
-              <Table className="data-table">
+              <Table className="data-table cb-manufacturing-requests">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">File</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Mode</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requested</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("File")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Mode")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Status")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("Requested")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {printLoading ? (
-                    <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="Loading" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label={t("Loading")} /></div></TableCell></TableRow>
                   ) : myPrintJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">No requests.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">{t("No requests.")}</TableCell></TableRow>
                   ) : (
                     myPrintJobs.map(j => {
                       const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                       return (
                         <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 cursor-pointer align-top" onClick={() => router.push(`${managementBase}/print/${j.id}`)}>
-                          <TableCell className="py-4 px-6">
+                          <TableCell data-label={t("File")} className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-sm">{j.file_name || '—'}</span>
+                              <Link href={`${managementBase}/print/${j.id}`} onClick={event=>event.stopPropagation()} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{j.file_name || '—'}</Link>
                               {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">{t("Rejection reason:")} {j.reject_reason}</span>}
                             </div>
                           </TableCell>
-                          <TableCell className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? "Beginner" : "Advanced"}</span></TableCell>
-                          <TableCell className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
-                          <TableCell className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('en-US')}</TableCell>
+                          <TableCell data-label={t("Mode")} className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? t("Beginner") : t("Advanced")}</span></TableCell>
+                          <TableCell data-label={t("Status")} className="py-4"><Badge variant={info.variant} icon={info.icon}>{t(info.label)}</Badge></TableCell>
+                          <TableCell data-label={t("Requested")} className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString(app?'ko-KR':'en-US')}</TableCell>
                         </TableRow>
                       );
                     })
@@ -597,46 +596,45 @@ export default function ManufacturingPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <h2 className="font-black uppercase text-sm tracking-widest">My requests</h2>
+              <h2 className="font-black uppercase text-sm tracking-widest">{t("My requests")}</h2>
               {laserQueueLength !== null && laserQueueLength > 0 && (
-                <Badge variant="warning" icon={<Clock className="size-3" />}>Queued {laserQueueLength} items</Badge>
+                <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Queued")} {laserQueueLength}  {t("items")}</Badge>
               )}
             </div>
             <Button onClick={() => router.push('/manufacturing/laser/new')} className="font-black text-xs uppercase gap-1.5 h-9">
-              <Plus className="size-3.5" />  New request
-            </Button>
+              <Plus className="size-3.5" />   {t("New request")} </Button>
           </div>
           <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
-              <Table className="data-table">
+              <Table className="data-table cb-manufacturing-requests">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">File</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Material</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
-                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requested</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("File")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Material")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Status")}</TableHead>
+                    <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("Requested")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {laserLoading ? (
-                    <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="Loading" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label={t("Loading")} /></div></TableCell></TableRow>
                   ) : myLaserJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">No requests.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">{t("No requests.")}</TableCell></TableRow>
                   ) : (
                     myLaserJobs.map(j => {
                       const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                       return (
                         <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 cursor-pointer align-top" onClick={() => router.push(`${managementBase}/laser/${j.id}`)}>
-                          <TableCell className="py-4 px-6">
+                          <TableCell data-label={t("File")} className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-sm">{j.file_name || '—'}</span>
+                              <Link href={`${managementBase}/laser/${j.id}`} onClick={event=>event.stopPropagation()} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{j.file_name || '—'}</Link>
                               {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
-                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">Rejection reason: {j.reject_reason}</span>}
+                              {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">{t("Rejection reason:")} {j.reject_reason}</span>}
                             </div>
                           </TableCell>
-                          <TableCell className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : "Acrylic"}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
-                          <TableCell className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
-                          <TableCell className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('en-US')}</TableCell>
+                          <TableCell data-label={t("Material")} className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : t("Acrylic")}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
+                          <TableCell data-label={t("Status")} className="py-4"><Badge variant={info.variant} icon={info.icon}>{t(info.label)}</Badge></TableCell>
+                          <TableCell data-label={t("Requested")} className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString(app?'ko-KR':'en-US')}</TableCell>
                         </TableRow>
                       );
                     })
@@ -648,33 +646,32 @@ export default function ManufacturingPage() {
         </div>
       )}
 
-      {equipmentKind==='print'&&panel==='overview'&&<section aria-label="Printing overview" className="grid gap-4 sm:grid-cols-3">{[
+      {equipmentKind==='print'&&panel==='overview'&&<section aria-label={t("Printing overview")} className="grid gap-4 sm:grid-cols-3">{[
         {href:'requests',label:'Print requests',count:allPrintJobs.filter(j=>j.status==='pending').length,unit:'pending',hint:'Review and approve requests',Icon:ListChecks,alert:true},
         {href:'queues',label:'Printer queues',count:printers.length,unit:'printers',hint:'Status and queue per printer',Icon:PrinterIcon,alert:false},
         {href:'filament',label:'Filament stock',count:filamentCatalog.length,unit:'combinations',hint:'Materials and colors in stock',Icon:Layers,alert:false},
       ].map(({href,label,count,unit,hint,Icon,alert})=><Link key={href} href={'/manage/manufacturing/'+href} className="group flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 transition-colors hover:bg-muted/40">
         <div className="flex items-center justify-between"><span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" strokeWidth={1.7}/></span><ArrowUpRight className="size-4 text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true"/></div>
-        <div className="space-y-1"><h2 className="text-sm font-medium text-muted-foreground">{label}</h2><p className={'text-3xl font-semibold tabular-nums tracking-tight '+(alert&&count>0?'text-primary':'text-foreground')}>{count}<span className="ml-2 text-sm font-medium text-muted-foreground">{unit}</span></p></div>
-        <p className="text-sm text-muted-foreground">{hint}</p>
+        <div className="space-y-1"><h2 className="text-sm font-medium text-muted-foreground">{t(label)}</h2><p className={'text-3xl font-semibold tabular-nums tracking-tight '+(alert&&count>0?'text-primary':'text-foreground')}>{count}<span className="ml-2 text-sm font-medium text-muted-foreground">{t(unit)}</span></p></div>
+        <p className="text-sm text-muted-foreground">{t(hint)}</p>
       </Link>)}</section>}
 
       {/* ── 3D manager ── */}
       {tab === 'print_manager' && canManagePrint && (
         <div className="space-y-8">
           {show('filament')&&<Card className="p-6 rounded-2xl space-y-3">
-            <h2 id="filament-stock" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />  Filament catalog</h2>
+            <h2 id="filament-stock" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />   {t("Filament catalog")}</h2>
             <p className="text-xs text-muted-foreground font-bold opacity-70">
 
-              List only available filament. Requesters can select a listed combination or choose any available material.
-            </p>
+               {t("List only available filament. Requesters can select a listed combination or choose any available material.")} </p>
             {filamentCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground opacity-50">No filament registered.</p>
+              <p className="text-xs text-muted-foreground">{t("No filament registered.")}</p>
             ) : (
               <div className="space-y-1.5">
                 {filamentCatalog.map(f => (
                   <div key={f.id} className={`flex items-center justify-between gap-2 rounded-lg px-3 py-1.5 ${f.stock_count === 0 ? 'bg-destructive/10' : 'bg-muted/50'}`}>
                     <span className="text-xs font-bold">
-                      {f.material} · {f.color}{f.stock_count === 0 && <span className="text-destructive ml-1.5">Out of stock</span>}
+                      {f.material} · {f.color}{f.stock_count === 0 && <span className="text-destructive ml-1.5">{t("Out of stock")}</span>}
                     </span>
                     <div className="flex items-center gap-1.5">
                       <button onClick={() => adjustFilamentStock(f.id, -1)} className="flex items-center justify-center size-6 rounded-full hover:bg-muted transition-colors font-black text-sm">−</button>
@@ -689,17 +686,16 @@ export default function ManufacturingPage() {
               </div>
             )}
             <div className="flex items-center gap-2">
-              <Input value={newFilamentMaterial} onChange={e => setNewFilamentMaterial(e.target.value)} className="h-9 w-28 text-xs" placeholder="Material (e.g. PLA Basic)" />
-              <Input value={newFilamentColor} onChange={e => setNewFilamentColor(e.target.value)} className="h-9 w-28 text-xs" placeholder="Color (e.g. black)" />
-              <Input type="number" min="0" value={newFilamentStock} onChange={e => setNewFilamentStock(e.target.value)} className="h-9 w-16 text-xs" placeholder="Stock" />
+              <Input value={newFilamentMaterial} onChange={e => setNewFilamentMaterial(e.target.value)} className="h-9 w-28 text-xs" placeholder={t("Material (e.g. PLA Basic)")} />
+              <Input value={newFilamentColor} onChange={e => setNewFilamentColor(e.target.value)} className="h-9 w-28 text-xs" placeholder={t("Color (e.g. black)")} />
+              <Input type="number" min="0" value={newFilamentStock} onChange={e => setNewFilamentStock(e.target.value)} className="h-9 w-16 text-xs" placeholder={t("Stock")} />
               <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addFilamentEntry}>
-                <Plus className="size-3.5" />  Add
-              </Button>
+                <Plus className="size-3.5" />   {t("Add")} </Button>
             </div>
           </Card>}
 
           {show('queues')&&<div>
-            <h2 className="font-black uppercase text-sm tracking-widest mb-3" id="printer-queues">Printer queues</h2>
+            <h2 className="font-black uppercase text-sm tracking-widest mb-3" id="printer-queues">{t("Printer queues")}</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {printers.map(p => {
                 const isMine = isAdmin || managedPrinterIds.includes(p.id);
@@ -709,37 +705,33 @@ export default function ManufacturingPage() {
                     <div className="flex items-center justify-between">
                       <span className="font-black text-sm">{p.name}</span>
                       {p.status === 'printing'
-                        ? <Badge variant="success" icon={<Printer className="size-3" />}>In use</Badge>
+                        ? <Badge variant="success" icon={<Printer className="size-3" />}>{t("In use")}</Badge>
                         : p.status === 'done'
-                          ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>Awaiting collection</Badge>
+                          ? <Badge variant="warning" icon={<CheckCircle2 className="size-3" />}>{t("Awaiting collection")}</Badge>
                           : p.status === 'maintenance'
-                            ? <Badge variant="danger">Faulty</Badge>
-                            : <Badge variant="muted">Available</Badge>}
+                            ? <Badge variant="danger">{t("Faulty")}</Badge>
+                            : <Badge variant="muted">{t("Available")}</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground opacity-70">Queued plates {plateBacklog[p.id] || 0} files</p>
+                    <p className="text-xs text-muted-foreground opacity-70">{t("Queued plates")} {plateBacklog[p.id] || 0}  {t("files")}</p>
 
                     {!isMine ? (
-                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">You do not manage this printer</p>
+                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">{t("You do not manage this printer")}</p>
                     ) : p.status === 'maintenance' ? (
                       <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => repairPrinter(p)}>
-                        <Undo2 className="size-3" />  Restore service
-                      </Button>
+                        <Undo2 className="size-3" />   {t("Restore service")} </Button>
                     ) : p.status === 'done' ? (
                       <>
-                        <p className="text-xs text-muted-foreground font-bold">Printing finished. Collect the item.</p>
+                        <p className="text-xs text-muted-foreground font-bold">{t("Printing finished. Collect the item.")}</p>
                         <Button size="sm" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => collectPrint(p)}>
-                          <CheckCircle2 className="size-3" />  Collected
-                        </Button>
+                          <CheckCircle2 className="size-3" />   {t("Collected")} </Button>
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" />  Report fault
-                        </Button>
+                          <Wrench className="size-3" />   {t("Report fault")} </Button>
                       </>
                     ) : p.status === 'printing' ? (
                       <>
                         {p.estimated_end_at && (
                           <p className="text-xs text-muted-foreground font-bold">
-                            {formatDistanceToNow(new Date(p.estimated_end_at), { locale: enUS, addSuffix: true })}  Estimated finish
-                          </p>
+                            {formatDistanceToNow(new Date(p.estimated_end_at), { locale: app?ko:enUS, addSuffix: true })}   {t("Estimated finish")} </p>
                         )}
                         {(() => {
                           const job = allPrintJobs.find(j => j.id === p.current_job_id);
@@ -747,7 +739,7 @@ export default function ManufacturingPage() {
                           if (job.plate_count > 1) {
                             return (
                               <div className="space-y-1">
-                                <p className="text-xs text-muted-foreground font-bold text-center">Plate {job.plates_completed}/{job.plate_count}  Completed</p>
+                                <p className="text-xs text-muted-foreground font-bold text-center">{t("Plate")} {job.plates_completed}/{job.plate_count}   {t("Completed")}</p>
                                 <div className="grid grid-cols-4 gap-1">
                                   {Array.from({ length: job.plate_count }, (_, idx) => {
                                     const plateNum = idx + 1;
@@ -772,13 +764,11 @@ export default function ManufacturingPage() {
                           }
                           return (
                             <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => openPlateComplete(p, job)}>
-                              <Square className="size-3" />  Complete print
-                            </Button>
+                              <Square className="size-3" />   {t("Complete print")} </Button>
                           );
                         })()}
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" />  Report fault
-                        </Button>
+                          <Wrench className="size-3" />   {t("Report fault")} </Button>
                       </>
                     ) : (
                       <>
@@ -788,11 +778,9 @@ export default function ManufacturingPage() {
                           disabled={queuedPrintJobsForPrinter(allPrintJobs,p.id).length === 0}
                           onClick={() => openQueueDialog(p)}
                         >
-                          <Play className="size-3" />  Start print
-                        </Button>
+                          <Play className="size-3" />   {t("Start print")} </Button>
                         <Button size="sm" variant="destructive" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => markPrinterBroken(p)}>
-                          <Wrench className="size-3" />  Report fault
-                        </Button>
+                          <Wrench className="size-3" />   {t("Report fault")} </Button>
                       </>
                     )}
                   </Card>
@@ -802,66 +790,66 @@ export default function ManufacturingPage() {
           </div>}
 
           {show('requests')&&<div>
-            <h2 className="font-black uppercase text-sm tracking-widest mb-3" id="print-requests">All requests</h2>
+            <h2 className="font-black uppercase text-sm tracking-widest mb-3" id="print-requests">{t("All requests")}</h2>
             <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
-                <Table className="data-table">
+                <Table className="data-table cb-manufacturing-requests">
                   <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent border-b-2">
-                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requester</TableHead>
-                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">Mode / file</TableHead>
-                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
-                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">Actions</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("Requester")}</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Mode / file")}</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Status")}</TableHead>
+                      <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">{t("Actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {managerPrintLoading ? (
-                      <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="Loading" /></div></TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label={t("Loading")} /></div></TableCell></TableRow>
                     ) : allPrintJobs.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">No requests.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">{t("No requests.")}</TableCell></TableRow>
                     ) : (
                       allPrintJobs.map(j => {
                         const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                         return (
                           <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 align-top">
-                            <TableCell className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
-                            <TableCell className="py-4">
+                            <TableCell data-label={t("Requester")} className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
+                            <TableCell data-label={t("Mode / file")} className="py-4">
                               <div className="flex flex-col gap-1.5">
-                                <span className="text-xs font-black uppercase">{j.mode === 'beginner' ? "Beginner" : "Advanced"} · {j.quantity} items · Plate {j.plate_count} files{j.material ? ` · ${j.material}` : ''}{j.color ? ` · ${j.color}` : ''}</span>
-                                {j.preferred_printer_id && <span className="text-xs text-muted-foreground">Preferred printer: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
+                                <span className="text-xs font-black uppercase">{j.mode === 'beginner' ? t("Beginner") : t("Advanced")} · {j.quantity}  {t("items · Plate")} {j.plate_count}  {t("files")}{j.material ? ` · ${j.material}` : ''}{j.color ? ` · ${j.color}` : ''}</span>
+                                {j.preferred_printer_id && <span className="text-xs text-muted-foreground">{t("Preferred printer:")} {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
                                 {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                                {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
+                                {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />   {t("Manager:")} {j.manager.full_name}</span>}
                                 <Link href={`${managementBase}/print/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
 
-                                  View details <ExternalLink className="size-3" />
+                                   {t("View details")} <ExternalLink className="size-3" />
                                 </Link>
                                 {j.file_path && (
                                   <button onClick={() => downloadFile(j.file_path,j.file_name)} className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
-                                    <Download className="size-3" /> {j.file_name}{j.mode === 'advanced' ? " (Sliced · ready to print)" : " (Slicing required)"}
+                                    <Download className="size-3" /> {j.file_name}{j.mode === 'advanced' ? t(" (Sliced · ready to print)") : t(" (Slicing required)")}
                                   </button>
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4">
-                              <Badge variant={info.variant} icon={info.icon}>{info.label}</Badge>
+                            <TableCell data-label={t("Status")} className="py-4">
+                              <Badge variant={info.variant} icon={info.icon}>{t(info.label)}</Badge>
                               {j.status === 'done' && j.delivered_at && (
-                                <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>Delivered</Badge></div>
+                                <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>{t("Delivered")}</Badge></div>
                               )}
                             </TableCell>
-                            <TableCell className="py-4 px-6 text-right">
+                            <TableCell data-label={t("Actions")} className="py-4 px-6 text-right">
                               <div className="flex justify-end gap-2 flex-wrap">
                                 {j.status === 'pending' && (
                                   <>
-                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>Accept</Button>
-                                    <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>Reject</Button>
+                                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updatePrintJobStatus(j.id, 'accepted')}>{t("Accept")}</Button>
+                                    <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>{t("Reject")}</Button>
                                   </>
                                 )}
+                                {['accepted','queued','printing'].includes(j.status)&&<Button asChild size="sm" variant="outline"><Link href={equipmentKind?'/manage/manufacturing/queues':managementBase+'#printer-queues'}>{t('Printer queues')}</Link></Button>}
                                 {j.status === 'done' && !j.delivered_at && (
                                   <>
                                     <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
                                     <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
-                                      <PackageCheck className="size-3.5" />  Hand delivered
-                                    </Button>
+                                      <PackageCheck className="size-3.5" />   {t("Hand delivered")} </Button>
                                   </>
                                 )}
                               </div>
@@ -882,18 +870,17 @@ export default function ManufacturingPage() {
       {tab === 'laser_manager' && canManageLaser && (
         <div className="space-y-8">
           {show('materials')&&<Card className="p-6 rounded-2xl space-y-3">
-            <h2 id="laser-materials" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />  Material catalog</h2>
+            <h2 id="laser-materials" className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" />   {t("Material catalog")}</h2>
             <p className="text-xs text-muted-foreground font-bold opacity-70">
 
-              List supported materials and thicknesses. Requesters can select only listed combinations; stock counts are not tracked.
-            </p>
+               {t("List supported materials and thicknesses. Requesters can select only listed combinations; stock counts are not tracked.")} </p>
             {laserCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground opacity-50">No materials registered.</p>
+              <p className="text-xs text-muted-foreground">{t("No materials registered.")}</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {laserCatalog.map(c => (
                   <span key={c.id} className="inline-flex items-center gap-1.5 bg-muted/50 rounded-full pl-3 pr-1.5 py-1 text-xs font-bold">
-                    {c.material === 'mdf' ? 'MDF' : "Acrylic"} {c.thickness_mm}mm
+                    {c.material === 'mdf' ? 'MDF' : t("Acrylic")} {c.thickness_mm}mm
                     <button onClick={() => removeLaserCatalogEntry(c.id)} className="ml-1 flex items-center justify-center size-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors">
                       <X className="size-3" />
                     </button>
@@ -906,74 +893,72 @@ export default function ManufacturingPage() {
                 <SelectTrigger className="h-9 w-28 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mdf">MDF</SelectItem>
-                  <SelectItem value="acrylic">Acrylic</SelectItem>
+                  <SelectItem value="acrylic">{t("Acrylic")}</SelectItem>
                 </SelectContent>
               </Select>
-              <Input type="number" step="0.5" min="0" value={newCatalogThickness} onChange={e => setNewCatalogThickness(e.target.value)} className="h-9 w-28 text-xs" placeholder="Thickness (mm)" />
+              <Input type="number" step="0.5" min="0" value={newCatalogThickness} onChange={e => setNewCatalogThickness(e.target.value)} className="h-9 w-28 text-xs" placeholder={t("Thickness (mm)")} />
               <Button size="sm" className="h-9 px-3 font-black text-xs uppercase gap-1" onClick={addLaserCatalogEntry}>
-                <Plus className="size-3.5" />  Add
-              </Button>
+                <Plus className="size-3.5" />   {t("Add")} </Button>
             </div>
           </Card>}
 
           {show('requests')&&<div id="laser-requests" className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
-            <Table className="data-table">
+            <Table className="data-table cb-manufacturing-requests">
               <TableHeader className="bg-muted/30">
                 <TableRow className="hover:bg-transparent border-b-2">
-                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">Requester</TableHead>
-                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">Material / file</TableHead>
-                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">Status</TableHead>
-                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">Actions</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">{t("Requester")}</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Material / file")}</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4">{t("Status")}</TableHead>
+                  <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6 text-right">{t("Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {managerLaserLoading ? (
-                  <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="Loading" /></div></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label={t("Loading")} /></div></TableCell></TableRow>
                 ) : allLaserJobs.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">No requests.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">{t("No requests.")}</TableCell></TableRow>
                 ) : (
                   allLaserJobs.map(j => {
                     const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                     return (
                       <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
-                        <TableCell className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
-                        <TableCell className="py-4">
+                        <TableCell data-label={t("Requester")} className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
+                        <TableCell data-label={t("Material / file")} className="py-4">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : "Acrylic"}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''} × {j.quantity}</span>
+                            <span className="text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : t("Acrylic")}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''} × {j.quantity}</span>
                             {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
-                            {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />  Manager: {j.manager.full_name}</span>}
+                            {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" />   {t("Manager:")} {j.manager.full_name}</span>}
                             <Link href={`${managementBase}/laser/${j.id}`} className="text-xs text-primary hover:underline flex items-center gap-1">
-                              {j.file_name || "View file"} <ExternalLink className="size-3" />
+                              {j.file_name || t("View file")} <ExternalLink className="size-3" />
                             </Link>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
-                          <Badge variant={info.variant} icon={info.icon}>{info.label}</Badge>
+                        <TableCell data-label={t("Status")} className="py-4">
+                          <Badge variant={info.variant} icon={info.icon}>{t(info.label)}</Badge>
                           {j.status === 'done' && j.delivered_at && (
-                            <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>Delivered</Badge></div>
+                            <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>{t("Delivered")}</Badge></div>
                           )}
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-right">
+                        <TableCell data-label={t("Actions")} className="py-4 px-6 text-right">
                           <div className="flex justify-end gap-2 flex-wrap">
                             {j.status === 'pending' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>Accept</Button>
-                                <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>Reject</Button>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'accepted')}>{t("Accept")}</Button>
+                                <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('laser', j.id)}>{t("Reject")}</Button>
                               </>
                             )}
                             {j.status === 'accepted' && (
-                              <Button size="sm" variant="outline" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>Start job</Button>
+                              <Button size="sm" variant="outline" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'in_progress')}>{t("Start job")}</Button>
                             )}
                             {j.status === 'in_progress' && (
-                              <Button size="sm" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>Completed</Button>
+                              <Button size="sm" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => updateLaserJobStatus(j.id, 'done')}>{t("Completed")}</Button>
                             )}
                             {j.status === 'done' && !j.delivered_at && (
                               <>
                                 <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
                                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
-                                  <PackageCheck className="size-3.5" />  Hand delivered
-                                </Button>
+                                  <PackageCheck className="size-3.5" />   {t("Hand delivered")} </Button>
                               </>
                             )}
                           </div>
@@ -993,12 +978,12 @@ export default function ManufacturingPage() {
       <Dialog open={!!plateCompleteTarget} onOpenChange={o => !o && setPlateCompleteTarget(null)}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">Complete job</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">Select any filament rolls depleted by this job. Multiple selections are allowed.</DialogDescription>
+            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{t("Complete job")}</DialogTitle>
+            <DialogDescription className="text-xs font-bold opacity-60">{t("Select any filament rolls depleted by this job. Multiple selections are allowed.")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5 max-h-56 overflow-y-auto py-2">
             {filamentCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">No filament registered.</p>
+              <p className="text-xs text-muted-foreground text-center py-4">{t("No filament registered.")}</p>
             ) : (
               filamentCatalog.map(f => (
                 <label key={f.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 cursor-pointer text-xs font-bold">
@@ -1008,14 +993,14 @@ export default function ManufacturingPage() {
                     onChange={() => toggleUsedUpFilament(f.id)}
                     className="size-4"
                   />
-                  {f.material} · {f.color} <span className="text-muted-foreground opacity-60">(Stock {f.stock_count})</span>
+                  {f.material} · {f.color} <span className="text-muted-foreground opacity-60">{t("(Stock")} {f.stock_count})</span>
                 </label>
               ))
             )}
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setPlateCompleteTarget(null)}>Cancel</Button>
-            <Button className="font-black uppercase text-xs" onClick={confirmPlateComplete}>Complete job</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setPlateCompleteTarget(null)}>{t("Cancel")}</Button>
+            <Button className="font-black uppercase text-xs" onClick={confirmPlateComplete}>{t("Complete job")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1024,14 +1009,14 @@ export default function ManufacturingPage() {
       <Dialog open={!!queueDialogPrinter} onOpenChange={o => !o && setQueueDialogPrinter(null)}>
         <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{queueDialogPrinter?.name}  Start print</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">Select a queued job and enter its estimated duration.</DialogDescription>
+            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{queueDialogPrinter?.name}   {t("Start print")}</DialogTitle>
+            <DialogDescription className="text-xs font-bold opacity-60">{t("Select a queued job and enter its estimated duration.")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Select job</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("Select job")}</label>
               <Select value={queueJobId} onValueChange={setQueueJobId}>
-                <SelectTrigger aria-label="Queued print job" className="h-10 w-full text-sm"><SelectValue placeholder="— Select —" /></SelectTrigger>
+                <SelectTrigger aria-label={t("Queued print job")} className="h-10 w-full text-sm"><SelectValue placeholder={t("— Select —")} /></SelectTrigger>
                 <SelectContent>
                   {idleJobsForQueue.map(j => (
                     <SelectItem key={j.id} value={j.id}>{requesterLabel(j)} · {j.file_name}</SelectItem>
@@ -1040,7 +1025,7 @@ export default function ManufacturingPage() {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">Estimated duration</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-1.5 block">{t("Estimated duration")}</label>
               <div className="grid grid-cols-3 gap-2 mb-2">
                 {DURATION_PRESETS.map(p => (
                   <button
@@ -1051,7 +1036,7 @@ export default function ManufacturingPage() {
                       queueHours === p.hours ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
                     }`}
                   >
-                    {p.label}
+                    {t(p.label)}
                   </button>
                 ))}
               </div>
@@ -1063,15 +1048,15 @@ export default function ManufacturingPage() {
                   value={queueHours}
                   onChange={e => setQueueHours(Math.max(0, Number(e.target.value)))}
                   className="h-10 pr-14 font-bold"
-                  placeholder="Custom"
+                  placeholder={t("Custom")}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black uppercase text-muted-foreground">hours</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black uppercase text-muted-foreground">{t("hours")}</span>
               </div>
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setQueueDialogPrinter(null)}>Cancel</Button>
-            <Button className="font-black uppercase text-xs" onClick={startPrint} disabled={startingPrint||!queueJobId}>Start</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setQueueDialogPrinter(null)}>{t("Cancel")}</Button>
+            <Button className="font-black uppercase text-xs" onClick={startPrint} disabled={startingPrint||!queueJobId}>{t("Start")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -1080,19 +1065,19 @@ export default function ManufacturingPage() {
       <Dialog open={!!rejectTarget} onOpenChange={o => !o && setRejectTarget(null)}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">Reject request</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">Optionally provide a rejection reason visible to the requester.</DialogDescription>
+            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{t("Reject request")}</DialogTitle>
+            <DialogDescription className="text-xs font-bold opacity-60">{t("Optionally provide a rejection reason visible to the requester.")}</DialogDescription>
           </DialogHeader>
           <textarea
             rows={3}
-            placeholder="For example: The estimated print duration exceeds our available capacity."
+            placeholder={t("For example: The estimated print duration exceeds our available capacity.")}
             value={rejectReason}
             onChange={e => setRejectReason(e.target.value)}
             className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
           />
           <DialogFooter className="gap-2">
-            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRejectTarget(null)}>Cancel</Button>
-            <Button variant="destructive" className="font-black uppercase text-xs" onClick={confirmReject}>Reject</Button>
+            <Button variant="outline" className="font-black uppercase text-xs" onClick={() => setRejectTarget(null)}>{t("Cancel")}</Button>
+            <Button variant="destructive" className="font-black uppercase text-xs" onClick={confirmReject}>{t("Reject")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

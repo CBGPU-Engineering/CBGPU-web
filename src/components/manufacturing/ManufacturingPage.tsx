@@ -1,4 +1,5 @@
 'use client';
+import '@/components/manufacturing/manufacturing-requests.css';
 import {scopedManufacturingFilesEnabled} from '@/lib/manufacturing/fileAccess';
 import {useManufacturingDownloader} from '@/lib/manufacturing/useManufacturingFile';
 import {useSchoolResourcePermission} from '@/components/schools/SchoolResourceScope';
@@ -196,13 +197,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
   };
 
   async function addFilamentEntry() {
-    if (!newFilamentMaterial.trim()) { showError('재질을 입력해주세요.'); return; }
-    if (!newFilamentColor.trim()) { showError('색상을 입력해주세요.'); return; }
+    if (!newFilamentMaterial.trim()) { showError('재질을 입력해 주세요.'); return; }
+    if (!newFilamentColor.trim()) { showError('색상을 입력해 주세요.'); return; }
     const stock = parseInt(newFilamentStock);
-    if (isNaN(stock) || stock < 0) { showError('재고 수량을 올바르게 입력해주세요.'); return; }
+    if (isNaN(stock) || stock < 0) { showError('재고 수량을 확인해 주세요.'); return; }
     const { error } = await supabase.from('print_materials').insert({ material: newFilamentMaterial.trim(), color: newFilamentColor.trim(), stock_count: stock });
     if (error) showError(error.code === '23505' ? '이미 등록된 재질과 색상이에요.' : '항목을 추가하지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.');
-    else { showSuccess('필라멘트가 등록됐습니다.'); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
+    else { showSuccess('필라멘트를 등록했어요.'); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
   }
 
   async function adjustFilamentStock(id: string, delta: number) {
@@ -217,7 +218,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
   async function removeFilamentEntry(id: string) {
     const { error } = await supabase.from('print_materials').delete().eq('id', id);
     if (error) showError('삭제하지 못했어요. 목록을 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('필라멘트가 삭제됐습니다.'); fetchFilamentCatalog(); }
+    else { showSuccess('필라멘트를 삭제했어요.'); fetchFilamentCatalog(); }
   }
 
   async function updatePrintJobStatus(id: string, status: string) {
@@ -230,13 +231,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     }
     const { error } = await supabase.from('print_jobs').update(updates).eq('id', id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('상태가 변경됐습니다.'); fetchAllPrintJobs(); }
+    else { showSuccess('상태를 변경했어요.'); fetchAllPrintJobs(); }
   }
 
   async function rejectPrintJob(id: string, reason: string) {
     const { error } = await supabase.from('print_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('거절 처리했습니다.'); fetchAllPrintJobs(); }
+    else { showSuccess('신청을 거절했어요.'); fetchAllPrintJobs(); }
   }
 
   async function markPrintDelivered(job: any) {
@@ -245,7 +246,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       .eq('id', job.id);
     if (error) { showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.'); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess('전달 완료로 표시했습니다.');
+    showSuccess('전달 완료로 표시했어요.');
     fetchAllPrintJobs();
   }
 
@@ -263,7 +264,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
       if(error){showError('인쇄를 시작하지 못했어요. 대기열을 확인하고 작업을 다시 선택해 주세요.');setQueueJobId('');await loadPrintManagerTab();return}
-      showSuccess("프린팅을 시작했습니다.");setQueueDialogPrinter(null);await loadPrintManagerTab();
+      showSuccess("인쇄를 시작했어요.");setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
 
@@ -330,7 +331,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       estimated_end_at: null,
     }).eq('id', printer.id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('회수 처리했습니다. 프린터가 다시 대기 상태가 됐습니다.'); loadPrintManagerTab(); }
+    else { showSuccess('출력물 회수를 완료했어요. 프린터를 사용할 수 있어요.'); loadPrintManagerTab(); }
   }
 
   async function markPrinterBroken(printer: any) {
@@ -387,13 +388,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     }
     const { error } = await supabase.from('laser_jobs').update(updates).eq('id', id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('상태가 변경됐습니다.'); fetchAllLaserJobs(); }
+    else { showSuccess('상태를 변경했어요.'); fetchAllLaserJobs(); }
   }
 
   async function rejectLaserJob(id: string, reason: string) {
     const { error } = await supabase.from('laser_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
     if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('거절 처리했습니다.'); fetchAllLaserJobs(); }
+    else { showSuccess('신청을 거절했어요.'); fetchAllLaserJobs(); }
   }
 
   async function markLaserDelivered(job: any) {
@@ -402,7 +403,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       .eq('id', job.id);
     if (error) { showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.'); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess('전달 완료로 표시했습니다.');
+    showSuccess('전달 완료로 표시했어요.');
     fetchAllLaserJobs();
   }
 
@@ -421,13 +422,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     if (isNaN(thicknessNum) || thicknessNum <= 0) { showError('두께를 올바르게 입력해주세요.'); return; }
     const { error } = await supabase.from('laser_materials').insert({ material: newCatalogMaterial, thickness_mm: thicknessNum });
     if (error) showError(error.code === '23505' ? '이미 등록된 재질과 색상이에요.' : '항목을 추가하지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.');
-    else { showSuccess('재질이 등록됐습니다.'); fetchLaserCatalog(); }
+    else { showSuccess('재질을 등록했어요.'); fetchLaserCatalog(); }
   }
 
   async function removeLaserCatalogEntry(id: string) {
     const { error } = await supabase.from('laser_materials').delete().eq('id', id);
     if (error) showError('삭제하지 못했어요. 목록을 새로 확인하고 다시 시도해 주세요.');
-    else { showSuccess('재질이 삭제됐습니다.'); fetchLaserCatalog(); }
+    else { showSuccess('재질을 삭제했어요.'); fetchLaserCatalog(); }
   }
 
   // ── Reject dialog (shared by both manager tabs) ──────────────────────────
@@ -529,7 +530,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           <h2 className="font-black uppercase text-sm tracking-widest">내 신청 내역</h2>
           <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="cb-manufacturing-requests">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
                     <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">파일</TableHead>
@@ -542,22 +543,22 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                   {printLoading ? (
                     <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                   ) : myPrintJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">아직 신청 내역이 없어요.</TableCell></TableRow>
                   ) : (
                     myPrintJobs.map(j => {
                       const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                       return (
                         <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 cursor-pointer align-top" onClick={() => router.push(`/manufacturing/print/${j.id}`)}>
-                          <TableCell className="py-4 px-6">
+                          <TableCell data-label="파일" className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-sm">{j.file_name || '—'}</span>
+                              <Link href={`/manufacturing/print/${j.id}`} onClick={event=>event.stopPropagation()} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{j.file_name || '—'}</Link>
                               {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
                               {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
-                          <TableCell className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? '초보자' : '고급자'}</span></TableCell>
-                          <TableCell className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
-                          <TableCell className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('ko-KR')}</TableCell>
+                          <TableCell data-label="모드" className="py-4"><span className="text-xs font-black uppercase">{j.mode === 'beginner' ? '초보자' : '고급자'}</span></TableCell>
+                          <TableCell data-label="상태" className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
+                          <TableCell data-label="신청일" className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('ko-KR')}</TableCell>
                         </TableRow>
                       );
                     })
@@ -585,7 +586,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           </div>
           <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="cb-manufacturing-requests">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
                     <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">파일</TableHead>
@@ -598,22 +599,22 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                   {laserLoading ? (
                     <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                   ) : myLaserJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">아직 신청 내역이 없어요.</TableCell></TableRow>
                   ) : (
                     myLaserJobs.map(j => {
                       const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                       return (
                         <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 cursor-pointer align-top" onClick={() => router.push(`/manufacturing/laser/${j.id}`)}>
-                          <TableCell className="py-4 px-6">
+                          <TableCell data-label="파일" className="py-4 px-6">
                             <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-sm">{j.file_name || '—'}</span>
+                              <Link href={`/manufacturing/laser/${j.id}`} onClick={event=>event.stopPropagation()} className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{j.file_name || '—'}</Link>
                               {j.manager?.full_name && <span className="text-xs text-muted-foreground flex items-center gap-1"><User className="size-2.5" /> {j.manager.full_name}</span>}
                               {j.status === 'rejected' && j.reject_reason && <span className="text-xs text-destructive font-bold">거절 사유: {j.reject_reason}</span>}
                             </div>
                           </TableCell>
-                          <TableCell className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : '아크릴'}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
-                          <TableCell className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
-                          <TableCell className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('ko-KR')}</TableCell>
+                          <TableCell data-label="재질" className="py-4 text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : '아크릴'}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''}</TableCell>
+                          <TableCell data-label="상태" className="py-4"><Badge variant={info.variant} icon={info.icon}>{info.label}</Badge></TableCell>
+                          <TableCell data-label="신청일" className="py-4 px-6 text-xs text-muted-foreground font-bold">{new Date(j.created_at).toLocaleString('ko-KR')}</TableCell>
                         </TableRow>
                       );
                     })
@@ -631,10 +632,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           <Card className="p-6 rounded-2xl space-y-3">
             <h2 className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" /> 필라멘트 카탈로그</h2>
             <p className="text-xs text-muted-foreground font-bold opacity-70">
-              지금 보유한 필라멘트만 등록하세요. 신청자는 여기 등록된 조합 중에서 고르거나 &ldquo;상관없음&rdquo;을 선택할 수 있습니다.
+              보유한 필라멘트만 등록해 주세요. 신청자는 등록된 조합을 고르거나 &ldquo;상관없음&rdquo;을 선택할 수 있어요.
             </p>
             {filamentCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground opacity-50">등록된 필라멘트가 없습니다.</p>
+              <p className="text-xs text-muted-foreground">등록된 필라멘트가 없어요.</p>
             ) : (
               <div className="space-y-1.5">
                 {filamentCatalog.map(f => (
@@ -665,7 +666,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           </Card>
 
           <div>
-            <h2 className="font-black uppercase text-sm tracking-widest mb-3">프린터 큐</h2>
+            <h2 id="printer-queues" className="font-black uppercase text-sm tracking-widest mb-3">프린터 대기열</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {printers.map(p => {
                 const isMine = managedPrinterIds.includes(p.id);
@@ -685,14 +686,14 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                     <p className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</p>
 
                     {!isMine ? (
-                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">담당 프린터가 아닙니다</p>
+                      <p className="text-xs text-muted-foreground font-bold opacity-50 text-center py-1">담당 프린터가 아니에요</p>
                     ) : p.status === 'maintenance' ? (
                       <Button size="sm" variant="outline" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => repairPrinter(p)}>
                         <Undo2 className="size-3" /> 정상으로 복구
                       </Button>
                     ) : p.status === 'done' ? (
                       <>
-                        <p className="text-xs text-muted-foreground font-bold">출력이 끝났습니다. 회수해주세요.</p>
+                        <p className="text-xs text-muted-foreground font-bold">인쇄를 마쳤어요. 출력물을 회수해 주세요.</p>
                         <Button size="sm" className="w-full font-black text-xs uppercase gap-1.5" onClick={() => collectPrint(p)}>
                           <CheckCircle2 className="size-3" /> 회수함
                         </Button>
@@ -771,7 +772,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
             <h2 className="font-black uppercase text-sm tracking-widest mb-3">전체 신청 목록</h2>
             <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
               <div className="overflow-x-auto">
-                <Table>
+                <Table className="cb-manufacturing-requests">
                   <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent border-b-2">
                       <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청자</TableHead>
@@ -784,14 +785,14 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                     {managerPrintLoading ? (
                       <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                     ) : allPrintJobs.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">아직 신청 내역이 없어요.</TableCell></TableRow>
                     ) : (
                       allPrintJobs.map(j => {
                         const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                         return (
                           <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0 align-top">
-                            <TableCell className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
-                            <TableCell className="py-4">
+                            <TableCell data-label="신청자" className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
+                            <TableCell data-label="모드/파일" className="py-4">
                               <div className="flex flex-col gap-1.5">
                                 <span className="text-xs font-black uppercase">{j.mode === 'beginner' ? '초보자' : '고급자'} · {j.quantity}개 · 플레이트 {j.plate_count}개{j.material ? ` · ${j.material}` : ''}{j.color ? ` · ${j.color}` : ''}</span>
                                 {j.preferred_printer_id && <span className="text-xs text-muted-foreground">희망 프린터: {printers.find(p => p.id === j.preferred_printer_id)?.name || `#${j.preferred_printer_id}`}</span>}
@@ -807,13 +808,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className="py-4">
+                            <TableCell data-label="상태" className="py-4">
                               <Badge variant={info.variant} icon={info.icon}>{info.label}</Badge>
                               {j.status === 'done' && j.delivered_at && (
                                 <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>전달 완료</Badge></div>
                               )}
                             </TableCell>
-                            <TableCell className="py-4 px-6 text-right">
+                            <TableCell data-label="작업" className="py-4 px-6 text-right">
                               <div className="flex justify-end gap-2 flex-wrap">
                                 {j.status === 'pending' && (
                                   <>
@@ -821,11 +822,12 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                                     <Button size="sm" variant="destructive" className="font-black text-xs uppercase h-8 px-3 rounded-xl" onClick={() => openReject('print', j.id)}>거절</Button>
                                   </>
                                 )}
+                                {['accepted','queued','printing'].includes(j.status)&&<Button asChild size="sm" variant="outline"><Link href="#printer-queues">프린터 대기열</Link></Button>}
                                 {j.status === 'done' && !j.delivered_at && (
                                   <>
                                     <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
                                     <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markPrintDelivered(j)}>
-                                      <PackageCheck className="size-3.5" /> 가져다 줌
+                                      <PackageCheck className="size-3.5" /> 전달 완료
                                     </Button>
                                   </>
                                 )}
@@ -849,10 +851,10 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           <Card className="p-6 rounded-2xl space-y-3">
             <h2 className="font-black uppercase text-xs tracking-widest flex items-center gap-1.5"><Layers className="size-4" /> 재질 카탈로그</h2>
             <p className="text-xs text-muted-foreground font-bold opacity-70">
-              지금 취급하는 재질/두께만 등록하세요. 신청자는 여기 등록된 조합만 고를 수 있습니다 (재고 수량은 관리하지 않습니다).
+              사용 가능한 재질과 두께만 등록해 주세요. 신청자는 등록된 조합만 고를 수 있어요. 재고 수량은 관리하지 않아요.
             </p>
             {laserCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground opacity-50">등록된 재질이 없습니다.</p>
+              <p className="text-xs text-muted-foreground">등록된 재질이 없어요.</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {laserCatalog.map(c => (
@@ -882,7 +884,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
 
           <div className="border-2 rounded-3xl bg-card overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="cb-manufacturing-requests">
               <TableHeader className="bg-muted/30">
                 <TableRow className="hover:bg-transparent border-b-2">
                   <TableHead className="font-black uppercase text-xs tracking-widest py-4 px-6">신청자</TableHead>
@@ -895,14 +897,14 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 {managerLaserLoading ? (
                   <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                 ) : allLaserJobs.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground">아직 신청 내역이 없어요.</TableCell></TableRow>
                 ) : (
                   allLaserJobs.map(j => {
                     const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
                     return (
                       <TableRow key={j.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
-                        <TableCell className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
-                        <TableCell className="py-4">
+                        <TableCell data-label="신청자" className="py-4 px-6 text-xs font-bold">{requesterLabel(j)}</TableCell>
+                        <TableCell data-label="재질/파일" className="py-4">
                           <div className="flex flex-col gap-1">
                             <span className="text-xs font-black uppercase">{j.material === 'mdf' ? 'MDF' : '아크릴'}{j.thickness_mm ? ` · ${j.thickness_mm}mm` : ''} × {j.quantity}</span>
                             {j.purpose && <span className="text-xs font-bold text-muted-foreground">{j.purpose}</span>}
@@ -912,13 +914,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                             </Link>
                           </div>
                         </TableCell>
-                        <TableCell className="py-4">
+                        <TableCell data-label="상태" className="py-4">
                           <Badge variant={info.variant} icon={info.icon}>{info.label}</Badge>
                           {j.status === 'done' && j.delivered_at && (
                             <div className="mt-1"><Badge variant="success" icon={<PackageCheck className="size-3" />}>전달 완료</Badge></div>
                           )}
                         </TableCell>
-                        <TableCell className="py-4 px-6 text-right">
+                        <TableCell data-label="작업" className="py-4 px-6 text-right">
                           <div className="flex justify-end gap-2 flex-wrap">
                             {j.status === 'pending' && (
                               <>
@@ -936,7 +938,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                               <>
                                 <LocateStudentButton studentId={requesterProfiles[j.user_id]?.student_id} studentName={requesterProfiles[j.user_id]?.full_name} />
                                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase h-8 px-3 rounded-xl gap-1" onClick={() => markLaserDelivered(j)}>
-                                  <PackageCheck className="size-3.5" /> 가져다 줌
+                                  <PackageCheck className="size-3.5" /> 전달 완료
                                 </Button>
                               </>
                             )}
@@ -958,11 +960,11 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">완료 처리</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">이번에 다 쓴 필라멘트 롤이 있으면 체크해주세요 (여러 개 선택 가능).</DialogDescription>
+            <DialogDescription className="text-xs font-bold opacity-60">이번 작업에서 다 쓴 필라멘트 롤을 선택해 주세요. 여러 개를 고를 수 있어요.</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5 max-h-56 overflow-y-auto py-2">
             {filamentCatalog.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">등록된 필라멘트가 없습니다.</p>
+              <p className="text-xs text-muted-foreground text-center py-4">등록된 필라멘트가 없어요.</p>
             ) : (
               filamentCatalog.map(f => (
                 <label key={f.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 cursor-pointer text-xs font-bold">
@@ -1049,7 +1051,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           </DialogHeader>
           <textarea
             rows={3}
-            placeholder="예: 인쇄 시간이 너무 길어 처리가 어렵습니다."
+            placeholder="예: 예상 인쇄 시간이 길어 현재 처리하기 어려워요."
             value={rejectReason}
             onChange={e => setRejectReason(e.target.value)}
             className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"

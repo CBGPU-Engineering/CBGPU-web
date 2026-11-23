@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage} from '@/components/admin/admin-language';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useRouter,useSearchParams} from 'next/navigation';
 import {Check,Clock,Cpu,ExternalLink,UserPlus,X,ArrowLeft,Loader2,Activity,Trash2,HelpCircle,RefreshCw} from 'lucide-react';
@@ -24,6 +25,7 @@ const fmt=(v:string)=>Number.isFinite(Date.parse(v))?new Date(v).toLocaleString(
 const gpuViews:{id:AdminGpuView;label:string}[]=[{id:'all',label:'전체'},{id:'pending',label:'승인 대기'},{id:'approved',label:'승인'},{id:'active',label:'사용 중'},{id:'upcoming',label:'시작 전'},{id:'ended',label:'종료'},{id:'rejected',label:'거절'}];
 const statusLabel=(status:string)=>status==='pending'?'승인 대기':status==='approved'?'승인됨':status==='rejected'?'거절됨':'상태 확인 필요';
 export default function MobileAdminPage(){
+  const {t,app}=useAdminLanguage();
  const {user,isLoading:authLoading,isAdmin}=useAuth();
  const router=useRouter(),params=useSearchParams();
  const param=params.get('tab') as Tab|null;
@@ -51,7 +53,7 @@ export default function MobileAdminPage(){
    if(ticket!==generation.current||actor.current!==owner||currentSession?.user.id!==owner)return;
    setProfiles(p);setReservations(r);setGpuHasMore(r.length===300);setLoadedAt(new Date().toISOString());setNow(Date.now());
    try{const res=await fetch('/api/admin/health',{headers:{Authorization:`Bearer ${session?.access_token||''}`},cache:'no-store'});const next=res.ok?(await res.json()).study:null;if(ticket===generation.current&&actor.current===owner)setStudy(next)}catch{if(ticket===generation.current&&actor.current===owner)setStudy(null)}
-  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(e instanceof Error?e.message:'불러오지 못했습니다.')}
+  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(t(e instanceof Error?e.message:'불러오지 못했습니다.'))}
   finally{if(reading.current?.ticket===ticket)reading.current=null;if(ticket===generation.current)setLoading(false)}
  },[user?.id]);
  useEffect(()=>{setProfiles([]);setReservations([]);setStudy(null);setLoadedAt(null);setGpuHasMore(false);setLoadingOlder(false);setGpuView('all');setGpuQuery('');setGpuFilter('all');return()=>{generation.current++}},[user?.id]);
@@ -72,7 +74,7 @@ export default function MobileAdminPage(){
    const currentSession=(await supabase.auth.getSession()).data.session;
    if(ticket!==generation.current||actor.current!==owner||currentSession?.user.id!==owner)return;
    setReservations(previous=>{const known=new Set(previous.map(row=>row.id));return [...previous,...(data||[]).filter(row=>!known.has(row.id))]});setGpuHasMore(data?.length===300);setLoadedAt(new Date().toISOString());
-  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(e instanceof Error?e.message:'이전 예약을 불러오지 못했어요.')}
+  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(t(e instanceof Error?e.message:'이전 예약을 불러오지 못했어요.'))}
   finally{if(olderReading.current===current)olderReading.current=null;if(ticket===generation.current&&actor.current===owner)setLoadingOlder(false)}
  }
  const pendingProfiles=useMemo(()=>profiles.filter(p=>p.is_approved!==true),[profiles]);
@@ -81,7 +83,7 @@ export default function MobileAdminPage(){
  const conflicts=(t:any)=>reservations.some(r=>r.id!==t.id&&r.gpu_id===t.gpu_id&&r.status==='approved'&&new Date(r.start_time)<new Date(t.end_time)&&new Date(r.end_time)>new Date(t.start_time));
  async function act(key:string,run:()=>Promise<string|null>){
   if(busyKey)return;setBusyKey(key);setError('');
-  try{const failure=await run();if(failure)setError(failure);else await load()}catch(e){setError(e instanceof Error?e.message:'처리 결과를 확인하지 못했어요. 새로고침해 주세요.')}finally{setBusyKey('')}
+  try{const failure=await run();if(failure)setError(t(failure));else await load()}catch(e){setError(t(e instanceof Error?e.message:'처리 결과를 확인하지 못했어요. 새로고침해 주세요.'))}finally{setBusyKey('')}
  }
  const approveProfile=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:true}).eq('id',id);return error?`승인하지 못했습니다: ${error.message}`:null});
  const markReview=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:false}).eq('id',id);return error?`처리하지 못했습니다: ${error.message}`:null});
@@ -93,7 +95,7 @@ export default function MobileAdminPage(){
  // 상단바와 하단 탭은 앱 관리 틀(AppAdminFrame)이 그린다. 여기서는 내용만 그린다.
  return <div className="space-y-3">
  <h1 className="cb-page-title">{tabs.find(t=>t.id===tab)?.label}</h1>
- {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>}
+ {error&&<p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{t(error)}</p>}
  {loading&&!profiles.length&&!reservations.length?<div className="flex justify-center py-16"><LoadingSpinner label="불러오는 중"/></div>:<>
   {tab==='home'&&<div className="space-y-3">
    {study&&<a href="/admin/study" className="flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-5"><span className={`mt-0.5 ${healthTone[study.state]}`}><Activity className="size-6"/></span><span className="min-w-0 flex-1"><span className="block text-sm text-muted-foreground">자습 연결</span><span className={`block text-lg font-semibold ${healthTone[study.state]}`}>{study.label}</span><span className="mt-1 block text-sm text-muted-foreground">{study.detail}</span><span className="mt-2 block text-xs text-muted-foreground">{study.hoursLeft!==null&&<>토큰 만료까지 {leftText(study.hoursLeft)}</>}{study.minutesAgo!==null&&<>{study.hoursLeft!==null?' · ':''}마지막 점검 {study.minutesAgo}분 전</>}</span></span></a>}
@@ -112,12 +114,12 @@ export default function MobileAdminPage(){
 
     <Input type="search" aria-label="GPU 예약 검색" value={gpuQuery} onChange={event=>setGpuQuery(event.target.value)} placeholder="이름, 학번, 이메일, GPU, 이용 목적" className="min-h-11"/>
     <div className="flex flex-wrap gap-2" aria-label="GPU 예약 상태">{gpuViews.map(view=><Button key={view.id} type="button" variant={gpuView===view.id?'default':'outline'} aria-pressed={gpuView===view.id} className="min-h-11" onClick={()=>setGpuView(view.id)}>{view.label}</Button>)}</div>
-    <label className="grid gap-1 text-sm"><span>GPU 번호</span><Dropdown aria-label="GPU 번호 필터" value={gpuFilter} onChange={event=>setGpuFilter(event.target.value)} className="w-full"><option value="all">모든 GPU</option>{[1,2,3,4].map(id=><option key={id} value={String(id)}>GPU #{id}</option>)}</Dropdown></label>
+    <label className="grid gap-1 text-sm"><span>GPU 번호</span><Dropdown aria-label="GPU 번호 필터" value={gpuFilter} onChange={event=>setGpuFilter(event.target.value)} className="w-full"><option value="all">모든 GPU</option>{[1,2,3,4].map(id=><option key={id} value={String(id)}>{t("GPU #")}{id}</option>)}</Dropdown></label>
     <p role="status" className="text-sm text-muted-foreground">{loading?'새로 불러오는 중…':`조회 ${reservations.length}건 · 검색 결과 ${gpuHistory.length}건 · ${Math.min(visibleGpu,gpuHistory.length)}건 표시`}</p>
     {loadedAt&&<p className="text-xs text-muted-foreground">마지막 조회 · {fmt(loadedAt)}</p>}
    </div>
    {gpuHistory.length?gpuHistory.slice(0,visibleGpu).map(r=>{const reviewable=matchesAdminGpuView(r,'pending',now),clash=reviewable&&conflicts(r),ended=matchesAdminGpuView(r,'ended',now);return <article key={r.id} data-reservation-id={r.id} className="rounded-2xl border border-border bg-card p-4">
-    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words text-base font-semibold">{r.profiles?.full_name||'계정 정보 없음'}</p><p className="break-all text-sm text-muted-foreground">{r.profiles?.student_id||r.user_email||r.id}</p></div><span className="shrink-0 text-base font-semibold text-primary">GPU #{r.gpu_id}</span></div>
+    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="break-words text-base font-semibold">{r.profiles?.full_name||'계정 정보 없음'}</p><p className="break-all text-sm text-muted-foreground">{r.profiles?.student_id||r.user_email||r.id}</p></div><span className="shrink-0 text-base font-semibold text-primary">{t("GPU #")}{r.gpu_id}</span></div>
     <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full bg-muted px-2.5 py-1">{statusLabel(r.status)}</span><span className="rounded-full bg-muted px-2.5 py-1">{ended?'종료':Date.parse(r.start_time)>now?'시작 전':'예약 시간 진행 중'}</span></div>
     <p className="mt-3 rounded-xl bg-muted/60 px-3 py-2 text-sm">{fmt(r.start_time)} → {fmt(r.end_time)}</p>
     <p className="mt-2 whitespace-pre-wrap break-words text-sm text-muted-foreground">이용 목적 · {r.purpose||'입력된 목적 없음'}</p>

@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage} from '@/components/admin/admin-language';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { MapPin } from 'lucide-react';
  * timetable during class hours, or today's self-study room assignments otherwise),
  * so they can go hand over a finished print/cut in person. */
 export function LocateStudentButton({ studentId, studentName }: { studentId?: string | null; studentName?: string | null }) {
+  const {t}=useAdminLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LocationResult | null>(null);
@@ -33,40 +35,37 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
   return (
     <>
       <Button size="sm" variant="outline" className="font-black text-xs uppercase gap-1.5" onClick={handleOpen}>
-        <MapPin className="size-3.5" />  Locate requester
-      </Button>
+        <MapPin className="size-3.5" />   {t("Locate requester")} </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{studentName || "Requester"}  location</DialogTitle>
-            <DialogDescription className="text-xs font-bold opacity-60">Estimated location based on the current time.</DialogDescription>
+            <DialogTitle className="font-black uppercase tracking-tighter italic text-xl">{studentName || t("Requester")}   {t("location")}</DialogTitle>
+            <DialogDescription className="text-xs font-bold opacity-60">{t("Estimated location based on the current time.")}</DialogDescription>
           </DialogHeader>
           <div className="py-2">
             {loading ? (
-              <div className="flex justify-center py-6"><LoadingSpinner size={36} label="Locating requester" /></div>
+              <div className="flex justify-center py-6"><LoadingSpinner size={36} label={t("Locating requester")} /></div>
             ) : errored || !result ? (
               <p className="text-sm font-bold text-muted-foreground text-center py-4">
 
-                Student ID or location information is unavailable.
-              </p>
+                 {t("Student ID or location information is unavailable.")} </p>
             ) : result.kind === 'class' ? (
               <div className="space-y-2 text-center">
                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  {result.period ? `School hours · period ${result.period}${result.subject ? ` (${result.subject})` : ''}` : "Outside self-study hours"}
+                  {result.period ? `School hours · period ${result.period}${result.subject ? ` (${result.subject})` : ''}` : t("Outside self-study hours")}
                 </p>
-                <p className="text-2xl font-black">Grade {result.identity.grade}, Class {result.identity.classNo} classroom</p>
-                <p className="text-xs text-muted-foreground opacity-60">The student may be in this classroom unless attending a different class.</p>
+                <p className="text-2xl font-black">{t("Grade")} {result.identity.grade}{t(", Class")} {result.identity.classNo}  {t("classroom")}</p>
+                <p className="text-xs text-muted-foreground opacity-60">{t("The student may be in this classroom unless attending a different class.")}</p>
               </div>
             ) : result.kind === 'selfstudy' ? (
               <div className="space-y-2 text-center">
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Self-study · {result.period}period</p>
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t("Self-study ·")} {result.period}{t("period")}</p>
                 <p className="text-2xl font-black">{result.roomName}{result.seatName ? ` · ${result.seatName}` : ''}</p>
               </div>
             ) : (
               <p className="text-sm font-bold text-muted-foreground text-center py-4">
 
-                It is currently self-study period {result.period}, but no request was found.
-              </p>
+                 {t("It is currently self-study period")} {result.period}{t(", but no request was found.")} </p>
             )}
           </div>
         </DialogContent>

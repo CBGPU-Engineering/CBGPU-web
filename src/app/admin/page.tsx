@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
 import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay,schoolAccountApprovalScope,schoolAccountApprovalState,accountSchools}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
@@ -33,6 +34,7 @@ export default function AdminPage({sectionOverride}:{sectionOverride?:AdminTab})
 }
 
 function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialReview:boolean}) {
+  const {t,app}=useAdminLanguage();
   const { isAdmin, isLoading: authLoading } = useAuth();
   const { showError, showSuccess, confirm } = useAlert();
   const [tab, setTab] = useState<AdminTab>(initialTab);
@@ -47,7 +49,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const schoolAccountsEnabled=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
   const modernSchoolAccount=(account:any)=>schoolAccountsEnabled&&schoolAccountApprovalScope(account,schoolFilter).kind!=='legacy';
   const accountState=(account:any)=>modernSchoolAccount(account)?schoolAccountApprovalState(account,schoolFilter):account.is_approved===true?'approved':account.is_approved===false?'restricted':'unreviewed';
-  const accountStatusBadge=(account:any)=>{const state=accountState(account),personal=modernSchoolAccount(account)&&!account.school_id&&Array.isArray(account.school_affiliations)&&account.school_affiliations.length===0;return <Badge variant={state==='approved'?'success':state==='restricted'?'danger':state==='multiple'?'default':'warning'}>{personal?'Personal account':state==='approved'?'Approved':state==='restricted'?'Restricted':state==='multiple'?'Select school':state==='unavailable'?'School unavailable':'Unreviewed'}</Badge>};
+  const accountStatusBadge=(account:any)=>{const state=accountState(account),personal=modernSchoolAccount(account)&&!account.school_id&&Array.isArray(account.school_affiliations)&&account.school_affiliations.length===0;return <Badge variant={state==='approved'?'success':state==='restricted'?'danger':state==='multiple'?'default':'warning'}>{personal?t('Personal account'):state==='approved'?t('Approved'):state==='restricted'?t('Restricted'):state==='multiple'?t('Select school'):state==='unavailable'?t('School unavailable'):t('Unreviewed')}</Badge>};
 
   const [rowActions, setRowActions] = useState<Record<string, boolean>>({});
   const activeRowActions = useRef(new Set<string>());
@@ -55,7 +57,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     if (activeRowActions.current.has(key)) return;
     activeRowActions.current.add(key); setRowActions(v => ({ ...v, [key]: true }));
     try { await action(); }
-    catch (error) { showError(error instanceof Error ? error.message : "Could not complete the operation. Please try again."); }
+    catch (error) { showError(adminNotice(error instanceof Error ? error.message : t("Could not complete the operation. Please try again."))); }
     finally { activeRowActions.current.delete(key); setRowActions(v => ({ ...v, [key]: false })); }
   }
   const resetFilters = () => { setQuery(''); setNeedsReviewOnly(false); setStatusFilter('all'); setGpuFilter('all'); setRoleFilter('all'); setSchoolFilter('all'); setVisibleLimit(30); };
@@ -66,7 +68,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   useEffect(() => { setPage(1); }, [query, needsReviewOnly, statusFilter, gpuFilter, roleFilter, schoolFilter, visibleLimit, sortOrder]);
   useEffect(() => {
-    const handle = () => document.querySelector<HTMLInputElement>('input[aria-label="Search current list"]')?.focus();
+    const handle = () => document.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
     window.addEventListener('admin:search-list', handle);
     return () => window.removeEventListener('admin:search-list', handle);
   }, []);
@@ -102,7 +104,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       .limit(1000);
 
     if(version!==gpuReadVersion.current)return;
-    if (error) { setLoadErrors(v => ({ ...v, gpu: "Could not load GPU reservations." })); showError("Could not load data."); }
+    if (error) { setLoadErrors(v => ({ ...v, gpu: "Could not load GPU reservations." })); showError(adminNotice("Could not load data.")); }
     else { setReservations(data || []); setGpuHasMore((data?.length||0)===1000); }
     } catch { if(version===gpuReadVersion.current)setLoadErrors(v => ({ ...v, gpu: "Could not load the list. Please try again." })); }
     if(version!==gpuReadVersion.current)return;
@@ -128,9 +130,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   async function updateStatus(id: string, newStatus: 'approved' | 'rejected' | 'pending', gpuId?: number) {
     return runRowAction('gpu:' + id, async () => {
     const observed=reservations.find(row=>row.id===id);
-    if(!observed){showError('Reservation no longer loaded. Refresh the list.');return;}
-    if(newStatus==='pending'&&!await confirm({title:'Return this reservation to pending?',message:'This removes its approval. The user may lose GPU access, including an active session. The reservation record is retained.',confirmLabel:'Return to pending',cancelLabel:'Keep current status'}))return;
-    if (newStatus === 'approved' && gpuId === undefined) { showError("A GPU number is required."); return; }
+    if(!observed){showError(adminNotice('Reservation no longer loaded. Refresh the list.'));return;}
+    if(newStatus==='pending'&&!await confirm({title:t('Return this reservation to pending?'),message:t('This removes its approval. The user may lose GPU access, including an active session. The reservation record is retained.'),confirmLabel:t('Return to pending'),cancelLabel:t('Keep current status')}))return;
+    if (newStatus === 'approved' && gpuId === undefined) { showError(adminNotice("A GPU number is required.")); return; }
     if (newStatus === 'approved' && gpuId !== undefined) {
       const target = reservations.find(r => r.id === id);
       if (target) {
@@ -141,16 +143,16 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           new Date(r.start_time) < new Date(target.end_time) &&
           new Date(r.end_time) > new Date(target.start_time)
         );
-        if (conflict) { showError("Cannot approve: this overlaps an approved reservation."); return; }
+        if (conflict) { showError(adminNotice("Cannot approve: this overlaps an approved reservation.")); return; }
       }
       const { error } = await supabase.rpc('approve_gpu_reservation', { p_reservation_id: id });
-      if (error) showError("Operation failed: " + error.message);
-      else { showSuccess("Reservation approved."); await fetchReservations(); }
+      if (error) showError(adminNotice("Operation failed: " + error.message));
+      else { showSuccess(adminNotice("Reservation approved.")); await fetchReservations(); }
       return;
     }
     const { data, error } = await supabase.from('reservations').update({ status: newStatus }).eq('id', id).eq('status',observed.status).eq('end_time',observed.end_time).gt('end_time',new Date().toISOString()).select('id');
-    if (error || !data?.length) showError("Operation failed: " + (error?.message || "No reservations were changed."));
-    else { showSuccess(`Status changed to ${newStatus}.`); await fetchReservations(); }
+    if (error || !data?.length) showError(adminNotice("Operation failed: " + (error?.message || "No reservations were changed.")));
+    else { showSuccess(adminNotice(`Status changed to ${newStatus}.`)); await fetchReservations(); }
     });
   }
 
@@ -169,7 +171,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       .neq('status', 'deleted')
       .order('created_at', { ascending: false })
       .limit(1000);
-    if (error) { setLoadErrors(v => ({ ...v, server: "Could not load server projects." })); showError("Could not load server projects."); }
+    if (error) { setLoadErrors(v => ({ ...v, server: "Could not load server projects." })); showError(adminNotice("Could not load server projects.")); }
     else setCpuProjects(data || []);
     } catch { setLoadErrors(v => ({ ...v, server: "Could not load the list. Please try again." })); }
     setCpuLoading(false);
@@ -184,8 +186,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       updates.deploy_requested_at = new Date().toISOString();
     }
     const { error } = await supabase.from('cpu_projects').update(updates).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
-    else { showSuccess(`Status changed to ${newStatus}.`); await fetchCpuProjects(); }
+    if (error) showError(adminNotice("Operation failed: " + error.message));
+    else { showSuccess(adminNotice(`Status changed to ${newStatus}.`)); await fetchCpuProjects(); }
     });
   }
 
@@ -207,7 +209,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       setProfiles(data.profiles || []);
     } catch {
       setLoadErrors(v => ({ ...v, accounts: "Could not load accounts." }));
-      showError("Could not load accounts.");
+      showError(adminNotice("Could not load accounts."));
     }
     setProfilesLoading(false);
     setProfilesJustFinished(true);
@@ -215,12 +217,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   };
 
   async function setProfileApproval(id: string, approved: boolean) {
-    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError('School membership is managed in the authorized school workspace.');return;}
+    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError(adminNotice('School membership is managed in the authorized school workspace.'));return;}
     return runRowAction('account:' + id, async () => {
     const { error } = await supabase.from('profiles').update({ is_approved: approved }).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError(adminNotice("Operation failed: " + error.message));
     else {
-      showSuccess(approved ? "Account approved." : "Account marked for identity review.");
+      showSuccess(adminNotice(approved ? t("Account approved.") : t("Account marked for identity review.")));
       await fetchProfiles();
     }
     });
@@ -232,7 +234,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      if (!token) { showError("Your session expired. Please sign in again."); return; }
+      if (!token) { showError(adminNotice("Your session expired. Please sign in again.")); return; }
 
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
@@ -240,12 +242,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         body: JSON.stringify({ userId: deleteTarget.id }),
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) { showError(body?.message || "Could not delete account"); return; }
+      if (!res.ok) { showError(adminNotice(body?.message || "Could not delete account")); return; }
 
-      showSuccess("Account deleted.");
+      showSuccess(adminNotice("Account deleted."));
       fetchProfiles();
     } catch (err: any) {
-      showError(err.message || "Could not delete the account.");
+      showError(adminNotice(err.message || "Could not delete the account."));
     } finally {
       setIsDeletingUser(false);
       setDeleteTarget(null);
@@ -254,9 +256,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   async function toggleLaserManager(id: string, current: boolean) {
     const { error } = await supabase.from('profiles').update({ is_laser_cut_manager: !current }).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError(adminNotice("Operation failed: " + error.message));
     else {
-      showSuccess(!current ? "Laser manager assigned." : "Laser manager removed.");
+      showSuccess(adminNotice(!current ? t("Laser manager assigned.") : t("Laser manager removed.")));
       fetchProfiles();
       fetchLaserManagers();
     }
@@ -305,20 +307,20 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   async function addPrinterManager(printerId: number) {
     const userId = addPrinterManagerSelect[printerId];
-    if (!userId) { showError("Select a person to assign."); return; }
+    if (!userId) { showError(adminNotice("Select a person to assign.")); return; }
     const { error } = await supabase.from('printer_managers').insert({ printer_id: printerId, user_id: userId });
-    if (error) showError("Could not add: " + error.message);
-    else { showSuccess("Manager added."); setAddPrinterManagerSelect(s => ({ ...s, [printerId]: '' })); fetchPrinterManagers(); }
+    if (error) showError(adminNotice("Could not add: " + error.message));
+    else { showSuccess(adminNotice("Manager added.")); setAddPrinterManagerSelect(s => ({ ...s, [printerId]: '' })); fetchPrinterManagers(); }
   }
 
   async function removePrinterManager(printerId: number, userId: string) {
     const { error } = await supabase.from('printer_managers').delete().eq('printer_id', printerId).eq('user_id', userId);
-    if (error) showError("Could not remove: " + error.message);
-    else { showSuccess("Manager removed."); fetchPrinterManagers(); }
+    if (error) showError(adminNotice("Could not remove: " + error.message));
+    else { showSuccess(adminNotice("Manager removed.")); fetchPrinterManagers(); }
   }
 
   async function addLaserManager() {
-    if (!addLaserManagerSelect) { showError("Select a person to assign."); return; }
+    if (!addLaserManagerSelect) { showError(adminNotice("Select a person to assign.")); return; }
     await toggleLaserManager(addLaserManagerSelect, false);
     setAddLaserManagerSelect('');
   }
@@ -336,12 +338,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   async function toggleWakeupManager(id: string, current: boolean) {
     const { error } = await supabase.from('profiles').update({ is_wakeup_manager: !current }).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
-    else { showSuccess(!current ? "Wake-up music manager assigned." : "Wake-up music manager removed."); fetchWakeupManagers(); }
+    if (error) showError(adminNotice("Operation failed: " + error.message));
+    else { showSuccess(adminNotice(!current ? t("Wake-up music manager assigned.") : t("Wake-up music manager removed."))); fetchWakeupManagers(); }
   }
 
   async function addWakeupManager() {
-    if (!addWakeupManagerSelect) { showError("Select a person to assign."); return; }
+    if (!addWakeupManagerSelect) { showError(adminNotice("Select a person to assign.")); return; }
     await toggleWakeupManager(addWakeupManagerSelect, false);
     setAddWakeupManagerSelect('');
   }
@@ -354,7 +356,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   const fetchBanner = async () => {
     const { data, error } = await supabase.from('site_banner').select('message, is_active').eq('id', 1).maybeSingle();
-    if (error) showError("Could not load the announcement.");
+    if (error) showError(adminNotice("Could not load the announcement."));
     else {
       setBannerMessage(data?.message ?? '');
       setBannerActive(data?.is_active ?? false);
@@ -367,10 +369,10 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     const { error } = await supabase
       .from('site_banner')
       .upsert({ id: 1, message: bannerMessage, is_active: active }, { onConflict: 'id' });
-    if (error) showError("Could not save: " + error.message);
+    if (error) showError(adminNotice("Could not save: " + error.message));
     else {
       setBannerActive(active);
-      showSuccess(active ? "Announcement enabled." : "Announcement disabled.");
+      showSuccess(adminNotice(active ? t("Announcement enabled.") : t("Announcement disabled.")));
     }
     setBannerSaving(false);
   }
@@ -390,7 +392,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={56} label="Checking access" />
+        <LoadingSpinner size={56} label={t("Checking access")} />
       </div>
     );
   }
@@ -402,14 +404,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           <ShieldAlert className="w-16 h-16 text-destructive" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic uppercase">Access Denied</h1>
+          <h1 className="cb-page-title">{t("Access Denied")}</h1>
           <p className="text-muted-foreground text-lg max-w-md font-bold uppercase opacity-70">
-            Administrator privileges required.
-          </p>
+             {t("Administrator privileges required.")} </p>
         </div>
         <Button onClick={() => router.push('/')} variant="outline" className="font-black px-10 h-12 uppercase tracking-widest border-2 hover:bg-foreground hover:text-background transition-all">
-          Return Home
-        </Button>
+           {t("Return Home")} </Button>
       </div>
     );
   }
@@ -453,50 +453,49 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       <section>
         <div className="page-heading">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{tab==='gpu'?'GPU reservations':tab==='server'?'Server deployments':tab==='accounts'?'Platform accounts':'Administration'}</h1>
+            <h1 className="cb-page-title">{tab==='gpu'?t('GPU reservations'):tab==='server'?t('Server deployments'):tab==='accounts'?t('Platform accounts'):t('Administration')}</h1>
           </div>
 
         </div>
 
-        {tab!=='gpu'&&<div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Review queues">
+        {!hasList&&<div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label={t("Review queues")}>
           {([
             ['server', "Pending deployments", pendingCpuCount, cpuLoading],
             ['accounts', "Account access reviews", unreviewedCount, profilesLoading],
           ] as const).filter(([, ,count])=>count!==null||process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1').map(([target, label, count, loading]) => (
-            <button key={label} type="button" onClick={() => selectTab(target, count!==null)} className="rounded-2xl border bg-card p-3 sm:p-5 text-left transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary" aria-pressed={tab===target&&(count===null?!needsReviewOnly:needsReviewOnly)}>
-              <span className="block text-sm text-muted-foreground">{label}</span>
-              <span className="mt-2 block text-2xl font-semibold tabular-nums">{count===null?"Open requests":loading ? "Checking…" : loadErrors[target] ? "Needs review" : `${count} items`}</span>
-              <span className="mt-2 block text-xs text-muted-foreground">Review list →</span>
+            <button key={label} type="button" onClick={() => selectTab(target, count!==null)} className="rounded-2xl border bg-card p-3 sm:p-5 text-left transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="block text-sm text-muted-foreground">{t(label)}</span>
+              <span className="mt-2 block text-2xl font-semibold tabular-nums">{count===null?t("Open requests"):loading ? t("Checking…") : loadErrors[target] ? t("Needs review") : `${count} ${t('items')}`}</span>
+              <span className="mt-2 block text-xs text-muted-foreground">{t("Review list →")}</span>
             </button>
           ))}
         </div>}
 
 
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
-          {tab!=='gpu'&&<h2 className="font-semibold text-lg">{tab === 'server' ? "Server deployments" : "Platform accounts"}</h2>}
-          {tab==='gpu'&&<><p className="text-sm text-muted-foreground">Chungbuk Science High School · GPU #1–4 · All approvals and reservation history</p><div className="flex flex-wrap gap-2" role="group" aria-label="Reservation views">{adminGpuViews.map(view=><Button key={view} type="button" variant={gpuView===view?'secondary':'outline'} className="min-h-11 gap-2" aria-pressed={gpuView===view} aria-label={gpuViewLabels[view]} onClick={()=>{setNeedsReviewOnly(false);setStatusFilter(view);setPage(1)}}>{view==='all'?'All':view==='pending'?'Pending':gpuViewLabels[view]}<span className="tabular-nums">{reservations.filter(row=>matchesAdminGpuView(row,view,clockNow)).length}</span></Button>)}</div>{gpuView!=='all'&&<p role="status" className="text-sm">Showing {gpuViewLabels[gpuView]||gpuView}. <Button variant="link" className="min-h-11 px-1" onClick={()=>{setNeedsReviewOnly(false);setStatusFilter('all')}}>Show all reservations</Button></p>}</>}
+          {tab==='gpu'&&<><p className="text-sm text-muted-foreground">{t("Chungbuk Science High School · GPU #1–4 · All approvals and reservation history")}</p><div className="flex flex-wrap gap-2" role="group" aria-label={t("Reservation views")}>{adminGpuViews.map(view=><Button key={view} type="button" variant={gpuView===view?'secondary':'outline'} className="min-h-11 gap-2" aria-pressed={gpuView===view} aria-label={t(gpuViewLabels[view])} onClick={()=>{setNeedsReviewOnly(false);setStatusFilter(view);setPage(1)}}>{view==='all'?t('All'):view==='pending'?t('Pending'):t(gpuViewLabels[view])}<span className="tabular-nums">{reservations.filter(row=>matchesAdminGpuView(row,view,clockNow)).length}</span></Button>)}</div>{gpuView!=='all'&&<p role="status" className="text-sm">{t("Showing")} {t(gpuViewLabels[gpuView]||gpuView)}. <Button variant="link" className="min-h-11 px-1" onClick={()=>{setNeedsReviewOnly(false);setStatusFilter('all')}}>{t("Show all reservations")}</Button></p>}</>}
           <div className="flex flex-wrap items-end gap-3">
-            <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU, purpose or reservation ID"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
-            {tab!=='gpu'&&<Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? "Needs review only" : "Pending only"}</Button>}
-            {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all' || schoolFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>Clear filters</Button>}
-            {tab!=='gpu'&&<label className="text-xs font-semibold space-y-2"><span className="block">Status</span><Dropdown aria-label="Filter by status" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All statuses</option>{tab === 'accounts' ? <><option value="unreviewed">Unreviewed</option><option value="approved">Approved</option><option value="restricted">Restricted</option></> : <><option value="pending">Pending approval</option><option value="approved">Approved</option><option value="rejected">Rejected</option></>}</Dropdown></label>}
-            {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label="Filter by GPU" value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All GPUs</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>GPU #{id}</option>)}</Dropdown></label>}
-            {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">School</span><Dropdown aria-label="Filter accounts by school" value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">All schools</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">No school affiliation</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">School information unavailable</option>}</Dropdown></label>}
-            {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">Role</span><Dropdown aria-label="Filter by role" value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">All accounts</option><option value="student">Students</option><option value="teacher">Teachers</option><option value="external">External collaborators</option><option value="admin">Platform administrators</option><option value="manager">Laser and music managers</option></Dropdown></label>}
-          <Button type="button" variant="outline" disabled={listLoading} onClick={refreshList} className="min-h-11 gap-2"><RefreshCw className={`size-4 ${listLoading ? 'animate-spin motion-reduce:animate-none' : ''}`} />{listLoading ? "Loading…" : "Refresh list"}</Button>
+            <Input type="search" aria-label={t("Search current list")} placeholder={tab === 'server' ? t("Search project name or email") : tab === 'accounts' ? t("Search name, school, student ID or email") : t("Search name, student ID, GPU, purpose or reservation ID")} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
+            {tab!=='gpu'&&<Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? t("Needs review only") : t("Pending only")}</Button>}
+            {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all' || schoolFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>{t("Clear filters")}</Button>}
+            {tab!=='gpu'&&<label className="text-xs font-semibold space-y-2"><span className="block">{t("Status")}</span><Dropdown aria-label={t("Filter by status")} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All statuses")}</option>{tab === 'accounts' ? <><option value="unreviewed">{t("Unreviewed")}</option><option value="approved">{t("Approved")}</option><option value="restricted">{t("Restricted")}</option></> : <><option value="pending">{t("Pending approval")}</option><option value="approved">{t("Approved")}</option><option value="rejected">{t("Rejected")}</option></>}</Dropdown></label>}
+            {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label={t("Filter by GPU")} value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All GPUs")}</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>{t("GPU #")}{id}</option>)}</Dropdown></label>}
+            {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">{t("School")}</span><Dropdown aria-label={t("Filter accounts by school")} value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All schools")}</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">{t("No school affiliation")}</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">{t("School information unavailable")}</option>}</Dropdown></label>}
+            {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">{t("Role")}</span><Dropdown aria-label={t("Filter by role")} value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All accounts")}</option><option value="student">{t("Students")}</option><option value="teacher">{t("Teachers")}</option><option value="external">{t("External collaborators")}</option><option value="admin">{t("Platform administrators")}</option><option value="manager">{t("Laser and music managers")}</option></Dropdown></label>}
+          <Button type="button" variant="outline" disabled={listLoading} onClick={refreshList} className="min-h-11 gap-2"><RefreshCw className={`size-4 ${listLoading ? 'animate-spin motion-reduce:animate-none' : ''}`} />{listLoading ? t("Loading…") : t("Refresh list")}</Button>
           </div>
           <div className="admin-list-options">
-            <label>Sort<Dropdown aria-label="Sort records" value={sortOrder} onChange={e => setSortOrder(e.target.value)}><option value="default">Original order</option><option value="review">Needs review first</option><option value="name">Name A–Z</option><option value="newest">Newest first</option><option value="oldest">Oldest first</option></Dropdown></label>
-            <label>Rows per page<Dropdown aria-label="Rows per page" value={visibleLimit} onChange={e => setVisibleLimit(Number(e.target.value))}>{[15,30,60,100].map(n => <option key={n} value={n}>{n}</option>)}</Dropdown></label>
-            <label>Density<Dropdown aria-label="Table density" value={density} onChange={e => setDensity(e.target.value)}><option value="comfortable">Comfortable</option><option value="compact">Compact</option></Dropdown></label>
+            <label>{t("Sort")}<Dropdown aria-label={t("Sort records")} value={sortOrder} onChange={e => setSortOrder(e.target.value)}><option value="default">{t("Original order")}</option><option value="review">{t("Needs review first")}</option><option value="name">{t("Name A–Z")}</option><option value="newest">{t("Newest first")}</option><option value="oldest">{t("Oldest first")}</option></Dropdown></label>
+            <label>{t("Rows per page")}<Dropdown aria-label={t("Rows per page")} value={visibleLimit} onChange={e => setVisibleLimit(Number(e.target.value))}>{[15,30,60,100].map(n => <option key={n} value={n}>{n}</option>)}</Dropdown></label>
+            <label>{t("Density")}<Dropdown aria-label={t("Table density")} value={density} onChange={e => setDensity(e.target.value)}><option value="comfortable">{t("Comfortable")}</option><option value="compact">{t("Compact")}</option></Dropdown></label>
             <div className="admin-list-summary">
-            <p role="status" className="text-sm text-foreground">{listError ? "Could not refresh the list." : listLoading ? "Loading records…" : `${resultCount} results · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)} shown`}</p>
-            {tab === 'server' && <p className="text-xs text-muted-foreground">Search and counts cover the most recent 1,000 loaded records.</p>}
-            {tab==='gpu'&&<p className="text-sm text-muted-foreground">{reservations.length.toLocaleString()} loaded{gpuHasMore?' · Load older records below':!listLoading&&!listError?' · End of history':''}. Search covers loaded records.</p>}
+            <p role="status" className="text-sm text-foreground">{listError ? t("Could not refresh the list.") : listLoading ? t("Loading records…") : app?`결과 ${resultCount}개 · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)}개 표시`:`${resultCount} results · ${resultCount ? offset + 1 : 0}–${Math.min(resultCount, offset + visibleLimit)} shown`}</p>
+            {tab === 'server' && <p className="text-xs text-muted-foreground">{t("Search and counts cover the most recent 1,000 loaded records.")}</p>}
+            {tab==='gpu'&&<p className="text-sm text-muted-foreground">{reservations.length.toLocaleString()}  {t("loaded")}{gpuHasMore?t(' · Load older records below'):!listLoading&&!listError?t(' · End of history'):''}{t(". Search covers loaded records.")}</p>}
             </div>
           </div>
-          {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{listError}</p><p className="mt-2 text-muted-foreground">Previously loaded records remain below. Refresh to try again.</p></div>}
-          {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">Saving changes and refreshing the list…</p>}
+          {listError && <div role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-5 py-4 text-sm"><p className="font-semibold">{t(listError)}</p><p className="mt-2 text-muted-foreground">{t("Previously loaded records remain below. Refresh to try again.")}</p></div>}
+          {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">{t("Saving changes and refreshing the list…")}</p>}
         </div>}
 
 
@@ -506,9 +505,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             {/* 모바일: 가로 스크롤 없이 바로 승인/거절 — 카드 목록 */}
             <div className="xl:hidden divide-y">
               {gpuLoading || gpuJustFinished ? (
-                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={gpuJustFinished} size={48} label="Loading reservations" /></div>
+                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={gpuJustFinished} size={48} label={t("Loading reservations")} /></div>
               ) : visibleReservations.length === 0 ? (
-                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">No reservations to display.</div>
+                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No reservations to display.")}</div>
               ) : (
                 visibleReservations.map((res) => {
                   const start = new Date(res.start_time);
@@ -517,38 +516,37 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                   const hasConflict = conflictsWithApproved(res);
                   const dateOptions: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
                   return (
-                    <article key={res.id} aria-label={'GPU #'+res.gpu_id+' reservation'} className="p-4 space-y-3">
+                    <article key={res.id} aria-label={t('GPU #')+res.gpu_id+' reservation'} className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex flex-col min-w-0">
-                          <span className="font-black text-sm uppercase tracking-tight truncate">{res.profiles?.full_name || "Account unavailable"}</span>
+                          <span className="font-black text-sm uppercase tracking-tight truncate">{res.profiles?.full_name || t("Account unavailable")}</span>
                           <span className="text-sm text-muted-foreground font-bold opacity-70">{res.profiles?.student_id || res.user_email}</span>
                         </div>
-                        <span className="font-black italic text-primary text-sm shrink-0">GPU #{res.gpu_id}</span>
+                        <span className="font-black italic text-primary text-sm shrink-0">{t("GPU #")}{res.gpu_id}</span>
                       </div>
-                      <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||'No purpose provided'}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">Reservation details</summary><dl className="space-y-1 break-all"><div><dt>Reservation ID</dt><dd>{res.id}</dd></div><div><dt>Requested</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString('en-US'):'Unavailable'}</dd></div></dl></details>
+                      <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||t('No purpose provided')}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">{t("Reservation details")}</summary><dl className="space-y-1 break-all"><div><dt>{t("Reservation ID")}</dt><dd>{res.id}</dd></div><div><dt>{t("Requested")}</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString(app?'ko-KR':'en-US'):t('Unavailable')}</dd></div></dl></details>
                       <div className="bg-muted/50 px-3 py-2 rounded-xl border border-border/50 text-sm leading-relaxed">
-                        {start.toLocaleString('en-US', dateOptions)}
+                        {start.toLocaleString(app?'ko-KR':'en-US', dateOptions)}
                         <span className="opacity-30 mx-1">→</span>
-                        {end.toLocaleString('en-US', dateOptions)}
+                        {end.toLocaleString(app?'ko-KR':'en-US', dateOptions)}
                       </div>
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
-                          {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">Conflicts with an approved reservation</p>}
-                          {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?'Ended':start.getTime()>clockNow?'Upcoming':'In use'}</p></>}
-                          {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
+                          {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Pending")}</Badge>}
+                          {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">{t("Conflicts with an approved reservation")}</p>}
+                          {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("Approved")}</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?t('Ended'):start.getTime()>clockNow?t('Upcoming'):t('In use')}</p></>}
+                          {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>{t("Rejected")}</Badge>}
                         </div>
                         {isEnded ? (
-                          <span className="text-sm font-black uppercase opacity-30">Session Finished</span>
+                          <span className="text-sm font-black uppercase opacity-30">{t("Session Finished")}</span>
                         ) : res.status === 'pending' ? (
                           <div className="flex gap-2">
-                            <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
-                            <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
+                            <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? t("Cannot approve overlapping reservations.") : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>{t("Approve")}</Button>
+                            <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>{t("Reject")}</Button>
                           </div>
                         ) : (
                           <Button size="sm" variant="outline" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
-                            <Undo2 className="size-3" /> Reset
-                          </Button>
+                            <Undo2 className="size-3" />  {t("Reset")} </Button>
                         )}
                       </div>
                     </article>
@@ -561,18 +559,18 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
               <Table className="data-table admin-gpu-history-table"><colgroup><col className="w-[27%]"/><col className="w-[11%]"/><col className="w-[27%]"/><col className="w-[15%]"/><col className="w-[20%]"/></colgroup>
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6">Applicant</TableHead>
-                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">GPU Unit</TableHead>
-                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">Time Frame</TableHead>
-                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">Status</TableHead>
-                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6 text-right">Actions</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6">{t("Applicant")}</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">{t("GPU Unit")}</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">{t("Time Frame")}</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5">{t("Status")}</TableHead>
+                    <TableHead className="font-black uppercase text-sm tracking-widest py-5 px-6 text-right">{t("Actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {gpuLoading || gpuJustFinished ? (
-                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={gpuJustFinished} size={48} label="Loading reservations" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={gpuJustFinished} size={48} label={t("Loading reservations")} /></div></TableCell></TableRow>
                   ) : visibleReservations.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">No reservations to display.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No reservations to display.")}</TableCell></TableRow>
                   ) : (
                     visibleReservations.map((res) => {
                       const start = new Date(res.start_time);
@@ -584,37 +582,36 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         <TableRow key={res.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
                           <TableCell className="py-5 px-6">
                             <div className="flex flex-col">
-                              <span className="font-black text-sm uppercase tracking-tight">{res.profiles?.full_name || "Account unavailable"}</span>
+                              <span className="font-black text-sm uppercase tracking-tight">{res.profiles?.full_name || t("Account unavailable")}</span>
                               <span className="text-sm text-muted-foreground">{res.profiles?.student_id || res.user_email}</span>
-                              <p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||'No purpose provided'}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">Reservation details</summary><dl className="space-y-1 break-all"><div><dt>Reservation ID</dt><dd>{res.id}</dd></div><div><dt>Requested</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString('en-US'):'Unavailable'}</dd></div></dl></details>
+                              <p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-sm text-muted-foreground">{res.purpose||t('No purpose provided')}</p><details className="text-sm text-muted-foreground"><summary className="min-h-11 cursor-pointer py-3">{t("Reservation details")}</summary><dl className="space-y-1 break-all"><div><dt>{t("Reservation ID")}</dt><dd>{res.id}</dd></div><div><dt>{t("Requested")}</dt><dd>{res.created_at?new Date(res.created_at).toLocaleString(app?'ko-KR':'en-US'):t('Unavailable')}</dd></div></dl></details>
                             </div>
                           </TableCell>
-                          <TableCell className="font-black italic text-primary">GPU #{res.gpu_id}</TableCell>
+                          <TableCell className="font-black italic text-primary">{t("GPU #")}{res.gpu_id}</TableCell>
                           <TableCell className="text-sm font-bold leading-tight py-5">
                             <div className="bg-muted/50 px-3 py-2 rounded-xl inline-block border border-border/50">
-                              {start.toLocaleString('en-US', dateOptions)} <br/>
-                              <span className="opacity-30 mx-1">to</span> {end.toLocaleString('en-US', dateOptions)}
+                              {start.toLocaleString(app?'ko-KR':'en-US', dateOptions)} <br/>
+                              <span className="opacity-30 mx-1">{t("to")}</span> {end.toLocaleString(app?'ko-KR':'en-US', dateOptions)}
                             </div>
                           </TableCell>
                           <TableCell className="py-5">
-                            {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
-                            {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">Conflicts with an approved reservation</p>}
-                            {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?'Ended':start.getTime()>clockNow?'Upcoming':'In use'}</p></>}
-                            {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
+                            {res.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Pending")}</Badge>}
+                            {hasConflict && <p className="mt-1 text-xs font-bold text-destructive">{t("Conflicts with an approved reservation")}</p>}
+                            {res.status === 'approved' && <><Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("Approved")}</Badge><p className="mt-1 text-sm text-muted-foreground">{isEnded?t('Ended'):start.getTime()>clockNow?t('Upcoming'):t('In use')}</p></>}
+                            {res.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>{t("Rejected")}</Badge>}
                           </TableCell>
                           <TableCell className="text-right py-5 px-6">
                             <div className="flex flex-wrap justify-end gap-2">
                               {isEnded ? (
-                                <span className="text-sm font-black uppercase opacity-30 px-4">Session Finished</span>
+                                <span className="text-sm font-black uppercase opacity-30 px-4">{t("Session Finished")}</span>
                               ) : res.status === 'pending' ? (
                                 <>
-                                  <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? "Cannot approve overlapping reservations." : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>Approve</Button>
-                                  <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>Reject</Button>
+                                  <Button size="sm" disabled={hasConflict || rowActions['gpu:' + res.id]} title={hasConflict ? t("Cannot approve overlapping reservations.") : undefined} className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" onClick={() => updateStatus(res.id, 'approved', res.gpu_id)}>{t("Approve")}</Button>
+                                  <Button size="sm" variant="destructive" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'rejected')}>{t("Reject")}</Button>
                                 </>
                               ) : (
                                 <Button size="sm" variant="outline" className="font-black text-sm uppercase min-h-11 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['gpu:' + res.id]} onClick={() => updateStatus(res.id, 'pending')}>
-                                  <Undo2 className="size-3" /> Reset
-                                </Button>
+                                  <Undo2 className="size-3" />  {t("Reset")} </Button>
                               )}
                             </div>
                           </TableCell>
@@ -628,27 +625,27 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           </div>
         )}
 
-        {tab==='gpu'&&gpuHasMore&&<div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={gpuLoading||gpuLoadingMore} onClick={()=>void loadOlderReservations()}>{gpuLoadingMore?'Loading older reservations…':'Load older reservations'}</Button><p className="text-sm text-muted-foreground">Adds the next 1,000 records without changing your filters.</p></div>}
+        {tab==='gpu'&&gpuHasMore&&<div className="mt-4 flex flex-wrap items-center gap-3"><Button type="button" variant="outline" className="min-h-11" disabled={gpuLoading||gpuLoadingMore} onClick={()=>void loadOlderReservations()}>{gpuLoadingMore?t('Loading older reservations…'):t('Load older reservations')}</Button><p className="text-sm text-muted-foreground">{t("Adds the next 1,000 records without changing your filters.")}</p></div>}
         {/* ── 서버 배포 탭 ── */}
         {tab === 'server' && (
           <div className="border rounded-3xl bg-card overflow-hidden shadow-sm">
             {/* 모바일: 가로 스크롤 없이 바로 승인/거절 — 카드 목록 */}
             <div className="md:hidden divide-y">
               {cpuLoading || cpuJustFinished ? (
-                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={cpuJustFinished} size={48} label="Loading projects" /></div>
+                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={cpuJustFinished} size={48} label={t("Loading projects")} /></div>
               ) : visibleProjects.length === 0 ? (
-                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">No projects to display.</div>
+                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No projects to display.")}</div>
               ) : (
                 visibleProjects.map((proj) => (
                   <div key={proj.id} className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex flex-col min-w-0">
-                        <span className="font-black text-sm uppercase tracking-tight truncate">{(proj.profiles as any)?.full_name || "Account unavailable"}</span>
+                        <span className="font-black text-sm uppercase tracking-tight truncate">{(proj.profiles as any)?.full_name || t("Account unavailable")}</span>
                         <span className="text-[10px] text-muted-foreground font-bold opacity-70">{(proj.profiles as any)?.student_id || proj.user_email}</span>
                       </div>
-                      {proj.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
-                      {proj.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
-                      {proj.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
+                      {proj.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Pending")}</Badge>}
+                      {proj.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("Approved")}</Badge>}
+                      {proj.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>{t("Rejected")}</Badge>}
                     </div>
                     <div className="bg-muted/50 px-3 py-2 rounded-xl border border-border/50 space-y-1.5">
                       <div className="flex items-center gap-1.5">
@@ -661,31 +658,29 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         {proj.deploy_type === 'docker' ? proj.docker_image : proj.git_url?.replace('https://', '')}
                       </code>
                       <div className="flex flex-col gap-1 text-[10px] font-bold text-muted-foreground pt-1">
-                        <span>Port: {proj.host_port}:{proj.container_port}</span>
+                        <span>{t("Port:")} {proj.host_port}:{proj.container_port}</span>
                         <span className="flex items-center gap-1">
-                          {proj.access_scope === 'private' && <><Lock className="size-2.5" /> Private</>}
-                          {proj.access_scope === 'school'  && <><School className="size-2.5 text-blue-500" /> School</>}
-                          {proj.access_scope === 'public'  && <><Globe className="size-2.5 text-green-500" /> Public</>}
+                          {proj.access_scope === 'private' && <><Lock className="size-2.5" />  {t("Private")}</>}
+                          {proj.access_scope === 'school'  && <><School className="size-2.5 text-blue-500" />  {t("School")}</>}
+                          {proj.access_scope === 'public'  && <><Globe className="size-2.5 text-green-500" />  {t("Public")}</>}
                         </span>
-                        <span>CPU: {proj.cpu_limit} / Mem: {formatMemoryLimit(proj.memory_limit)}</span>
+                        <span>{t("CPU:")} {proj.cpu_limit}  {t("/ Mem:")} {formatMemoryLimit(proj.memory_limit)}</span>
                       </div>
                     </div>
                     <div className="flex justify-end gap-2 flex-wrap">
                       <Link href={`/server/${proj.id}`}>
                         <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 transition-all active:scale-95 gap-1.5">
-                          <Server className="size-3" />  Details
-                        </Button>
+                          <Server className="size-3" />   {t("Details")} </Button>
                       </Link>
                       {proj.status === 'pending' && (
                         <>
-                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'approved')}>Approve</Button>
-                          <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'rejected')}>Reject</Button>
+                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'approved')}>{t("Approve")}</Button>
+                          <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'rejected')}>{t("Reject")}</Button>
                         </>
                       )}
                       {(proj.status === 'approved' || proj.status === 'rejected') && (
                         <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'pending')}>
-                          <Undo2 className="size-3" /> Reset
-                        </Button>
+                          <Undo2 className="size-3" />  {t("Reset")} </Button>
                       )}
                     </div>
                   </div>
@@ -697,24 +692,24 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
               <Table className="data-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">Applicant</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Project</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Config</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">Actions</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">{t("Applicant")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">{t("Project")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">{t("Config")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">{t("Status")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">{t("Actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {cpuLoading || cpuJustFinished ? (
-                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={cpuJustFinished} size={48} label="Loading projects" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={cpuJustFinished} size={48} label={t("Loading projects")} /></div></TableCell></TableRow>
                   ) : visibleProjects.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">No projects to display.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No projects to display.")}</TableCell></TableRow>
                   ) : (
                     visibleProjects.map((proj) => (
                       <TableRow key={proj.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
                         <TableCell className="py-5 px-6">
                           <div className="flex flex-col">
-                            <span className="font-black text-sm uppercase tracking-tight">{(proj.profiles as any)?.full_name || "Account unavailable"}</span>
+                            <span className="font-black text-sm uppercase tracking-tight">{(proj.profiles as any)?.full_name || t("Account unavailable")}</span>
                             <span className="text-[10px] text-muted-foreground font-bold opacity-70">{(proj.profiles as any)?.student_id || proj.user_email}</span>
                           </div>
                         </TableCell>
@@ -733,42 +728,39 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         </TableCell>
                         <TableCell className="py-5">
                           <div className="flex flex-col gap-1 text-[10px] font-bold text-muted-foreground">
-                            <span>Port: {proj.host_port}:{proj.container_port}</span>
+                            <span>{t("Port:")} {proj.host_port}:{proj.container_port}</span>
                             <span className="flex items-center gap-1">
-                              {proj.access_scope === 'private' && <><Lock className="size-2.5" /> Private</>}
-                              {proj.access_scope === 'school'  && <><School className="size-2.5 text-blue-500" /> School</>}
-                              {proj.access_scope === 'public'  && <><Globe className="size-2.5 text-green-500" /> Public</>}
+                              {proj.access_scope === 'private' && <><Lock className="size-2.5" />  {t("Private")}</>}
+                              {proj.access_scope === 'school'  && <><School className="size-2.5 text-blue-500" />  {t("School")}</>}
+                              {proj.access_scope === 'public'  && <><Globe className="size-2.5 text-green-500" />  {t("Public")}</>}
                             </span>
-                            <span>CPU: {proj.cpu_limit} / Mem: {formatMemoryLimit(proj.memory_limit)}</span>
+                            <span>{t("CPU:")} {proj.cpu_limit}  {t("/ Mem:")} {formatMemoryLimit(proj.memory_limit)}</span>
                           </div>
                         </TableCell>
                         <TableCell className="py-5">
-                          {proj.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>Pending</Badge>}
-                          {proj.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Approved</Badge>}
-                          {proj.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>Rejected</Badge>}
+                          {proj.status === 'pending'  && <Badge variant="warning" icon={<Clock className="size-3" />}>{t("Pending")}</Badge>}
+                          {proj.status === 'approved' && <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("Approved")}</Badge>}
+                          {proj.status === 'rejected' && <Badge variant="danger"  icon={<XCircle className="size-3" />}>{t("Rejected")}</Badge>}
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2 flex-wrap">
                             <Link href={`/server/${proj.id}`}>
                               <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 transition-all active:scale-95 gap-1.5">
-                                <Server className="size-3" />  Details
-                              </Button>
+                                <Server className="size-3" />   {t("Details")} </Button>
                             </Link>
                             {proj.status === 'pending' && (
                               <>
-                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'approved')}>Approve</Button>
-                                <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'rejected')}>Reject</Button>
+                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'approved')}>{t("Approve")}</Button>
+                                <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'rejected')}>{t("Reject")}</Button>
                               </>
                             )}
                             {proj.status === 'approved' && (
                               <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'pending')}>
-                                <Undo2 className="size-3" /> Reset
-                              </Button>
+                                <Undo2 className="size-3" />  {t("Reset")} </Button>
                             )}
                             {proj.status === 'rejected' && (
                               <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl border-2 hover:bg-muted transition-all active:scale-95 gap-1.5" disabled={rowActions['server:' + proj.id]} onClick={() => updateCpuStatus(proj.id, 'pending')}>
-                                <Undo2 className="size-3" /> Reset
-                              </Button>
+                                <Undo2 className="size-3" />  {t("Reset")} </Button>
                             )}
                           </div>
                         </TableCell>
@@ -787,42 +779,40 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             {/* 모바일: 가로 스크롤 없이 바로 승인 — 카드 목록 */}
             <div className="md:hidden divide-y">
               {profilesLoading || profilesJustFinished ? (
-                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label="Loading accounts" /></div>
+                <div className="py-16 flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label={t("Loading accounts")} /></div>
               ) : visibleProfiles.length === 0 ? (
-                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">No accounts to display.</div>
+                <div className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No accounts to display.")}</div>
               ) : (
                 visibleProfiles.map((p) => (
                   <div key={p.id} className="p-4 space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        <span className="font-black text-sm uppercase tracking-tight truncate">{p.full_name || "Name not provided"}</span>
-                        {p.is_admin && <Badge variant="warning">Admin</Badge>}
-                        {p.is_laser_cut_manager && <Badge variant="default">Laser manager</Badge>}
+                        <span className="font-black text-sm uppercase tracking-tight truncate">{p.full_name || t("Name not provided")}</span>
+                        {p.is_admin && <Badge variant="warning">{t("Admin")}</Badge>}
+                        {p.is_laser_cut_manager && <Badge variant="default">{t("Laser manager")}</Badge>}
                       </div>
                       <span className="text-sm font-bold shrink-0">{accountStudentNumberDisplay(p,schoolFilter)}</span>
                     </div>
                     {p.email && <p className="text-xs text-muted-foreground break-all">{p.email}</p>}
-                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">School</p><AccountSchoolDetails account={p} showStudentNumber={false}/></div>
-                    {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">Updating account…</p>}
+                    <div className="rounded-lg border border-border/60 bg-muted/20 p-3"><p className="mb-1 text-xs font-medium text-muted-foreground">{t("School")}</p><AccountSchoolDetails account={p} showStudentNumber={false}/></div>
+                    {rowActions['account:' + p.id] && <p role="status" className="text-xs text-primary">{t("Updating account…")}</p>}
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         {accountStatusBadge(p)}
                       </div>
                       <div className="flex gap-2 flex-wrap justify-end">
-                        {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">School membership is managed in the authorized school workspace.</p>:<>{p.is_approved !== true && (
+                        {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">{t("School membership is managed in the authorized school workspace.")}</p>:<>{p.is_approved !== true && (
                           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
-                            Approve
-                          </Button>
+                             {t("Approve")} </Button>
                         )}
                         {p.is_approved !== false && (
                           <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, false)}>
 
-                            Mark for review
-                          </Button>
+                             {t("Mark for review")} </Button>
                         )}
                         </>}
-                        <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || "Selected account"} Delete`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
+                        <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || t("Selected account")} ${t("Delete")}`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
                           <Trash2 className="size-3" />
                         </Button>
                       </div>
@@ -836,29 +826,29 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
               <Table className="data-table">
                 <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-b-2">
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">Name</TableHead>
-                    <TableHead className="min-w-56 font-black uppercase text-[10px] tracking-widest py-5">School</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Student ID</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">Status</TableHead>
-                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">Actions</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6">{t("Name")}</TableHead>
+                    <TableHead className="min-w-56 font-black uppercase text-[10px] tracking-widest py-5">{t("School")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">{t("Student ID")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5">{t("Status")}</TableHead>
+                    <TableHead className="font-black uppercase text-[10px] tracking-widest py-5 px-6 text-right">{t("Actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {profilesLoading || profilesJustFinished ? (
-                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label="Loading accounts" /></div></TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="py-16"><div className="flex items-center justify-center"><LoadingSpinner done={profilesJustFinished} size={48} label={t("Loading accounts")} /></div></TableCell></TableRow>
                   ) : visibleProfiles.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">No accounts to display.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold text-muted-foreground opacity-50">{t("No accounts to display.")}</TableCell></TableRow>
                   ) : (
                     visibleProfiles.map((p) => (
                       <TableRow key={p.id} className="hover:bg-muted/20 transition-colors border-b last:border-0">
                         <TableCell className="py-5 px-6">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-black text-sm uppercase tracking-tight">{p.full_name || "Name not provided"}</span>
-                            {p.is_admin && <Badge variant="warning">Admin</Badge>}
-                            {p.is_laser_cut_manager && <Badge variant="default">Laser manager</Badge>}
+                            <span className="font-black text-sm uppercase tracking-tight">{p.full_name || t("Name not provided")}</span>
+                            {p.is_admin && <Badge variant="warning">{t("Admin")}</Badge>}
+                            {p.is_laser_cut_manager && <Badge variant="default">{t("Laser manager")}</Badge>}
                           </div>
                           {p.email && <p className="mt-2 text-xs text-muted-foreground break-all">{p.email}</p>}
-                          {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">Updating…</p>}
+                          {rowActions['account:' + p.id] && <p role="status" className="mt-2 text-xs text-primary">{t("Updating…")}</p>}
                         </TableCell>
                         <TableCell className="min-w-56 max-w-sm whitespace-normal py-5"><AccountSchoolDetails account={p} showStudentNumber={false}/></TableCell>
                         <TableCell className="text-sm font-bold">{accountStudentNumberDisplay(p,schoolFilter)}</TableCell>
@@ -867,22 +857,19 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2 flex-wrap">
-                            {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">School membership is managed in the authorized school workspace.</p>:<>{p.is_approved !== true && (
+                            {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">{t("School membership is managed in the authorized school workspace.")}</p>:<>{p.is_approved !== true && (
                               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
-                                Approve
-                              </Button>
+                                 {t("Approve")} </Button>
                             )}
                             {p.is_approved !== false && (
                               <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, false)}>
 
-                                Mark for review
-                              </Button>
+                                 {t("Mark for review")} </Button>
                             )}
                             </>}
-                        <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || "Selected account"} Delete`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
-                              <Trash2 className="size-3" />  Delete
-                            </Button>
+                        <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || t("Selected account")} ${t("Delete")}`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
+                              <Trash2 className="size-3" />   {t("Delete")} </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -900,15 +887,14 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         {tab === 'manufacture' && (
           <div className="space-y-8">
             {manufactureLoading ? (
-              <div className="flex justify-center py-16"><LoadingSpinner size={48} label="Loading" /></div>
+              <div className="flex justify-center py-16"><LoadingSpinner size={48} label={t("Loading")} /></div>
             ) : (
               <>
                 <div>
-                  <h2 className="font-black uppercase text-sm tracking-widest mb-1 flex items-center gap-1.5"><Printer className="size-4" />  3D printer managers</h2>
+                  <h2 className="font-black uppercase text-sm tracking-widest mb-1 flex items-center gap-1.5"><Printer className="size-4" />   {t("3D printer managers")}</h2>
                   <p className="text-xs text-muted-foreground font-bold opacity-60 mb-4">
 
-                    Select a printer and assign its managers. Managers can start and finish jobs and report faults for that printer.
-                  </p>
+                     {t("Select a printer and assign its managers. Managers can start and finish jobs and report faults for that printer.")} </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {printers.map(printer => {
                       const assigned = printerManagers.filter(pm => pm.printer_id === printer.id);
@@ -918,12 +904,12 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         <div key={printer.id} className="border-2 rounded-2xl bg-card p-5 space-y-3">
                           <p className="font-black text-sm uppercase">{printer.name}</p>
                           {assigned.length === 0 ? (
-                            <p className="text-xs text-muted-foreground opacity-50">No managers assigned</p>
+                            <p className="text-xs text-muted-foreground opacity-50">{t("No managers assigned")}</p>
                           ) : (
                             <div className="flex flex-wrap gap-2">
                               {assigned.map(a => (
                                 <span key={a.user_id} className="inline-flex items-center gap-1.5 bg-muted/50 rounded-full pl-3 pr-1.5 py-1 text-xs font-bold">
-                                  {a.profiles?.full_name || "Account unavailable"} <span className="text-muted-foreground opacity-60">({a.profiles?.student_id || '-'})</span>
+                                  {a.profiles?.full_name || t("Account unavailable")} <span className="text-muted-foreground opacity-60">({a.profiles?.student_id || '-'})</span>
                                   <button onClick={() => removePrinterManager(printer.id, a.user_id)} className="ml-1 flex items-center justify-center size-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors">
                                     <X className="size-3" />
                                   </button>
@@ -933,14 +919,13 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           )}
                           <div className="flex items-center gap-2">
                             <PersonSearchSelect
-                              language="en"
+                              language={app?'ko':'en'}
                               candidates={candidates}
                               value={addPrinterManagerSelect[printer.id] || ''}
                               onChange={v => setAddPrinterManagerSelect(s => ({ ...s, [printer.id]: v }))}
                             />
                             <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={() => addPrinterManager(printer.id)}>
-                              <Plus className="size-3.5" />  Add
-                            </Button>
+                              <Plus className="size-3.5" />   {t("Add")} </Button>
                           </div>
                         </div>
                       );
@@ -949,15 +934,15 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                 </div>
 
                 <div>
-                  <h2 className="font-black uppercase text-sm tracking-widest mb-3 flex items-center gap-1.5"><Scissors className="size-4" />  Laser cutting managers</h2>
+                  <h2 className="font-black uppercase text-sm tracking-widest mb-3 flex items-center gap-1.5"><Scissors className="size-4" />   {t("Laser cutting managers")}</h2>
                   <div className="border-2 rounded-2xl bg-card p-5 space-y-3 max-w-xl">
                     {laserManagers.length === 0 ? (
-                      <p className="text-xs text-muted-foreground opacity-50">No managers assigned</p>
+                      <p className="text-xs text-muted-foreground opacity-50">{t("No managers assigned")}</p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {laserManagers.map(m => (
                           <span key={m.id} className="inline-flex items-center gap-1.5 bg-muted/50 rounded-full pl-3 pr-1.5 py-1 text-xs font-bold">
-                            {m.full_name || "Account unavailable"} <span className="text-muted-foreground opacity-60">({m.student_id || '-'})</span>
+                            {m.full_name || t("Account unavailable")} <span className="text-muted-foreground opacity-60">({m.student_id || '-'})</span>
                             <button onClick={() => toggleLaserManager(m.id, true)} className="ml-1 flex items-center justify-center size-5 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors">
                               <X className="size-3" />
                             </button>
@@ -967,14 +952,13 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                     )}
                     <div className="flex items-center gap-2">
                       <PersonSearchSelect
-                              language="en"
+                              language={app?'ko':'en'}
                         candidates={allProfiles.filter(p => !laserManagers.some(m => m.id === p.id))}
                         value={addLaserManagerSelect}
                         onChange={setAddLaserManagerSelect}
                       />
                       <Button size="sm" className="h-9 px-3 font-black text-[10px] uppercase gap-1" onClick={addLaserManager}>
-                        <Plus className="size-3.5" />  Add
-                      </Button>
+                        <Plus className="size-3.5" />   {t("Add")} </Button>
                     </div>
                   </div>
                 </div>
@@ -982,33 +966,32 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             )}
           </div>
         )}
-        {hasList && !listLoading && <nav className="admin-pagination" aria-label="Record pages"><span className="meta">{resultCount} results · Page {currentPage} of {pageCount}</span><div><Button variant="outline" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Previous</Button><Button variant="outline" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>Next</Button></div></nav>}
+        {hasList && !listLoading && <nav className="admin-pagination" aria-label={t("Record pages")}><span className="meta">{resultCount}  {t("results · Page")} {currentPage}  {t("of")} {pageCount}</span><div><Button variant="outline" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>{t("Previous")}</Button><Button variant="outline" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>{t("Next")}</Button></div></nav>}
 
-        <div className="mt-10 border-t pt-8"><h2 className="mb-4 text-lg font-semibold">Service settings</h2>
+        <div className="mt-10 border-t pt-8"><h2 className="mb-4 text-lg font-semibold">{t("Service settings")}</h2>
         {/* 자주 사용하지 않는 설정은 필요할 때 펼친다. */}
         <details className="mb-4 rounded-2xl border bg-card p-5 space-y-4">
           <summary className="min-h-11 cursor-pointer font-semibold list-inside">
 
-            Wake-up music managers
-          </summary>
+             {t("Wake-up music managers")} </summary>
           <div className="flex items-center gap-2 sr-only">
             <Music className="size-5 text-primary" />
-            <h2 className="font-black uppercase text-sm tracking-widest">Wake-up music managers</h2>
+            <h2 className="font-black uppercase text-sm tracking-widest">{t("Wake-up music managers")}</h2>
           </div>
           <div className="flex gap-2">
             <PersonSearchSelect
-                              language="en"
+                              language={app?'ko':'en'}
               candidates={allProfiles.filter(p => !wakeupManagers.some(m => m.id === p.id))}
               value={addWakeupManagerSelect}
               onChange={setAddWakeupManagerSelect}
             />
-            <Button onClick={addWakeupManager}>Add</Button>
+            <Button onClick={addWakeupManager}>{t("Add")}</Button>
           </div>
           {wakeupManagers.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {wakeupManagers.map(m => (
                 <span key={m.id} className="flex items-center gap-1 bg-muted rounded-full pl-3 pr-1.5 py-1 text-xs font-bold">
-                  {m.full_name || "Account unavailable"} <span className="text-muted-foreground opacity-60">({m.student_id || '-'})</span>
+                  {m.full_name || t("Account unavailable")} <span className="text-muted-foreground opacity-60">({m.student_id || '-'})</span>
                   <button aria-label={`${m.full_name || "User"} Remove manager`} onClick={() => toggleWakeupManager(m.id, true)} className="ml-1 flex items-center justify-center size-11 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors">
                     <X className="size-3" />
                   </button>
@@ -1019,27 +1002,26 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
         </details>
 
         <details className="mb-8 rounded-2xl border bg-card p-5 space-y-4">
-          <summary className="min-h-11 cursor-pointer font-semibold list-inside">Site announcement <span className="ml-2 text-sm font-normal text-muted-foreground">{bannerLoading ? "Checking" : bannerActive ? "Enabled" : "Disabled"}</span></summary>
+          <summary className="min-h-11 cursor-pointer font-semibold list-inside">{t("Site announcement")} <span className="ml-2 text-sm font-normal text-muted-foreground">{bannerLoading ? t("Checking") : bannerActive ? t("Enabled") : t("Disabled")}</span></summary>
           {bannerLoading ? (
-            <div className="flex items-center justify-center py-8"><LoadingSpinner size={40} label="Loading announcement" /></div>
+            <div className="flex items-center justify-center py-8"><LoadingSpinner size={40} label={t("Loading announcement")} /></div>
           ) : (
             <>
               <div className="flex items-center gap-2">
                 <Megaphone className="size-5 text-primary" />
-                <h2 className="font-black uppercase text-sm tracking-widest">Site announcement</h2>
+                <h2 className="font-black uppercase text-sm tracking-widest">{t("Site announcement")}</h2>
                 {bannerActive && (
-                  <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Enabled</Badge>
+                  <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("Enabled")}</Badge>
                 )}
               </div>
               <p className="text-sm text-muted-foreground font-medium">
 
-                When enabled, this announcement appears at the top of the user website for all visitors.
-              </p>
+                 {t("When enabled, this announcement appears at the top of the user website for all visitors.")} </p>
               <textarea
-                aria-label="Announcement message"
+                aria-label={t("Announcement message")}
                 value={bannerMessage}
                 onChange={(e) => setBannerMessage(e.target.value)}
-                placeholder="For example: Scheduled maintenance on July 10, 03:00–05:00."
+                placeholder={t("For example: Scheduled maintenance on July 10, 03:00–05:00.")}
                 rows={3}
                 className="w-full rounded-xl border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-y"
               />
@@ -1049,8 +1031,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                   disabled={bannerSaving || !bannerMessage.trim()}
                   onClick={() => saveBanner(true)}
                 >
-                  <Megaphone className="size-3.5" />  Save and enable
-                </Button>
+                  <Megaphone className="size-3.5" />   {t("Save and enable")} </Button>
                 <Button
                   variant="outline"
                   className="font-black text-xs uppercase tracking-widest"
@@ -1058,8 +1039,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                   onClick={() => saveBanner(false)}
                 >
 
-                  Disable
-                </Button>
+                   {t("Disable")} </Button>
               </div>
             </>
           )}
@@ -1070,9 +1050,9 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="Delete this account?"
+        title={t("Delete this account?")}
         description={`${deleteTarget?.name ?? ''} will lose their name, student ID and profile image and will no longer be able to sign in. This cannot be undone.`}
-        confirmLabel={isDeletingUser ? "Deleting…" : "Delete account"}
+        confirmLabel={isDeletingUser ? t("Deleting…") : t("Delete account")}
         onConfirm={handleDeleteUser}
         onCancel={() => setDeleteTarget(null)}
       />

@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, FolderOpen, HardDrive, RefreshCw } from 'lucide-react';
@@ -16,14 +17,16 @@ type MaterialRow = {
 const TOP = 5;
 
 function Meter({ ratio, label }: { ratio: number; label: string }) {
+ const {t}=useAdminLanguage();
   const percent = Math.min(Math.round(ratio * 100), 100);
   const tone = ratio >= 0.95 ? 'bg-destructive' : ratio >= 0.8 ? 'bg-amber-500' : 'bg-primary';
-  return <div role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="h-3 overflow-hidden rounded-full bg-muted">
+  return <div role="meter" aria-label={t(label)} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent} className="h-3 overflow-hidden rounded-full bg-muted">
     <div className={`h-full rounded-full transition-[width] duration-500 ${tone}`} style={{ width: `${percent}%` }} />
   </div>;
 }
 
 export default function MaterialsStorage() {
+  const {t,app}=useAdminLanguage();
   const { showError } = useAlert();
   const [usage, setUsage] = useState<MaterialsUsage | null>(null);
   const [outdated, setOutdated] = useState(false);
@@ -44,7 +47,7 @@ export default function MaterialsStorage() {
       if (rowsResult.error) throw rowsResult.error;
       setRows((rowsResult.data ?? []) as unknown as MaterialRow[]);
     } catch (error) {
-      showError(error instanceof Error ? error.message : "Could not load storage information.");
+      showError(adminNotice(error instanceof Error ? error.message : t("Could not load storage information.")));
     } finally { setLoading(false); }
   }, [showError]);
 
@@ -70,56 +73,55 @@ export default function MaterialsStorage() {
 
   return <div className="space-y-5">
     <div className="flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2"><HardDrive className="size-5 text-primary" /><h2 className="text-lg font-black tracking-tight">File storage</h2></div>
+      <div className="flex items-center gap-2"><HardDrive className="size-5 text-primary" /><h2 className="text-lg font-black tracking-tight">{t("File storage")}</h2></div>
       <Button variant="outline" size="sm" className="gap-1.5 font-black text-xs" disabled={loading} onClick={() => void load()}>
-        <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />Refresh
-      </Button>
+        <RefreshCw className={`size-3.5 ${loading ? 'animate-spin' : ''}`} />{t("Refresh")} </Button>
     </div>
 
     {outdated && <div role="alert" className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs">
       <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-400" />
-      <p>Storage metrics are unavailable from this file server version. The list below uses database records.</p>
+      <p>{t("Storage metrics are unavailable from this file server version. The list below uses database records.")}</p>
     </div>}
 
     {usage && <section className={card}>
       <div className="flex items-end justify-between gap-3">
         <div>
-          <p className={heading}>Usage / quota</p>
+          <p className={heading}>{t("Usage / quota")}</p>
           <p className="mt-1 text-3xl font-black tracking-tighter">{formatBytes(usage.used_bytes)}<span className="text-base font-bold text-muted-foreground"> / {formatBytes(usage.quota_bytes)}</span></p>
         </div>
-        {full ? <Badge variant="danger" icon={<AlertTriangle className="size-3" />}>Full · uploads paused</Badge>
-          : ratio >= 0.8 ? <Badge variant="warning">{Math.round(ratio * 100)}% used</Badge>
-          : <Badge variant="success">{Math.round(ratio * 100)}% used</Badge>}
+        {full ? <Badge variant="danger" icon={<AlertTriangle className="size-3" />}>{t("Full · uploads paused")}</Badge>
+          : ratio >= 0.8 ? <Badge variant="warning">{Math.round(ratio * 100)}{t("% used")}</Badge>
+          : <Badge variant="success">{Math.round(ratio * 100)}{t("% used")}</Badge>}
       </div>
-      <Meter ratio={ratio} label="File storage usage" />
+      <Meter ratio={ratio} label={t("File storage usage")} />
       <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <div><dt className={heading}>Available</dt><dd className="mt-1 font-black">{formatBytes(usage.remaining_bytes)}</dd></div>
-        <div><dt className={heading}>Files</dt><dd className="mt-1 font-black">{usage.file_count.toLocaleString('en-US')} files</dd></div>
-        <div><dt className={heading}>Uploading</dt><dd className="mt-1 font-black">{usage.reserved_bytes ? formatBytes(usage.reserved_bytes) : "None"}</dd></div>
-        <div><dt className={heading}>Server disk free</dt><dd className="mt-1 font-black">{formatBytes(usage.disk_free_bytes)}<span className="font-bold text-muted-foreground"> / {formatBytes(usage.disk_total_bytes)}</span></dd></div>
+        <div><dt className={heading}>{t("Available")}</dt><dd className="mt-1 font-black">{formatBytes(usage.remaining_bytes)}</dd></div>
+        <div><dt className={heading}>{t("Files")}</dt><dd className="mt-1 font-black">{usage.file_count.toLocaleString(app?'ko-KR':'en-US')}  {t("files")}</dd></div>
+        <div><dt className={heading}>{t("Uploading")}</dt><dd className="mt-1 font-black">{usage.reserved_bytes ? formatBytes(usage.reserved_bytes) : t("None")}</dd></div>
+        <div><dt className={heading}>{t("Server disk free")}</dt><dd className="mt-1 font-black">{formatBytes(usage.disk_free_bytes)}<span className="font-bold text-muted-foreground"> / {formatBytes(usage.disk_total_bytes)}</span></dd></div>
       </dl>
     </section>}
 
     <div className="grid gap-5 md:grid-cols-2">
       <section className={card}>
-        <p className={heading}>Top uploaders · {TOP}</p>
+        <p className={heading}>{t("Top uploaders ·")} {TOP}</p>
         {uploaders.length ? <ol className="space-y-2.5">
           {uploaders.map((entry, index) => <li key={index} className="flex items-center justify-between gap-3 text-sm">
             <span className="min-w-0 truncate font-bold"><span className="mr-2 text-muted-foreground">{index + 1}</span>{entry.name}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{entry.count} files · <b className="text-foreground">{formatBytes(entry.bytes)}</b></span>
+            <span className="shrink-0 text-xs text-muted-foreground">{entry.count}  {t("files ·")} <b className="text-foreground">{formatBytes(entry.bytes)}</b></span>
           </li>)}
-        </ol> : <p className="py-6 text-center text-sm text-muted-foreground">{loading ? "Loading…" : "No shared files."}</p>}
+        </ol> : <p className="py-6 text-center text-sm text-muted-foreground">{loading ? t("Loading…") : t("No shared files.")}</p>}
       </section>
       <section className={card}>
-        <p className={heading}>Largest files · {TOP}</p>
+        <p className={heading}>{t("Largest files ·")} {TOP}</p>
         {largest.length ? <ol className="space-y-2.5">
           {largest.map(row => <li key={row.id} className="flex items-center justify-between gap-3 text-sm">
             <span className="flex min-w-0 items-center gap-2"><FolderOpen className="size-3.5 shrink-0 text-muted-foreground" aria-hidden /><span className="min-w-0 truncate font-bold" title={`${row.title} (${row.file_name})`}>{row.title}</span></span>
             <span className="shrink-0 text-xs font-black">{formatBytes(row.size_bytes)}</span>
           </li>)}
-        </ol> : <p className="py-6 text-center text-sm text-muted-foreground">{loading ? "Loading…" : "No shared files."}</p>}
+        </ol> : <p className="py-6 text-center text-sm text-muted-foreground">{loading ? t("Loading…") : t("No shared files.")}</p>}
       </section>
     </div>
-    {rows.length >= 2000 && <p className="text-xs text-muted-foreground">Counts cover the most recent 2,000 files.</p>}
+    {rows.length >= 2000 && <p className="text-xs text-muted-foreground">{t("Counts cover the most recent 2,000 files.")}</p>}
   </div>;
 }

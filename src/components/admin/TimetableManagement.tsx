@@ -1,4 +1,5 @@
 'use client';
+import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -43,6 +44,7 @@ type Cell = { subject: string; teacher: string; changed?: boolean };
 type Grid = Record<number, Record<number, Cell>>;
 
 export default function TimetablePage() {
+  const {t,app}=useAdminLanguage();
   const { isAdmin, user, profile, isLoading: authLoading } = useAuth();
   const { showAlert, showError, showSuccess } = useAlert();
   const [grade,   setGrade]   = useState(1);
@@ -79,7 +81,7 @@ export default function TimetablePage() {
       setSource('comcigan');
       setFreshness({stale:!!json.stale,fetchedAt:json.fetchedAt||'',weekStart:json.weekStart||null});
     } catch (e: any) {
-      setError(/[가-힣]/.test(e.message??String(e))?'The timetable provider is unavailable.':(e.message??String(e)));
+      setError(t(/[가-힣]/.test(e.message??String(e))?t('The timetable provider is unavailable.'):(e.message??String(e))));
       await loadManual(g, c);
     } finally {
       setLoading(false);
@@ -119,7 +121,7 @@ export default function TimetablePage() {
   },[freshness?.stale,editing,grade,cls,loadComcigan]);
 
   const switchTo = (g: number, c: number) => {
-    if (editing) { showAlert("Finish editing before switching classes.", 'info'); return; }
+    if (editing) { showAlert(adminNotice("Finish editing before switching classes."), 'info'); return; }
     setGrade(g); setCls(c); loadComcigan(g, c);
   };
 
@@ -138,19 +140,18 @@ export default function TimetablePage() {
     const { error: dbErr } = await supabase.from('timetable')
       .upsert(rows, { onConflict: 'grade,class_num,weekday,period' });
     setSaving(false);
-    if (dbErr) { showError(dbErr.message); return; }
+    if (dbErr) { showError(adminNotice(dbErr.message)); return; }
     const g2: Grid = {};
     for (let wd = 0; wd < 5; wd++) { g2[wd] = {}; for (const p of PERIODS) { const s = draft[wd]?.[p] ?? ''; if (s) g2[wd][p] = { subject: s, teacher: '' }; } }
-    setGrid(g2); setEditing(false); showSuccess("Saved.");
+    setGrid(g2); setEditing(false); showSuccess(adminNotice("Saved."));
   };
 
   if (dbMissing) return (
     <main className="px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">Database setup required</h2>
+      <h2 className="font-black text-xl uppercase tracking-tight">{t("Database setup required")}</h2>
       <p className="text-sm text-muted-foreground">
-        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_timetable_migration.sql</code>in the SQL editor.
-      </p>
+        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_timetable_migration.sql</code>{t("in the SQL editor.")} </p>
     </main>
   );
 
@@ -158,12 +159,12 @@ export default function TimetablePage() {
     <main className="px-4 py-8 space-y-5 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="cb-page-title">Timetable</h1>
+          <h1 className="cb-page-title">{t("Timetable")}</h1>
           <p className="cb-page-sub mt-1">
 
-            Chungbuk Science High School ·{' '}
+             {t("Chungbuk Science High School ·")}{' '}
             <span className={source === 'comcigan' ? 'text-green-500' : 'text-amber-500'}>
-              {source === 'comcigan' ? "Comcigan" : "Manual data"}
+              {source === 'comcigan' ? t("Comcigan") : t("Manual data")}
             </span>
           </p>
         </div>
@@ -175,8 +176,7 @@ export default function TimetablePage() {
           )}
           {isAdmin && !editing && (
             <Button onClick={startEdit} variant="outline" size="sm" className="font-black text-xs uppercase gap-1.5 active:scale-95 transition-transform">
-              <Edit3 className="size-3.5" />  Edit timetable
-            </Button>
+              <Edit3 className="size-3.5" />   {t("Edit timetable")} </Button>
           )}
           {isAdmin && editing && (
             <div className="flex gap-2">
@@ -184,10 +184,9 @@ export default function TimetablePage() {
                 <RotateCcw className="size-3" />
               </Button>
               <Button onClick={() => setEditing(false)} variant="outline" size="sm" className="font-black text-xs gap-1.5 active:scale-95 transition-transform">
-                <X className="size-3" />  Cancel
-              </Button>
+                <X className="size-3" />   {t("Cancel")} </Button>
               <Button onClick={save} size="sm" disabled={saving} className="font-black text-xs uppercase gap-1.5 active:scale-95 transition-transform">
-                <Save className="size-3" /> {saving ? "Saving…" : "Save"}
+                <Save className="size-3" /> {saving ? t("Saving…") : t("Save")}
               </Button>
             </div>
           )}
@@ -196,36 +195,35 @@ export default function TimetablePage() {
 
       <div className="flex items-center gap-2 flex-wrap">
         <SegmentedTabs
-          items={grades.map(g => ({ value: String(g), label: `Grade ${g}` }))}
+          items={grades.map(g => ({ value: String(g), label: t(`Grade ${g}`) }))}
           value={String(grade)}
           onChange={(v) => switchTo(Number(v), cls)}
         />
         <SegmentedTabs
-          items={classes.map(c => ({ value: String(c), label: `Class ${c}` }))}
+          items={classes.map(c => ({ value: String(c), label: t(`Class ${c}`) }))}
           value={String(cls)}
           onChange={(v) => switchTo(grade, Number(v))}
         />
-        {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />  Editing</span>}
+        {editing && <span className="text-xs font-black text-amber-500 uppercase tracking-widest flex items-center gap-1"><Edit3 className="size-3" />   {t("Editing")}</span>}
       </div>
 
-      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">Latest provider check is delayed. Showing the last verified timetable; substitutions may be missing.<span className="mt-1 block text-xs">Last verified: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('en-GB',{timeZone:'Asia/Seoul'}):'Unavailable'}{freshness.weekStart?' · Week of '+freshness.weekStart:''} · Retrying automatically.</span></div>}
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">{t("Latest provider check is delayed. Showing the last verified timetable; substitutions may be missing.")}<span className="mt-1 block text-xs">{t("Last verified:")} {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString(app?'ko-KR':'en-GB',{timeZone:'Asia/Seoul'}):t('Unavailable')}{freshness.weekStart?' · Week of '+freshness.weekStart:''}  {t("· Retrying automatically.")}</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
           <AlertTriangle className="size-3.5 text-amber-500 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
 
-            Comcigan is unavailable. Showing manual data.
-            <span className="block text-muted-foreground/60 mt-0.5 font-normal">{error}</span>
+             {t("Comcigan is unavailable. Showing manual data.")} <span className="block text-muted-foreground/60 mt-0.5 font-normal">{t(error)}</span>
           </p>
         </div>
       )}
 
-      {prepTip && !editing && <p className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-black text-primary">Study suggestions · </span>{prepTip}<span className="ml-1 text-muted-foreground">Suggestions are based only on subject names.</span></span></p>}
+      {prepTip && !editing && <p className="flex items-start gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-black text-primary">{t("Study suggestions ·")} </span>{prepTip}<span className="ml-1 text-muted-foreground">{t("Suggestions are based only on subject names.")}</span></span></p>}
 
       {loading || justFinished ? (
         <div className="py-16 flex items-center justify-center">
-          <LoadingSpinner done={justFinished} size={56} label="Loading timetable" />
+          <LoadingSpinner done={justFinished} size={56} label={t("Loading timetable")} />
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -235,7 +233,7 @@ export default function TimetablePage() {
                 <th className="w-10 p-1" />
                 {DAYS.map((day, i) => (
                   <th key={day} className={`p-2 text-xs font-black uppercase tracking-widest text-center min-w-[72px] ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
-                    {day}{todayWd===i&&<span className="block text-xs text-primary/70">Today</span>}
+                    {day}{todayWd===i&&<span className="block text-xs text-primary/70">{t("Today")}</span>}
                   </th>
                 ))}
               </tr>
@@ -255,11 +253,11 @@ export default function TimetablePage() {
                         {editing ? (
                           <input value={subject}
                             onChange={e => setDraft(prev => ({ ...prev, [di]: { ...prev[di], [p]: e.target.value } }))}
-                            placeholder="Subject"
+                            placeholder={t("Subject")}
                             className="w-full h-14 px-1.5 text-center text-xs font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
                           />
                         ) : subject ? (
-                          <div title={changed ? "Live Comcigan update" : undefined}
+                          <div title={changed ? t("Live Comcigan update") : undefined}
                             className={`relative h-14 pl-2.5 pr-1.5 rounded-lg border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden tilt-3d transition-all ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
                             <span className={`absolute inset-y-0 left-0 w-1 ${subjectColor(subject).bar}`} />
                             {changed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-amber-500" />}
@@ -280,9 +278,9 @@ export default function TimetablePage() {
       )}
 
       <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
-        <span>Synced with Comcigan · manual fallback when unavailable{isAdmin && " · Editing enabled"}</span>
+        <span>{t("Synced with Comcigan · manual fallback when unavailable")}{isAdmin && " · Editing enabled"}</span>
         {source === 'comcigan' && (
-          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" />Live class changes</span>
+          <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" />{t("Live class changes")}</span>
         )}
       </p>
     </main>

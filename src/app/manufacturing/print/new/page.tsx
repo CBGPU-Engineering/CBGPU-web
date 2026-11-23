@@ -225,7 +225,7 @@ export default function NewPrintJobPage() {
 
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground">모드 선택</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <button
             aria-pressed={mode === 'beginner'}
             onClick={() => setMode('beginner')}
@@ -236,7 +236,7 @@ export default function NewPrintJobPage() {
             <GraduationCap className={`size-5 mt-0.5 ${mode === 'beginner' ? 'text-primary' : ''}`} />
             <div>
               <p className="font-semibold text-sm tracking-tight">초보자</p>
-              <p className="text-sm mt-0.5">슬라이싱 전 원본 3mf만 올리면 담당자가 슬라이싱까지 진행</p>
+              <p className="text-sm mt-0.5">원본 모델을 올리면 담당자가 슬라이싱해요.</p>
             </div>
           </button>
           <button
@@ -249,7 +249,7 @@ export default function NewPrintJobPage() {
             <Wrench className={`size-5 mt-0.5 ${mode === 'advanced' ? 'text-primary' : ''}`} />
             <div>
               <p className="font-semibold text-sm tracking-tight">고급자</p>
-              <p className="text-sm mt-0.5">본인 컴퓨터의 밤부스튜디오로 직접 슬라이싱한 완료 파일을 올려서 출력만 요청</p>
+              <p className="text-sm mt-0.5">밤부스튜디오에서 슬라이싱한 파일로 출력을 요청해요.</p>
             </div>
           </button>
         </div>
@@ -284,7 +284,7 @@ export default function NewPrintJobPage() {
 
         {fileEntries.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">파일마다 수량/재질/색상을 각각 정하고, 파일별로 나눠 신청해요.</p>
+            <p className="text-xs text-muted-foreground">파일마다 수량과 필라멘트를 정해 주세요. 파일별로 신청돼요.</p>
             {fileEntries.map((entry, i) => (
               <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
@@ -294,19 +294,19 @@ export default function NewPrintJobPage() {
                 {entry.convertedFrom && (
                   <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → 3mf 변환됨</p>
                 )}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className={labelCls}>수량</label>
-                    <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
+                    <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-11 text-base" />
                   </div>
                   <div>
                     <label className={labelCls}>플레이트 수</label>
-                    <Input aria-label={`${entry.file.name} 플레이트 수`} type="number" min="1" value={entry.plateCount} onChange={e => updateEntry(i, { plateCount: e.target.value })} className="h-9 text-xs" />
+                    <Input aria-label={`${entry.file.name} 플레이트 수`} type="number" min="1" value={entry.plateCount} onChange={e => updateEntry(i, { plateCount: e.target.value })} className="h-11 text-base" />
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls}>필라멘트</label>
                     <Select value={entry.filamentId} onValueChange={v => updateEntry(i, { filamentId: v })}>
-                      <SelectTrigger aria-label={`${entry.file.name} 필라멘트`} className="h-11 w-full text-sm"><SelectValue placeholder="상관없음" /></SelectTrigger>
+                      <SelectTrigger aria-label={`${entry.file.name} 필라멘트`} className="h-11 w-full text-base"><SelectValue placeholder="상관없음" /></SelectTrigger>
                       <SelectContent>
                         {filaments.map(f => (
                           <SelectItem key={f.id} value={f.id}>
@@ -337,7 +337,7 @@ export default function NewPrintJobPage() {
           </p>
         ) : (
           <div className="flex items-center gap-2">
-            <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="아무나 (수락하는 담당자에게 배정) — 이름/학번 검색" />
+            <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="이름 또는 학번 검색" />
           </div>
         )}
         <p className="text-xs text-muted-foreground">
