@@ -56,7 +56,7 @@ export function Dropdown({ value, onChange, children, className, disabled, requi
       </SelectTrigger>
       <SelectContent position="popper" sideOffset={6} className="max-h-72 min-w-(--radix-select-trigger-width)">
         {options.map(option => (
-          <SelectItem key={option.value} value={encode(option.value)} disabled={option.disabled} className="min-h-10 text-sm">
+          <SelectItem key={option.value} value={encode(option.value)} disabled={option.disabled} className="min-h-11 text-sm">
             {option.label}
           </SelectItem>
         ))}
