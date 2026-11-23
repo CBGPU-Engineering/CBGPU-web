@@ -130,7 +130,7 @@ export default function NewPrintJobPage() {
       const { error: uploadError } = await supabase.storage.from('manufacturing').upload(filePath, entry.file);
       if (uploadError) {
         setSubmitting(false);
-        showError(`"${entry.file.name}" 파일을 올리지 못했어요. ` + uploadError.message);
+        showError(`"${entry.file.name}" 파일을 올리지 못했어요. 연결을 확인하고 다시 시도해 주세요.`);
         return;
       }
       rows.push({
@@ -155,7 +155,7 @@ export default function NewPrintJobPage() {
     setSubmitting(false);
 
     if (error) {
-      showError('신청하지 못했어요. ' + error.message);
+      showError('신청을 저장하지 못했어요. 입력 내용을 확인한 뒤 다시 시도해 주세요.');
     } else if (rows.length === 1) {
       showSuccess('3D 프린팅을 신청했어요. 담당자 승인 후 제작을 진행해요.');
       router.push(`/manufacturing/print/${data[0].id}`);
@@ -188,8 +188,9 @@ export default function NewPrintJobPage() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 max-w-2xl">
       <div className="flex items-center gap-4">
         <button
+          aria-label="이전 화면"
           onClick={() => router.back()}
-          className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+          className="flex items-center justify-center size-11 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -205,6 +206,7 @@ export default function NewPrintJobPage() {
           {printers.map(p => (
             <button
               key={p.id}
+              aria-pressed={printerId === p.id}
               onClick={() => setPrinterId(p.id)}
               className={`flex flex-col items-center gap-1.5 p-4 rounded-lg border-2 text-center transition-all ${
  printerId === p.id ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
@@ -218,13 +220,14 @@ export default function NewPrintJobPage() {
             </button>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground opacity-60">담당자 지정은 이 프린터를 맡고 있는 사람 중에서만 고를 수 있어요.</p>
+        <p className="text-xs text-muted-foreground">담당자 지정은 이 프린터를 맡고 있는 사람 중에서만 고를 수 있어요.</p>
       </section>
 
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground">모드 선택</h2>
         <div className="grid grid-cols-2 gap-3">
           <button
+            aria-pressed={mode === 'beginner'}
             onClick={() => setMode('beginner')}
             className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all ${
  mode === 'beginner' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
@@ -233,10 +236,11 @@ export default function NewPrintJobPage() {
             <GraduationCap className={`size-5 mt-0.5 ${mode === 'beginner' ? 'text-primary' : ''}`} />
             <div>
               <p className="font-semibold text-sm tracking-tight">초보자</p>
-              <p className="text-xs opacity-60 mt-0.5">슬라이싱 전 원본 3mf만 올리면 담당자가 슬라이싱까지 진행</p>
+              <p className="text-sm mt-0.5">슬라이싱 전 원본 3mf만 올리면 담당자가 슬라이싱까지 진행</p>
             </div>
           </button>
           <button
+            aria-pressed={mode === 'advanced'}
             onClick={() => setMode('advanced')}
             className={`flex items-start gap-3 p-4 rounded-lg border-2 text-left transition-all ${
  mode === 'advanced' ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border'
@@ -245,7 +249,7 @@ export default function NewPrintJobPage() {
             <Wrench className={`size-5 mt-0.5 ${mode === 'advanced' ? 'text-primary' : ''}`} />
             <div>
               <p className="font-semibold text-sm tracking-tight">고급자</p>
-              <p className="text-xs opacity-60 mt-0.5">본인 컴퓨터의 밤부스튜디오로 직접 슬라이싱한 완료 파일을 올려서 출력만 요청</p>
+              <p className="text-sm mt-0.5">본인 컴퓨터의 밤부스튜디오로 직접 슬라이싱한 완료 파일을 올려서 출력만 요청</p>
             </div>
           </button>
         </div>
@@ -254,6 +258,8 @@ export default function NewPrintJobPage() {
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
         <Input
+          id="print-purpose"
+          aria-label="사용 목적"
           placeholder="예: 동아리 전시용 모형, 개인 프로젝트 부품 등"
           value={purpose}
           onChange={e => setPurpose(e.target.value)}
@@ -265,25 +271,25 @@ export default function NewPrintJobPage() {
         <h2 className="text-xs font-semibold text-muted-foreground">
           {mode === 'beginner' ? '모델 파일 *' : '슬라이싱 완료 파일 *'}
         </h2>
-        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
+        <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
           {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
             <>
               <UploadCloud className="size-6 opacity-40" />
               <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
-              <span className="text-xs text-muted-foreground opacity-50">.3mf 그대로 올리거나, .stl / .obj를 올리면 3mf로 변환해요</span>
+              <span className="text-xs text-muted-foreground">.3mf 그대로 올리거나, .stl / .obj를 올리면 3mf로 변환해요</span>
             </>
           )}
-          <input type="file" accept=".3mf,.stl,.obj" multiple disabled={converting} className="hidden" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+          <input aria-label="설계 파일 업로드" type="file" accept=".3mf,.stl,.obj" multiple disabled={converting} className="sr-only" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
         </label>
 
         {fileEntries.length > 0 && (
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground opacity-60">파일마다 수량/재질/색상을 각각 정하고, 파일별로 나눠 신청해요.</p>
+            <p className="text-xs text-muted-foreground">파일마다 수량/재질/색상을 각각 정하고, 파일별로 나눠 신청해요.</p>
             {fileEntries.map((entry, i) => (
               <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
-                  <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
+                  <button type="button" aria-label={`${entry.file.name} 파일 제외`} onClick={() => removeFile(i)} className="flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
                 </div>
                 {entry.convertedFrom && (
                   <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → 3mf 변환됨</p>
@@ -291,16 +297,16 @@ export default function NewPrintJobPage() {
                 <div className="grid grid-cols-4 gap-2">
                   <div>
                     <label className={labelCls}>수량</label>
-                    <Input type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
+                    <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
                   </div>
                   <div>
                     <label className={labelCls}>플레이트 수</label>
-                    <Input type="number" min="1" value={entry.plateCount} onChange={e => updateEntry(i, { plateCount: e.target.value })} className="h-9 text-xs" />
+                    <Input aria-label={`${entry.file.name} 플레이트 수`} type="number" min="1" value={entry.plateCount} onChange={e => updateEntry(i, { plateCount: e.target.value })} className="h-9 text-xs" />
                   </div>
                   <div className="col-span-2">
                     <label className={labelCls}>필라멘트</label>
                     <Select value={entry.filamentId} onValueChange={v => updateEntry(i, { filamentId: v })}>
-                      <SelectTrigger className="h-9 w-full text-xs"><SelectValue placeholder="상관없음" /></SelectTrigger>
+                      <SelectTrigger aria-label={`${entry.file.name} 필라멘트`} className="h-11 w-full text-sm"><SelectValue placeholder="상관없음" /></SelectTrigger>
                       <SelectContent>
                         {filaments.map(f => (
                           <SelectItem key={f.id} value={f.id}>
@@ -317,7 +323,7 @@ export default function NewPrintJobPage() {
         )}
 
         {mode === 'advanced' && (
-          <p className="text-xs text-muted-foreground opacity-60 leading-relaxed">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             고급자는 본인 컴퓨터의 밤부스튜디오로 미리 슬라이싱한 파일을 올려주세요. 담당자는 올린 파일로 출력을 진행해요.
           </p>
         )}
@@ -334,13 +340,14 @@ export default function NewPrintJobPage() {
             <PersonSearchSelect candidates={managers} value={managerId} onChange={setManagerId} placeholder="아무나 (수락하는 담당자에게 배정) — 이름/학번 검색" />
           </div>
         )}
-        <p className="text-xs text-muted-foreground opacity-60">
+        <p className="text-xs text-muted-foreground">
           &ldquo;아무나&rdquo;를 선택하면 무작위 배정이 아니라, 이 프린터 담당자 중 먼저 수락한 사람에게 배정돼요.
         </p>
 
         <div>
-          <label className={labelCls}>메모</label>
+          <label className={labelCls} htmlFor="print-notes">메모</label>
           <textarea
+            id="print-notes"
             rows={3}
             placeholder="서포트 여부 등 요청사항... (모든 파일에 공통 적용)"
             value={notes}

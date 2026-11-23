@@ -201,7 +201,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     const stock = parseInt(newFilamentStock);
     if (isNaN(stock) || stock < 0) { showError('재고 수량을 올바르게 입력해주세요.'); return; }
     const { error } = await supabase.from('print_materials').insert({ material: newFilamentMaterial.trim(), color: newFilamentColor.trim(), stock_count: stock });
-    if (error) showError(error.code === '23505' ? '이미 등록된 조합입니다.' : '추가 실패: ' + error.message);
+    if (error) showError(error.code === '23505' ? '이미 등록된 재질과 색상이에요.' : '항목을 추가하지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.');
     else { showSuccess('필라멘트가 등록됐습니다.'); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
   }
 
@@ -210,13 +210,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     if (!f) return;
     const next = Math.max(0, f.stock_count + delta);
     const { error } = await supabase.from('print_materials').update({ stock_count: next }).eq('id', id);
-    if (error) showError('재고 수정 실패: ' + error.message);
+    if (error) showError('재고를 저장하지 못했어요. 현재 수량을 확인하고 다시 시도해 주세요.');
     else fetchFilamentCatalog();
   }
 
   async function removeFilamentEntry(id: string) {
     const { error } = await supabase.from('print_materials').delete().eq('id', id);
-    if (error) showError('삭제 실패: ' + error.message);
+    if (error) showError('삭제하지 못했어요. 목록을 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('필라멘트가 삭제됐습니다.'); fetchFilamentCatalog(); }
   }
 
@@ -229,13 +229,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('print_jobs').update(updates).eq('id', id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('상태가 변경됐습니다.'); fetchAllPrintJobs(); }
   }
 
   async function rejectPrintJob(id: string, reason: string) {
     const { error } = await supabase.from('print_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('거절 처리했습니다.'); fetchAllPrintJobs(); }
   }
 
@@ -243,7 +243,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError('처리 실패: ' + error.message); return; }
+    if (error) { showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.'); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess('전달 완료로 표시했습니다.');
     fetchAllPrintJobs();
@@ -262,7 +262,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     if(!Number.isFinite(queueHours)||queueHours<=0){showError("예상 시간을 0보다 크게 입력해 주세요.");return}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
-      if(error){showError(error.message);setQueueJobId('');await loadPrintManagerTab();return}
+      if(error){showError('인쇄를 시작하지 못했어요. 대기열을 확인하고 작업을 다시 선택해 주세요.');setQueueJobId('');await loadPrintManagerTab();return}
       showSuccess("프린팅을 시작했습니다.");setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
@@ -307,11 +307,11 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
         status: 'done',
         estimated_end_at: null,
       }).eq('id', printer.id);
-      if (error) showError('처리 실패: ' + error.message);
+      if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
       else showSuccess('인쇄 완료 처리했습니다. 회수하면 "회수함"을 눌러주세요.');
     } else {
       const { error } = await supabase.from('print_jobs').update({ plates_completed: newCompleted }).eq('id', job.id);
-      if (error) showError('처리 실패: ' + error.message);
+      if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
       else showSuccess(`${newCompleted}번 플레이트를 완료 처리했습니다.`);
     }
 
@@ -329,7 +329,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('회수 처리했습니다. 프린터가 다시 대기 상태가 됐습니다.'); loadPrintManagerTab(); }
   }
 
@@ -350,13 +350,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('고장으로 표시했습니다.'); loadPrintManagerTab(); }
   }
 
   async function repairPrinter(printer: any) {
     const { error } = await supabase.from('printers').update({ status: 'idle' }).eq('id', printer.id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('정상 상태로 복구했습니다.'); loadPrintManagerTab(); }
   }
 
@@ -386,13 +386,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('laser_jobs').update(updates).eq('id', id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('상태가 변경됐습니다.'); fetchAllLaserJobs(); }
   }
 
   async function rejectLaserJob(id: string, reason: string) {
     const { error } = await supabase.from('laser_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError('처리 실패: ' + error.message);
+    if (error) showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('거절 처리했습니다.'); fetchAllLaserJobs(); }
   }
 
@@ -400,7 +400,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     const { error } = await supabase.from('laser_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError('처리 실패: ' + error.message); return; }
+    if (error) { showError('변경 내용을 저장하지 못했어요. 상태를 새로 확인하고 다시 시도해 주세요.'); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess('전달 완료로 표시했습니다.');
     fetchAllLaserJobs();
@@ -420,13 +420,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
     const thicknessNum = parseFloat(newCatalogThickness);
     if (isNaN(thicknessNum) || thicknessNum <= 0) { showError('두께를 올바르게 입력해주세요.'); return; }
     const { error } = await supabase.from('laser_materials').insert({ material: newCatalogMaterial, thickness_mm: thicknessNum });
-    if (error) showError(error.code === '23505' ? '이미 등록된 조합입니다.' : '추가 실패: ' + error.message);
+    if (error) showError(error.code === '23505' ? '이미 등록된 재질과 색상이에요.' : '항목을 추가하지 못했어요. 입력 내용을 확인하고 다시 시도해 주세요.');
     else { showSuccess('재질이 등록됐습니다.'); fetchLaserCatalog(); }
   }
 
   async function removeLaserCatalogEntry(id: string) {
     const { error } = await supabase.from('laser_materials').delete().eq('id', id);
-    if (error) showError('삭제 실패: ' + error.message);
+    if (error) showError('삭제하지 못했어요. 목록을 새로 확인하고 다시 시도해 주세요.');
     else { showSuccess('재질이 삭제됐습니다.'); fetchLaserCatalog(); }
   }
 
@@ -784,7 +784,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                     {managerPrintLoading ? (
                       <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                     ) : allPrintJobs.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">신청 내역이 없습니다.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
                     ) : (
                       allPrintJobs.map(j => {
                         const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
@@ -895,7 +895,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                 {managerLaserLoading ? (
                   <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                 ) : allLaserJobs.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">신청 내역이 없습니다.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
                 ) : (
                   allLaserJobs.map(j => {
                     const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };

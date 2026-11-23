@@ -933,6 +933,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                           )}
                           <div className="flex items-center gap-2">
                             <PersonSearchSelect
+                              language="en"
                               candidates={candidates}
                               value={addPrinterManagerSelect[printer.id] || ''}
                               onChange={v => setAddPrinterManagerSelect(s => ({ ...s, [printer.id]: v }))}
@@ -966,6 +967,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                     )}
                     <div className="flex items-center gap-2">
                       <PersonSearchSelect
+                              language="en"
                         candidates={allProfiles.filter(p => !laserManagers.some(m => m.id === p.id))}
                         value={addLaserManagerSelect}
                         onChange={setAddLaserManagerSelect}
@@ -995,6 +997,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           </div>
           <div className="flex gap-2">
             <PersonSearchSelect
+                              language="en"
               candidates={allProfiles.filter(p => !wakeupManagers.some(m => m.id === p.id))}
               value={addWakeupManagerSelect}
               onChange={setAddWakeupManagerSelect}

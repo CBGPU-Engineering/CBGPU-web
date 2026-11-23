@@ -94,7 +94,7 @@ export default function ManufacturingPage() {
       .select(manufacturingJobSelect())
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
-    if (!error) {const labels=await attachManufacturingManagers(supabase,'print',data||[]);setMyPrintJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');}
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'print',data||[]);setMyPrintJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');}
   };
 
   const [printQueueLength, setPrintQueueLength] = useState<number | null>(null);
@@ -132,7 +132,7 @@ export default function ManufacturingPage() {
       supabase.from('laser_jobs').select(manufacturingJobSelect()).eq('user_id', user.id).order('created_at', { ascending: false }),
       supabase.rpc('laser_queue_length'),
     ]);
-    if (!error) {const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setMyLaserJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');}
+    if (!error) {const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setMyLaserJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');}
     if (!qlenError) setLaserQueueLength(qlen);
     setLaserLoading(false);
   };
@@ -161,7 +161,7 @@ export default function ManufacturingPage() {
     const uniqueIds = [...new Set(userIds)];
     if (uniqueIds.length === 0) return;
     const { data,error } = await manufacturingProfiles(supabase,kind,uniqueIds);
-    if(error){setRequesterProfiles({});showError('신청자 표시 정보를 확인하지 못했어요.');return;}
+    if(error){setRequesterProfiles({});showError('Could not load requester details. Refresh and try again.');return;}
     setRequesterProfiles(prev => {
       const next:Record<string,{full_name:string|null;student_id:string|null}> = scopedProfilesEnabled()?{}:{ ...prev };
       for (const p of data || []) next[p.id] = { full_name: p.full_name, student_id: p.student_id };
@@ -186,7 +186,7 @@ export default function ManufacturingPage() {
     if(equipmentKind==='print'){const ids=managedPrinterIds.join(',');query=query.or(`preferred_printer_id.in.(${ids}),printer_id.in.(${ids})`)}
     const {data,error}=await query;
     if (!error) {
-      const labels=await attachManufacturingManagers(supabase,'print',data||[]);setAllPrintJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
+      const labels=await attachManufacturingManagers(supabase,'print',data||[]);setAllPrintJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');
       fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'print');
     }
     setManagerPrintLoading(false);
@@ -213,7 +213,7 @@ export default function ManufacturingPage() {
     const stock = parseInt(newFilamentStock);
     if (isNaN(stock) || stock < 0) { showError("Enter a valid stock count."); return; }
     const { error } = await supabase.from('print_materials').insert({ material: newFilamentMaterial.trim(), color: newFilamentColor.trim(), stock_count: stock });
-    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add: " + error.message);
+    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add this item. Check the values and try again.");
     else { showSuccess("Filament added."); setNewFilamentMaterial(''); setNewFilamentColor(''); setNewFilamentStock('1'); fetchFilamentCatalog(); }
   }
 
@@ -222,13 +222,13 @@ export default function ManufacturingPage() {
     if (!f) return;
     const next = Math.max(0, f.stock_count + delta);
     const { error } = await supabase.from('print_materials').update({ stock_count: next }).eq('id', id);
-    if (error) showError("Could not update stock: " + error.message);
+    if (error) showError("Could not update stock. Refresh the current quantity and try again.");
     else fetchFilamentCatalog();
   }
 
   async function removeFilamentEntry(id: string) {
     const { error } = await supabase.from('print_materials').delete().eq('id', id);
-    if (error) showError("Could not delete: " + error.message);
+    if (error) showError("Could not delete this item. Refresh the list and try again.");
     else { showSuccess("Filament deleted."); fetchFilamentCatalog(); }
   }
 
@@ -241,13 +241,13 @@ export default function ManufacturingPage() {
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('print_jobs').update(updates).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Status updated."); fetchAllPrintJobs(); }
   }
 
   async function rejectPrintJob(id: string, reason: string) {
     const { error } = await supabase.from('print_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Request rejected."); fetchAllPrintJobs(); }
   }
 
@@ -255,7 +255,7 @@ export default function ManufacturingPage() {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Operation failed: " + error.message); return; }
+    if (error) { showError("Could not save this change. Refresh the job status and try again."); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess("Marked as delivered.");
     fetchAllPrintJobs();
@@ -274,7 +274,7 @@ export default function ManufacturingPage() {
     if(!Number.isFinite(queueHours)||queueHours<=0){showError("Enter a positive estimated duration.");return}
     setStartingPrint(true);
     try{const {error}=await supabase.rpc('start_print_job',{p_job_id:job.id,p_printer_id:queueDialogPrinter.id,p_hours:queueHours});
-      if(error){showError(error.message);setQueueJobId('');await loadPrintManagerTab();return}
+      if(error){showError("Could not start this print. Refresh the queue and select the job again.");setQueueJobId('');await loadPrintManagerTab();return}
       showSuccess("Print started.");setQueueDialogPrinter(null);await loadPrintManagerTab();
     }finally{setStartingPrint(false)}
   }
@@ -319,11 +319,11 @@ export default function ManufacturingPage() {
         status: 'done',
         estimated_end_at: null,
       }).eq('id', printer.id);
-      if (error) showError("Operation failed: " + error.message);
+      if (error) showError("Could not save this change. Refresh the job status and try again.");
       else showSuccess("Print completed. Select Collected after collecting the item.");
     } else {
       const { error } = await supabase.from('print_jobs').update({ plates_completed: newCompleted }).eq('id', job.id);
-      if (error) showError("Operation failed: " + error.message);
+      if (error) showError("Could not save this change. Refresh the job status and try again.");
       else showSuccess(`${newCompleted}plate completed.`);
     }
 
@@ -341,7 +341,7 @@ export default function ManufacturingPage() {
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Item collected. The printer is now available."); loadPrintManagerTab(); }
   }
 
@@ -362,13 +362,13 @@ export default function ManufacturingPage() {
       started_at: null,
       estimated_end_at: null,
     }).eq('id', printer.id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Printer marked as faulty."); loadPrintManagerTab(); }
   }
 
   async function repairPrinter(printer: any) {
     const { error } = await supabase.from('printers').update({ status: 'idle' }).eq('id', printer.id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Printer restored to service."); loadPrintManagerTab(); }
   }
 
@@ -384,7 +384,7 @@ export default function ManufacturingPage() {
       .order('created_at', { ascending: false })
       .limit(500);
     if (!error) {
-      const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setAllLaserJobs(labels.data);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
+      const labels=await attachManufacturingManagers(supabase,'laser',data||[]);setAllLaserJobs(labels.data);if(labels.error)showError('Could not load manager details. Refresh and try again.');
       fetchRequesterProfiles((data || []).map((j:any) => j.user_id),'laser');
     }
     setManagerLaserLoading(false);
@@ -398,13 +398,13 @@ export default function ManufacturingPage() {
       if (job && !job.manager_id && user) updates.manager_id = user.id;
     }
     const { error } = await supabase.from('laser_jobs').update(updates).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Status updated."); fetchAllLaserJobs(); }
   }
 
   async function rejectLaserJob(id: string, reason: string) {
     const { error } = await supabase.from('laser_jobs').update({ status: 'rejected', reject_reason: reason || null }).eq('id', id);
-    if (error) showError("Operation failed: " + error.message);
+    if (error) showError("Could not save this change. Refresh the job status and try again.");
     else { showSuccess("Request rejected."); fetchAllLaserJobs(); }
   }
 
@@ -412,7 +412,7 @@ export default function ManufacturingPage() {
     const { error } = await supabase.from('laser_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Operation failed: " + error.message); return; }
+    if (error) { showError("Could not save this change. Refresh the job status and try again."); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess("Marked as delivered.");
     fetchAllLaserJobs();
@@ -432,13 +432,13 @@ export default function ManufacturingPage() {
     const thicknessNum = parseFloat(newCatalogThickness);
     if (isNaN(thicknessNum) || thicknessNum <= 0) { showError("Enter a valid thickness."); return; }
     const { error } = await supabase.from('laser_materials').insert({ material: newCatalogMaterial, thickness_mm: thicknessNum });
-    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add: " + error.message);
+    if (error) showError(error.code === '23505' ? "This combination already exists." : "Could not add this item. Check the values and try again.");
     else { showSuccess("Material added."); fetchLaserCatalog(); }
   }
 
   async function removeLaserCatalogEntry(id: string) {
     const { error } = await supabase.from('laser_materials').delete().eq('id', id);
-    if (error) showError("Could not delete: " + error.message);
+    if (error) showError("Could not delete this item. Refresh the list and try again.");
     else { showSuccess("Material deleted."); fetchLaserCatalog(); }
   }
 

@@ -98,7 +98,7 @@ export default function NewLaserJobPage() {
       const { error: uploadError } = await supabase.storage.from('manufacturing').upload(filePath, entry.file);
       if (uploadError) {
         setSubmitting(false);
-        showError(`"${entry.file.name}" 파일을 올리지 못했어요. ` + uploadError.message);
+        showError(`"${entry.file.name}" 파일을 올리지 못했어요. 연결을 확인하고 다시 시도해 주세요.`);
         return;
       }
       rows.push({
@@ -120,7 +120,7 @@ export default function NewLaserJobPage() {
     setSubmitting(false);
 
     if (error) {
-      showError('신청하지 못했어요. ' + error.message);
+      showError('신청을 저장하지 못했어요. 입력 내용을 확인한 뒤 다시 시도해 주세요.');
     } else if (rows.length === 1) {
       showSuccess('레이저 커팅을 신청했어요. 담당자 승인 후 제작을 진행해요.');
       router.push(`/manufacturing/laser/${data[0].id}`);
@@ -153,8 +153,9 @@ export default function NewLaserJobPage() {
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-8 max-w-2xl">
       <div className="flex items-center gap-4">
         <button
+          aria-label="이전 화면"
           onClick={() => router.back()}
-          className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+          className="flex items-center justify-center size-11 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
         >
           <ArrowLeft className="size-4" />
         </button>
@@ -167,6 +168,8 @@ export default function NewLaserJobPage() {
       <section className={cardCls}>
         <h2 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5"><Target className="size-3.5" /> 사용 목적 *</h2>
         <Input
+          id="laser-purpose"
+          aria-label="사용 목적"
           placeholder="예: 동아리 전시용 케이스, 개인 프로젝트 부품 등"
           value={purpose}
           onChange={e => setPurpose(e.target.value)}
@@ -183,25 +186,25 @@ export default function NewLaserJobPage() {
           </p>
         ) : (
           <>
-            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
+            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border/40 rounded-lg py-8 transition-all focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ${converting ? 'opacity-60 pointer-events-none' : 'cursor-pointer hover:border-border/80 hover:bg-muted/10'}`}>
               {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
                 <>
                   <UploadCloud className="size-6 opacity-40" />
                   <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
-                  <span className="text-xs text-muted-foreground opacity-50">.dxf 그대로 올리거나, .svg / .dwg를 올리면 dxf로 변환해요</span>
+                  <span className="text-xs text-muted-foreground">.dxf 그대로 올리거나, .svg / .dwg를 올리면 dxf로 변환해요</span>
                 </>
               )}
-              <input type="file" accept=".dxf,.svg,.dwg" multiple disabled={converting} className="hidden" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+              <input aria-label="설계 파일 업로드" type="file" accept=".dxf,.svg,.dwg" multiple disabled={converting} className="sr-only" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
             </label>
 
             {fileEntries.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 파일별로 나눠 신청해요.</p>
+                <p className="text-xs text-muted-foreground">파일마다 재질/두께/수량을 각각 정하고, 파일별로 나눠 신청해요.</p>
                 {fileEntries.map((entry, i) => (
                   <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="flex items-center gap-1.5 text-xs font-semibold truncate"><FileBox className="size-3.5 shrink-0 opacity-50" /> {entry.file.name}</span>
-                      <button onClick={() => removeFile(i)} className="text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
+                      <button type="button" aria-label={`${entry.file.name} 파일 제외`} onClick={() => removeFile(i)} className="flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:text-destructive shrink-0"><X className="size-3.5" /></button>
                     </div>
                     {entry.convertedFrom && (
                       <p className="text-xs text-emerald-600 font-bold flex items-center gap-1"><RefreshCw className="size-2.5" /> {entry.convertedFrom} → dxf 변환됨</p>
@@ -210,7 +213,7 @@ export default function NewLaserJobPage() {
                       <div className="col-span-2">
                         <label className={labelCls}>재질 / 두께</label>
                         <Select value={entry.catalogId} onValueChange={v => updateEntry(i, { catalogId: v })}>
-                          <SelectTrigger className="h-9 w-full text-xs"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
+                          <SelectTrigger aria-label={`${entry.file.name} 재질과 두께`} className="h-11 w-full text-sm"><SelectValue placeholder="— 선택 —" /></SelectTrigger>
                           <SelectContent>
                             {catalog.map(c => (
                               <SelectItem key={c.id} value={c.id}>{c.material === 'mdf' ? 'MDF' : '아크릴'} {c.thickness_mm}mm</SelectItem>
@@ -220,7 +223,7 @@ export default function NewLaserJobPage() {
                       </div>
                       <div>
                         <label className={labelCls}>수량</label>
-                        <Input type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
+                        <Input aria-label={`${entry.file.name} 수량`} type="number" min="1" value={entry.quantity} onChange={e => updateEntry(i, { quantity: e.target.value })} className="h-9 text-xs" />
                       </div>
                     </div>
                   </div>
@@ -238,8 +241,9 @@ export default function NewLaserJobPage() {
         </div>
 
         <div>
-          <label className={labelCls}>메모</label>
+          <label className={labelCls} htmlFor="laser-notes">메모</label>
           <textarea
+            id="laser-notes"
             rows={3}
             placeholder="원하는 완성 규격 등 요청사항... (모든 파일에 공통 적용)"
             value={notes}

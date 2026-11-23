@@ -2,3 +2,13 @@
 .cb-club-date-grid{display:grid;gap:1rem}.cb-club-field input{min-height:2.75rem}.cb-clubs-actions button,.cb-club-form>button,.cb-clubs-heading>button{min-height:2.75rem}
 
 .cb-club-windows{display:grid;gap:1.25rem}.cb-club-window{min-width:0;border:0;border-top:1px solid var(--border);padding-top:.75rem;display:grid;gap:.75rem}.cb-club-window legend{font-weight:650;padding-right:.75rem;font-size:.9375rem}
+
+/* Existing rounds remain visible until an operator chooses to create another. */
+.cb-club-campaign-form{padding-block:1.25rem;border-block:1px solid var(--border)}
+.cb-club-campaign-form>h3{font-size:1rem;line-height:1.5}
+.cb-club-campaign-form>button{justify-self:start;max-width:100%;white-space:normal;height:auto}
+.cb-club-applications:empty{display:none}
+.cb-club-field input[type=datetime-local]{width:100%;min-width:0;font-size:1rem}
+.cb-clubs-heading>div:first-child{min-width:0;flex:1 1 220px}
+@media(max-width:639px){.cb-club-panel{padding:1rem}.cb-clubs-heading>.cb-clubs-actions{width:100%}.cb-clubs-heading>.cb-clubs-actions>button{flex:1}.cb-club-campaign-form>button{justify-self:stretch}}
+.cb-club-panel>.cb-club-applications>.cb-club-application{border:0;border-top:1px solid var(--border);border-radius:0;padding:1.25rem 0 0}

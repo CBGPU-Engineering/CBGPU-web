@@ -71,7 +71,7 @@ export default function PrintJobDetailPage() {
 
   const handleCancel = async () => {
     const { error } = await supabase.from('print_jobs').update({ status: 'canceled' }).eq('id', job.id);
-    if (error) showError("Could not cancel: " + error.message);
+    if (error) showError("Could not cancel this request. Refresh its status and try again.");
     else { showSuccess("Request canceled."); setCancelOpen(false); fetchJob(); }
   };
 
@@ -79,7 +79,7 @@ export default function PrintJobDetailPage() {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError("Operation failed: " + error.message); return; }
+    if (error) { showError("Could not save this change. Refresh the job status and try again."); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess("Marked as delivered.");
     fetchJob();
@@ -103,7 +103,7 @@ export default function PrintJobDetailPage() {
       <div>
         <button
           onClick={() => router.push(managementBase)}
-          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors mb-6 min-h-11"
         >
           <ArrowLeft className="size-3" /> Back
         </button>

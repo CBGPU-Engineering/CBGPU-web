@@ -70,7 +70,7 @@ export default function PrintJobDetailPage() {
 
   const handleCancel = async () => {
     const { error } = await supabase.from('print_jobs').update({ status: 'canceled' }).eq('id', job.id);
-    if (error) showError('취소하지 못했어요. ' + error.message);
+    if (error) showError('신청을 취소하지 못했어요. 상태를 새로 확인한 뒤 다시 시도해 주세요.');
     else { showSuccess('신청을 취소했어요.'); setCancelOpen(false); fetchJob(); }
   };
 
@@ -78,7 +78,7 @@ export default function PrintJobDetailPage() {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError('처리하지 못했어요. ' + error.message); return; }
+    if (error) { showError('처리 결과를 저장하지 못했어요. 상태를 확인한 뒤 다시 시도해 주세요.'); return; }
     await deleteManufacturingFile(job.file_path);
     showSuccess('전달 완료로 표시했어요.');
     fetchJob();
@@ -102,9 +102,9 @@ export default function PrintJobDetailPage() {
       <div>
         <button
           onClick={() => router.push('/manufacturing/print')}
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
+          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6 min-h-11"
         >
-          <ArrowLeft className="size-3" /> Back
+          <ArrowLeft className="size-4" /> 신청 목록
         </button>
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
