@@ -7,7 +7,7 @@ const source = fs.readFileSync('src/lib/contests.ts', 'utf8');
 const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
 const loaded = { exports: {} as Record<string, any> };
 new Function('module', 'exports', compiled.outputText)(loaded, loaded.exports);
-const { deadlineToISO, deadlineToInput, contestClosed, remainingTime, fileError, validateAnswers, isHttpUrl } = loaded.exports;
+const { deadlineToISO, deadlineToInput, contestClosed, remainingTime, fileError, validateAnswers, isHttpUrl, contestError } = loaded.exports;
 const field = { id: 'slides', label: '발표 자료', type: 'file', required: true, extensions: '.ppt,.pptx', max_size_mb: 1 };
 
 test('Korea deadline roundtrip keeps seconds independently of device timezone', () => {
@@ -42,4 +42,12 @@ test('required answers accept an existing file or a replacement; links only acce
   assert.ok(validateAnswers([link], { link: 'javascript:alert(1)' }));
   assert.equal(validateAnswers([link], { link: 'https://example.com' }), null);
   assert.equal(isHttpUrl('data:text/html,test'), false);
+});
+test('contest errors guide recovery without exposing database/provider details',()=>{
+ assert.match(contestError({code:'42501',message:'permission denied for private_schema.submissions'}),/권한/);
+ assert.match(contestError(Error('CONTEST_PARTICIPANT_POLICY_DENIED')),/참가 대상/);
+ assert.match(contestError(Error('CONTEST_NOT_STARTED')),/시작 전/);
+ assert.match(contestError(Error('PRIVATE_UNKNOWN_PROVIDER_ERROR secret-value')),/새로고침/);
+ assert.equal(contestError(Error('PRIVATE_UNKNOWN_PROVIDER_ERROR secret-value')).includes('secret-value'),false);
+ assert.equal(contestError(Error('이름을 입력해 주세요.')),'이름을 입력해 주세요.');
 });

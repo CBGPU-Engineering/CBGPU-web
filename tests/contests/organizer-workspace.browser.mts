@@ -20,7 +20,7 @@ async function fixture(context:BrowserContext,viewer:'owner'|'participant'){
  const read=(table:string)=>{
  const where:Record<string,unknown>={};let single=false,write:string|null=null;
  const query:any={};
- for(const method of ['select','order','limit','range','is','neq','gte','lte','in','not'])query[method]=()=>query;
+ for(const method of ['select','order','limit','range','is','neq','gte','lte','in','not','abortSignal'])query[method]=()=>query;
  query.eq=(key:string,value:unknown)=>{where[key]=value;return query};
  for(const method of ['insert','update','upsert','delete'])query[method]=()=>{write=table+':'+method;return query};
  const result=()=>{
@@ -54,6 +54,8 @@ async function fixture(context:BrowserContext,viewer:'owner'|'participant'){
  if(url.pathname==='/api/auth/shared-session')return json({value:null,state:'empty'});
  if(url.pathname==='/api/schools/memberships')return json({items:[],current_school_id:null});
  if(url.pathname==='/api/schools/resource-contexts')return json({items:[],current_school_id:null,server_time:serverNow});
+ // Site telemetry is intercepted locally; it is not a contest mutation and never reaches a server.
+ if(url.pathname==='/api/traffic'){assert.equal(request.method(),'POST');return route.fulfill({status:204})}
  if(url.pathname.startsWith('/api/')||url.pathname.startsWith('/backend/')){if(!['GET','HEAD'].includes(request.method()))apiWrites++;return json({error:'Synthetic API denied'},403);}
  const headers:Record<string,string>={host:url.hostname,'x-cbgpu-public-host':url.hostname,'x-forwarded-proto':'https','accept-encoding':'identity'};
  for(const k of ['accept','content-type','rsc','next-router-state-tree','next-url','next-router-prefetch','user-agent'])if(request.headers()[k])headers[k]=request.headers()[k];
@@ -72,7 +74,7 @@ try{for(const frame of ['desktop','app']as const)for(const theme of ['light','da
  const context=await browser.newContext(options);const ownerApiWrites=await fixture(context,'owner');
  const page=await context.newPage(),errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto(origin+'/contests/'+teamId+'/manage',{waitUntil:'domcontentloaded'});
- await page.locator('[data-contest-management]').waitFor({timeout:15000});
+ await page.locator('[data-contest-management]').waitFor({timeout:15000}).catch(async()=>{await page.screenshot({path:output+'/failure-before-management.png'});throw Error('Synthetic Next management not mounted: '+JSON.stringify({body:await page.locator('body').innerText(),errors}))});
  const nav=page.getByRole('navigation',{name:'대회 관리 항목'});
  for(const label of ['운영 현황','참가자','팀','제출물','심사·투표','세부 일정','공지','소개·배너','신청·장소','운영진','보관·복제']){
  const button=nav.getByRole('button',{name:label,exact:true});await button.click();assert.equal(await button.getAttribute('aria-pressed'),'true');

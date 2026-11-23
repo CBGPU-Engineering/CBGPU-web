@@ -18,12 +18,12 @@ import { isNativeApp, onNativeBridgeReady } from '@/lib/nativeBridge';
 const APK_URL = '/downloads/cbgpu.apk';
 
 const FEATURES = [
-  { Icon: CalendarDays, label: '시간표', desc: '대강까지 반영되는 실시간 시간표' },
+  { Icon: CalendarDays, label: '시간표', desc: '학교에 연결된 시간표 확인' },
   { Icon: UtensilsCrossed, label: '급식', desc: '오늘 급식 메뉴 바로 확인' },
-  { Icon: Cpu, label: 'GPU 예약', desc: '실시간 상태 확인하고 바로 예약' },
+  { Icon: Cpu, label: 'GPU 예약', desc: '이용 권한과 상태를 확인하고 예약' },
   { Icon: Printer, label: '3D프린터 · 레이저', desc: '신청부터 완료까지 진행 상황 확인' },
-  { Icon: Server, label: '서버 배포', desc: 'Docker/Git으로 프로젝트 올리기' },
-  { Icon: LayoutGrid, label: '홈 화면 위젯', desc: 'GPU·프린터·시간표·급식을 앱 안 열고도' },
+  { Icon: Server, label: '서버 배포', desc: '프로젝트를 서버에 배포' },
+  { Icon: LayoutGrid, label: '홈 화면 위젯', desc: '앱을 열지 않고 주요 상태 확인' },
 ];
 
 /**
@@ -49,7 +49,7 @@ export default function DownloadPage() {
       <div className="text-center space-y-6">
         <Image src="/img/cbgpu-logo.png" alt="CBGPU" width={96} height={96} className="mx-auto" />
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-muted-foreground">충북과학고 학생 종합 플랫폼</p>
+          <p className="text-sm font-semibold text-muted-foreground">학교생활과 연구·개발을 함께</p>
           <h1 className="cb-page-title">CBGPU 앱</h1>
           <p className="text-base text-muted-foreground font-medium max-w-md mx-auto">
             시간표, 급식부터 GPU 예약, 제작 신청까지 — 학교생활을 앱 하나로.
@@ -79,7 +79,7 @@ export default function DownloadPage() {
             이 사이트에서 내려받은 APK인지 확인한 후 설치해 주세요.
           </p>
           <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-            기존 앱과 서명이 달라 업데이트 설치가 되지 않는 경우, 기존 앱을 삭제한 뒤 설치해 주세요.
+            기존 앱과 서명이 달라 업데이트되지 않으면, 삭제 전에 필요한 알람 설정을 확인해 주세요.
             앱 삭제 시 기기에 저장된 로그인 정보와 알람 설정이 지워질 수 있어요.
           </p>
         </div>
@@ -106,12 +106,12 @@ export default function DownloadPage() {
           marginSize={2}
           className="rounded-lg bg-white ring-1 ring-foreground/10"
         />
-        <p className="text-sm text-muted-foreground font-medium">휴대폰으로 QR코드를 스캔해서 설치하세요</p>
+        <p className="text-sm text-muted-foreground font-medium">휴대폰으로 QR코드를 스캔해 설치해 주세요</p>
       </div>
 
       <div className="text-center space-y-3">
         <p className="text-sm text-muted-foreground">
-          충북과학고등학교 학생 전용 서비스입니다.
+          학교마다 제공하는 기능과 이용 권한이 달라요.
         </p>
         <div className="flex items-center justify-center gap-4 text-sm font-medium text-muted-foreground">
           <Link href="/" className="hover:text-foreground transition-colors underline underline-offset-2">
