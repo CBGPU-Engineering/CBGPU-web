@@ -358,6 +358,10 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       const reason = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
       if (reason.includes('POLL_ANSWERED_QUESTION_REMOVAL') || reason.includes('POLL_ANSWERED_QUESTION_TYPE')) {
         showError('답변이 있는 질문은 삭제하거나 유형을 바꿀 수 없어요. 질문을 원래대로 돌린 뒤 저장해 주세요.');
+      } else if (reason.includes('POLL_ANSWERED_OPTION_REMOVAL')) {
+        showError('답변에 쓰인 선택지는 삭제할 수 없어요. 기존 선택지를 유지한 뒤 저장해 주세요.');
+      } else if (reason.includes('POLL_INVALID_OPTIONS')) {
+        showError('선택지가 중복되거나 올바르지 않아요. 선택지를 다시 확인한 뒤 저장해 주세요.');
       } else if (reason.includes('POLL_INVALID_CONDITION')) {
         showError('표시 조건에 연결된 질문을 찾지 못했어요. 질문의 표시 조건을 다시 선택한 뒤 저장해 주세요.');
       } else if (reason.includes('POLL_EDIT_CONFLICT')) {
@@ -420,37 +424,51 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
 }
 
 // ─── PollForm ─────────────────────────────────────────────────────────────────
-function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questions: Question[]; onSubmitted: () => void; onBack: () => void }) {
+function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll; questions: Question[]; onSubmitted: () => void; onBack: () => void; notice?: string }) {
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const actor = useRef(user?.id); actor.current = user?.id;
   const closed = isClosed(poll);
 
   const visibleQs = questions.filter(q => isVisible(q, answers));
 
   const submit = async () => {
+    if (submittingRef.current || !user || closed) return;
     for (const q of visibleQs) {
       if (!q.required) continue;
       const v = answers[q.id];
       const empty = v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length);
       if (empty) { showError(`"${q.title || '질문'}"에 답변해 주세요.`); return; }
     }
-    setSubmitting(true);
+    const owner = user.id;
+    submittingRef.current = true; setSubmitting(true);
     try {
-      const { data: resp, error: re } = await supabase.from('poll_responses').insert({ poll_id: poll.id, user_id: user!.id }).select().single();
-      if (re) throw re;
-      const rows = visibleQs.map(q => ({ response_id: resp.id, question_id: q.id, value: answers[q.id] ?? null }));
-      const { error: ae } = await supabase.from('poll_answers').insert(rows);
-      if (ae) throw ae;
+      const { data, error } = await boundedClientRequest(async signal => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (signal.aborted || actor.current !== owner || session?.user.id !== owner) throw new Error('POLL_AUTH_REQUIRED');
+        return supabase.rpc('cbgpu_submit_poll', { p_poll_id: poll.id, p_expected_revision: poll.editor_revision ?? null, p_answers: { ...answers } }).abortSignal(signal);
+      }, undefined, 30_000);
+      if (error) throw error;
+      if (data?.submitted !== true || data.poll_id !== poll.id || !data.id) throw new Error('POLL_RESPONSE_UNCONFIRMED');
+      if (actor.current !== owner) return;
       showSuccess('제출했어요.');
       onSubmitted();
-    } catch { showError('응답을 제출하지 못했어요. 투표 목록에서 제출 여부를 확인한 뒤 다시 시도해 주세요.'); }
-    finally { setSubmitting(false); }
+    } catch (error) {
+      if (actor.current !== owner) return;
+      const reason = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
+      if (reason.includes('POLL_CLOSED')) showError('투표가 마감됐어요. 목록에서 마감 상태와 내 응답을 확인해 주세요.');
+      else if (reason.includes('POLL_EDIT_CONFLICT')) showError('질문이 변경됐어요. 작성한 답변을 따로 복사한 뒤 투표를 다시 열어 주세요.');
+      else if (reason.includes('POLL_REQUIRED_ANSWER') || reason.includes('POLL_INVALID_ANSWER')) showError('필수 항목과 선택 가능한 값을 확인한 뒤 다시 제출해 주세요. 작성한 답변은 그대로 있어요.');
+      else if (reason.includes('POLL_RESPONSE_ALREADY_RECORDED')) showError('이미 등록된 답변이 있어요. 작성한 내용은 그대로 있으니 목록의 내 응답 확인으로 등록된 응답을 확인해 주세요.');
+      else showError('제출 결과를 확인하지 못했어요. 작성한 답변은 그대로 있어요. 목록의 내 응답 확인으로 저장 여부를 확인해 주세요.');
+    } finally { submittingRef.current = false; setSubmitting(false); }
   };
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto">
+    <fieldset disabled={submitting} className="space-y-5 max-w-2xl mx-auto min-w-0">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
@@ -460,6 +478,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
         </div>
       </div>
 
+      {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
       <div className="space-y-4">
         {visibleQs.map((q, i) => (
           <div key={q.id} className="p-5 border border-border/50 rounded-2xl bg-card space-y-3">
@@ -481,7 +500,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
           {submitting ? '제출 중...' : '제출하기'}
         </Button>
       )}
-    </div>
+    </fieldset>
   );
 }
 
@@ -509,7 +528,8 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
     const key = `poll-insight:${poll.id}:${resCount}:${allAnswers.length}`;
     if (insightKeyRef.current === key) return;
     insightKeyRef.current = key;
-    const cached = sessionStorage.getItem(key);
+    let cached: string | null = null;
+    try { cached = sessionStorage.getItem(key); } catch { /* Optional summaries do not require browser storage. */ }
     if (cached) { setInsight(cached); return; }
     const lines = questions.map(q => {
       const values = allAnswers.filter(answer => answer.question_id === q.id).map(answer => answer.value);
@@ -528,7 +548,7 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
     requestAi('poll_insight', `총 응답자 ${resCount}명\n${lines.join('\n')}`).then(text => {
       if (cancelled) return;
       setInsight(text);
-      sessionStorage.setItem(key, text);
+      try { sessionStorage.setItem(key, text); } catch { /* The visible summary remains usable when storage is unavailable. */ }
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [allAnswers, poll.id, questions, resCount]);
@@ -556,9 +576,10 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
 }
 
 // ─── main ─────────────────────────────────────────────────────────────────────
-type View = { type: 'list' } | { type: 'form'; poll: Poll; questions: Question[] } | { type: 'results'; poll: Poll; questions: Question[] } | { type: 'builder'; poll?: Poll };
+type View = { type: 'list' } | { type: 'form'; poll: Poll; questions: Question[]; notice?: string } | { type: 'results'; poll: Poll; questions: Question[] } | { type: 'builder'; poll?: Poll };
 
-export default function PollsPage() {
+export default function PollsPage() { const { user } = useAuth(); return <PollsSession key={user?.id || 'anonymous'} />; }
+function PollsSession() {
   const { user, isAdmin } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [polls,  setPolls]  = useState<Poll[]>([]);
@@ -570,6 +591,9 @@ export default function PollsPage() {
   const [dbMissing, setDbMissing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const responseCheck = useRef(false);
+  const [checkingResponse, setCheckingResponse] = useState(false);
+  const currentActor = useRef(user?.id); currentActor.current = user?.id;
 
   const loadPolls = useCallback(async () => {
     setLoading(true); setLoadError('');
@@ -596,6 +620,30 @@ export default function PollsPage() {
     } else {
       setView({ type: 'form', poll, questions });
     }
+  };
+
+  const checkMyResponse = async (poll: Poll) => {
+    const owner = user?.id;
+    if (!owner || responseCheck.current) return;
+    responseCheck.current = true; setCheckingResponse(true);
+    try {
+      const result = await boundedClientRequest(async signal => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (signal.aborted || currentActor.current !== owner || session?.user.id !== owner) throw new Error('Account changed');
+        const response = await supabase.from('poll_responses').select('id').eq('poll_id', poll.id).eq('user_id', owner).abortSignal(signal).maybeSingle();
+        if (response.error || !response.data) throw new Error('Response unavailable');
+        const recorded = await supabase.from('poll_answers').select('id').eq('response_id', response.data.id).limit(1).abortSignal(signal);
+        if (recorded.error) throw recorded.error;
+        const questions = await supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num').abortSignal(signal);
+        if (questions.error) throw questions.error;
+        return { answered: !!recorded.data?.length, questions: (questions.data ?? []).map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} })) as Question[] };
+      });
+      if (currentActor.current !== owner) return;
+      if (!result.answered && !isClosed(poll)) setView({ type: 'form', poll, questions: result.questions, notice: '등록된 답변이 없어요. 답변을 작성해 제출하거나, 표시된 질문이 없으면 그대로 제출할 수 있어요.' });
+      else if (poll.show_results) setView({ type: 'results', poll, questions: result.questions });
+      else showSuccess('내 응답이 등록돼 있어요.');
+    } catch { if (currentActor.current === owner) showError('내 응답을 확인하지 못했어요. 연결을 확인한 뒤 다시 확인해 주세요.'); }
+    finally { responseCheck.current = false; setCheckingResponse(false); }
   };
 
   const closePoll = async (pollId: string) => {
@@ -626,9 +674,9 @@ export default function PollsPage() {
   );
   if (view.type === 'form') return (
     <section className="cb-page-content py-4">
-      <PollForm poll={view.poll} questions={view.questions}
+      <PollForm poll={view.poll} questions={view.questions} notice={view.notice}
         onSubmitted={() => { loadPolls(); setView({ type: 'results', poll: view.poll, questions: view.questions }); }}
-        onBack={() => setView({ type: 'list' })} />
+        onBack={() => { setView({ type: 'list' }); void loadPolls(); }} />
     </section>
   );
   if (view.type === 'results') return (
@@ -706,6 +754,7 @@ export default function PollsPage() {
                     )}
                   </div>
                 </div>
+                {voted && !closed && <div className="mt-3" onClick={event => event.stopPropagation()}><Button variant="outline" size="sm" disabled={checkingResponse} onClick={() => void checkMyResponse(poll)}>{checkingResponse ? '확인 중…' : '내 응답 확인'}</Button></div>}
               </div>
             );
           })}
