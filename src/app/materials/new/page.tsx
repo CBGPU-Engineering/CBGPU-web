@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { boundedClientRequest } from '@/lib/boundedClientRequest';
 import { useSchoolResourcePermission, useSchoolResourceScope } from '@/components/schools/SchoolResourceScope';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, FileText, Loader2, Tag, UploadCloud, X } from 'lucide-react';
@@ -18,6 +19,7 @@ const labelClass = 'mb-1.5 block text-sm font-semibold   text-muted-foreground';
 
 const CHUNK_BYTES = 8 * 1024 * 1024;
 type UploadState = { offset: number; size_bytes: number; complete: boolean };
+type LegacyUploadAttempt = { id: string; owner: string; file: File; title: string; tags: string[]; created: boolean };
 
 function transferError(status: number, responseText: string) {
   let detail: unknown;
@@ -47,13 +49,17 @@ function putChunk(url: string, token: string, chunk: Blob, onProgress: (loaded: 
 
 async function putFile(url: string, file: File, onProgress: (ratio: number) => void) {
   async function status(): Promise<UploadState> {
-    const response = await fetch(`${url}/upload`, { cache: 'no-store', headers: { Authorization: `Bearer ${await materialsToken()}` } });
-    if (!response.ok) throw transferError(response.status, await response.text());
-    const state: UploadState = await response.json();
-    if (!Number.isSafeInteger(state.offset) || state.offset < 0 || state.offset > file.size || state.size_bytes !== file.size || (state.complete && state.offset !== file.size)) {
-      throw new Error('파일 전송 상태를 확인하지 못했어요. 다시 시도해 주세요.');
-    }
-    return state;
+    return boundedClientRequest(async signal => {
+      const token = await materialsToken();
+      if (signal.aborted) throw signal.reason;
+      const response = await fetch(`${url}/upload`, { cache: 'no-store', signal, headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw transferError(response.status, await response.text());
+      const state: UploadState = await response.json();
+      if (!Number.isSafeInteger(state.offset) || state.offset < 0 || state.offset > file.size || state.size_bytes !== file.size || (state.complete && state.offset !== file.size)) {
+        throw new Error('파일 전송 상태를 확인하지 못했어요. 다시 시도해 주세요.');
+      }
+      return state;
+    });
   }
   let current = await status();
   onProgress(current.offset / file.size);
@@ -94,6 +100,12 @@ export default function NewMaterialPage() {
   const scope = useSchoolResourceScope();
   const storagePermission = useSchoolResourcePermission('school_storage');
   const uploadAttempt = useRef<{id:string;fingerprint:string;file:File}|null>(null);
+  const legacyAttempt = useRef<LegacyUploadAttempt | null>(null);
+  const uploadLock = useRef(false);
+  const actor = useRef(user?.id); actor.current = user?.id;
+  const [retainedUpload, setRetainedUpload] = useState(false);
+  const [verificationNeeded, setVerificationNeeded] = useState(false);
+  const [uploadMessage, setUploadMessage] = useState('');
   const { showError, showSuccess } = useAlert();
   const [title, setTitle] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -102,6 +114,14 @@ export default function NewMaterialPage() {
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState(0);
+  const previousOwner = useRef(user?.id);
+  useEffect(() => {
+    if (previousOwner.current === user?.id) return;
+    previousOwner.current = user?.id;
+    legacyAttempt.current = null; uploadAttempt.current = null;
+    setRetainedUpload(false); setVerificationNeeded(false); setUploadMessage('');
+    setFile(null); setTitle(''); setTags([]); setTagInput('');
+  }, [user?.id]);
 
   function addTag() {
     const value = tagInput.trim().replace(/^#/, '');
@@ -112,28 +132,56 @@ export default function NewMaterialPage() {
     setTagInput('');
   }
 
+  async function legacyStatus(attempt: LegacyUploadAttempt) {
+    return boundedClientRequest(async signal => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (signal.aborted || actor.current !== attempt.owner || session?.user.id !== attempt.owner) throw new Error('로그인 계정이 바뀌었어요. 자료 목록에서 전송 결과를 확인해 주세요.');
+      const { data, error } = await supabase.from('shared_materials').select('id,status').eq('id', attempt.id).eq('uploader_id', attempt.owner).abortSignal(signal).maybeSingle();
+      if (error) throw error;
+      if (data && (data.id !== attempt.id || !['pending', 'ready'].includes(data.status))) throw new Error('전송 상태를 확인하지 못했어요.');
+      return data?.status as 'pending' | 'ready' | undefined;
+    });
+  }
+
   async function upload() {
+    if (uploadLock.current) return;
     if (!user || !file) { showError('파일을 선택해 주세요.'); return; }
     if (!title.trim()) { showError('제목을 입력해 주세요.'); return; }
     if (title.trim().length > 120) { showError('제목은 120자 이내로 입력해 주세요.'); return; }
     if (!file.size || file.size > MAX_BYTES) { showError('파일은 1GB 이하로 선택해 주세요.'); return; }
     if (!API_BASE) { showError('자료 공유 서버가 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
-    setUploading(true);
+    const owner = user.id;
+    uploadLock.current = true;
+    setUploading(true); setUploadMessage('');
     setProgress(0);
     let materialId: string | null = null;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('로그인해 주세요.');
-      if (session.user.id !== user.id) throw new Error('로그인 계정이 바뀌었어요. 다시 시도해 주세요.');
+      if (session.user.id !== owner || actor.current !== owner) throw new Error('로그인 계정이 바뀌었어요. 다시 시도해 주세요.');
       const selectedSchool = scope.current?.school_id;
       if (storagePermission.enabled && (!selectedSchool || !(await storagePermission.verify()))) throw new Error('선택한 학교의 자료 공유 권한이 없거나 만료됐어요. 학교 소속과 이용 권한을 확인해 주세요.');
-      // 서버 저장 공간이 부족하면 서버가 본문을 읽기 전에 거절해 브라우저에는 연결 오류로만 보인다. 미리 확인해 이유를 알려준다.
-      const quota = await fetchMaterialsJson<MaterialsQuota>('/materials/quota').catch(() => null);
-      if (quota && file.size > quota.remaining_bytes) {
-        throw new Error(`자료 공유 저장 공간이 부족해요. (남은 공간 ${fileSize(quota.remaining_bytes)}) 관리자에게 문의해 주세요.`);
+      // Resolve an uncertain legacy request by ID before any further write.
+      if (!storagePermission.enabled && legacyAttempt.current) {
+        const attempt = legacyAttempt.current;
+        if (attempt.owner !== owner || attempt.file !== file) throw new Error('기존 전송의 계정과 파일을 확인해 주세요. 자료 목록에서 전송 결과를 확인할 수 있어요.');
+        materialId = attempt.id;
+        const status = await legacyStatus(attempt);
+        if (status === 'ready') { showSuccess('자료를 공유했어요.'); router.push('/materials'); return; }
+        attempt.created = status === 'pending';
+        if (verificationNeeded) {
+          setVerificationNeeded(false);
+          setUploadMessage(status === 'pending' ? '전송이 아직 끝나지 않았어요. 이어서 올리기를 눌러 주세요.' : '공유 기록이 아직 없어요. 자료 공유하기를 눌러 다시 시도해 주세요.');
+          return;
+        }
+      }
+      // Check capacity before creating a new reservation; resumed uploads already have one.
+      if (storagePermission.enabled || !legacyAttempt.current?.created) {
+        const quota = await fetchMaterialsJson<MaterialsQuota>('/materials/quota').catch(() => null);
+        if (quota && file.size > quota.remaining_bytes) throw new Error(`자료 공유 저장 공간이 부족해요. (남은 공간 ${fileSize(quota.remaining_bytes)}) 관리자에게 문의해 주세요.`);
       }
       if (storagePermission.enabled) {
-        const fingerprint = JSON.stringify([user.id, selectedSchool, title.trim(), tags, file.name, file.size, file.lastModified]);
+        const fingerprint = JSON.stringify([owner, selectedSchool, title.trim(), tags, file.name, file.size, file.lastModified]);
         if (uploadAttempt.current?.fingerprint !== fingerprint || uploadAttempt.current.file !== file) uploadAttempt.current = {id:crypto.randomUUID(), fingerprint, file};
         const response = await fetch(`${API_BASE}/materials`, {method:'POST', headers:{Authorization:`Bearer ${session.access_token}`, 'Content-Type':'application/json', 'X-CBGPU-School-Id':selectedSchool!}, body:JSON.stringify({upload_id:uploadAttempt.current.id, title:title.trim(), tags, file_name:file.name.slice(0,255), content_type:file.type || 'application/octet-stream', size_bytes:file.size})});
         const saved = await response.json().catch(()=>null);
@@ -141,35 +189,46 @@ export default function NewMaterialPage() {
         if (!saved?.id || saved.school_id !== selectedSchool || saved.access_scope !== 'SCHOOL') throw new Error('자료를 올릴 학교를 확인하지 못했어요. 학교를 다시 선택해 주세요.');
         materialId = saved.id;
       } else {
-        const { data, error } = await supabase.from('shared_materials').insert({
-          uploader_id: user.id, title: title.trim(), tags, file_name: file.name.slice(0, 255),
-          content_type: file.type || 'application/octet-stream', size_bytes: file.size, status: 'pending',
-        }).select('id').single();
-        if (error) throw error;
-        materialId = data.id;
+        // A browser-owned UUID makes a lost INSERT response reconcilable without
+        // creating another draft. Keep the exact File and metadata for resuming.
+        const attempt = legacyAttempt.current ?? { id: crypto.randomUUID(), owner, file, title: title.trim(), tags: [...tags], created: false };
+        legacyAttempt.current = attempt; setRetainedUpload(true);
+        materialId = attempt.id;
+        if (!attempt.created) {
+          const { data, error } = await boundedClientRequest(signal => supabase.from('shared_materials').insert({
+            id: attempt.id, uploader_id: attempt.owner, title: attempt.title, tags: attempt.tags, file_name: attempt.file.name.slice(0, 255),
+            content_type: attempt.file.type || 'application/octet-stream', size_bytes: attempt.file.size, status: 'pending',
+          }).select('id').abortSignal(signal).single(), undefined, 30_000);
+          if (error) throw error;
+          if (data?.id !== attempt.id) throw new Error('자료 전송 기록을 확인하지 못했어요.');
+          attempt.created = true;
+        }
       }
-      await putFile(`${API_BASE}/materials/${materialId}`, file, setProgress);
+      await putFile(`${API_BASE}/materials/${materialId}`, storagePermission.enabled ? file : legacyAttempt.current?.file ?? file, setProgress);
+      if (actor.current !== owner) return;
       showSuccess('자료를 공유했어요.');
       router.push('/materials');
     } catch (error) {
-      if (materialId && !storagePermission.enabled) {
-        // The server may finish an upload even if the response is lost.
-        const { data } = await supabase.from('shared_materials').select('status').eq('id', materialId).maybeSingle();
-        if (data?.status === 'ready') {
-          showSuccess('자료를 공유했어요.');
-          router.push('/materials');
-          return;
-        }
-        // Ask the file service to remove its partial bytes/reservation first.
-        // If it is unreachable, abandoned partials expire automatically.
+      if (actor.current !== owner) return;
+      if (materialId && !storagePermission.enabled && legacyAttempt.current?.id === materialId) {
+        // Never delete on an ambiguous response. Even a pending read can race a
+        // final chunk committing. Only the user can explicitly resume this ID.
         try {
-          const cleanupToken = await materialsToken();
-          await fetch(`${API_BASE}/materials/${materialId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${cleanupToken}` } });
-        } catch { /* Expired sessions or outages leave partials for safe expiry cleanup. */ }
-        await supabase.from('shared_materials').delete().eq('id', materialId);
+          const status = await legacyStatus(legacyAttempt.current);
+          if (status === 'ready') { showSuccess('자료를 공유했어요.'); router.push('/materials'); return; }
+          legacyAttempt.current.created = status === 'pending';
+          setVerificationNeeded(false);
+          const capacityFull = error instanceof Error && 'status' in error && Number(error.status) === 507;
+          setUploadMessage(capacityFull ? '자료 공유 저장 공간이 가득 찼어요. 관리자에게 문의한 뒤 이어서 올려 주세요.' : status === 'pending' ? '전송이 아직 끝나지 않았어요. 같은 파일로 이어서 올릴 수 있어요.' : '공유 기록이 아직 없어요. 계정과 자료 공유 권한을 확인한 뒤 다시 시도해 주세요.');
+        } catch {
+          setVerificationNeeded(true);
+          setUploadMessage('전송 결과를 확인하지 못했어요. 파일과 입력 내용은 그대로 있어요. 전송 결과 확인을 눌러 다시 확인해 주세요.');
+        }
+        return;
       }
       showError(error instanceof Error ? error.message : '자료를 올리지 못했어요. 다시 시도해 주세요.');
     } finally {
+      uploadLock.current = false;
       setUploading(false);
     }
   }
@@ -190,15 +249,15 @@ export default function NewMaterialPage() {
       <section className={cardClass}>
         <div>
           <label htmlFor="material-title" className={`${labelClass} flex justify-between`}><span>제목 *</span><span className="font-bold normal-case tracking-normal">{title.length}/120</span></label>
-          <Input id="material-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="예: 물리학 실험 보고서 양식" className="min-h-11" />
+          <Input id="material-title" disabled={uploading || retainedUpload} value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="예: 물리학 실험 보고서 양식" className="min-h-11" />
         </div>
         <div>
           <label htmlFor="material-tag-input" className={labelClass}>태그</label>
           <div className="flex gap-2">
-            <Input id="material-tag-input" value={tagInput} onChange={event => setTagInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); addTag(); } }} placeholder="태그 입력 후 Enter" className="min-h-11" />
-            <Button variant="outline" type="button" className="gap-1.5" onClick={addTag}><Tag className="size-4" />추가</Button>
+            <Input id="material-tag-input" disabled={uploading || retainedUpload} value={tagInput} onChange={event => setTagInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); addTag(); } }} placeholder="태그 입력 후 Enter" className="min-h-11" />
+            <Button variant="outline" type="button" disabled={uploading || retainedUpload} className="gap-1.5" onClick={addTag}><Tag className="size-4" />추가</Button>
           </div>
-          {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="min-h-11 rounded-full"><Badge className="normal-case tracking-normal text-sm px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
+          {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" disabled={uploading || retainedUpload} onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="min-h-11 rounded-full"><Badge className="normal-case tracking-normal text-sm px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
           <p className="mt-2 text-sm text-muted-foreground">{tags.length}/8개 · 태그를 누르면 지울 수 있어요.</p>
         </div>
       </section>
@@ -209,7 +268,7 @@ export default function NewMaterialPage() {
           {file ? <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><FileText className="size-5" /></div>
             <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{file.name}</p><p className="text-sm text-muted-foreground">{fileSize(file.size)}{file.size > MAX_BYTES ? ' · 1GB를 넘어요' : ''}</p></div>
-            <button type="button" disabled={uploading} onClick={() => setFile(null)} aria-label="선택한 파일 제거" className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><X className="size-4" /></button>
+            <button type="button" disabled={uploading || retainedUpload} onClick={() => setFile(null)} aria-label="선택한 파일 제거" className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><X className="size-4" /></button>
           </div> : <label className={`group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-9 text-center transition-colors ${dragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/60 hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2'}`}
             onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); setFile(event.dataTransfer.files[0] ?? null); }}>
             <UploadCloud className={`size-7 ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -220,7 +279,8 @@ export default function NewMaterialPage() {
         </div>
       </section>
 
-      {uploading && <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="space-y-1.5">
+      {uploadMessage && <p role="status" className="text-sm text-muted-foreground">{uploadMessage}</p>}
+      {uploading && !verificationNeeded && <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="space-y-1.5">
         <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} /></div>
         <p className="text-right text-sm text-muted-foreground">{progress >= 1 ? '서버에서 마무리하는 중…' : `${Math.round(progress * 100)}% · ${fileSize(file?.size ?? 0)}`}</p>
       </div>}
@@ -228,7 +288,7 @@ export default function NewMaterialPage() {
       <div className="flex gap-3">
         <Button type="button" variant="outline" className="h-11 flex-1 font-bold" disabled={uploading} onClick={() => router.push('/materials')}>취소</Button>
         <Button type="submit" className="h-11 flex-1 gap-2 font-bold" disabled={uploading || !title.trim() || !file || (storagePermission.enabled && !storagePermission.allowed)}>
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}{uploading ? `올리는 중 ${Math.round(progress * 100)}%` : '자료 공유하기'}
+          {uploading ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}{uploading ? verificationNeeded ? '결과 확인 중…' : `올리는 중 ${Math.round(progress * 100)}%` : verificationNeeded ? '전송 결과 확인' : retainedUpload && legacyAttempt.current?.created ? '이어서 올리기' : '자료 공유하기'}
         </Button>
       </div>
     </form>
