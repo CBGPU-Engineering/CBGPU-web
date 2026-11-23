@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { requestAi } from '@/lib/requestAi';
 import { boundedClientRequest } from '@/lib/boundedClientRequest';
+import { blankScaleAnswer, pollScaleNumber, pollScaleRange, pollScaleSummary } from '@/lib/pollScale';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type QType = 'choice' | 'checkbox' | 'text' | 'paragraph' | 'scale' | 'dropdown';
@@ -97,20 +98,21 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: AnswerValue
       return <Textarea aria-label={q.title || '답변'} value={typeof value === 'string' ? value : ''} onChange={e => onChange(e.target.value)} rows={4} placeholder="답변을 입력해 주세요"
         className="resize-none font-medium" />;
     case 'scale': {
-      const { min = 1, max = 5, minLabel, maxLabel } = q.config;
+      const range=pollScaleRange(q.config),minLabel=q.config?.minLabel,maxLabel=q.config?.maxLabel;
+      if(!range.valid)return <p role="alert" className="text-sm text-destructive">척도 범위가 올바르지 않아요. 작성자에게 최솟값·최댓값을 확인해 달라고 요청해 주세요.</p>;
+      const invalid=!blankScaleAnswer(value)&&pollScaleNumber(value,range)===null;
       return (
         <div className="space-y-2">
-          <div className="flex gap-2 flex-wrap">
-            {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => (
-              <button key={n} type="button" aria-pressed={value === n} onClick={() => onChange(n)}
-                className={`size-11 rounded-lg border font-semibold text-sm transition-all ${value === n ? 'bg-primary text-primary-foreground border-primary shadow-md' : 'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>
-            ))}
-          </div>
-          {(minLabel || maxLabel) && (
-            <div className="flex justify-between text-sm text-muted-foreground font-medium px-1">
-              <span>{minLabel}</span><span>{maxLabel}</span>
-            </div>
-          )}
+          {range.compact?<div className="grid gap-2" style={{gridTemplateColumns:`repeat(${range.preview.length<=5?range.preview.length:range.preview.length===6?3:4}, minmax(44px, 1fr))`}}>
+            {range.preview.map(n=><button key={n} type="button" aria-pressed={value===n} onClick={()=>onChange(n)}
+              className={`min-h-11 min-w-11 w-full break-all px-2 rounded-lg border font-semibold text-sm transition-all ${value===n?'bg-primary text-primary-foreground border-primary shadow-md':'bg-muted/30 border-border/40 hover:bg-muted/60 text-muted-foreground'}`}>{n}</button>)}
+          </div>:<>
+            <Input aria-label={q.title||'척도 답변'} aria-describedby={'scale-hint-'+q.id} aria-invalid={invalid} type="number" inputMode="numeric" min={range.min} max={range.max} step={1}
+              value={typeof value==='number'||typeof value==='string'?value:''} onChange={event=>{const raw=event.target.value;onChange(raw===''?null:pollScaleNumber(raw,range)??raw)}}/>
+            <p id={'scale-hint-'+q.id} className="text-sm text-muted-foreground">{range.min}부터 {range.max}까지 정수로 입력해 주세요.</p>
+            {invalid&&<p role="alert" className="text-sm text-destructive">범위 안의 정수를 입력해 주세요.</p>}
+          </>}
+          {(minLabel||maxLabel)&&<div className="flex justify-between gap-3 text-sm text-muted-foreground font-medium px-1"><span>{minLabel}</span><span>{maxLabel}</span></div>}
         </div>
       );
     }
@@ -137,29 +139,20 @@ function ResultChart({ q, allAnswers }: { q: Question; allAnswers: { question_id
   }
 
   if (q.type === 'scale') {
-    const nums = qAnswers.map(Number).filter(n => !isNaN(n));
-    const avg = nums.length ? (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1) : '-';
-    const { min = 1, max = 5 } = q.config;
-    return (
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-muted-foreground">{total}개 응답 · 평균 <span className="text-primary">{avg}</span></p>
-        <div className="flex gap-2">
-          {Array.from({ length: max - min + 1 }, (_, i) => min + i).map(n => {
-            const cnt = nums.filter(v => v === n).length;
-            const pct = total ? Math.round(cnt / total * 100) : 0;
-            return (
-              <div key={n} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full bg-muted rounded-full h-20 flex items-end overflow-hidden">
-                  <div className="w-full bg-primary rounded-full transition-all duration-700" style={{ height: `${pct}%` }} />
-                </div>
-                <span className="text-sm font-semibold text-muted-foreground">{n}</span>
-                <span className="text-sm text-muted-foreground/60">{pct}%</span>
-              </div>
-            );
-          })}
-        </div>
+    const range=pollScaleRange(q.config);
+    if(!range.valid)return <p role="alert" className="text-sm text-destructive">척도 범위가 올바르지 않아 평균과 분포를 표시할 수 없어요. 최솟값·최댓값을 확인해 주세요.</p>;
+    const summary=pollScaleSummary(qAnswers,range);
+    const buckets=range.compact?range.preview.map(value=>({value,count:summary.distribution.find(item=>item.value===value)?.count||0})):summary.distribution;
+    return <div className="space-y-2">
+      <p className="text-sm font-semibold text-muted-foreground">{summary.count}개 응답 · 평균 <span className="text-primary">{summary.average}</span>{summary.blank>0&&` · 미응답 ${summary.blank}개`}{summary.invalid>0&&` · 범위 밖·잘못된 답변 ${summary.invalid}개 제외`}</p>
+      {!range.compact&&<p className="text-sm text-muted-foreground">답변이 있는 값만 표시해요.</p>}
+      <div className="grid gap-2" style={{gridTemplateColumns:range.compact?`repeat(${range.preview.length<=5?range.preview.length:range.preview.length===6?3:4}, minmax(0, 1fr))`:'repeat(auto-fit, minmax(min(100%, 80px), 1fr))'}}>
+        {buckets.map(({value,count})=>{const percent=summary.count?Math.round(count/summary.count*100):0;return <div key={value} data-scale-bucket={value} className="min-w-0 flex flex-col items-center gap-1">
+          <div className="w-full bg-muted rounded-full h-20 flex items-end overflow-hidden"><div className="w-full bg-primary rounded-full transition-all duration-700" style={{height:`${percent}%`}}/></div>
+          <span className="max-w-full break-all text-sm font-semibold text-muted-foreground">{value}</span><span className="text-sm text-muted-foreground">{count}개 · {percent}%</span>
+        </div>})}
       </div>
-    );
+    </div>;
   }
 
   // choice / checkbox / dropdown
@@ -201,6 +194,7 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
   const setOptText = (id: string, text: string) => onChange({ ...q, options: q.options.map(o => o.id === id ? { ...o, text } : o) });
   const hasOptions = ['choice', 'checkbox', 'dropdown'].includes(q.type);
   const isScale    = q.type === 'scale';
+  const scaleRange=pollScaleRange(q.config);
 
   const Icon = Q_TYPES.find(t => t.id === q.type)?.icon ?? Circle;
 
@@ -250,13 +244,14 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
           {/* scale config */}
           {isScale && (
             <div className="grid grid-cols-2 gap-2">
-              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값</p><Input aria-label="최솟값" type="number" value={q.config.min ?? 1} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
-              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값</p><Input aria-label="최댓값" type="number" value={q.config.max ?? 5} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값</p><Input aria-label="최솟값" type="number" value={q.config.min===undefined?1:Number.isFinite(q.config.min)?q.config.min:''} onChange={e => onChange({ ...q, config: { ...q.config, min: +e.target.value } })} className="md:text-sm" /></div>
+              <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값</p><Input aria-label="최댓값" type="number" value={q.config.max===undefined?5:Number.isFinite(q.config.max)?q.config.max:''} onChange={e => onChange({ ...q, config: { ...q.config, max: +e.target.value } })} className="md:text-sm" /></div>
               <div><p className="text-sm font-semibold text-muted-foreground mb-1">최솟값 라벨</p><Input aria-label="최솟값 라벨" value={q.config.minLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, minLabel: e.target.value } })} className="md:text-sm" /></div>
               <div><p className="text-sm font-semibold text-muted-foreground mb-1">최댓값 라벨</p><Input aria-label="최댓값 라벨" value={q.config.maxLabel ?? ''} onChange={e => onChange({ ...q, config: { ...q.config, maxLabel: e.target.value } })} className="md:text-sm" /></div>
             </div>
           )}
 
+          {isScale&&(scaleRange.valid?<p className="text-sm text-muted-foreground break-words">범위 미리보기: {scaleRange.preview.join(' · ')}{!scaleRange.compact?' · 답변은 범위 안의 정수로 직접 입력해요.':''}</p>:<p role="alert" className="text-sm text-destructive">최솟값·최댓값을 정수로 입력하고, 최댓값을 최솟값 이상으로 정해 주세요. 너무 큰 숫자는 정확히 표시할 수 없어요.</p>)}
           <div className="flex items-center justify-between pt-1">
             {/* conditional show */}
             {prevQs.filter(p => ['choice','checkbox','dropdown'].includes(p.type) && p.options.length).length > 0 && (
@@ -342,6 +337,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
   const save = async () => {
     if (savingRef.current || !questionsLoaded) return;
     if (!title.trim()) { showError('제목을 입력해 주세요.'); return; }
+    if(questions.some(q=>q.type==='scale'&&!pollScaleRange(q.config).valid)){showError('척도의 최솟값·최댓값을 정수로 입력하고, 최댓값을 최솟값 이상으로 정해 주세요. 너무 큰 숫자는 정확히 표시할 수 없어요. 입력한 내용은 그대로 있어요.');return;}
     savingRef.current = true; setSaving(true);
     try {
       const { data, error } = await boundedClientRequest(signal => supabase.rpc('cbgpu_save_poll', {
@@ -440,6 +436,7 @@ function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll
   const submit = async () => {
     if (submittingRef.current || !user || closed) return;
     for (const q of visibleQs) {
+      if(q.type==='scale'){const range=pollScaleRange(q.config);if(!range.valid){showError('척도 범위가 올바르지 않아요. 작성자에게 질문 수정을 요청해 주세요. 작성한 답변은 그대로 있어요.');return;}if(!blankScaleAnswer(answers[q.id])&&pollScaleNumber(answers[q.id],range)===null){showError(`"${q.title||'척도 질문'}"에 범위 안의 정수를 입력해 주세요.`);return;}}
       if (!q.required) continue;
       const v = answers[q.id];
       const empty = v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length);
@@ -533,7 +530,7 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
 
   useEffect(() => {
     if (!canViewResults || resCount < 3 || allAnswers.length === 0) return;
-    const key = `poll-insight:${poll.id}:${resCount}:${allAnswers.length}`;
+    const key = `poll-insight:scale-v2:${poll.id}:${poll.editor_revision}:${resCount}:${allAnswers.length}`;
     if (insightKeyRef.current === key) return;
     insightKeyRef.current = key;
     let cached: string | null = null;
@@ -543,9 +540,10 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
       const values = allAnswers.filter(answer => answer.question_id === q.id).map(answer => answer.value);
       if (q.type === 'text' || q.type === 'paragraph') return `${q.title}: 서술형 응답 ${values.length}개`;
       if (q.type === 'scale') {
-        const nums = values.map(Number).filter(Number.isFinite);
-        const average = nums.length ? (nums.reduce((sum, value) => sum + value, 0) / nums.length).toFixed(1) : '응답 없음';
-        return `${q.title}: 평균 ${average}, 응답 ${nums.length}개`;
+        const range=pollScaleRange(q.config);
+        if(!range.valid)return `${q.title}: 척도 범위 오류로 집계 제외`;
+        const summary=pollScaleSummary(values,range);
+        return `${q.title}: 평균 ${summary.average}, 응답 ${summary.count}개, 미응답 ${summary.blank}개, 잘못된 답변 ${summary.invalid}개 제외`;
       }
       return `${q.title}: ${q.options.map(option => {
         const count = values.filter(value => Array.isArray(value) ? value.includes(option.id) : value === option.id).length;
@@ -559,7 +557,7 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
       try { sessionStorage.setItem(key, text); } catch { /* The visible summary remains usable when storage is unavailable. */ }
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [allAnswers, poll.id, questions, resCount, canViewResults]);
+  }, [allAnswers, poll.id, poll.editor_revision, questions, resCount, canViewResults]);
 
   if (!canViewResults) return <div className="space-y-4"><Button variant="outline" onClick={onBack}>투표 목록으로 돌아가기</Button><p role="status" className="text-sm text-muted-foreground">결과를 공개하지 않는 투표예요. 목록에서 내 응답의 등록 여부를 확인할 수 있어요.</p></div>;
 

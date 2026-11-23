@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { boundedClientRequest } from '@/lib/boundedClientRequest';
 import { RefreshCw, ExternalLink, MessageSquare, ChevronUp, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
@@ -76,64 +77,91 @@ function domain(url?: string): string {
 }
 
 // ─── HN fetch ─────────────────────────────────────────────────────────────────
-async function fetchHN(query: string): Promise<HNStory[]> {
+async function fetchHN(query: string, signal: AbortSignal): Promise<HNStory[]> {
   const res = await fetch(
     `https://hn.algolia.com/api/v1/search_by_date?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=50`,
+    { signal },
   );
   if (!res.ok) throw new Error('HN fetch failed');
-  return (await res.json()).hits as HNStory[];
+  const data = await res.json();
+  if (!Array.isArray(data.hits)) throw new Error('HN response unavailable');
+  return data.hits as HNStory[];
 }
 
 // ─── Google News fetch (via API route) ────────────────────────────────────────
-async function fetchGoogle(query: string, lang = 'en-US'): Promise<GNewsItem[]> {
-  const res = await fetch(`/api/news?q=${encodeURIComponent(query)}&hl=${lang}`);
+async function fetchGoogle(query: string, lang: string | undefined, signal: AbortSignal): Promise<GNewsItem[]> {
+  const res = await fetch(`/api/news?q=${encodeURIComponent(query)}&hl=${lang ?? 'en-US'}`, { signal });
   if (!res.ok) throw new Error('Google News fetch failed');
-  return (await res.json()).items as GNewsItem[];
+  const data = await res.json();
+  if (!Array.isArray(data.items)) throw new Error('Google response unavailable');
+  return data.items as GNewsItem[];
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
 export default function TechNews() {
   const [cat, setCat] = useState<CatId>('ai');
   const [src, setSrc] = useState<Source>('google');
-  const [hnStories, setHnStories] = useState<HNStory[]>([]);
-  const [gnItems, setGnItems] = useState<GNewsItem[]>([]);
+  const [hnSnapshot, setHnSnapshot] = useState<{ category: CatId; items: HNStory[]; at: Date } | null>(null);
+  const [googleSnapshot, setGoogleSnapshot] = useState<{ category: CatId; items: GNewsItem[]; at: Date } | null>(null);
   const [loading, setLoading] = useState(false);
   const [justFinished, setJustFinished] = useState(false);
   const [error, setError] = useState('');
-  const [refreshed, setRefreshed] = useState<Date | null>(null);
+  const generation = useRef(0);
+  const request = useRef<AbortController | null>(null);
+  const finishTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeScope = useRef(`${src}:${cat}`); activeScope.current = `${src}:${cat}`;
 
   const load = useCallback(async (catId: CatId, source: Source) => {
+    const scope = `${source}:${catId}`;
+    if (scope !== activeScope.current) return;
     const cfg = CATEGORIES.find(c => c.id === catId)!;
-    setLoading(true);
-    setError('');
+    const ticket = ++generation.current;
+    request.current?.abort();
+    const controller = new AbortController(); request.current = controller;
+    if (finishTimer.current) clearTimeout(finishTimer.current);
+    const current = () => generation.current === ticket && activeScope.current === scope && !controller.signal.aborted;
+    setLoading(true); setJustFinished(false); setError('');
+    let succeeded = false;
     try {
       if (source === 'hn') {
-        const data = await fetchHN(cfg.hn);
-        setHnStories(data);
+        const data = await boundedClientRequest(signal => fetchHN(cfg.hn, signal), controller.signal);
+        if (!current()) return;
+        setHnSnapshot({ category: catId, items: data, at: new Date() });
       } else {
-        const data = await fetchGoogle(cfg.google, 'googleLang' in cfg ? (cfg as { googleLang: string }).googleLang : undefined);
-        setGnItems(data);
+        const data = await boundedClientRequest(signal => fetchGoogle(cfg.google, 'googleLang' in cfg ? cfg.googleLang : undefined, signal), controller.signal);
+        if (!current()) return;
+        setGoogleSnapshot({ category: catId, items: data, at: new Date() });
       }
-      setRefreshed(new Date());
-    } catch (e) {
+      succeeded = true;
+    } catch {
+      if (!current()) return;
       setError(source === 'hn'
         ? 'Hacker News를 불러오지 못했어요. 다시 불러와 주세요.'
         : 'Google News를 불러오지 못했어요. 다시 불러와 주세요.');
     } finally {
-      setLoading(false);
-      setJustFinished(true);
-      setTimeout(() => setJustFinished(false), 600);
+      if (current()) {
+        setLoading(false); setJustFinished(succeeded);
+        if (succeeded) finishTimer.current = setTimeout(() => { if (current()) setJustFinished(false); }, 600);
+      }
     }
   }, []);
 
-  useEffect(() => { load(cat, src); }, [cat, src, load]);
   useEffect(() => {
-    const t = setInterval(() => load(cat, src), 5 * 60 * 1000);
+    void load(cat, src);
+    return () => { ++generation.current; request.current?.abort(); if (finishTimer.current) clearTimeout(finishTimer.current); };
+  }, [cat, src, load]);
+  useEffect(() => {
+    const t = setInterval(() => { void load(cat, src); }, 5 * 60 * 1000);
     return () => clearInterval(t);
   }, [cat, src, load]);
 
-  const stories = src === 'hn' ? hnStories : [];
-  const gnNews = src === 'google' ? gnItems : [];
+  // Keep confirmed content after a same-scope refresh failure. Never relabel a
+  // different category's cached headlines or summary as the current category.
+  const stories = src === 'hn' && hnSnapshot?.category === cat ? hnSnapshot.items : [];
+  const gnNews = src === 'google' && googleSnapshot?.category === cat ? googleSnapshot.items : [];
+  const snapshot = src === 'hn' ? hnSnapshot : googleSnapshot;
+  const refreshed = snapshot?.category === cat ? snapshot.at : null;
+
   const total = src === 'hn' ? stories.length : gnNews.length;
 
   return (
@@ -189,7 +217,7 @@ export default function TechNews() {
         </div>
       )}
 
-      {!loading && !justFinished && !error && <HeadlineTrend titles={(src === 'hn' ? stories : gnNews).map(item => item.title)} scope={`tech:${src}:${cat}`} />}
+      {!loading && !justFinished && !error && snapshot?.category === cat && <HeadlineTrend key={`${src}:${cat}`} titles={(src === 'hn' ? stories : gnNews).map(item => item.title)} scope={`tech:${src}:${cat}`} />}
 
       {/* HN stories */}
       {src === 'hn' && (

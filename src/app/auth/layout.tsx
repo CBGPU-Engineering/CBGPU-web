@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: '로그인',
+  title: { default: '로그인', template: '%s | CBGPU' },
   robots: { index: false, follow: false },
 };
 
