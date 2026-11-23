@@ -68,12 +68,12 @@ export default function ServerPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="cb-page-title">Login Required</h1>
+          <h1 className="cb-page-title">로그인이 필요해요</h1>
           <p className="cb-page-sub mt-1">
             로그인 후 이용할 수 있습니다.
           </p>
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">
+        <Button onClick={() => router.push('/auth/login?next=%2Fserver')} className="font-semibold px-10 h-12">
           Login
         </Button>
       </div>

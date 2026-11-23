@@ -229,7 +229,7 @@ export default function ServerDetailPage() {
           onClick={() => router.push('/server')}
           className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors mb-6"
         >
-          <ArrowLeft className="size-3" /> Back to Projects
+          <ArrowLeft className="size-3" /> 서버 목록으로
         </button>
 
         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -314,7 +314,7 @@ export default function ServerDetailPage() {
 
           {project.deploy_type === 'docker' ? (
             <div>
-              <label className={labelCls}>Docker Image</label>
+              <label className={labelCls}>Docker 이미지</label>
               <code className="block break-all font-medium text-sm">{project.docker_image}</code>
             </div>
           ) : (
@@ -351,7 +351,7 @@ export default function ServerDetailPage() {
           <div>
             <label className={labelCls}>포트 연결</label>
             <code className="font-bold text-sm">{project.host_port}:{project.container_port}</code>
-            <span className="text-sm text-muted-foreground ml-2 opacity-60">(host:container)</span>
+            <span className="text-sm text-muted-foreground ml-2 opacity-60">(호스트:컨테이너)</span>
           </div>
 
           {/* 접근 범위 */}
@@ -371,7 +371,7 @@ export default function ServerDetailPage() {
               <label className={labelCls}>CPU 제한</label>
               <div className="flex items-center gap-1.5">
                 <Cpu className="size-3.5 text-muted-foreground" />
-                <span className="font-bold text-sm">{project.cpu_limit} core(s)</span>
+                <span className="font-bold text-sm">{project.cpu_limit} 코어</span>
               </div>
             </div>
             <div>
@@ -435,7 +435,7 @@ export default function ServerDetailPage() {
               <div><label className={labelCls} htmlFor="server-edit-description">설명</label><Input id="server-edit-description" value={form.description} onChange={e=>set('description',e.target.value)} maxLength={2000}/></div>
               {project.deploy_type === 'docker' ? (
                 <div>
-                  <label className={labelCls}>Docker Image</label>
+                  <label className={labelCls}>Docker 이미지</label>
                   <Input
                     placeholder="nginx:latest"
                     value={form.dockerImage}

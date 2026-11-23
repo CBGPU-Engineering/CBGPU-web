@@ -15,6 +15,7 @@ import { useAlert } from '@/lib/alert';
 import { formatMemoryLimit } from '@/lib/formatMemoryLimit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -77,7 +78,6 @@ const DEFAULT_FORM: FormState = {
 };
 
 const labelCls = 'text-sm font-semibold text-muted-foreground mb-1.5 block';
-const inputCls = 'min-h-11 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-base font-normal outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 transition-colors';
 const cardCls = 'rounded-2xl border border-border/60 bg-card p-6 space-y-5';
 
 const SCOPE_OPTS: { value: AccessScope; label: string; icon: React.ReactNode; desc: string }[] = [
@@ -119,7 +119,7 @@ export default function NewServerPage() {
     const hostPort      = form.hostPort.trim()?parseInt(form.hostPort):null;
     const containerPort = parseInt(form.containerPort);
     if (hostPort!==null&&(isNaN(hostPort)      || hostPort < 1024      || hostPort > 65535))      { showError('외부 포트는 1024~65535 사이의 숫자로 입력해 주세요.'); return; }
-    if (isNaN(containerPort) || containerPort < 1 || containerPort > 65535) { showError('컨테이너 외부 포트는 1024~65535 사이의 숫자로 입력해 주세요.'); return; }
+    if (isNaN(containerPort) || containerPort < 1 || containerPort > 65535) { showError('컨테이너 포트는 1~65535 사이의 숫자로 입력해 주세요.'); return; }
 
     const envVarsObj: Record<string, string> = {};
     for (const e of form.envVars) if (e.key.trim()) envVarsObj[e.key.trim()] = e.value;
@@ -178,13 +178,13 @@ export default function NewServerPage() {
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="cb-page-title">Login Required</h1>
+          <h1 className="cb-page-title">로그인이 필요해요</h1>
           <p className="cb-page-sub mt-1">
-            로그인 후 이용할 수 있습니다.
+            로그인하고 서버 프로젝트를 만들어 보세요.
           </p>
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">
-          Login
+        <Button onClick={() => router.push('/auth/login?next=%2Fserver%2Fnew')} className="font-semibold px-10 h-12">
+          로그인하기
         </Button>
       </div>
     );
@@ -197,8 +197,8 @@ export default function NewServerPage() {
       <div className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <button
-            onClick={() => router.back()}
-            className="flex items-center justify-center size-9 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
+            onClick={() => router.back()} aria-label="서버 목록으로 돌아가기"
+            className="flex shrink-0 items-center justify-center size-11 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
           >
             <ArrowLeft className="size-4" />
           </button>
@@ -240,9 +240,9 @@ export default function NewServerPage() {
             <h2 className="text-sm font-semibold text-muted-foreground">프로젝트 기본 정보</h2>
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>프로젝트 이름 *</label>
+                <label className={labelCls} htmlFor="server-project-name">프로젝트 이름 *</label>
                 <Input
-                  placeholder="my-web-server"
+                  id="server-project-name" aria-required="true" placeholder="my-web-server"
                   value={form.name}
                   onChange={e => set('name', e.target.value)}
                   className="h-10"
@@ -250,13 +250,13 @@ export default function NewServerPage() {
               </div>
               <div><label className={labelCls} htmlFor="server-domain-name">공개 주소</label><Input id="server-domain-name" placeholder="my-server" value={domainName} onChange={e=>setDomainName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><p className="text-sm text-muted-foreground mt-2 break-all">{domainName||'자동 발급 이름'}.server.cbgpu.com · 공개 범위를 선택하고 배포하면 연결돼요.</p></div>
               <div>
-                <label className={labelCls}>설명</label>
-                <textarea
+                <label className={labelCls} htmlFor="server-description">설명</label>
+                <Textarea id="server-description"
                   rows={3}
                   placeholder="이 서버에 대한 간단한 설명..."
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
-                  className={`${inputCls} h-auto resize-none`}
+                  className="min-h-28"
                 />
               </div>
             </div>
@@ -269,12 +269,12 @@ export default function NewServerPage() {
             {/* Deploy type 선택 카드 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {([
-                { value: 'docker', label: 'Docker Image', icon: <Container className="size-5" />, desc: 'Docker Hub 이미지로 바로 실행' },
-                { value: 'git',    label: 'Git Repo',     icon: <GitBranch  className="size-5" />, desc: 'Git 저장소 클론 후 실행' },
+                { value: 'docker', label: 'Docker 이미지', icon: <Container className="size-5" />, desc: 'Docker Hub 이미지로 바로 실행' },
+                { value: 'git',    label: 'Git 저장소',     icon: <GitBranch  className="size-5" />, desc: 'Git 저장소 클론 후 실행' },
                 { value:'compose',label:'Docker Compose',icon:<Layers className="size-5"/>,desc:'DB·Storage와 여러 서비스를 함께 배포' },
               ] as const).map(opt => (
                 <button
-                  key={opt.value}
+                  key={opt.value} type="button" aria-pressed={form.deployType===opt.value}
                   onClick={()=>setForm(current=>({...current,deployType:opt.value,...(opt.value==='compose'?{containerPort:'8000',cpuLimit:'3',memoryLimit:'4g',accessScope:'public'}:{})}))}
                   className={`flex items-start gap-3 p-4 rounded-lg border text-left transition-all ${ form.deployType === opt.value ? 'border-primary bg-primary/5 text-foreground' : 'border-border/60 bg-muted/20 text-muted-foreground hover:border-border' }`}
                 >
@@ -287,18 +287,18 @@ export default function NewServerPage() {
               ))}
             </div>
 
-            {form.deployType==='compose'&&<div className="rounded-2xl bg-muted/30 border p-4 space-y-4"><p className="text-sm font-semibold">docker compose up -d</p><p className="text-sm text-muted-foreground leading-relaxed">저장소 폴더와 Compose 파일을 지정하세요. DB·Storage 데이터는 코드와 분리된 프로젝트 전용 영구 볼륨에 보존됩니다. 다른 프로젝트나 호스트 파일, Docker 제어 소켓에 접근하는 설정은 허용되지 않습니다.</p><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm font-medium">Compose File<Input aria-label="Compose 파일" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yaml / docker-compose.yml 자동 감지"/></label><label className="text-sm font-medium">HTTPS Gateway Service<Input aria-label="Compose 게이트웨이 서비스" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/></label></div><label className="block text-sm font-medium">영구 스토리지 (GB)<Input type="number" min="40" max="200" value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/></label><p className="text-sm text-muted-foreground">컨테이너 포트는 게이트웨이 서비스의 포트(예: 8000)를 입력하세요. 기존 데이터 복원은 별도로 진행해야 합니다.</p></div>}
+            {form.deployType==='compose'&&<div className="rounded-2xl bg-muted/30 border p-4 space-y-4"><p className="text-sm font-semibold">docker compose up -d</p><p className="text-sm text-muted-foreground leading-relaxed">저장소 폴더와 Compose 파일을 지정하세요. DB·Storage 데이터는 코드와 분리된 프로젝트 전용 영구 볼륨에 보존됩니다. 다른 프로젝트나 호스트 파일, Docker 제어 소켓에 접근하는 설정은 허용되지 않습니다.</p><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm font-medium">Compose 파일<Input aria-label="Compose 파일" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yaml / docker-compose.yml 자동 감지"/></label><label className="text-sm font-medium">HTTPS 연결 서비스<Input aria-label="Compose 게이트웨이 서비스" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/></label></div><label className="block text-sm font-medium">영구 스토리지 (GB)<Input type="number" min="40" max="200" value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/></label><p className="text-sm text-muted-foreground">컨테이너 포트는 게이트웨이 서비스의 포트(예: 8000)를 입력하세요. 기존 데이터 복원은 별도로 진행해야 합니다.</p></div>}
             {/* Docker 필드 */}
             {form.deployType === 'docker' && (
               <div>
-                <label className={labelCls}>Docker Image *</label>
+                <label className={labelCls} htmlFor="server-image">Docker 이미지 *</label>
                 <Input
-                  placeholder="nginx:latest  /  python:3.11-slim"
+                  id="server-image" aria-required="true" placeholder="nginx:latest / python:3.11-slim"
                   value={form.dockerImage}
                   onChange={e => set('dockerImage', e.target.value)}
                   className="h-10 font-mono"
                 />
-                <p className="text-sm text-muted-foreground mt-1.5 opacity-60">Docker Hub 이미지 이름 (tag 포함)</p>
+                <p className="text-sm text-muted-foreground mt-1.5">Docker Hub 이미지 이름 (tag 포함)</p>
               </div>
             )}
 
@@ -306,9 +306,9 @@ export default function NewServerPage() {
             {form.deployType !== 'docker' && (
               <div className="space-y-4">
                 <div>
-                  <label className={labelCls}>Git Repository URL *</label>
+                  <label className={labelCls} htmlFor="server-git-url">Git 저장소 주소 *</label>
                   <Input
-                    placeholder="https://github.com/user/repo"
+                    id="server-git-url" aria-required="true" placeholder="https://github.com/user/repo"
                     value={form.gitUrl}
                     onChange={e => set('gitUrl', e.target.value)}
                     className="h-10 font-mono"
@@ -316,18 +316,18 @@ export default function NewServerPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className={labelCls}>브랜치</label>
+                    <label className={labelCls} htmlFor="server-git-branch">브랜치</label>
                     <Input
-                      placeholder="main"
+                      id="server-git-branch" placeholder="main"
                       value={form.gitBranch}
                       onChange={e => set('gitBranch', e.target.value)}
                       className="h-10"
                     />
                   </div>
                   <div className={form.deployType==='compose'?'hidden':''}>
-                    <label className={labelCls}>실행 환경 *</label>
+                    <label className={labelCls} htmlFor="server-runtime">실행 환경 *</label>
                     <Select value={form.runtime} onValueChange={v => set('runtime', v as Runtime)}>
-                      <SelectTrigger className="h-10">
+                      <SelectTrigger id="server-runtime" className="h-10">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -336,11 +336,11 @@ export default function NewServerPage() {
                     </Select>
                   </div>
                 </div>
-<div><label className={labelCls} htmlFor="server-root-directory">Root Directory</label><Input id="server-root-directory" value={form.rootDirectory} onChange={e=>set('rootDirectory',e.target.value)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2">저장소 안의 폴더를 지정하세요. 이 폴더에서 의존성을 설치하고 실행합니다.</p></div>
+<div><label className={labelCls} htmlFor="server-root-directory">프로젝트 폴더</label><Input id="server-root-directory" value={form.rootDirectory} onChange={e=>set('rootDirectory',e.target.value)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2">저장소 안의 폴더를 지정하세요. 이 폴더에서 의존성을 설치하고 실행합니다.</p></div>
                 <div className={form.deployType==='compose'?'hidden':''}>
-                  <label className={labelCls}>실행 명령어</label>
+                  <label className={labelCls} htmlFor="server-run-command">실행 명령어</label>
                   <Input
-                    placeholder="npm start  /  python app.py"
+                    id="server-run-command" placeholder="npm start  /  python app.py"
                     value={form.runCommand}
                     onChange={e => set('runCommand', e.target.value)}
                     className="h-10 font-mono"
@@ -360,37 +360,37 @@ export default function NewServerPage() {
             </div>
             <details className="border rounded-2xl p-4"><summary className="text-sm cursor-pointer">.env 여러 항목 한 번에 붙여넣기</summary><label className="sr-only" htmlFor="server-env-bulk">서버 환경변수 .env</label><textarea id="server-env-bulk" className="mt-3 w-full min-h-40 rounded-lg border bg-background p-3 font-mono text-sm" value={bulkEnv} onChange={e=>setBulkEnv(e.target.value)} placeholder={'POSTGRES_PASSWORD=...\nJWT_SECRET=...\nSUPABASE_PUBLIC_URL=https://my-api.server.cbgpu.com'}/><p className="mt-2 text-sm text-muted-foreground">저장소의 .env.example과 README에 필요한 항목을 확인하세요. 비밀 값은 프로젝트 소유자·편집자만 관리할 수 있습니다.</p></details>
             {form.envVars.length === 0 ? (
-              <div
+              <button type="button"
                 onClick={addEnvVar}
-                className="border border-dashed border-border/40 rounded-2xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
+                className="w-full border border-dashed border-border/40 rounded-2xl py-8 text-center text-muted-foreground cursor-pointer hover:border-border/80 hover:bg-muted/10 transition-all"
               >
                 <Plus className="size-5 mx-auto mb-2 opacity-30" />
-                <p className="text-sm font-semibold opacity-70">클릭하여 환경변수 추가</p>
-              </div>
+                <span className="text-sm font-semibold">환경변수 추가</span>
+              </button>
             ) : (
               <div className="space-y-2.5">
                 <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
-                  <p className="text-sm font-semibold opacity-70">Key</p>
-                  <p className="text-sm font-semibold opacity-70">Value</p>
+                  <p className="text-sm font-semibold opacity-70">이름</p>
+                  <p className="text-sm font-semibold opacity-70">값</p>
                   <span />
                 </div>
                 {form.envVars.map((e, i) => (
                   <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
                     <Input
-                      placeholder="DATABASE_URL"
+                      aria-label={`${i+1}번째 환경변수 이름`} placeholder="DATABASE_URL"
                       value={e.key}
                       onChange={ev => updateEnvVar(i, 'key', ev.target.value)}
                       className="h-9 font-mono text-sm"
                     />
                     <Input
-                      placeholder="값..."
+                      aria-label={`${i+1}번째 환경변수 값`} placeholder="값..."
                       value={e.value}
                       onChange={ev => updateEnvVar(i, 'value', ev.target.value)}
                       className="h-9 font-mono text-sm"
                     />
                     <button
-                      onClick={() => removeEnvVar(i)}
-                      className="flex items-center justify-center size-9 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                      type="button" aria-label={`${i+1}번째 환경변수 삭제`} onClick={() => removeEnvVar(i)}
+                      className="flex shrink-0 items-center justify-center size-11 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                     >
                       <Trash2 className="size-3.5" />
                     </button>
@@ -408,31 +408,31 @@ export default function NewServerPage() {
           <section className={cardCls}>
             <h2 className="text-sm font-semibold text-muted-foreground">포트 연결</h2>
             <div className="flex items-end gap-3">
-              <div className="flex-1">
-                <label className={labelCls}>호스트 포트 (자동 할당 가능)</label>
+              <div className="min-w-0 flex-1">
+                <label className={labelCls} htmlFor="server-host-port">호스트 포트 (자동 할당 가능)</label>
                 <Input
                   type="number"
-                  placeholder="비워두면 자동 할당"
+                  id="server-host-port" placeholder="자동 할당"
                   value={form.hostPort}
                   onChange={e => set('hostPort', e.target.value)}
                   className="h-10"
                 />
               </div>
               <div className="pb-1 text-muted-foreground font-bold text-lg">:</div>
-              <div className="flex-1">
-                <label className={labelCls}>컨테이너 포트</label>
+              <div className="min-w-0 flex-1">
+                <label className={labelCls} htmlFor="server-container-port">컨테이너 포트</label>
                 <Input
                   type="number"
-                  placeholder="80"
+                  id="server-container-port" placeholder="80"
                   value={form.containerPort}
                   onChange={e => set('containerPort', e.target.value)}
                   className="h-10"
                 />
               </div>
             </div>
-            <p className="text-sm text-muted-foreground opacity-60 leading-relaxed">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               앱이 컨테이너 내 몇 번 포트를 쓰는지 확인하세요.<br />
-              호스트 포트는 외부에서 접속하는 포트입니다.
+              호스트 포트는 외부 접속용이에요. 비워두면 사용 가능한 포트를 자동으로 정해요.
             </p>
           </section>
 
@@ -442,7 +442,7 @@ export default function NewServerPage() {
             <div className="space-y-2">
               {SCOPE_OPTS.map(opt => (
                 <button
-                  key={opt.value}
+                  key={opt.value} type="button" aria-pressed={form.accessScope===opt.value}
                   onClick={() => set('accessScope', opt.value)}
                   className={`w-full flex items-center gap-3 p-3.5 rounded-lg border text-left transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary/5' : 'border-border/60 bg-muted/20 hover:border-border' }`}
                 >
@@ -453,7 +453,7 @@ export default function NewServerPage() {
                     <p className={`font-semibold text-sm tracking-tight ${form.accessScope === opt.value ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {opt.label}
                     </p>
-                    <p className="text-sm opacity-50 mt-0.5">{opt.desc}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">{opt.desc}</p>
                   </div>
                   <div className={`ml-auto size-4 rounded-full border flex items-center justify-center flex-shrink-0 transition-all ${ form.accessScope === opt.value ? 'border-primary bg-primary' : 'border-border' }`}>
                     {form.accessScope === opt.value && <div className="size-1.5 rounded-full bg-white" />}
@@ -468,9 +468,9 @@ export default function NewServerPage() {
             <h2 className="text-sm font-semibold text-muted-foreground">자원 제한</h2>
             <div className="space-y-4">
               <div>
-                <label className={labelCls}>CPU 코어</label>
+                <label className={labelCls} htmlFor="server-cpu">CPU 코어</label>
                 <Input
-                  placeholder="1"
+                  id="server-cpu" placeholder="1"
                   value={form.cpuLimit}
                   onChange={e => set('cpuLimit', e.target.value)}
                   className="h-10"
@@ -478,9 +478,9 @@ export default function NewServerPage() {
                 <p className="text-sm text-muted-foreground mt-1 opacity-50">0.5, 1, 2 …</p>
               </div>
               <div>
-                <label className={labelCls}>메모리</label>
+                <label className={labelCls} htmlFor="server-memory">메모리</label>
                 <Select value={form.memoryLimit} onValueChange={v => set('memoryLimit', v as MemoryLimit)}>
-                  <SelectTrigger className="h-10">
+                  <SelectTrigger id="server-memory" className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
