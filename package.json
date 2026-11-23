@@ -19,7 +19,7 @@
     "check:source": "node scripts/check-source-languages.mts"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^149.0.0",
+    "@sparticuz/chromium": "^153.0.0",
     "@supabase/supabase-js": "^2.99.1",
     "@use-funnel/core": "0.1.0",
     "@vercel/analytics": "^2.0.1",
