@@ -66,7 +66,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
   const { showError, showSuccess } = useAlert();
   const router = useRouter();
   const tab = view as Tab;
-  async function newRequest(kind:'print'|'laser'){if(scopedRequests){try{if(!fabrication.enabled||!await fabrication.verify()){showError('이전 신청은 볼 수 있어요. 새 신청에는 현재 학교의 제작 장비 이용 권한이 필요해요.');return;}}catch{showError('제작 장비 이용 권한을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.');return;}}router.push('/manufacturing/'+kind+'/new');}
+  async function newRequest(kind:'print'|'laser'){if(scopedRequests){try{if(!fabrication.enabled||!await fabrication.verify()){showError('이전 신청은 볼 수 있어요. 새 신청에는 현재 학교의 제작 장비 이용 권한이 필요해요.');return;}}catch{showError('제작 장비 이용 권한을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.');return;}}router.push('/manufacturing/'+kind+'/new');}
 
   // ── 3D printing (requester) ───────────────────────────────────────────
   const [printers, setPrinters] = useState<any[]>([]);
@@ -137,9 +137,9 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
   const [queueHours, setQueueHours] = useState(4);
 
   async function downloadFile(path: string,name?:string) {
-    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError(error instanceof Error?error.message:'파일 다운로드 권한을 확인하지 못했습니다.')}return;}
+    if(scopedManufacturingFilesEnabled()){try{await freshFileDownload(path,name)}catch(error){showError(error instanceof Error?error.message:'파일을 내려받을 권한을 확인하지 못했어요.')}return;}
     const { data, error } = await supabase.storage.from('manufacturing').createSignedUrl(path, 3600);
-    if (error || !data) { showError('다운로드 링크 생성 실패'); return; }
+    if (error || !data) { showError('파일을 내려받을 링크를 만들지 못했어요. 다시 시도해 주세요.'); return; }
     window.open(data.signedUrl, '_blank');
   }
 
@@ -469,13 +469,13 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
         <div className="space-y-2">
-          <h1 className="cb-page-title">Login Required</h1>
+          <h1 className="cb-page-title">로그인해 주세요</h1>
           <p className="cb-page-sub mt-1">
-            로그인 후 이용할 수 있습니다.
+            로그인하면 내 제작 신청을 확인할 수 있어요.
           </p>
         </div>
         <Button onClick={() => router.push('/auth/login')} className="font-black px-10 h-12 uppercase tracking-widest">
-          Login
+          로그인하기
         </Button>
       </div>
     );
@@ -542,7 +542,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                   {printLoading ? (
                     <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                   ) : myPrintJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">신청 내역이 없습니다.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
                   ) : (
                     myPrintJobs.map(j => {
                       const info = PRINT_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };
@@ -598,7 +598,7 @@ export default function ManufacturingPage({view='print'}:{view?:'print'|'laser'}
                   {laserLoading ? (
                     <TableRow><TableCell colSpan={4} className="py-16"><div className="flex justify-center"><LoadingSpinner size={40} label="불러오는 중" /></div></TableCell></TableRow>
                   ) : myLaserJobs.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">신청 내역이 없습니다.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={4} className="text-center py-16 font-bold text-muted-foreground opacity-50">아직 신청 내역이 없어요.</TableCell></TableRow>
                   ) : (
                     myLaserJobs.map(j => {
                       const info = LASER_STATUS_INFO[j.status] || { variant: 'default', icon: null, label: j.status };

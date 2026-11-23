@@ -21,11 +21,11 @@ export default async function SiteShell({ site, children }: { site: 'docs' | 'ar
   const title = site === 'docs' ? 'Docs' : 'arXiv';
   const items = site === 'docs'
     ? [{ href: home, internalPath: '/docs', label: '문서 홈', kind: 'docs' as const }, ...guides.map(g => ({ href: `${base}/${g.slug}`, internalPath: `/docs/${g.slug}`, label: g.title, group:docCategories.find(category=>category.id===g.category)?.title, kind: 'docs' as const }))]
-    : [{ href: home, internalPath: '/arxiv', label: '연구 프리프린트', kind: 'papers' as const }, { href: `${base}/submit`, internalPath: '/arxiv/submit', label: '연구 제출', kind: 'submit' as const }];
+    : [{ href: home, internalPath: '/arxiv', label: '연구 프리프린트', kind: 'papers' as const }, { href: `${base}/submit`, internalPath: '/arxiv/submit', label: '연구 올리기', kind: 'submit' as const }];
   return <WorkspaceTheme><div className="portal">
     <aside className="sidebar">
       <Link href={home} className="brand"><CBGPULogo  width={30} height={30} alt="" /><span className="brand-word">CBGPU<small>{title}</small></span></Link>
-      <p className="nav-caption">Workspace</p>
+      <p className="nav-caption">문서와 연구</p>
       <PublicationNav items={items} />
       <div className="sidebar-bottom"><a href={siteHref(site === 'docs' ? 'https://arxiv.cbgpu.com' : 'https://docs.cbgpu.com')}>{site === 'docs' ? '연구 프리프린트' : '사용 문서'}<ArrowUpRight aria-hidden="true" /></a><a href={siteHref('https://cbgpu.com')}>CBGPU 열기<ArrowUpRight aria-hidden="true" /></a></div>
     </aside>

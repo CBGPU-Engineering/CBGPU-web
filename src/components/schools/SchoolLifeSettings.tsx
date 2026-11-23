@@ -111,7 +111,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
       if (value.ok !== true)
         throw Error("정보 출처 검토 결과를 확인하지 못했어요.");
       setNotice(
-        "학교의 정보 출처를 저장했어요. 실제 사용 가능 여부는 연결 상태와 기능 설정을 따로 확인해요.",
+        "정보 출처를 저장했어요. 연결 상태와 학교 기능 설정도 확인해 주세요.",
       );
       await load();
       window.dispatchEvent(new Event("cbgpu-school-changed"));
@@ -160,7 +160,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
       <InlineFeedback message={error} />
       <InlineFeedback kind="success" message={notice} />
       {!source ? (
-        <p className="text-sm text-muted-foreground">{"현재 연결 설정을 불러오지 못해 수정할 수 없어요. 이 학교에 대한 현재 관리 권한과 로그인 상태를 확인해 주세요."}</p>
+        <p className="text-sm text-muted-foreground">{"연결 설정을 불러오지 못했어요. 로그인 상태와 이 학교의 관리 권한을 확인한 뒤 새로고침해 주세요."}</p>
       ) : (
         <>
           {!editor&&<SchoolLifeReadiness source={source}/>}
@@ -172,7 +172,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">{"설정 버전 (연결 상태와 별개)"}</dt>
+              <dt className="text-xs text-muted-foreground">{"설정 버전"}</dt>
               <dd>
                 {source.version} · {schoolStatusLabel(source.status)}
               </dd>
@@ -273,13 +273,13 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                   disabled={busy}
                   checked={ack}
                   onChange={(e) => setAck(e.target.checked)}
-                />{"이 학교와 각 공개 호스트, 제공 기관 정보를 독립적으로 확인했고 삭제 항목을 포함한 전체 변경을 검토했어요."}</label>
+                />{"이 학교의 공식 정보와 제공 기관을 확인하고, 삭제할 항목을 포함한 전체 변경 내용을 검토했어요."}</label>
               <Button
                 className="h-auto min-h-11 max-w-full whitespace-normal text-center"
                 type="submit"
                 disabled={busy || !ack || stale}
               >
-                {busy ? "검토 저장 중…" : "검토한 정보 출처 저장"}
+                {busy ? "검토 저장 중…" : "정보 출처 저장"}
               </Button>
             </form>
           ) : (

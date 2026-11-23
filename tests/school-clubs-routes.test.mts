@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import{extendedSchoolClubPath}from'../src/lib/schoolClubsRoutes.ts';
+const id='12345678-1234-4123-8123-123456789abc';
+const base=['schools','school-a','clubs',id,'applications',id];
+test('only exact reviewed private club review and withdrawal methods extend the path bound',()=>{assert.equal(extendedSchoolClubPath(base,'PATCH'),true);assert.equal(extendedSchoolClubPath([...base,'withdraw'],'POST'),true);for(const method of ['GET','POST','DELETE'])assert.equal(extendedSchoolClubPath(base,method),false);for(const method of['GET','PATCH','DELETE'])assert.equal(extendedSchoolClubPath([...base,'withdraw'],method),false)});
+test('club path exceptions reject foreign resources, malformed IDs and extra segments',()=>{for(const path of[['schools','../other','clubs',id,'applications',id],['schools','school-a','clubs','not-an-id','applications',id],[...base,'execute'],[...base,'withdraw','extra'],['admin','school-a','clubs',id,'applications',id]])assert.equal(extendedSchoolClubPath(path,'POST'),false)});

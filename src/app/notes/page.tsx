@@ -196,7 +196,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
           </span>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4"
-          dangerouslySetInnerHTML={{ __html: renderMd(content) || '<p class="text-muted-foreground text-sm">내용이 없습니다.</p>' }} />
+          dangerouslySetInnerHTML={{ __html: renderMd(content) || '<p class="text-muted-foreground text-sm">아직 작성한 내용이 없어요.</p>' }} />
         {tags.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-3 border-t border-border/20 flex-shrink-0 flex-wrap">
             <Tag className="size-3 text-muted-foreground shrink-0" />
@@ -235,7 +235,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
             className={`font-semibold text-xs gap-1.5 transition-all active:scale-95 ${saveState === 'saved' ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : ''}`}
           >
             {saveState === 'saving' ? (
-              <>저장 중...</>
+              <>저장 중…</>
             ) : saveState === 'saved' ? (
               <span key="saved" className="flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-200">
                 <Check className="size-3" />저장됨
@@ -272,7 +272,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
           />
         ) : (
           <div className="flex-1 overflow-y-auto px-6 py-4 animate-in fade-in duration-200"
-            dangerouslySetInnerHTML={{ __html: renderMd(content) || '<p class="text-muted-foreground text-sm">내용이 없습니다.</p>' }} />
+            dangerouslySetInnerHTML={{ __html: renderMd(content) || '<p class="text-muted-foreground text-sm">아직 작성한 내용이 없어요.</p>' }} />
         )}
       </div>
 
@@ -387,7 +387,7 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
       : shown.length === 0 && !errors[tab] ? (
         <div className="py-16 text-center text-muted-foreground border-2 border-dashed rounded-2xl animate-in fade-in duration-300 pop-in-3d">
           <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">📓</p>
-          <p className="font-medium">{tab==='mine'?'노트를 만들어 보세요.':'공유된 노트가 없습니다.'}</p>
+          <p className="font-medium">{tab==='mine'?'노트를 만들어 보세요.':'아직 공유된 노트가 없어요.'}</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
@@ -433,7 +433,7 @@ function NotesSession() {
 
   if (!user) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center">
-      <p className="font-semibold text-xl">로그인이 필요합니다</p>
+      <p className="font-semibold text-xl">로그인해 주세요</p>
     </section>
   );
 

@@ -47,7 +47,7 @@ try{
  try{
   await (await page.$('.chat-composer input[type=file]')).uploadFile(attachment);
   await page.waitForSelector('.chat-file-card.ready');
-  await page.evaluate(()=>[...document.querySelectorAll<HTMLButtonElement>('.chat-file-card button')].find(button=>button.textContent==='내용 확인').click());
+  await page.evaluate(()=>[...document.querySelectorAll<HTMLButtonElement>('.chat-file-card button')].find(button=>button.textContent==='읽어 온 내용 보기').click());
   await page.waitForFunction(()=>document.querySelector<HTMLElement>('.chat-file-preview pre')?.textContent.includes('Voltage 12.5 V'));
   const bounds=await page.$eval('.chat-file-preview',element=>{const r=element.getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right}});
   assert.ok(bounds.top>=0&&bounds.bottom<=900&&bounds.left>=0&&bounds.right<=1440);

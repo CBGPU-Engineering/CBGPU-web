@@ -9,6 +9,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     { href: '/timetable', label: '시간표', description: '오늘 수업과 주간 시간표', icon: CalendarDays, keywords: '수업 시간표' },
     { href: '/meal', label: '급식', description: '오늘의 식단 확인', icon: UtensilsCrossed, keywords: '밥 식단 점심 저녁' },
     { href: '/wakeup', label: '기상송', description: '노래 신청과 플레이리스트', icon: Music, keywords: '음악 노래 스포티파이' },
+    { href: '/clubs', label: '동아리', description: '우리 학교 동아리 홍보와 모집 신청', icon: Users, keywords: '동아리 모집 홍보 부원 신청 접수 동아리소개' },
     { href: '/materials', label: '자료 공유', description: '학습·연구 자료 찾기', icon: FolderOpen, keywords: '파일 태그 학습자료 자료공유 업로드 올리기 다운로드 공유' },
   ] },
   {id:'ai',title:'AI',services:[{href:'/ai',label:'CBGPU AI',description:'대화·프롬프트 최적화·전사·검색·GPU·API·CLI',icon:Sparkles,keywords:'AI 인공지능 채팅 chatgpt 프롬프트 최적화 전사 검색 모델 API CLI 코딩 에이전트'}]},
@@ -31,7 +32,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
   ]},
   { id:'community', title: '커뮤니티·대회·소식', services: [
     { href: '/community', label: '커뮤니티', description: '공개 글과 학교·전국 이야기, 개인 메시지', icon: MessageCircle, keywords: '메신저 메시지 친구 채팅 대화 쪽지 DM messenger chat 학교 전국 개인' },
-    { href: '/contests', label: '교내 대회', description: '행사 개설부터 참가·운영·작품 제출까지', icon: Trophy, keywords: '대회 행사 공모전 참가 신청 체크인 제출 파일 호스트' },
+    { href: '/contests', label: '대회·행사', description: '행사 개설부터 참가·운영·작품 제출까지', icon: Trophy, keywords: '대회 행사 공모전 참가 신청 체크인 제출 파일 호스트' },
     { href: '/match', label: '스터디 매칭', description: '함께 공부할 친구 찾기', icon: Users, keywords: '모임 스터디 매칭' },
     { href: '/polls', label: '투표', description: '진행 중인 투표 참여', icon: Vote, keywords: '설문 의견 투표' },
     { href: '/feed', label: '소식', description: '학교와 과학 소식 확인', icon: Newspaper, keywords: '피드 feed 소식' },

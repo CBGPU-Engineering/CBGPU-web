@@ -23,3 +23,12 @@ test('national high school policy is explicit and distinct from discovery visibi
  assert.ok(validate({...base,participant_policy:'TEACHER'},'school-b'));
  assert.ok(validate({...base,access_scope:'FORGED'},'school-b'));
 });
+test('middle, secondary and teacher cohorts are explicit while legacy high-only remains unchanged',()=>{
+ for(const participant_policy of ['ALL_ELIGIBLE','HIGH_SCHOOL_STUDENTS','MIDDLE_SCHOOL_STUDENTS','SECONDARY_SCHOOL_STUDENTS','SCHOOL_TEACHERS']){
+  assert.equal(validate({...base,participant_policy},'school-b'),null);
+  assert.equal(validate({...base,access_scope:'PUBLIC',participant_policy},'school-b'),null);
+  assert.ok(validate({...base,participant_policy},'other-school'));
+ }
+ assert.equal(base.participant_policy,'ALL_ELIGIBLE');
+ assert.ok(validate({...base,participant_policy:'ANYONE_AUTOMATICALLY'},'school-b'));
+});

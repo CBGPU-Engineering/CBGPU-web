@@ -68,7 +68,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       if (!live.current) return;
       if (value.school_id !== schoolId || value.school_year !== year)
         throw Error(
-          "미리보기의 학교 또는 학년도가 맞지 않아 변경하지 않았어요.",
+          "학교나 학년도가 맞지 않아요. 다시 미리보기를 확인해 주세요.",
         );
       setPreview(value);
     } catch (e) {
@@ -241,9 +241,9 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                   required
                   disabled={busy}
                   onChange={(e) => setAck(e.target.checked)}
-                />{"대상 학교·학년도·계정·학년 판별을 검토했고, 유효한 백업과 복구 절차를 확인했어요."}</label>
+                />{"대상 학교·학년도와 학생별 변경 내용을 검토하고, 백업과 복구 방법을 확인했어요."}</label>
               <label className="cb-school-field">
-                <span>{"다음 확인 문구를 입력하세요: "}{academicConfirmation(schoolId, year)}</span>
+                <span>{"다음 문구를 그대로 입력해 주세요: "}{academicConfirmation(schoolId, year)}</span>
                 <Input
                   autoComplete="off"
                   required
@@ -276,7 +276,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       )}
       {result && (
         <div role="status" className="rounded-xl border p-4 space-y-2">
-          <h3 className="font-semibold">{"학년도 전환 완료"}</h3>
+          <h3 className="font-semibold">{"학년도를 전환했어요"}</h3>
           <p className="text-sm">
             {result.school_id} · {result.school_year} ·{" "}
             {result.counts.grade1 + result.counts.grade2}{"명 재인증 대기 · "}{" "}
@@ -288,7 +288,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       )}
       <section className="rounded-xl border p-4 space-y-3">
         <div className="flex flex-wrap justify-between gap-3">
-          <h3 className="font-semibold">{"학년도 전환 이력"}</h3>
+          <h3 className="font-semibold">{"학년도 전환 기록"}</h3>
           <Button
             variant="outline"
             disabled={busy}
@@ -310,7 +310,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
             </article>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">{"이 학교에서 완료된 학년도 전환이 없어요."}</p>
+          <p className="text-sm text-muted-foreground">{"아직 학년도 전환 기록이 없어요."}</p>
         )}
       </section>
     </section>

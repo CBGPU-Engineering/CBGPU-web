@@ -125,7 +125,7 @@ export default function WakeupSongPage() {
     if (!deleteTarget) return;
     const { error } = await supabase.from('wakeup_songs').delete().eq('id', deleteTarget.id);
     setDeleteTarget(null);
-    if (error) { showError('삭제 실패: ' + error.message); return; }
+    if (error) { showError('삭제하지 못했어요. ' + error.message); return; }
     showSuccess('신청을 삭제했어요.');
     fetchAll();
   };
@@ -138,7 +138,7 @@ export default function WakeupSongPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isApproved) { showError('학번 또는 이름 확인이 필요해 신청할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if (!isApproved) { showError('학번과 이름을 확인해야 신청할 수 있어요. 프로필에서 확인해 주세요.'); return; }
     if (!preview) { showError('신청할 곡을 먼저 검색해서 골라주세요.'); return; }
     if (!user) return;
     if (queue.length >= 8) { showError('이 날짜의 기상송은 이미 8곡이 신청됐어요. 다른 날짜를 선택해 주세요.'); return; }
@@ -158,7 +158,7 @@ export default function WakeupSongPage() {
       message: message.trim(),
     });
     setSubmitting(false);
-    if (error) { showError('신청 실패: ' + error.message); return; }
+    if (error) { showError('신청하지 못했어요. ' + error.message); return; }
     showSuccess(`${format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열에 바로 올라갔어요!`);
     setMessage('');
     setPreview(null);
@@ -313,7 +313,7 @@ export default function WakeupSongPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         title="신청을 삭제할까요?"
-        description={deleteTarget ? `"${deleteTarget.title}" 신청을 삭제합니다. 이 작업은 되돌릴 수 없어요.` : ''}
+        description={deleteTarget ? `"${deleteTarget.title}" 신청을 삭제해요. 되돌릴 수 없어요.` : ''}
         confirmLabel="삭제"
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

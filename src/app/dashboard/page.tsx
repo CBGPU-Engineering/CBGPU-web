@@ -161,12 +161,12 @@ export default function Dashboard() {
         .eq('id', cancelTarget.id);
 
       if (error) throw error;
-      if (!count || count === 0) throw new Error("삭제 권한이 없거나 이미 삭제된 예약입니다.");
-      showSuccess("예약이 취소됐습니다.");
+      if (!count || count === 0) throw new Error("예약 상태가 바뀌었거나 취소 권한이 없어요. 목록을 새로고침해 주세요.");
+      showSuccess("예약을 취소했어요.");
       setCancelTarget(null);
       fetchMyReservations();
     } catch (err: any) {
-      showError("취소 실패: " + err.message);
+      showError("예약 취소 결과를 확인하지 못했어요. " + err.message);
     }
   };
 
@@ -178,9 +178,9 @@ export default function Dashboard() {
       .eq('id', endTarget)
       .select('id');
     if (error || !data?.length) {
-      showError("세션 종료 실패: " + (error?.message || '종료 가능한 본인 예약을 찾지 못했습니다.'));
+      showError("이용 종료 결과를 확인하지 못했어요. " + (error?.message || '종료할 수 있는 내 예약을 찾지 못했어요.'));
     } else {
-      showSuccess("세션이 종료됐습니다.");
+      showSuccess("GPU 이용을 종료했어요.");
       setEndTarget(null);
       setSelectedRes(null);
       fetchMyReservations();
@@ -188,8 +188,8 @@ export default function Dashboard() {
   };
 
   const copyToClipboard = async (text: string) => {
-    try { await navigator.clipboard.writeText(text); showSuccess("클립보드에 복사됐습니다."); }
-    catch { showError("복사하지 못했습니다. 브라우저의 클립보드 권한을 확인해주세요."); }
+    try { await navigator.clipboard.writeText(text); showSuccess("복사했어요."); }
+    catch { showError("복사하지 못했어요. 브라우저에서 클립보드 권한을 확인해 주세요."); }
   };
 
   // ── GPU 실시간 상태 ──────────────────────────────────────────────────────────
@@ -212,7 +212,7 @@ export default function Dashboard() {
 
   // ── iCal 내보내기 ──────────────────────────────────────────────────────────
   const exportIcal = () => {
-    if (!myReservations.length) { showError('예약이 없습니다.'); return; }
+    if (!myReservations.length) { showError('아직 예약이 없어요. 먼저 GPU를 예약해 주세요.'); return; }
     const fmtDt = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
     const events = myReservations.map(r => [
       'BEGIN:VEVENT',
@@ -228,16 +228,16 @@ export default function Dashboard() {
     a.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
     a.download = 'cbgpu-reservations.ics';
     a.click();
-    showSuccess('iCal 파일이 다운로드됩니다.');
+    showSuccess('예약 캘린더 파일을 내려받아요.');
   };
 
   // ── Push 알림 ──────────────────────────────────────────────────────────────
   const requestNotif = async () => {
-    if (!('Notification' in window)) { showError('이 브라우저는 알림을 지원하지 않습니다.'); return; }
+    if (!('Notification' in window)) { showError('이 브라우저에서는 알림을 사용할 수 없어요.'); return; }
     const perm = await Notification.requestPermission();
     setNotifPerm(perm);
-    if (perm === 'granted') showSuccess('알림이 활성화됐습니다. 예약 10분 전에 알림이 옵니다.');
-    else showError('알림 권한이 거부됐습니다.');
+    if (perm === 'granted') showSuccess('알림을 켰어요. 이 화면을 열어두면 예약 10분 전에 알려드려요.');
+    else showError('알림이 차단돼 있어요. 브라우저 설정에서 허용해 주세요.');
   };
 
   // ── GPU 통계 ───────────────────────────────────────────────────────────────
@@ -461,14 +461,14 @@ export default function Dashboard() {
 
       {!user ? (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[30vh] text-center space-y-4">
-          <h2 className="text-2xl font-semibold">Authentication Required</h2>
+          <h2 className="text-2xl font-semibold">로그인 후 예약해 주세요</h2>
           <p className="text-muted-foreground">Please sign in to view your reservations.</p>
         </div>
       ) : (
       <div id="my-gpu-reservations" className="flex-1 min-w-0 scroll-mt-24">
         <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
           <div className="flex flex-col">
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">My Reservations</h2>
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight">내 예약</h2>
             <p className="text-xs text-muted-foreground font-bold">Manage your active sessions</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

@@ -2,7 +2,7 @@ import {supabase} from './supabase';
 import {deploymentResponse} from './deploymentResponse';
 export async function deploymentApi(path:string,method='GET',body?:unknown){
  const {data:{session}}=await supabase.auth.getSession();
- if(!session)throw new Error('로그인이 필요합니다.');
+ if(!session)throw new Error('로그인 후 이용해 주세요.');
  // Bound both response headers and body; never retry a mutation automatically.
  const controller=new AbortController();
  const timer=setTimeout(()=>controller.abort(),30000);
@@ -15,4 +15,4 @@ export async function deploymentApi(path:string,method='GET',body?:unknown){
   throw error;
  }finally{clearTimeout(timer)}
 }
-export async function serverProjectRequest(id?:string,updates?:Record<string,unknown>,remove=false){try{const data=await deploymentApi('servers/projects'+(id?'/'+id:''),remove?'DELETE':updates?(id?'PATCH':'POST'):'GET',updates);return{data:id||updates?data.project:data.projects,error:null,deployment_requested:typeof data.deployment_requested==='boolean'?data.deployment_requested:undefined,warning:typeof data.warning==='string'?data.warning:null}}catch(e){return{data:null,error:{message:e instanceof Error?e.message:'서버를 불러오지 못했습니다.',code:''},deployment_requested:undefined,warning:null}}}
+export async function serverProjectRequest(id?:string,updates?:Record<string,unknown>,remove=false){try{const data=await deploymentApi('servers/projects'+(id?'/'+id:''),remove?'DELETE':updates?(id?'PATCH':'POST'):'GET',updates);return{data:id||updates?data.project:data.projects,error:null,deployment_requested:typeof data.deployment_requested==='boolean'?data.deployment_requested:undefined,warning:typeof data.warning==='string'?data.warning:null}}catch(e){return{data:null,error:{message:e instanceof Error?e.message:'서버 프로젝트를 불러오지 못했어요. 새로고침해 주세요.',code:''},deployment_requested:undefined,warning:null}}}

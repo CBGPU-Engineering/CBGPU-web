@@ -60,8 +60,8 @@ export default function SelfStudyReminderSettings() {
   }, [user, open]);
 
   async function save() {
-    if (!user || !profile?.student_id) { showError('로그인 후 학번을 등록해야 신청 알림을 설정할 수 있습니다.'); return; }
-    if (!TIMES.includes(time)) { showError('오전 8시부터 오후 3시 15분까지 15분 단위로 선택해주세요.'); return; }
+    if (!user || !profile?.student_id) { showError('로그인하고 학번을 등록한 뒤 신청 알림을 설정해 주세요.'); return; }
+    if (!TIMES.includes(time)) { showError('오전 8시부터 오후 3시 15분 사이에서 15분 단위로 선택해 주세요.'); return; }
     setSaving(true);
     try {
       const { error } = await supabase.from('profiles').update({
@@ -72,7 +72,7 @@ export default function SelfStudyReminderSettings() {
       }).eq('id', user.id);
       if (error) throw error;
       await refreshProfile();
-      showSuccess(enabled ? '신청 알림이 설정됐습니다.' : '신청 알림이 꺼졌습니다.');
+      showSuccess(enabled ? '신청 알림을 켰어요.' : '신청 알림을 껐어요.');
       setOpen(false);
       if (enabled && isNativeAppHint()) {
         const bridge = getNativeBridge();
@@ -85,7 +85,7 @@ export default function SelfStudyReminderSettings() {
         }
       }
     } catch (error) {
-      showError(error instanceof Error ? error.message : '알림 설정을 저장하지 못했습니다.');
+      showError(error instanceof Error ? error.message : '알림 설정을 저장하지 못했어요. 다시 시도해 주세요.');
     } finally {
       setSaving(false);
     }
@@ -99,7 +99,7 @@ export default function SelfStudyReminderSettings() {
     setAcknowledging(false);
     if (error) { showError(error.message); return; }
     setHasUnacknowledgedAlert(false);
-    showSuccess('오늘 재알림을 중단했습니다.');
+    showSuccess('오늘 재알림을 껐어요.');
   }
 
   return <>
@@ -113,15 +113,15 @@ export default function SelfStudyReminderSettings() {
           <DialogDescription>선택한 시각에 신청하지 않은 교시가 있으면 알려드려요. 한국 시간 기준입니다.</DialogDescription>
         </DialogHeader>
         <div className="min-w-0 space-y-4 py-2 sm:space-y-5">
-          {!user || !profile?.student_id ? <p className="text-sm text-amber-600">로그인하고 학번을 등록하면 사용할 수 있습니다.</p> : null}
+          {!user || !profile?.student_id ? <p className="text-sm text-amber-600">로그인하고 학번을 등록하면 사용할 수 있어요.</p> : null}
           <label className="flex items-center justify-between gap-4 rounded-lg border p-4 cursor-pointer">
-            <span><strong className="block text-sm">신청 알림 받기</strong><span className="text-xs text-muted-foreground">동의한 경우에만 발송합니다.</span></span>
+            <span><strong className="block text-sm">신청 알림 받기</strong><span className="text-xs text-muted-foreground">알림을 켠 경우에만 보내요.</span></span>
             <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} className="peer sr-only" />
             <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-checked:[&>span]:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 peer-focus-visible:ring-offset-2">
               <span className="absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform" />
             </span>
           </label>
-          {!isNativeAppHint() && <p className="text-xs text-muted-foreground">웹에서는 알림이 전송되지 않습니다.</p>}
+          {!isNativeAppHint() && <p className="text-xs text-muted-foreground">웹에서는 이 알림을 받을 수 없어요.</p>}
           <div className="space-y-2 text-sm font-semibold">
             <span id="reminder-time-label">첫 알림 시각</span>
             <Select value={time} onValueChange={setTime}>
@@ -152,7 +152,7 @@ export default function SelfStudyReminderSettings() {
               </Select>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">신청을 완료하거나 오늘 알림을 확인하면 재알림이 멈춥니다. 오후 3시 15분 이후에는 보내지 않습니다.</p>
+          <p className="text-xs text-muted-foreground">신청을 마치거나 오늘 알림을 확인하면 재알림이 멈춰요. 오후 3시 15분 이후에는 보내지 않아요.</p>
           {hasUnacknowledgedAlert && <Button type="button" variant="outline" className="w-full" disabled={acknowledging} onClick={acknowledge}>오늘 알림 확인 · 재알림 중단</Button>}
           <Button type="button" className="w-full" disabled={saving || !user || !profile?.student_id} onClick={save}>
             {saving && <Loader2 className="size-4 animate-spin mr-2" />}설정 저장

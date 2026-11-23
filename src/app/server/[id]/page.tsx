@@ -129,7 +129,7 @@ export default function ServerDetailPage() {
     if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&(project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:!permission.canExecute)))) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
     const hostPort = parseInt(form.hostPort);
     const containerPort = parseInt(form.containerPort);
-    if (isNaN(hostPort)) { showError('포트는 숫자여야 합니다.'); return; }
+    if (isNaN(hostPort)) { showError('포트 번호를 숫자로 입력해 주세요.'); return; }
 
     const envVarsObj: Record<string, string> = {};
     for (const e of form.envVars) {
@@ -152,7 +152,7 @@ export default function ServerDetailPage() {
     };
 
     if (project.deploy_type === 'docker') {
-      if (!form.dockerImage.trim()) { showError('이미지를 입력해주세요.'); setSubmitting(false); return; }
+      if (!form.dockerImage.trim()) { showError('Docker 이미지 이름을 입력해 주세요.'); setSubmitting(false); return; }
       updates.docker_image = form.dockerImage.trim();
     } else {
       updates.git_url = form.gitUrl.trim();
@@ -165,10 +165,10 @@ export default function ServerDetailPage() {
     setSubmitting(false);
 
     if (error) {
-      if (error.code === '23505') showError('이미 사용 중인 포트입니다.');
-      else showError('재배포 요청 실패: ' + error.message);
+      if (error.code === '23505') showError('이미 사용 중인 포트예요. 다른 포트를 입력해 주세요.');
+      else showError('재배포 요청 결과를 확인하지 못했어요. ' + error.message);
     } else {
-      showSuccess(redeploy?'설정을 저장하고 재배포를 요청했습니다.':'설정을 저장했습니다. 다음 배포에 적용됩니다.');
+      showSuccess(redeploy?'설정을 저장하고 재배포를 요청했어요.':'설정을 저장했어요. 다음 배포부터 적용돼요.');
       setRedeployOpen(false);
       fetchProject();
     }
@@ -177,9 +177,9 @@ export default function ServerDetailPage() {
   const handleDelete = async () => {
     if (!project) return;
     const {error}=await serverProjectRequest(project.id,undefined,true);
-    if (error) showError('삭제 실패: ' + error.message);
+    if (error) showError('프로젝트 삭제 결과를 확인하지 못했어요. ' + error.message);
     else {
-      showSuccess('프로젝트가 삭제됐습니다.');
+      showSuccess('프로젝트를 삭제했어요.');
       router.push('/server');
     }
   };
@@ -267,7 +267,7 @@ export default function ServerDetailPage() {
         </div>
       </div>
 
-      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">Server Domain</h2><p className="text-xs text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-xs text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
+      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">서버 주소</h2><p className="text-xs text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-xs text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
       {isCompose&&<ComposeStatus id={project.id}/>}
       <ProjectTeam kind="server" id={project.id}/><ProjectDomains kind="server" id={project.id}/>
       {/* 접근 정보 — 실행 중일 때만 */}
@@ -340,7 +340,7 @@ export default function ServerDetailPage() {
                   <span className="font-bold text-sm">{isCompose?'Docker Compose':RUNTIMES.find(r=>r.value===serverRuntimeOf(project))?.label||serverRuntimeOf(project)}</span>
                 </div>
                 <div>
-                  <label className={labelCls}>Root Directory</label><p className="text-sm font-mono mb-4 break-all">{serverRootOf(project)}</p><label className={labelCls}>Run Command</label>
+                  <label className={labelCls}>프로젝트 폴더</label><p className="text-sm font-mono mb-4 break-all">{serverRootOf(project)}</p><label className={labelCls}>Run Command</label>
                   <code className="block break-all whitespace-pre-wrap font-medium text-xs">{project.run_command || '—'}</code>
                 </div>
               </div>
@@ -386,7 +386,7 @@ export default function ServerDetailPage() {
           {/* 환경변수 */}
           {envEntries.length > 0 && (
             <div>
-              <label className={labelCls}>Environment Variables</label>
+              <label className={labelCls}>환경변수</label>
               <div className="space-y-1.5">
                 {envEntries.map(([k, v]) => (
                   <div key={k} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-1.5 font-mono text-xs">
@@ -444,7 +444,7 @@ export default function ServerDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div><label className={labelCls} htmlFor="server-edit-git-url">GitHub Repository</label><Input id="server-edit-git-url" value={form.gitUrl} onChange={e=>set('gitUrl',e.target.value)} placeholder="https://github.com/owner/repository"/></div>
+                  <div><label className={labelCls} htmlFor="server-edit-git-url">GitHub 저장소</label><Input id="server-edit-git-url" value={form.gitUrl} onChange={e=>set('gitUrl',e.target.value)} placeholder="https://github.com/owner/repository"/></div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>Branch</label>
@@ -464,13 +464,13 @@ export default function ServerDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls} htmlFor="redeploy-root-directory">Root Directory</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-xs text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더입니다.</p>{!isCompose&&<><label className={labelCls}>Run Command</label>
+                    <label className={labelCls} htmlFor="redeploy-root-directory">프로젝트 폴더</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-xs text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더입니다.</p>{!isCompose&&<><label className={labelCls}>Run Command</label>
                     <Input
                       placeholder="npm start"
                       value={form.runCommand}
                       onChange={e => set('runCommand', e.target.value)}
                     /></>}
-                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose File</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">Gateway Service</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">Persistent Storage (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-xs text-muted-foreground">재배포해도 기존 데이터 볼륨을 유지합니다.</p></div>}
+                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose 파일</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">Gateway Service</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">Persistent Storage (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-xs text-muted-foreground">재배포해도 기존 데이터 볼륨을 유지합니다.</p></div>}
                   </div>
                 </div>
               )}
@@ -531,7 +531,7 @@ export default function ServerDetailPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className={labelCls}>Environment Variables</label>
+                  <label className={labelCls}>환경변수</label>
                   <Button variant="ghost" size="sm" onClick={addEnvVar} className="h-6 px-2 text-xs font-semibold gap-1">
                     <Plus className="size-3" /> Add
                   </Button>

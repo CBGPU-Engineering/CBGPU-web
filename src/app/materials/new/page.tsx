@@ -22,8 +22,8 @@ type UploadState = { offset: number; size_bytes: number; complete: boolean };
 function transferError(status: number, responseText: string) {
   let detail: unknown;
   try { detail = JSON.parse(responseText)?.detail; } catch { /* proxy may return a non-JSON error */ }
-  const message = status === 507 ? '자료 공유 저장 공간이 가득 찼습니다. 관리자에게 문의해 주세요.'
-    : typeof detail === 'string' ? detail : status === 0 ? '파일 서버에 연결하지 못했습니다.' : `파일 서버 오류 (${status})`;
+  const message = status === 507 ? '자료 공유 저장 공간이 가득 찼어요. 관리자에게 문의해 주세요.'
+    : typeof detail === 'string' ? detail : status === 0 ? '파일 서버에 연결하지 못했어요. 다시 시도해 주세요.' : `파일 서버 오류 (${status})`;
   return Object.assign(new Error(message), { status });
 }
 
@@ -40,7 +40,7 @@ function putChunk(url: string, token: string, chunk: Blob, onProgress: (loaded: 
       try { resolve(JSON.parse(xhr.responseText)); } catch { reject(transferError(502, '')); }
     };
     xhr.onerror = xhr.ontimeout = () => reject(transferError(0, ''));
-    xhr.onabort = () => reject(new Error('업로드가 취소됐습니다.'));
+    xhr.onabort = () => reject(new Error('파일 올리기를 취소했어요.'));
     xhr.send(chunk);
   });
 }
@@ -51,7 +51,7 @@ async function putFile(url: string, file: File, onProgress: (ratio: number) => v
     if (!response.ok) throw transferError(response.status, await response.text());
     const state: UploadState = await response.json();
     if (!Number.isSafeInteger(state.offset) || state.offset < 0 || state.offset > file.size || state.size_bytes !== file.size || (state.complete && state.offset !== file.size)) {
-      throw new Error('서버의 업로드 상태가 파일과 일치하지 않습니다.');
+      throw new Error('파일 전송 상태를 확인하지 못했어요. 다시 시도해 주세요.');
     }
     return state;
   }
@@ -64,7 +64,7 @@ async function putFile(url: string, file: File, onProgress: (ratio: number) => v
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const result = await putChunk(`${url}/chunks?offset=${offset}`, await materialsToken(), file.slice(offset, end), loaded => onProgress(Math.min(offset + loaded, file.size) / file.size));
-        if (result.offset !== end || result.complete !== (end === file.size)) throw new Error('서버의 업로드 확인 응답이 일치하지 않습니다.');
+        if (result.offset !== end || result.complete !== (end === file.size)) throw new Error('파일 전송 결과를 확인하지 못했어요. 다시 시도해 주세요.');
         current = { offset: result.offset, size_bytes: file.size, complete: result.complete };
         onProgress(current.offset / file.size);
         break;
@@ -83,7 +83,7 @@ async function putFile(url: string, file: File, onProgress: (ratio: number) => v
   }
   if (!current.complete) {
     current = await status();
-    if (!current.complete) throw new Error('업로드를 마무리하지 못했습니다. 다시 시도해 주세요.');
+    if (!current.complete) throw new Error('파일 올리기를 마치지 못했어요. 다시 시도해 주세요.');
   }
   onProgress(1);
 }
@@ -106,8 +106,8 @@ export default function NewMaterialPage() {
   function addTag() {
     const value = tagInput.trim().replace(/^#/, '');
     if (!value) return;
-    if (value.length > 20) { showError('태그는 20자까지 입력할 수 있습니다.'); return; }
-    if (tags.length >= 8 && !tags.includes(value)) { showError('태그는 최대 8개까지 추가할 수 있습니다.'); return; }
+    if (value.length > 20) { showError('태그는 20자 이내로 입력해 주세요.'); return; }
+    if (tags.length >= 8 && !tags.includes(value)) { showError('태그는 최대 8개까지 추가할 수 있어요.'); return; }
     if (!tags.includes(value)) setTags(previous => [...previous, value]);
     setTagInput('');
   }
@@ -115,30 +115,30 @@ export default function NewMaterialPage() {
   async function upload() {
     if (!user || !file) { showError('파일을 선택해 주세요.'); return; }
     if (!title.trim()) { showError('제목을 입력해 주세요.'); return; }
-    if (title.trim().length > 120) { showError('제목은 120자까지 입력할 수 있습니다.'); return; }
+    if (title.trim().length > 120) { showError('제목은 120자 이내로 입력해 주세요.'); return; }
     if (!file.size || file.size > MAX_BYTES) { showError('파일은 1GB 이하로 선택해 주세요.'); return; }
-    if (!API_BASE) { showError('파일 서버 주소가 설정되지 않았습니다.'); return; }
+    if (!API_BASE) { showError('자료 공유 서버가 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
     setUploading(true);
     setProgress(0);
     let materialId: string | null = null;
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('로그인이 필요합니다.');
-      if (session.user.id !== user.id) throw new Error('로그인 계정이 변경됐습니다. 다시 시도해 주세요.');
+      if (!session) throw new Error('로그인해 주세요.');
+      if (session.user.id !== user.id) throw new Error('로그인 계정이 바뀌었어요. 다시 시도해 주세요.');
       const selectedSchool = scope.current?.school_id;
-      if (storagePermission.enabled && (!selectedSchool || !(await storagePermission.verify()))) throw new Error('선택한 학교의 자료 공유 권한이 없거나 만료됐습니다.');
+      if (storagePermission.enabled && (!selectedSchool || !(await storagePermission.verify()))) throw new Error('선택한 학교의 자료 공유 권한이 없거나 만료됐어요. 학교 소속과 이용 권한을 확인해 주세요.');
       // 서버 저장 공간이 부족하면 서버가 본문을 읽기 전에 거절해 브라우저에는 연결 오류로만 보인다. 미리 확인해 이유를 알려준다.
       const quota = await fetchMaterialsJson<MaterialsQuota>('/materials/quota').catch(() => null);
       if (quota && file.size > quota.remaining_bytes) {
-        throw new Error(`자료 공유 저장 공간이 부족합니다. (남은 공간 ${fileSize(quota.remaining_bytes)}) 관리자에게 문의해 주세요.`);
+        throw new Error(`자료 공유 저장 공간이 부족해요. (남은 공간 ${fileSize(quota.remaining_bytes)}) 관리자에게 문의해 주세요.`);
       }
       if (storagePermission.enabled) {
         const fingerprint = JSON.stringify([user.id, selectedSchool, title.trim(), tags, file.name, file.size, file.lastModified]);
         if (uploadAttempt.current?.fingerprint !== fingerprint || uploadAttempt.current.file !== file) uploadAttempt.current = {id:crypto.randomUUID(), fingerprint, file};
         const response = await fetch(`${API_BASE}/materials`, {method:'POST', headers:{Authorization:`Bearer ${session.access_token}`, 'Content-Type':'application/json', 'X-CBGPU-School-Id':selectedSchool!}, body:JSON.stringify({upload_id:uploadAttempt.current.id, title:title.trim(), tags, file_name:file.name.slice(0,255), content_type:file.type || 'application/octet-stream', size_bytes:file.size})});
         const saved = await response.json().catch(()=>null);
-        if (!response.ok) throw new Error(typeof saved?.detail === 'string' ? saved.detail : '업로드 권한을 확인하지 못했습니다.');
-        if (!saved?.id || saved.school_id !== selectedSchool || saved.access_scope !== 'SCHOOL') throw new Error('업로드 학교를 확인하지 못했습니다.');
+        if (!response.ok) throw new Error(typeof saved?.detail === 'string' ? saved.detail : '자료를 올릴 권한을 확인하지 못했어요. 다시 시도해 주세요.');
+        if (!saved?.id || saved.school_id !== selectedSchool || saved.access_scope !== 'SCHOOL') throw new Error('자료를 올릴 학교를 확인하지 못했어요. 학교를 다시 선택해 주세요.');
         materialId = saved.id;
       } else {
         const { data, error } = await supabase.from('shared_materials').insert({
@@ -149,14 +149,14 @@ export default function NewMaterialPage() {
         materialId = data.id;
       }
       await putFile(`${API_BASE}/materials/${materialId}`, file, setProgress);
-      showSuccess('자료가 공유됐습니다.');
+      showSuccess('자료를 공유했어요.');
       router.push('/materials');
     } catch (error) {
       if (materialId && !storagePermission.enabled) {
         // The server may finish an upload even if the response is lost.
         const { data } = await supabase.from('shared_materials').select('status').eq('id', materialId).maybeSingle();
         if (data?.status === 'ready') {
-          showSuccess('자료가 공유됐습니다.');
+          showSuccess('자료를 공유했어요.');
           router.push('/materials');
           return;
         }
@@ -168,14 +168,14 @@ export default function NewMaterialPage() {
         } catch { /* Expired sessions or outages leave partials for safe expiry cleanup. */ }
         await supabase.from('shared_materials').delete().eq('id', materialId);
       }
-      showError(error instanceof Error ? error.message : '자료를 올리지 못했습니다.');
+      showError(error instanceof Error ? error.message : '자료를 올리지 못했어요. 다시 시도해 주세요.');
     } finally {
       setUploading(false);
     }
   }
 
   return <section className="cb-page-content mx-auto max-w-2xl space-y-8 px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서만 공유됩니다. 임시 권한이 끝나도 본인 업로드 기록은 유지됩니다.' : storagePermission.reason}</p></div>}
+    {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서만 공유해요. 임시 권한이 끝나도 내가 올린 기록은 유지돼요.' : storagePermission.reason}</p></div>}
     <div className="flex items-center gap-4">
       <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
         <ArrowLeft className="size-4" />
@@ -199,7 +199,7 @@ export default function NewMaterialPage() {
             <Button variant="outline" type="button" className="gap-1.5" onClick={addTag}><Tag className="size-4" />추가</Button>
           </div>
           {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="rounded-full"><Badge className="normal-case tracking-normal text-xs px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
-          <p className="mt-2 text-xs text-muted-foreground">{tags.length}/8개 · 태그를 누르면 제거됩니다.</p>
+          <p className="mt-2 text-xs text-muted-foreground">{tags.length}/8개 · 태그를 누르면 지울 수 있어요.</p>
         </div>
       </section>
 

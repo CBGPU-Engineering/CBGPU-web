@@ -174,7 +174,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground font-medium">카드를 탭해서 짝을 맞추세요</p>
+      <p className="text-xs text-muted-foreground font-medium">카드를 눌러 같은 그림을 맞춰 보세요</p>
     </div>
   );
 }

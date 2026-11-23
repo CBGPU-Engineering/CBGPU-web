@@ -19,7 +19,7 @@ export default function CatalogSchoolPicker({value,onChange,initialId,disabled=f
   try{
    const result=await schoolsRequest<{items:SchoolSummary[];total:number}>('schools?'+new URLSearchParams({q:query.trim(),limit:String(PAGE_SIZE),offset:String(start)}),'GET',undefined,true);
    if(request!==sequence.current)return;
-   const next=result.items.filter(s=>s.type==='HIGH_SCHOOL');
+   const next=result.items.filter(s=>s.type==='HIGH_SCHOOL'||s.type==='MIDDLE_SCHOOL');
    setItems(previous=>append?[...previous,...next.filter(item=>!previous.some(old=>old.id===item.id))]:next);setTotal(result.total);setOffset(start+result.items.length);
   }catch{if(request===sequence.current){if(!append)setItems([]);setError('학교 목록을 불러오지 못했어요. 다시 불러와 주세요.');}}
   finally{if(inFlight.current===request)inFlight.current=null;if(request===sequence.current){setLoading(false);setLoadingMore(false);}}

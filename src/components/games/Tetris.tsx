@@ -211,9 +211,9 @@ export default function Tetris(props: RankedGameProps) {
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
       {arcade.retryButton}
       <div className="flex items-center gap-6">
-        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Score</p><p className="text-xl font-black">{score}</p></div>
-        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">Lines</p><p className="text-xl font-black">{lines}</p></div>
-        {started && !gameOver && <Button variant="outline" size="sm" onClick={togglePause} className="font-black text-xs uppercase">{paused ? 'Resume' : 'Pause'}</Button>}
+        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">점수</p><p className="text-xl font-black">{score}</p></div>
+        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">완성한 줄</p><p className="text-xl font-black">{lines}</p></div>
+        {started && !gameOver && <Button variant="outline" size="sm" onClick={togglePause} className="font-black text-xs uppercase">{paused ? '계속하기' : '일시 정지'}</Button>}
       </div>
       <div className="relative">
         <canvas
@@ -223,25 +223,25 @@ export default function Tetris(props: RankedGameProps) {
         />
         {paused && (
           <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-xl">
-            <p className="text-2xl font-black uppercase tracking-widest">Paused</p>
+            <p className="text-2xl font-black uppercase tracking-widest">일시 정지</p>
           </div>
         )}
       </div>
       {(!started || gameOver) && (
         <div className="flex flex-col items-center gap-2">
-          {gameOver && <p className="text-destructive font-black uppercase tracking-widest">Game Over!</p>}
-          <Button onClick={start} className="font-black uppercase tracking-widest">{gameOver ? 'Restart' : 'Start Game'}</Button>
+          {gameOver && <p className="text-destructive font-black uppercase tracking-widest">게임이 끝났어요</p>}
+          <Button onClick={start} className="font-black uppercase tracking-widest">{gameOver ? '다시 하기' : '게임 시작'}</Button>
         </div>
       )}
 
       {/* 터치 컨트롤 — 키보드 없는 화면에서도 5가지 동작을 명확히 분리해서 누를 수 있게 */}
       {started && !gameOver && (
         <div className="flex md:hidden items-center gap-2 select-none">
-          <button onClick={moveLeft} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowLeft className="size-5" /></button>
-          <button onClick={rotatePiece} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><RotateCw className="size-5" /></button>
-          <button onClick={moveRight} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowRight className="size-5" /></button>
-          <button onClick={softDrop} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowDown className="size-5" /></button>
-          <button onClick={hardDrop} className="flex items-center justify-center size-12 rounded-2xl bg-primary text-primary-foreground shadow-sm active:scale-90 transition-transform"><ChevronsDown className="size-5" /></button>
+          <button aria-label="왼쪽으로 이동" onClick={moveLeft} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowLeft className="size-5" /></button>
+          <button aria-label="블록 회전" onClick={rotatePiece} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><RotateCw className="size-5" /></button>
+          <button aria-label="오른쪽으로 이동" onClick={moveRight} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowRight className="size-5" /></button>
+          <button aria-label="한 칸 내리기" onClick={softDrop} className="flex items-center justify-center size-12 rounded-2xl bg-card ring-1 ring-foreground/10 shadow-sm active:scale-90 transition-transform"><ArrowDown className="size-5" /></button>
+          <button aria-label="바로 떨어뜨리기" onClick={hardDrop} className="flex items-center justify-center size-12 rounded-2xl bg-primary text-primary-foreground shadow-sm active:scale-90 transition-transform"><ChevronsDown className="size-5" /></button>
         </div>
       )}
       <p className="text-xs text-muted-foreground font-medium hidden md:block">← → move · ↑ rotate · ↓ drop · Space hard drop · P pause</p>

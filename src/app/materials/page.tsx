@@ -102,7 +102,7 @@ function MaterialsSession() {
   const availableTags = useMemo(() => [...new Set(materials.flatMap(material => material.tags))].sort(), [materials]);
 
   async function download(material: Material) {
-    if (!API_BASE) { showError('파일 서버 주소가 설정되지 않았습니다.'); return; }
+    if (!API_BASE) { showError('자료 공유 서버가 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
     setBusyId(material.id);
     try {
       const token = await sessionToken();
@@ -119,22 +119,22 @@ function MaterialsSession() {
       document.body.appendChild(link); link.click(); link.remove();
       setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
     } catch (error) {
-      showError(error instanceof Error ? error.message : '파일을 내려받지 못했습니다.');
+      showError(error instanceof Error ? error.message : '파일을 내려받지 못했어요. 다시 시도해 주세요.');
     } finally { setBusyId(null); }
   }
 
   async function remove(material: Material) {
     setDeleteTarget(null);
-    if (!API_BASE) { showError('파일 서버 주소가 설정되지 않았습니다.'); return; }
+    if (!API_BASE) { showError('자료 공유 서버가 연결되지 않았어요. 관리자에게 알려 주세요.'); return; }
     setBusyId(material.id);
     try {
       const token = await sessionToken();
       const response = await fetch(`${API_BASE}/materials/${material.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (!response.ok) throw await apiError(response);
       setMaterials(previous => previous.filter(item => item.id !== material.id));
-      showSuccess('자료를 삭제했습니다.');
+      showSuccess('자료를 삭제했어요.');
     } catch (error) {
-      showError(error instanceof Error ? error.message : '자료를 삭제하지 못했습니다.');
+      showError(error instanceof Error ? error.message : '자료를 삭제하지 못했어요. 다시 시도해 주세요.');
     } finally { setBusyId(null); }
   }
 

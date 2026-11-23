@@ -1,3 +1,4 @@
+import type {ContestParticipantPolicy} from './contestSchoolPolicy';
 export type ContestFieldType = 'file' | 'link' | 'text';
 export type ContestField = {
   id: string;
@@ -12,7 +13,7 @@ export type Contest = {
   school_id?: string;
   access_scope?: 'PRIVATE'|'SCHOOL'|'MULTI_SCHOOL'|'AUTHENTICATED'|'PUBLIC';
   allowed_school_ids?: string[];
-  participant_policy?: 'ALL_ELIGIBLE'|'HIGH_SCHOOL_STUDENTS';
+  participant_policy?: ContestParticipantPolicy;
   id: string;
   host_id: string;
   participation_mode?: 'individual' | 'team';
@@ -124,7 +125,7 @@ export function deadlineToInput(value: string | null) {
 
 export function eventError(error: unknown) {
   const message = error instanceof Error ? error.message : (error as { message?: string })?.message;
-  if (message?.includes('EVENT_REGISTRATION_CLOSED')) return '참가 신청이 마감되었어요.';
+  if (message?.includes('EVENT_REGISTRATION_CLOSED')) return '참가 신청이 마감됐어요.';
   if (message?.includes('EVENT_FULL')) return '참가 정원이 모두 찼어요.';
   return contestError(error);
 }
@@ -180,17 +181,24 @@ export function validateAnswers(fields: ContestField[], answers: ContestAnswers,
 }
 
 export function contestError(error: unknown) {
-  const message = error instanceof Error ? error.message : (error as { message?: string })?.message;
-  if (message?.includes('schema cache') || message?.includes('does not exist')) return '대회 기능의 데이터베이스 설정이 아직 완료되지 않았어요. 관리자에게 문의해 주세요.';
-  if (message?.includes('CONTEST_CLOSED')) return '제출이 마감되었어요. 입력 내용은 유지되니 호스트에게 문의해 주세요.';
-  return message || '요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
+  const message=error instanceof Error?error.message:(error as {message?:string})?.message;
+  const code=typeof error==='object'&&error!==null&&'code'in error?String((error as {code:unknown}).code):'';
+  if(/schema cache|does not exist/i.test(message||''))return '대회 기능을 사용할 수 없어요. 운영진에게 문의해 주세요.';
+  if(message?.includes('CONTEST_CLOSED'))return '제출이 마감됐어요. 대회 일정을 확인해 주세요.';
+  if(/EVENT_REGISTRATION_NOT_STARTED|CONTEST_NOT_STARTED/.test(message||''))return '아직 접수 시작 전이에요. 대회 일정을 확인해 주세요.';
+  if(/PARTICIPANT_POLICY|ELIGIB/i.test(message||''))return '참가 대상과 현재 학교 소속을 확인해 주세요.';
+  if(/FRESH_IDENTITY|INVALID_SESSION|JWT|SESSION_EXPIRED/i.test(message||''))return '로그인 상태를 다시 확인해 주세요.';
+  if(code==='42501'||/row-level security|permission denied|FORBIDDEN|HOST_REQUIRED|SCHOOL_SCOPE/i.test(message||''))return '이 대회를 이용하거나 관리할 권한을 확인해 주세요.';
+  if(code==='23505'||/already exists|duplicate key/i.test(message||''))return '이미 저장된 내용이 있어요. 새로고침한 뒤 결과를 확인해 주세요.';
+  if(!code&&message&&/[가-힣]/.test(message)&&!/PGRST|SQLSTATE|private_schema|constraint|column|relation/i.test(message))return message;
+  return '요청 결과를 확인하지 못했어요. 새로고침한 뒤 처리 상태를 확인해 주세요.';
 }
 
 export type ContestTeam = { id:string;contest_id:string;name:string;captain_id:string|null;kind:'formed'|'random';join_code:string;formation_status:'forming'|'ready'|'needs_members';created_at:string };
 export type ContestTeamMember = {contest_id:string;team_id:string;user_id:string;registration_id:string;attendee_name:string;registration_status:EventRegistrationStatus;joined_at:string};
 export type ContestTeamSettings = {participation_mode:'individual'|'team';team_min_size:number;team_max_size:number;allow_individual_entries:boolean};
 export function contestTeamSettings(contest:Partial<ContestTeamSettings>):ContestTeamSettings{return {participation_mode:contest.participation_mode||'individual',team_min_size:contest.team_min_size??2,team_max_size:contest.team_max_size??5,allow_individual_entries:contest.allow_individual_entries??false};}
-export function contestTeamSettingsError(settings:ContestTeamSettings,deadline:string|null){if(settings.participation_mode!=='team')return null;if(!Number.isInteger(settings.team_min_size)||!Number.isInteger(settings.team_max_size)||settings.team_min_size<1||settings.team_max_size>50||settings.team_min_size>settings.team_max_size)return '팀 인원은 최소 1명부터 최대 50명까지, 최소 인원 이하로 최대 인원을 설정할 수 없어요.';if(!deadline)return '팀 대회는 참가 신청 마감 또는 행사 시작 시간을 지정해 주세요.';return null;}
+export function contestTeamSettingsError(settings:ContestTeamSettings,deadline:string|null){if(settings.participation_mode!=='team')return null;if(!Number.isInteger(settings.team_min_size)||!Number.isInteger(settings.team_max_size)||settings.team_min_size<1||settings.team_max_size>50||settings.team_min_size>settings.team_max_size)return '팀 인원은 1~50명으로 정하고, 최대 인원을 최소 인원 이상으로 입력해 주세요.';if(!deadline)return '팀 대회는 참가 신청 마감 또는 행사 시작 시간을 지정해 주세요.';return null;}
 export function contestTeamJoinCode(value:string){const raw=value.trim();try{const fromUrl=new URL(raw).searchParams.get('team');if(fromUrl)return /^[a-f0-9-]{36}$/i.test(fromUrl)?fromUrl:null}catch{}return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw)?raw:null;}
 
 export type ContestPeriodPhase = 'checking'|'pending'|'open'|'closed';

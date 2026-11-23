@@ -66,13 +66,13 @@ export function AlertProvider({ children, english = false }: { children: ReactNo
   const settle2 = (value: string | null) => { resolver2.current?.(value); resolver2.current = null; setAsk2(prev => ({ ...prev, open: false })); };
 
   const showAlert = useCallback((msg: string, type: AlertType = 'info', title?: string) => {
-    const titles = english ? {success:'Done',error:'Error',info:'Notice'} : { success: '완료', error: '오류', info: '알림' };
+    const titles = english ? {success:'Done',error:'Error',info:'Notice'} : { success: '완료', error: '확인해 주세요', info: '알림' };
     if (english && type === 'error' && /[가-힣]/.test(msg)) msg = 'The operation could not be completed. Refresh the page and try again.';
     if (english && title && /[가-힣]/.test(title)) title = titles[type];
     setS({ open: true, message: msg, type, title: title ?? titles[type] });
   }, [english]);
 
-  const showError = useCallback((msg: string, title = '오류') => showAlert(msg, 'error', title), [showAlert]);
+  const showError = useCallback((msg: string, title = '확인해 주세요') => showAlert(msg, 'error', title), [showAlert]);
 
   const showSuccess = useCallback((msg: string) => {
     const id = ++toastId.current;

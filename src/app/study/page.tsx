@@ -59,7 +59,7 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
     return {seat,available:occupants.length===0,pending:occupants.length>0&&occupants.every(o=>o.status==='PENDING'),detail:occupants.map(o=>o.label).join(' · ')};
   });
   const selected=rows.find(row=>String(row.seat.id)===selectedId);
-  if(failed)return <div role="alert" className="space-y-3 rounded-2xl border p-4"><p className="text-sm">좌석 현황을 불러오지 못했습니다. 빈자리 여부를 확인할 수 없습니다.</p><Button variant="outline" className="min-h-11" onClick={onRetry}>다시 불러오기</Button></div>;
+  if(failed)return <div role="alert" className="space-y-3 rounded-2xl border p-4"><p className="text-sm">좌석 현황을 불러오지 못했어요. 빈자리로 판단하지 말고 다시 불러와 주세요.</p><Button variant="outline" className="min-h-11" onClick={onRetry}>다시 불러오기</Button></div>;
   return <div className="min-w-0 space-y-4">
     <StudySeatBrowser items={rows} obstacles={obstacles} width={room.width} height={room.height} selectedId={selectedId} onSelect={seat=>setSelectedId(String(seat.id))} selectOccupied/>
     <div aria-live="polite" className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-3 shadow-sm">
@@ -80,7 +80,7 @@ function CapacityList({ occupancy, selectedPeriod, failed, onRetry }: {
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center">
         <p className="text-sm text-amber-600 dark:text-amber-400 font-bold">
-          신청자 명단을 불러오지 못했습니다. 0명이 아니라 조회 실패일 수 있습니다.
+          신청자 명단을 불러오지 못했어요. 신청자가 없는 상태와는 달라요. 다시 조회해 주세요.
         </p>
         {onRetry && (
           <Button type="button" variant="outline" size="sm" onClick={onRetry}>
@@ -92,7 +92,7 @@ function CapacityList({ occupancy, selectedPeriod, failed, onRetry }: {
   }
 
   if (entries.length === 0) {
-    return <p className="text-sm text-muted-foreground text-center py-10">이 교시에 신청자가 없습니다.</p>;
+    return <p className="text-sm text-muted-foreground text-center py-10">이 교시에 신청자가 없어요.</p>;
   }
 
   return (
@@ -130,7 +130,7 @@ export default function StudyPage() {
   const permission=useSchoolResourcePermission('study',isApproved),resourceScope=useSchoolResourceScope();
   const canStudy=permission.enabled?permission.allowed&&resourceScope.current?.school_id==='cbsh':isApproved;
   const permissionLoading=permission.enabled&&permission.status==='loading';
-  const permissionMessage=permission.enabled?permission.reason:'승인된 계정만 조회할 수 있습니다.';
+  const permissionMessage=permission.enabled?permission.reason:'계정 승인을 마친 뒤 조회할 수 있어요.';
   const generation=useRef(0),busy=useRef(false),lastDate=useRef('');
   const dialogViewport = useStudyDialogViewport();
   const [requestPrefill,setRequestPrefill]=useState<StudyPrefill|null>(null);
@@ -177,7 +177,7 @@ export default function StudyPage() {
 
       const data=await loadStudyRooms(rooms,selfStudyEntries,id=>getRoomComposition(id,{fresh}));
       if(request!==generation.current)return;
-      if(dateStr!==localDateStr())throw Error('날짜가 바뀌었습니다. 새로고침해 주세요.');
+      if(dateStr!==localDateStr())throw Error('날짜가 바뀌었어요. 새로고침해 주세요.');
       lastDate.current=dateStr;
 
       setRoomData(data);
@@ -194,7 +194,7 @@ export default function StudyPage() {
       }
       setUpdatedAt(new Date());
     } catch (err: unknown) {
-      if(request===generation.current)setError(err instanceof Error ? err.message : '현황을 불러오지 못했습니다.');
+      if(request===generation.current)setError(err instanceof Error ? err.message : '자습 현황을 불러오지 못했어요. 다시 불러와 주세요.');
     } finally {
       if(request===generation.current){busy.current=false;setLoading(false)}
     }
@@ -295,7 +295,7 @@ export default function StudyPage() {
       {canStudy&&<StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />}
       <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
 
-      <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{loading ? (roomData.length ? '현황 업데이트 중 · 이전 결과를 표시합니다.' : '자습 현황을 불러오는 중…') : updatedAt ? `최근 조회 ${updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}${error ? ' · 업데이트 실패, 이전 결과입니다.' : ''}` : '아직 조회된 현황이 없습니다.'}</p>
+      <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{loading ? (roomData.length ? '현황을 새로 확인하고 있어요. 이전 결과를 보여 드려요.' : '자습 현황을 불러오는 중…') : updatedAt ? `최근 조회 ${updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}${error ? ' · 다시 조회하지 못해 이전 결과를 보여 드려요.' : ''}` : '아직 조회한 현황이 없어요.'}</p>
 
       {/* 교시 — 가장 자주 바뀌는 축이라 검색 모드와 무관하게 항상 맨 위에 고정 */}
       {periods.length > 0 && (
@@ -336,8 +336,8 @@ export default function StudyPage() {
                 {selectedStudentEntry
                   ? `${selectedPeriod}교시: ${selectedStudentEntry.roomName}${
                       selectedStudentEntry.seatName ? ` ${selectedStudentEntry.seatName}번 자리` : ''
-                    }에 신청했습니다.${selectedStudentEntry.status === 'PENDING' ? ' (승인 대기중)' : ''}`
-                  : `${selectedPeriod}교시: 조회된 정보에서 신청 내역을 찾지 못했습니다. 공식 사이트에서도 확인해 주세요.`}
+                    }에 신청했어요.${selectedStudentEntry.status === 'PENDING' ? ' (승인 대기 중)' : ''}`
+                  : `${selectedPeriod}교시: 조회한 정보에서 신청 내역을 찾지 못했어요. 공식 사이트에서도 확인해 주세요.`}
               </p>
               {selectedStudentEntry && (
                 <Button
@@ -364,7 +364,7 @@ export default function StudyPage() {
             {studentQuery.trim() && (
               <div className="absolute z-10 mt-1 w-full rounded-2xl border border-border/60 bg-background shadow-lg divide-y divide-border/40 overflow-hidden max-h-72 overflow-y-auto">
                 {studentMatches.length === 0 ? (
-                  <p className="p-3 text-sm text-muted-foreground text-center">일치하는 학생이 없습니다.</p>
+                  <p className="p-3 text-sm text-muted-foreground text-center">일치하는 학생이 없어요. 이름이나 학번을 바꿔 검색해 주세요.</p>
                 ) : (
                   studentMatches.map((s) => (
                     <button
@@ -385,7 +385,7 @@ export default function StudyPage() {
 
       {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>changeRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="occupied">사람 많은 순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
 
-      {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했습니다. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
+      {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했어요. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
 
       {error && (
         <div role="alert" className="flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 md:flex-row md:items-start md:justify-between">
@@ -405,7 +405,7 @@ export default function StudyPage() {
         </div>
       ) : error && roomData.length === 0 ? null : sortedRoomData.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          {roomData.length === 0 ? '아직 확인 가능한 자습실 데이터가 없습니다.' : '검색 결과가 없습니다.'}
+          {roomData.length === 0 ? '아직 확인할 수 있는 자습실 정보가 없어요.' : '검색 결과가 없어요. 검색어를 바꿔 주세요.'}
           {(query||onlyAvailable) && <Button variant="outline" className="mt-4 min-h-11" onClick={() => {setQuery('');setOnlyAvailable(false)}}>전체 자습실 보기</Button>}
         </div>
       ) : (
@@ -467,7 +467,7 @@ export default function StudyPage() {
               <DialogHeader className="shrink-0 flex-row items-start gap-3 border-b p-3 text-left sm:p-4">
                 <div className="min-w-0 flex-1 space-y-1">
                   <DialogTitle className="break-words leading-snug">{openRoomData.room.name} {openRoomData.room.hasSeats ? '좌석 배치' : '신청자 명단'}</DialogTitle>
-                  <DialogDescription>{openRoomData.room.hasSeats ? '좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.' : '정원제 자습실이라 좌석 없이 신청자만 표시됩니다.'}</DialogDescription>
+                  <DialogDescription>{openRoomData.room.hasSeats ? '좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.' : '정원제 자습실이라 좌석 없이 신청자만 보여 드려요.'}</DialogDescription>
                 </div>
                 <DialogClose asChild><Button type="button" variant="ghost" size="icon" aria-label="자습실 창 닫기" className="size-11 shrink-0"><X className="size-5" /></Button></DialogClose>
               </DialogHeader>

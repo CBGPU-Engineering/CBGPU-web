@@ -31,10 +31,10 @@ async function resizeImageToJpeg(file: File, maxSize = 256, quality = 0.85): Pro
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('이미지 처리에 실패했습니다.');
+  if (!ctx) throw new Error('사진을 읽지 못했어요. 다른 사진을 선택해 주세요.');
   ctx.drawImage(bitmap, 0, 0, w, h);
   return await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지 변환에 실패했습니다.'))), 'image/jpeg', quality);
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('사진을 변환하지 못했어요. 다른 사진을 선택해 주세요.'))), 'image/jpeg', quality);
   });
 }
 
@@ -135,10 +135,10 @@ function ProfileSession() {
       if(!current())return;
       if (error) throw error;
       setSavedSshKey(key);
-      showSuccess(key ? 'SSH 공개키를 저장했습니다.' : 'SSH 공개키를 삭제했습니다.');
+      showSuccess(key ? 'SSH 공개키를 저장했어요.' : 'SSH 공개키를 삭제했어요.');
     } catch (error: any) {
       if(!current())return;
-      showError(error.message || 'SSH 공개키 저장 실패');
+      showError(error.message || 'SSH 공개키를 저장하지 못했어요. 다시 시도해 주세요.');
     } finally {
       if(current())setSavingSshKey(false);
     }
@@ -158,7 +158,7 @@ function ProfileSession() {
     } catch (error: any) {
       if(!current())return;
       setNotifPrefs((prev) => ({ ...prev, [key]: !next })); // revert on failure
-      showError(error.message || '알림 설정 저장 실패');
+      showError(error.message || '알림 설정을 저장하지 못했어요. 다시 시도해 주세요.');
     } finally {
       if(current())setSavingNotifKey(null);
     }
@@ -168,17 +168,17 @@ function ProfileSession() {
     try {
       const { error } = await signOutEverywhere();
       if (error) throw error;
-      showSuccess('로그아웃됐습니다.');
+      showSuccess('로그아웃했어요.');
       router.push('/auth/login');
     } catch {
-      showError('로그아웃에 실패했습니다.');
+      showError('로그아웃하지 못했어요. 다시 시도해 주세요.');
     }
   }
 
   async function updateProfile() {
     if (!user) return;
     if (!scopedIdentity && !isValidStudentId(studentId)) {
-      showError(`학번 형식이 올바르지 않습니다. ${STUDENT_ID_HINT}`);
+      showError(`학번을 다시 확인해 주세요. ${STUDENT_ID_HINT}`);
       return;
     }
     const owner=user.id,current=operations.current.lease(owner);
@@ -192,12 +192,12 @@ function ProfileSession() {
       if(!current())return;
       await refreshProfile();
       if(!current())return;
-      showSuccess('프로필이 업데이트됐습니다!');
+      showSuccess('프로필을 저장했어요.');
     } catch (error: any) {
       if(!current())return;
       showError(error.code === '23505' || error.message?.includes('STUDENT_ID_ALREADY_REGISTERED')
-        ? '이 학번은 같은 학년도에 이미 등록되어 있습니다. 기존 계정을 확인해주세요.'
-        : error.message || '업데이트 실패');
+        ? '이 학번은 이번 학년도에 이미 등록돼 있어요. 기존 계정을 확인해 주세요.'
+        : error.message || '프로필을 저장하지 못했어요. 다시 시도해 주세요.');
     } finally {
       if(current())setIsUpdating(false);
     }
@@ -207,10 +207,10 @@ function ProfileSession() {
     if (!user?.email||changingPassword.current) return;
 
     if (newPassword.length < 6) {
-      showError('새 비밀번호는 6자 이상이어야 합니다.'); return;
+      showError('새 비밀번호를 6자 이상 입력해 주세요.'); return;
     }
     if (newPassword !== confirmPassword) {
-      showError('새 비밀번호가 일치하지 않습니다.'); return;
+      showError('새 비밀번호가 서로 달라요. 다시 확인해 주세요.'); return;
     }
 
     const owner=user.id,current=operations.current.lease(owner);
@@ -218,10 +218,10 @@ function ProfileSession() {
     try {
       await changeProfilePassword({owner,email:user.email,currentPassword,newPassword},current);
       if(!current())return;
-      showSuccess('비밀번호가 변경됐습니다!');
+      showSuccess('비밀번호를 바꿨어요.');
       setCurrentPassword('');setNewPassword('');setConfirmPassword('');
     } catch (error: any) {
-      if(current())showError(error.message || '비밀번호 변경 실패');
+      if(current())showError(error.message || '비밀번호를 바꾸지 못했어요. 다시 시도해 주세요.');
     } finally {
       changingPassword.current=false;if(current())setIsChangingPassword(false);
     }
@@ -242,15 +242,15 @@ function ProfileSession() {
       if(!current())return;
       const body = await res.json().catch(() => ({}));
       if(!current())return;
-      if (!res.ok) { showError(body?.message || '계정 삭제 실패'); return; }
+      if (!res.ok) { showError(body?.message || '계정을 삭제하지 못했어요. 다시 시도해 주세요.'); return; }
 
       await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
       await signOutEverywhere();
       if(!current())return;
-      showSuccess('계정이 삭제됐습니다.');
+      showSuccess('계정을 삭제했어요.');
       router.push('/');
     } catch (error: any) {
-      if(current())showError(error.message || '계정 삭제 중 오류가 발생했습니다.');
+      if(current())showError(error.message || '계정을 삭제하지 못했어요. 다시 시도해 주세요.');
     } finally {
       deleting.current=false;
       if(current()){setIsDeletingAccount(false);setDeleteOpen(false);}
@@ -263,10 +263,10 @@ function ProfileSession() {
     if (!user || !file) return;
 
     if (!file.type.startsWith('image/')) {
-      showError('이미지 파일만 업로드할 수 있습니다.'); return;
+      showError('이미지 파일을 선택해 주세요.'); return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
-      showError('5MB 이하 이미지만 업로드할 수 있습니다.'); return;
+      showError('5MB 이하인 이미지를 선택해 주세요.'); return;
     }
 
     const owner=user.id,current=operations.current.lease(owner);
@@ -295,10 +295,10 @@ function ProfileSession() {
       if(!current())return;
       await refreshProfile();
       if(!current())return;
-      showSuccess('프로필 사진이 변경됐습니다!');
+      showSuccess('프로필 사진을 바꿨어요.');
     } catch (error: any) {
       if(!current())return;
-      showError(error.message || '업로드 실패');
+      showError(error.message || '사진을 올리지 못했어요. 다시 시도해 주세요.');
     } finally {
       if(current())setIsUploadingAvatar(false);
     }
@@ -306,7 +306,7 @@ function ProfileSession() {
 
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <LoadingSpinner size={56} label="프로필 불러오는 중" />
+      <LoadingSpinner size={56} label="프로필을 불러오고 있어요" />
     </div>
   );
 
@@ -353,7 +353,7 @@ function ProfileSession() {
         <div className={multiSchoolEnabled?"grid grid-cols-1 gap-8":"grid grid-cols-1 md:grid-cols-2 gap-8"}>
           <div className="space-y-2">
             <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
-              <UserCircle2 className="size-3" /> 이름 (Name)
+              <UserCircle2 className="size-3" /> 이름
             </label>
             <Input
               name="name"
@@ -366,7 +366,7 @@ function ProfileSession() {
           </div>
           {!multiSchoolEnabled&&<div className="space-y-2">
             <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
-              <Hash className="size-3" /> 학번 (Student ID)
+              <Hash className="size-3" /> 학번
             </label>
             <Input
               name="student-id"
@@ -461,7 +461,7 @@ function ProfileSession() {
           className="w-full h-12 rounded-lg font-semibold text-sm shadow-sm shadow-primary/20 transition-all active:scale-[0.98] gap-2"
         >
           {isChangingPassword ? <Loader2 className="size-6 animate-spin" /> : <KeyRound className="size-6" />}
-          {isChangingPassword ? "변경 중..." : "비밀번호 변경"}
+          {isChangingPassword ? "변경 중…" : "비밀번호 변경"}
         </Button>
       </form>
 
@@ -483,7 +483,7 @@ function ProfileSession() {
           className="w-full rounded-lg border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         <Button type="button" onClick={saveSshKey} disabled={savingSshKey || sshPublicKey.trim() === savedSshKey}>
-          {savingSshKey ? '저장 중...' : sshPublicKey.trim() ? '공개키 저장' : '등록된 키 삭제'}
+          {savingSshKey ? '저장 중…' : sshPublicKey.trim() ? '공개키 저장' : '등록된 키 삭제'}
         </Button>
       </div>
 
@@ -492,7 +492,7 @@ function ProfileSession() {
           <BellRing className="size-5 text-primary" /> 알림 설정
         </h2>
         <p className="text-xs text-muted-foreground font-medium -mt-2">
-          자습신청 알림은 자습신청 페이지의 ‘신청 알림’에서 설정할 수 있습니다.
+          자습 신청 알림은 자습 신청 화면의 ‘신청 알림’에서 설정해 주세요.
         </p>
         <div className="divide-y divide-foreground/5">
           {NOTIF_PREFS.filter(({ role }) =>
@@ -534,10 +534,10 @@ function ProfileSession() {
 
       <div className="bg-card ring-1 ring-destructive/20 p-5 rounded-2xl shadow-sm space-y-6">
         <h2 className="text-lg font-semibold flex items-center gap-2 text-destructive">
-          <ShieldAlert className="size-5" /> 위험 구역
+          <ShieldAlert className="size-5" /> 계정 삭제
         </h2>
         <p className="text-sm text-muted-foreground font-medium">
-          계정을 삭제하면 로그인할 수 없게 되고 이름, 학번, 프로필 사진이 모두 삭제됩니다. 되돌릴 수 없습니다.
+          계정을 삭제하면 다시 로그인할 수 없고 이름, 학번, 프로필 사진도 삭제돼요. 되돌릴 수 없어요.
         </p>
         <Button
           type="button"
@@ -552,8 +552,8 @@ function ProfileSession() {
       <ConfirmDialog
         open={deleteOpen}
         title="계정을 삭제할까요?"
-        description="이름, 학번, 프로필 사진이 삭제되고 다시 로그인할 수 없습니다. 되돌릴 수 없습니다."
-        confirmLabel={isDeletingAccount ? '삭제 중...' : '계정 삭제'}
+        description="이름, 학번, 프로필 사진이 삭제되고 다시 로그인할 수 없어요. 삭제한 계정은 되돌릴 수 없어요."
+        confirmLabel={isDeletingAccount ? '삭제 중…' : '계정 삭제'}
         onConfirm={handleDeleteAccount}
         onCancel={() => setDeleteOpen(false)}
       />
