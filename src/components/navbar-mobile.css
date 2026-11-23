@@ -13,3 +13,22 @@
  .cb-main-navbar .cb-user-version>summary{min-height:44px;align-items:center}
  .cb-main-navbar>div:first-child>a:first-child{min-height:44px;align-items:center}
 }
+
+/* Keep labels horizontal before the full desktop rail has enough room. */
+.cb-main-navbar>div:first-child{min-width:0}
+.cb-main-navbar>div:last-child{flex-shrink:0}
+.cb-main-navbar :is(a,button,summary){white-space:nowrap}
+.cb-narrow-theme-row{display:none}
+@media(max-width:479px){
+ .cb-main-navbar{padding-inline:12px;gap:6px}
+ .cb-main-navbar>div:first-child{gap:8px}
+ .cb-main-navbar>div:first-child>a:first-child{flex-shrink:0}
+ .cb-main-navbar>div:first-child>a:first-child .cb-brand-art{width:88px!important}
+ .cb-main-navbar>div:last-child,.cb-main-navbar>div:last-child>div:last-child{gap:4px}
+ .cb-main-navbar .cb-user-version>summary{max-width:90px;font-size:14px;padding-inline:4px;gap:3px}
+}
+@media(max-width:359px){
+ .cb-main-navbar{padding-inline:8px}
+ .cb-main-navbar .cb-mobile-theme-toggle{display:none}
+ .cb-narrow-theme-row{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding-block:8px;margin-bottom:8px;border-bottom:1px solid var(--border);font-size:14px}
+}

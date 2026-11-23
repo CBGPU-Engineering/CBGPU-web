@@ -332,3 +332,12 @@
 .contest-filter-pills .contest-filter-label{font-size:inherit;background:transparent;padding:0}
 .contest-page :is(input,textarea)::placeholder{color:var(--muted-foreground);opacity:.8}
 .contest-page textarea{color:var(--foreground)}
+
+/* A grid's intrinsic minimum must not widen the page on 320px phones. */
+.contest-discovery{min-width:0;grid-template-columns:minmax(0,1fr)}
+.contest-discovery>*{min-width:0}
+.contest-filter-pills{min-width:0;max-width:100%}
+.contest-filter-pills button{min-height:44px;white-space:nowrap}
+/* Selected text remains legible while the decorative shared indicator moves. */
+.contest-filter-pills button[aria-pressed='true']{background:var(--contest-green);border-color:var(--contest-green)}
+.contest-filter-pills .contest-filter-active{inset:auto 8px -4px;height:2px;opacity:.35}

@@ -1,5 +1,6 @@
 'use client';
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { managementChromeEnglish } from '@/lib/managementChrome';
 
 export interface SegmentedTabItem {
   value: string;
@@ -39,8 +40,8 @@ export function SegmentedTabs({ items, value, onChange, className = '', pill = f
   }, [value, items]);
 
   return (
-    <div ref={rail} role="group" aria-label={typeof window!=='undefined'&&['admin.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(window.location.hostname)&&label==='보기 선택'?'View selection':label} className={`segmented-tabs relative flex max-w-full gap-1 overflow-x-auto p-1 ${appearance === 'neutral' ? 'rounded-xl bg-muted' : ''} ${className}`}>
-      <span aria-hidden="true" className={`tab-selection ${shape} ${appearance === 'neutral' ? 'bg-card shadow-sm ring-1 ring-border' : 'bg-primary shadow-sm'}`} />
+    <div ref={rail} data-appearance={appearance} role="group" aria-label={managementChromeEnglish()&&label==='보기 선택'?'View selection':label} className={`segmented-tabs relative flex max-w-full gap-1 overflow-x-auto p-1 ${appearance === 'neutral' ? 'rounded-xl bg-muted' : ''} ${className}`}>
+      <span aria-hidden="true" className={`tab-selection ${shape} ${appearance === 'neutral' ? 'bg-card shadow-sm ring-1 ring-border' : 'bg-primary/30'}`} />
       {items.map((item, index) => {
         const active = value === item.value;
         return (

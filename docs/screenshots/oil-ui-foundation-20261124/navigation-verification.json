@@ -1,0 +1,115 @@
+{
+  "baseline": false,
+  "results": [
+    {
+      "width": 320,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 360,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 390,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 768,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1024,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1280,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1440,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1536,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1920,
+      "theme": "light",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 320,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 360,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 390,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 768,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1024,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1280,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1440,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1536,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    },
+    {
+      "width": 1920,
+      "theme": "dark",
+      "overflow": false,
+      "wraps": []
+    }
+  ],
+  "blockedExternal": 0,
+  "scope": "Actual Next production demo build, synthetic student sign-in; no real accounts, requests or external writes."
+}

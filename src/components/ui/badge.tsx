@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 const VARIANTS = {
   default: 'bg-primary/10 text-primary',
   success: 'bg-success/10 text-success',
-  warning: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  warning: 'bg-amber-500/10 text-amber-800 dark:text-amber-300',
   danger: 'bg-destructive/10 text-destructive',
   muted: 'bg-muted text-muted-foreground',
 } as const;
