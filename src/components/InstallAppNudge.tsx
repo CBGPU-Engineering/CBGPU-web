@@ -71,9 +71,9 @@ export default function InstallAppNudge() {
             <Smartphone className="size-4.5" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold">안드로이드 앱을 설치해보세요</p>
+            <p className="text-sm font-semibold">안드로이드 앱으로 이용해 보세요</p>
             <p className="text-xs text-muted-foreground font-medium mt-0.5 mb-2">
-              위젯, 알림까지 더 편하게 쓸 수 있어요
+              홈 화면 위젯과 알림을 사용할 수 있어요
             </p>
             <Link
               href="/download"

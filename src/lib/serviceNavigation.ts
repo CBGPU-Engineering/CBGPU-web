@@ -12,7 +12,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     { href: '/clubs', label: '동아리', description: '우리 학교 동아리 홍보와 모집 신청', icon: Users, keywords: '동아리 모집 홍보 부원 신청 접수 동아리소개' },
     { href: '/materials', label: '자료 공유', description: '학습·연구 자료 찾기', icon: FolderOpen, keywords: '파일 태그 학습자료 자료공유 업로드 올리기 다운로드 공유' },
   ] },
-  {id:'ai',title:'AI',services:[{href:'/ai',label:'CBGPU AI',description:'대화·프롬프트 최적화·전사·검색·GPU·API·CLI',icon:Sparkles,keywords:'AI 인공지능 채팅 chatgpt 프롬프트 최적화 전사 검색 모델 API CLI 코딩 에이전트'}]},
+  {id:'ai',title:'AI',services:[{href:'/ai',label:'CBGPU AI',description:'AI 대화, 자료 검색과 글·코드 작업',icon:Sparkles,keywords:'AI 인공지능 채팅 chatgpt 프롬프트 최적화 전사 검색 모델 API CLI 코딩 에이전트'}]},
   {id:'compute',title:'GPU 사용',services:[
     {href:'/compute',label:'학교 GPU',description:'학교별 GPU 예약과 Jupyter 실행',icon:Cpu,keywords:'학교 GPU 서버 노트북 주피터 jupyter 예약'},
     {href:'/dashboard',label:'GPU 예약',description:'사용 가능한 GPU 확인과 예약',icon:Cpu,keywords:'GPU 대여 컴퓨팅 그래픽카드 주피터 jupyter 실험 학습'},
@@ -43,7 +43,7 @@ export const serviceGroups: {id:string;title:string;services:Service[]}[] = [
     {href:'/download',label:'앱 다운로드',description:'Android 앱 설치 파일과 설치 안내',icon:Smartphone,keywords:'앱 app apk 안드로이드 android 다운로드 설치 모바일 휴대폰 업데이트'},
   ]},
   {id:'knowledge',title:'문서·연구 공개',services:[
-    {href:'https://docs.cbgpu.com',label:'사용 문서',description:'계정·GPU·SSH 사용 안내 · 로그인 없이 열람',icon:BookOpen,keywords:'docs 도움말 가이드 설명서 비밀번호 접속'},
+    {href:'https://docs.cbgpu.com',label:'사용 문서',description:'CBGPU 기능별 사용법과 문제 해결 안내',icon:BookOpen,keywords:'docs 도움말 가이드 설명서 비밀번호 접속'},
     {href:'https://arxiv.cbgpu.com',label:'연구 프리프린트',description:'학교 연구 읽기·검색 · CBGPU 계정으로 논문 제출',icon:Newspaper,keywords:'arxiv 논문 프리프린트 pdf 연구 업로드 제출'},
   ]},
 ];

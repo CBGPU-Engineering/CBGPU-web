@@ -32,8 +32,8 @@ export default function ConfirmDialog({
     <Dialog open={open} onOpenChange={o => !o && onCancel()}>
       <DialogContent className="max-w-sm" onExitComplete={onClosed}>
         <DialogHeader>
-          <DialogTitle className="font-semibold tracking-tight">{title ?? (english ? 'Delete this item?' : '삭제하시겠습니까?')}</DialogTitle>
-          <DialogDescription className="text-sm">{description ?? (english ? 'This action cannot be undone.' : '이 작업은 되돌릴 수 없습니다.')}</DialogDescription>
+          <DialogTitle className="font-semibold tracking-tight">{title ?? (english ? 'Delete this item?' : '삭제할까요?')}</DialogTitle>
+          <DialogDescription className="text-sm">{description ?? (english ? 'This action cannot be undone.' : '삭제하면 되돌릴 수 없어요.')}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 flex-row justify-end">
           <Button variant="outline" onClick={onCancel} className="font-semibold text-xs">
