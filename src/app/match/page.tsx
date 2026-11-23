@@ -152,7 +152,7 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
     <Dialog open onOpenChange={open => { if (!open) onCancel(); }}><DialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md"><DialogHeader className="shrink-0 px-4 pt-4 pb-3"><DialogTitle>새 스터디 만들기</DialogTitle><DialogDescription>과목과 인원을 정하고 함께 공부할 사람을 모아요.</DialogDescription></DialogHeader><div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain px-4 pb-4">
         <div className="flex gap-1.5 flex-wrap">
           {SUBJECTS.map(s => (
-            <button key={s} onClick={() => setSubject(s)}
+            <button key={s} type="button" aria-pressed={subject === s} onClick={() => setSubject(s)}
               className={`min-h-11 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${subject===s?'bg-primary text-primary-foreground':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>
@@ -299,10 +299,10 @@ export default function MatchPage() {
           onChange={(v) => setTab(v as 'all' | 'mine')}
         />
         <div className="flex gap-1 flex-wrap">
-          <button onClick={() => setFilter('')}
+          <button type="button" aria-pressed={!filter} onClick={() => setFilter('')}
             className={`min-h-11 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${!filter?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>전체</button>
           {SUBJECTS.map(s => (
-            <button key={s} onClick={() => setFilter(f => f===s?'':s)}
+            <button key={s} type="button" aria-pressed={filter === s} onClick={() => setFilter(f => f===s?'':s)}
               className={`min-h-11 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${filter===s?'bg-primary/10 text-primary':'bg-muted text-muted-foreground'}`}>{s}</button>
           ))}
         </div>

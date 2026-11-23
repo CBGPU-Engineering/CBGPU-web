@@ -104,8 +104,8 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
       <div className="flex items-center gap-3 flex-wrap justify-center">
         <div className="flex gap-1">
           {[6, 8, 12].map(p => (
-            <button key={p} onClick={() => { setPairs(p); start(p); }}
-              className={`px-3 py-1.5 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${
+            <button key={p} type="button" aria-pressed={pairs === p} onClick={() => { setPairs(p); start(p); }}
+              className={`min-h-11 px-3 py-2 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${
                 pairs === p ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}>
               {p === 6 ? '쉬움' : p === 8 ? '보통' : '어려움'}
@@ -168,7 +168,7 @@ export default function MemoryMatch(props: RankedGameProps = {}) {
 
       {done && (
         <div className="text-center space-y-2 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl">
-          <p className="font-black text-green-500 uppercase tracking-widest text-lg">🎉 클리어!</p>
+          <p className="font-black text-green-700 dark:text-green-400 uppercase tracking-widest text-lg">🎉 클리어!</p>
           <p className="text-sm text-muted-foreground font-medium">{fmt(time)} · {moves}회 시도</p>
           <Button onClick={() => start()} className="font-black uppercase tracking-widest mt-1">다시 하기</Button>
         </div>

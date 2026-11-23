@@ -9,27 +9,27 @@ import HeadlineTrend from './HeadlineTrend';
 // ─── category config ──────────────────────────────────────────────────────────
 const CATEGORIES = [
   {
-    id: 'ai', label: 'AI / LLM',
+    id: 'ai', label: 'AI · 언어 모델',
     hn: 'LLM GPT Claude artificial intelligence machine learning agent 2025',
     google: 'AI LLM ChatGPT Claude machine learning 2025',
   },
   {
-    id: 'security', label: 'Security',
+    id: 'security', label: '보안',
     hn: 'hacking CVE exploit vulnerability malware ransomware zero-day',
     google: 'CVE vulnerability exploit hacking cybersecurity 2025',
   },
   {
-    id: 'embedded', label: 'Embedded',
+    id: 'embedded', label: '임베디드',
     hn: 'embedded firmware microcontroller IoT RTOS ESP32 RISC-V bare-metal',
     google: 'embedded systems firmware microcontroller IoT RTOS 2025',
   },
   {
-    id: 'research', label: 'Research',
+    id: 'research', label: '연구',
     hn: 'arxiv paper preprint neural network deep learning research',
     google: 'machine learning research paper arxiv preprint 2025',
   },
   {
-    id: 'oss', label: 'Open Source',
+    id: 'oss', label: '오픈 소스',
     hn: 'open source release github rust golang typescript new version',
     google: 'open source release new version programming 2025',
   },
@@ -143,6 +143,7 @@ export default function TechNews() {
         {CATEGORIES.map(c => (
           <button
             key={c.id}
+            type="button" aria-pressed={cat === c.id}
             onClick={() => setCat(c.id)}
             className={`min-h-11 px-3 py-2 rounded-lg font-semibold text-sm transition-all ${
  cat === c.id ? 'bg-primary text-primary-foreground shadow-md' : 'bg-muted text-muted-foreground hover:bg-muted/70'

@@ -116,16 +116,20 @@ function DDayCounter() {
   const [label, setLabel] = useState('');
   const [date,  setDate]  = useState('');
   const [emoji, setEmoji] = useState('📅');
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     try { setItems(JSON.parse(localStorage.getItem('cbgpu_dday') ?? '[]')); } catch {}
   }, []);
 
-  const save = (next: DDay[]) => { setItems(next); localStorage.setItem('cbgpu_dday', JSON.stringify(next)); };
+  const save = (next: DDay[]) => {
+    try { localStorage.setItem('cbgpu_dday', JSON.stringify(next)); setItems(next); setSaveError(''); return true; }
+    catch { setSaveError('이 기기에서 날짜를 저장하지 못했어요. 브라우저의 저장 공간 설정을 확인한 뒤 다시 시도해 주세요.'); return false; }
+  };
 
   const add = () => {
     if (!label.trim() || !date) return;
-    save([...items, { id: Date.now().toString(), label, date, emoji }]);
+    if (!save([...items, { id: Date.now().toString(), label, date, emoji }])) return;
     setLabel(''); setDate('');
   };
 
@@ -142,15 +146,16 @@ function DDayCounter() {
 
   return (
     <div className="space-y-4 w-full max-w-sm mx-auto">
+      {saveError && <p role="alert" className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">{saveError}</p>}
       <div className="p-4 border border-border/50 rounded-2xl bg-card space-y-3">
         <div className="flex gap-1.5 flex-wrap">
           {EMOJIS.map(e => (
-            <button key={e} onClick={() => setEmoji(e)}
+            <button key={e} type="button" aria-label={`디데이 아이콘 ${e}`} aria-pressed={emoji === e} onClick={() => setEmoji(e)}
               className={`size-11 rounded-lg text-lg transition-all ${emoji===e?'bg-primary/20 scale-110':'hover:bg-muted'}`}>{e}</button>
           ))}
         </div>
-        <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="이벤트 이름 (예: 수학 기말고사)" className="font-medium" onKeyDown={e => e.key === 'Enter' && add()} />
-        <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="font-medium" />
+        <div className="space-y-2"><label htmlFor="dday-label" className="text-sm font-medium">이름</label><Input id="dday-label" value={label} onChange={e => setLabel(e.target.value)} placeholder="예: 수학 기말고사" className="font-medium" onKeyDown={e => e.key === 'Enter' && add()} /></div>
+        <div className="space-y-2"><label htmlFor="dday-date" className="text-sm font-medium">날짜</label><Input id="dday-date" type="date" value={date} onChange={e => setDate(e.target.value)} className="font-medium" /></div>
         <Button onClick={add} disabled={!label.trim() || !date} className="w-full font-semibold gap-2">
           <Plus className="size-4" />추가
         </Button>

@@ -61,14 +61,14 @@ function isOver(g: Grid): boolean {
 const COLORS: Record<number, string> = {
   2:    'bg-amber-100 text-gray-800',
   4:    'bg-amber-200 text-gray-800',
-  8:    'bg-orange-300 text-white',
-  16:   'bg-orange-400 text-white',
-  32:   'bg-orange-500 text-white',
-  64:   'bg-red-500 text-white',
-  128:  'bg-yellow-400 text-white',
-  256:  'bg-yellow-500 text-white',
-  512:  'bg-green-500 text-white',
-  1024: 'bg-green-600 text-white',
+  8:    'bg-orange-300 text-gray-900',
+  16:   'bg-orange-400 text-gray-900',
+  32:   'bg-orange-500 text-gray-900',
+  64:   'bg-red-500 text-gray-900',
+  128:  'bg-yellow-400 text-gray-900',
+  256:  'bg-yellow-500 text-gray-900',
+  512:  'bg-green-500 text-gray-900',
+  1024: 'bg-green-600 text-gray-900',
   2048: 'bg-green-700 text-white',
 };
 
@@ -160,7 +160,7 @@ export default function Game2048(props: RankedGameProps = {}) {
 
       {won && !over && (
         <div className="flex items-center gap-3 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl">
-          <p className="text-green-500 font-black uppercase tracking-widest text-sm">2048 달성!</p>
+          <p className="text-green-700 dark:text-green-400 font-black uppercase tracking-widest text-sm">2048 달성!</p>
           <Button onClick={() => setWon(false)} size="sm" variant="outline" className="font-black text-sm">계속하기</Button>
         </div>
       )}

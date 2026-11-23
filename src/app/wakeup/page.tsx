@@ -217,7 +217,7 @@ export default function WakeupSongPage() {
               return (
                 <button
                   key={i}
-                  type="button"
+                  type="button" aria-pressed={isSelected}
                   onClick={() => setSelectedDate(day)}
                   className={`flex flex-col items-center gap-0.5 shrink-0 px-2.5 py-1.5 rounded-lg border text-center transition-all active:scale-95 ${
  isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
