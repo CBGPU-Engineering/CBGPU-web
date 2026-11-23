@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 const origin = process.env.CBGPU_MATCH_TEST_ORIGIN || 'http://localhost:13980';
 assert.match(origin, /^http:\/\/(localhost|127\.0\.0\.1):\d+$/);
-const browser = await chromium.launch({ headless: true, executablePath: '/tmp/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+const browser = await chromium.launch({ headless: true, executablePath: process.env.CBGPU_CHROMIUM || undefined, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 try {
  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
  const session = await fetch(origin + '/backend/auth/v1/token?grant_type=password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: 'student@example.invalid', password: 'demo-only' }) }).then(r => r.json());
@@ -25,7 +25,8 @@ try {
   client.from = ((table: string) => {
    if (table !== 'study_posts') return original(table);
    const query = original(table);
-   query.insert = (() => ({ abortSignal: () => { attempts++; return Promise.reject(new Error('Synthetic SDK promise rejection')); } })) as any;
+   const rejected: any = { select: () => rejected, abortSignal: () => rejected, single: () => { attempts++; return Promise.reject(new Error('Synthetic SDK promise rejection')); } };
+   query.insert = (() => rejected) as any;
    return query;
   }) as typeof client.from;
  });

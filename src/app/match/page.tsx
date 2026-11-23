@@ -149,8 +149,9 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
     submitting.current = true;
     setSaving(true);
     try {
-      const { error } = await boundedClientRequest(signal => supabase.from('study_posts').insert({ user_id: owner, subject, title, description: desc, tags, max_members: max, is_open: true }).abortSignal(signal), undefined, 30_000);
+      const { data, error } = await boundedClientRequest(signal => supabase.from('study_posts').insert({ user_id: owner, subject, title, description: desc, tags, max_members: max, is_open: true }).select('id').abortSignal(signal).single(), undefined, 30_000);
       if (error) throw error;
+      if (typeof data?.id !== 'string' || !data.id) throw new Error('Study creation was not acknowledged');
       if (actor.current !== owner) return;
       showSuccess('스터디를 만들었어요.');
       onCreated();
@@ -265,13 +266,16 @@ export default function MatchPage() {
     return () => { supabase.removeChannel(ch); };
   }, [load]);
 
-  const mutate = async (postId: string, action: (owner: string, signal: AbortSignal) => PromiseLike<{ error: unknown }>, success?: string) => {
+  const mutate = async (postId: string, kind: 'member'|'post', action: (owner: string, signal: AbortSignal) => PromiseLike<{ data: unknown; error: unknown }>, success?: string) => {
     const owner = user?.id;
     if (!owner || mutations.current.has(postId)) return;
     mutations.current.add(postId);
     try {
-      const { error } = await boundedClientRequest(signal => action(owner, signal), undefined, 30_000);
+      const { data, error } = await boundedClientRequest(signal => action(owner, signal), undefined, 30_000);
       if (error) throw error;
+      if (!Array.isArray(data) || data.length !== 1 || (kind === 'member'
+        ? data[0]?.post_id !== postId || data[0]?.user_id !== owner
+        : data[0]?.id !== postId)) throw new Error('Study mutation was not acknowledged');
       if (actor.current !== owner) return;
       if (success) showSuccess(success);
       void load();
@@ -281,10 +285,10 @@ export default function MatchPage() {
       mutations.current.delete(postId);
     }
   };
-  const join = (postId: string) => mutate(postId, (owner, signal) => supabase.from('study_members').insert({ post_id: postId, user_id: owner }).abortSignal(signal), '참여했어요.');
-  const leave = (postId: string) => mutate(postId, (owner, signal) => supabase.from('study_members').delete().eq('post_id', postId).eq('user_id', owner).abortSignal(signal), '스터디에서 나왔어요.');
-  const del = (postId: string) => mutate(postId, (_, signal) => supabase.from('study_posts').delete().eq('id', postId).abortSignal(signal), '스터디를 삭제했어요.');
-  const close = (postId: string) => mutate(postId, (_, signal) => supabase.from('study_posts').update({ is_open: false }).eq('id', postId).abortSignal(signal));
+  const join = (postId: string) => mutate(postId, 'member', (owner, signal) => supabase.from('study_members').insert({ post_id: postId, user_id: owner }).select('post_id,user_id').abortSignal(signal), '참여했어요.');
+  const leave = (postId: string) => mutate(postId, 'member', (owner, signal) => supabase.from('study_members').delete().eq('post_id', postId).eq('user_id', owner).select('post_id,user_id').abortSignal(signal), '스터디에서 나왔어요.');
+  const del = (postId: string) => mutate(postId, 'post', (_, signal) => supabase.from('study_posts').delete().eq('id', postId).select('id').abortSignal(signal), '스터디를 삭제했어요.');
+  const close = (postId: string) => mutate(postId, 'post', (_, signal) => supabase.from('study_posts').update({ is_open: false }).eq('id', postId).select('id').abortSignal(signal));
 
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center max-w-lg mx-auto">
