@@ -11,7 +11,7 @@ import { MapPin } from 'lucide-react';
  * timetable during class hours, or today's self-study room assignments otherwise),
  * so they can go hand over a finished print/cut in person. */
 export function LocateStudentButton({ studentId, studentName }: { studentId?: string | null; studentName?: string | null }) {
-  const {t}=useAdminLanguage();
+  const {t,app}=useAdminLanguage();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LocationResult | null>(null);
@@ -52,7 +52,7 @@ export function LocateStudentButton({ studentId, studentName }: { studentId?: st
             ) : result.kind === 'class' ? (
               <div className="space-y-2 text-center">
                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  {result.period ? `School hours · period ${result.period}${result.subject ? ` (${result.subject})` : ''}` : t("Outside self-study hours")}
+                  {result.period ? (app?`수업 시간 · ${result.period}교시${result.subject ? ` (${result.subject})` : ''}`:`School hours · period ${result.period}${result.subject ? ` (${result.subject})` : ''}`) : t("Outside self-study hours")}
                 </p>
                 <p className="text-2xl font-black">{t("Grade")} {result.identity.grade}{t(", Class")} {result.identity.classNo}  {t("classroom")}</p>
                 <p className="text-xs text-muted-foreground opacity-60">{t("The student may be in this classroom unless attending a different class.")}</p>

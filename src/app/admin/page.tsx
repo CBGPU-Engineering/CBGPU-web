@@ -1051,7 +1051,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       <ConfirmDialog
         open={!!deleteTarget}
         title={t("Delete this account?")}
-        description={`${deleteTarget?.name ?? ''} will lose their name, student ID and profile image and will no longer be able to sign in. This cannot be undone.`}
+        description={app?`${deleteTarget?.name ?? ''} 계정의 이름·학번·프로필 사진이 삭제되고 더 이상 로그인할 수 없어요. 삭제하면 되돌릴 수 없어요.`:`${deleteTarget?.name ?? ''} will lose their name, student ID and profile image and will no longer be able to sign in. This cannot be undone.`}
         confirmLabel={isDeletingUser ? t("Deleting…") : t("Delete account")}
         onConfirm={handleDeleteUser}
         onCancel={() => setDeleteTarget(null)}
