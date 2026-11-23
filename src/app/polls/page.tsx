@@ -16,6 +16,7 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { requestAi } from '@/lib/requestAi';
+import { boundedClientRequest } from '@/lib/boundedClientRequest';
 
 // ─── types ────────────────────────────────────────────────────────────────────
 type QType = 'choice' | 'checkbox' | 'text' | 'paragraph' | 'scale' | 'dropdown';
@@ -31,7 +32,7 @@ interface Question {
 }
 interface Poll {
   id: string; created_at: string; title: string; description: string;
-  ends_at: string | null; is_active: boolean; show_results: boolean;
+  ends_at: string | null; is_active: boolean; show_results: boolean; editor_revision: number;
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -297,7 +298,6 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
 
 // ─── PollBuilder ──────────────────────────────────────────────────────────────
 function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => void; onBack: () => void }) {
-  const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [title, setTitle]   = useState(poll?.title ?? '');
   const [desc, setDesc]     = useState(poll?.description ?? '');
@@ -305,12 +305,25 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
   const [showRes, setShowRes] = useState(poll?.show_results ?? true);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
+  const [questionsLoaded, setQuestionsLoaded] = useState(!poll);
+  const [questionLoadError, setQuestionLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     if (!poll) return;
-    supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num')
-      .then(({ data }) => setQuestions((data ?? []).map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} }))));
-  }, [poll]);
+    let live = true;
+    const controller = new AbortController();
+    setQuestionsLoaded(false); setQuestionLoadError(false);
+    void boundedClientRequest(signal => supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num').abortSignal(signal), controller.signal)
+      .then(({ data, error }) => {
+        if (!live) return;
+        if (error) throw error;
+        setQuestions((data ?? []).map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} })));
+        setQuestionsLoaded(true);
+      }).catch(() => { if (live) setQuestionLoadError(true); });
+    return () => { live = false; controller.abort(); };
+  }, [poll, loadAttempt]);
 
   const addQ = (type: QType) => {
     const opts = ['choice','checkbox','dropdown'].includes(type) ? [{ id: uid(), text: '' }, { id: uid(), text: '' }] : [];
@@ -327,33 +340,36 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
   };
 
   const save = async () => {
+    if (savingRef.current || !questionsLoaded) return;
     if (!title.trim()) { showError('제목을 입력해 주세요.'); return; }
-    setSaving(true);
+    savingRef.current = true; setSaving(true);
     try {
-      let pollId = poll?.id;
-      if (!pollId) {
-        const { data, error } = await supabase.from('polls').insert({ title, description: desc, ends_at: endsAt || null, is_active: true, show_results: showRes, created_by: user?.id }).select().single();
-        if (error) throw error;
-        pollId = data.id;
-      } else {
-        const { error } = await supabase.from('polls').update({ title, description: desc, ends_at: endsAt || null, show_results: showRes }).eq('id', pollId);
-        if (error) throw error;
-        const { error: removeError } = await supabase.from('poll_questions').delete().eq('poll_id', pollId);
-        if (removeError) throw removeError;
-      }
-      if (questions.length) {
-        const rows = questions.map((q, i) => ({ poll_id: pollId, order_num: i, type: q.type, title: q.title, description: q.description, required: q.required, options: q.options, config: q.config }));
-        const { error } = await supabase.from('poll_questions').insert(rows);
-        if (error) throw error;
-      }
+      const { data, error } = await boundedClientRequest(signal => supabase.rpc('cbgpu_save_poll', {
+        p_poll_id: poll?.id ?? null,
+        p_expected_revision: poll?.editor_revision ?? null,
+        p_poll: { title, description: desc, ends_at: endsAt || null, show_results: showRes },
+        p_questions: questions.map((q, i) => ({ id: q.id, order_num: i, type: q.type, title: q.title, description: q.description, required: q.required, options: q.options, config: q.config })),
+      }).abortSignal(signal), undefined, 30_000);
+      if (error) throw error;
+      if (!data?.id) throw new Error('POLL_RESULT_UNCONFIRMED');
       showSuccess('저장했어요.');
       onSaved();
-    } catch { showError('투표를 저장하지 못했어요. 입력한 내용을 확인한 뒤 다시 저장해 주세요.'); }
-    finally { setSaving(false); }
+    } catch (error) {
+      const reason = error && typeof error === 'object' && 'message' in error ? String(error.message) : '';
+      if (reason.includes('POLL_ANSWERED_QUESTION_REMOVAL') || reason.includes('POLL_ANSWERED_QUESTION_TYPE')) {
+        showError('답변이 있는 질문은 삭제하거나 유형을 바꿀 수 없어요. 질문을 원래대로 돌린 뒤 저장해 주세요.');
+      } else if (reason.includes('POLL_INVALID_CONDITION')) {
+        showError('표시 조건에 연결된 질문을 찾지 못했어요. 질문의 표시 조건을 다시 선택한 뒤 저장해 주세요.');
+      } else if (reason.includes('POLL_EDIT_CONFLICT')) {
+        showError('다른 곳에서 투표를 수정했어요. 작성한 내용을 따로 복사한 뒤 목록에서 투표를 다시 열어 주세요.');
+      } else {
+        showError('저장 결과를 확인하지 못했어요. 작성한 내용은 그대로 있어요. 목록에서 저장 여부를 확인한 뒤 다시 시도해 주세요.');
+      }
+    } finally { savingRef.current = false; setSaving(false); }
   };
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto">
+    <fieldset disabled={saving} className="space-y-5 max-w-2xl mx-auto min-w-0">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <h2 className="font-semibold text-xl tracking-tight">{poll ? '투표 편집' : '새 투표 만들기'}</h2>
@@ -364,7 +380,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         <div className="flex gap-3 flex-wrap">
           <div><p className="text-sm font-semibold text-muted-foreground mb-1">마감일</p><Input aria-label="마감일" type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-sm" /></div>
           <label className="flex items-center gap-2 mt-5 cursor-pointer">
-            <div onClick={() => setShowRes(v => !v)} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
+            <div onClick={() => { if (!savingRef.current) setShowRes(v => !v); }} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
               <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
             </div>
             <span className="text-sm font-semibold text-muted-foreground">결과 공개</span>
@@ -372,6 +388,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         </div>
       </div>
 
+      {!questionsLoaded && <div role={questionLoadError ? 'alert' : 'status'} className="space-y-2 text-sm text-muted-foreground"><p>{questionLoadError ? '질문을 불러오지 못했어요. 질문을 확인한 뒤 저장할 수 있어요.' : '질문을 불러오고 있어요.'}</p>{questionLoadError && <Button variant="outline" onClick={() => setLoadAttempt(value => value + 1)}>질문 다시 불러오기</Button>}</div>}
       <div className="space-y-3">
         {questions.map((q, i) => (
           <QuestionBuilder key={q.id} q={q} idx={i} total={questions.length}
@@ -386,7 +403,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         <p className="text-sm font-semibold text-muted-foreground mb-3 text-center">질문 추가</p>
         <div className="flex gap-1.5 flex-wrap justify-center">
           {Q_TYPES.map(t => (
-            <button key={t.id} onClick={() => addQ(t.id)}
+            <button key={t.id} disabled={!questionsLoaded} onClick={() => addQ(t.id)}
               className="min-h-11 px-3 py-2 bg-muted hover:bg-muted/70 rounded-lg text-sm font-semibold text-muted-foreground transition-all flex items-center gap-1.5">
               <t.icon className="size-3" />{t.label}
             </button>
@@ -396,9 +413,9 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
 
       <div className="flex gap-2 justify-end">
         <Button variant="outline" onClick={onBack} className="font-semibold text-sm">취소</Button>
-        <Button onClick={save} disabled={saving} className="font-semibold text-sm">{saving ? '저장 중...' : '저장하기'}</Button>
+        <Button onClick={save} disabled={saving || !questionsLoaded} className="font-semibold text-sm">{saving ? '저장 중...' : '저장하기'}</Button>
       </div>
-    </div>
+    </fieldset>
   );
 }
 
@@ -682,10 +699,7 @@ export default function PollsPage() {
                     )}
                     {isAdmin && (
                       <>
-                        <Button variant="ghost" size="icon" aria-label="투표 수정" className="size-11" onClick={async () => {
-                          const { data: qs } = await supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num');
-                          setView({ type: 'builder', poll });
-                        }}><Edit3 className="size-3.5" /></Button>
+                        <Button variant="ghost" size="icon" aria-label="투표 수정" className="size-11" onClick={() => setView({ type: 'builder', poll })}><Edit3 className="size-3.5" /></Button>
                         {poll.is_active && !closed && <Button variant="ghost" size="icon" aria-label="투표 마감" className="size-11 text-amber-600 dark:text-amber-400" onClick={() => closePoll(poll.id)}><Lock className="size-3.5" /></Button>}
                         <Button variant="ghost" size="icon" aria-label="투표 삭제" className="size-11 text-destructive" onClick={() => setConfirmDeleteId(poll.id)}><Trash2 className="size-3.5" /></Button>
                       </>
