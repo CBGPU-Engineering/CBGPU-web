@@ -197,7 +197,7 @@ export default function NewServerPage() {
       <div className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4 min-w-0">
           <button
-            onClick={() => router.back()} aria-label="서버 목록으로 돌아가기"
+            onClick={() => router.back()} aria-label="이전 화면으로 돌아가기"
             className="flex shrink-0 items-center justify-center size-11 rounded-lg border border-border/60 bg-card text-muted-foreground hover:text-foreground hover:border-border transition-all"
           >
             <ArrowLeft className="size-4" />
