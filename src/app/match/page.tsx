@@ -14,6 +14,7 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { requestAi } from '@/lib/requestAi';
+import { boundedClientRequest } from '@/lib/boundedClientRequest';
 
 interface StudyPost {
   id: string; created_at: string; user_id: string;
@@ -119,6 +120,8 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
   const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
   const [suggestingTags, setSuggestingTags] = useState(false);
   const suggestedFromRef = useRef('');
+  const submitting = useRef(false);
+  const actor = useRef(user?.id); actor.current = user?.id;
 
   const suggestTags = async () => {
     const source = `${subject}\n${title}\n${desc}`.trim();
@@ -139,17 +142,28 @@ function CreateForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: 
   };
 
   const submit = async () => {
+    if (submitting.current) return;
     if (!title.trim()) { showError('제목을 입력해 주세요.'); return; }
+    const owner = user?.id;
+    if (!owner) { showError('로그인한 뒤 스터디를 만들어 주세요.'); return; }
+    submitting.current = true;
     setSaving(true);
-    const { error } = await supabase.from('study_posts').insert({ user_id: user!.id, subject, title, description: desc, tags, max_members: max, is_open: true });
-    setSaving(false);
-    if (error) { showError('스터디를 만들지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    showSuccess('스터디를 만들었어요.');
-    onCreated();
+    try {
+      const { error } = await boundedClientRequest(signal => supabase.from('study_posts').insert({ user_id: owner, subject, title, description: desc, tags, max_members: max, is_open: true }).abortSignal(signal), undefined, 30_000);
+      if (error) throw error;
+      if (actor.current !== owner) return;
+      showSuccess('스터디를 만들었어요.');
+      onCreated();
+    } catch {
+      if (actor.current === owner) showError('스터디 생성 결과를 확인하지 못했어요. 입력한 내용은 그대로 있어요. 목록을 확인한 뒤 다시 시도해 주세요.');
+    } finally {
+      submitting.current = false;
+      setSaving(false);
+    }
   };
 
   return (
-    <Dialog open onOpenChange={open => { if (!open) onCancel(); }}><DialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md"><DialogHeader className="shrink-0 px-4 pt-4 pb-3"><DialogTitle>새 스터디 만들기</DialogTitle><DialogDescription>과목과 인원을 정하고 함께 공부할 사람을 모아요.</DialogDescription></DialogHeader><div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain px-4 pb-4">
+    <Dialog open onOpenChange={open => { if (!open && !submitting.current) onCancel(); }}><DialogContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md"><DialogHeader className="shrink-0 px-4 pt-4 pb-3"><DialogTitle>새 스터디 만들기</DialogTitle><DialogDescription>과목과 인원을 정하고 함께 공부할 사람을 모아요.</DialogDescription></DialogHeader><div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain px-4 pb-4">
         <div className="flex gap-1.5 flex-wrap">
           {SUBJECTS.map(s => (
             <button key={s} type="button" aria-pressed={subject === s} onClick={() => setSubject(s)}
@@ -202,13 +216,19 @@ export default function MatchPage() {
   const [dbMissing, setDbMissing] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const mutations = useRef(new Set<string>());
+  const actor = useRef(user?.id); actor.current = user?.id;
+  const generation = useRef(0);
 
   const load = useCallback(async () => {
+    const ticket = ++generation.current;
     setLoading(true); setLoadError('');
+    try {
     const [{ data: p, error }, { data: m, error: memberError }] = await Promise.all([
       supabase.from('study_posts').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('study_members').select('post_id, user_id, joined_at').limit(2000),
     ]);
+    if (ticket !== generation.current) return;
     if (error?.message?.includes('does not exist')) { setDbMissing(true); setLoading(false); return; }
     if (error || memberError) { setLoadError('스터디 정보를 불러오지 못했어요. 연결을 확인한 뒤 다시 불러와 주세요.'); setLoading(false); return; }
     setPosts((p ?? []) as StudyPost[]);
@@ -219,6 +239,7 @@ export default function MatchPage() {
     const ids = [...new Set([...(m ?? []).map((x: any) => x.user_id), ...(p ?? []).map((x: any) => x.user_id)])];
     if (ids.length > 0) {
       const { data: profs,error:profileError } = await studyMemberProfiles(supabase,ids);
+      if (ticket !== generation.current) return;
       if(profileError)showError('참여자 표시 정보를 확인하지 못했어요.');
       setProfileMap(new Map((profs ?? []).map((pr: any) => [pr.id, pr as Profile])));
     }else{setProfileMap(new Map());
@@ -226,7 +247,12 @@ export default function MatchPage() {
 
     setLoading(false);
     setJustFinished(true);
-    setTimeout(() => setJustFinished(false), 600);
+    setTimeout(() => { if (ticket === generation.current) setJustFinished(false); }, 600);
+    } catch {
+      if (ticket === generation.current) setLoadError('스터디 정보를 불러오지 못했어요. 연결을 확인한 뒤 다시 불러와 주세요.');
+    } finally {
+      if (ticket === generation.current) setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -239,26 +265,26 @@ export default function MatchPage() {
     return () => { supabase.removeChannel(ch); };
   }, [load]);
 
-  const join  = async (postId: string) => {
-    const { error } = await supabase.from('study_members').insert({ post_id: postId, user_id: user!.id });
-    if (error) { showError('참여하지 못했어요. 모집 인원과 상태를 확인한 뒤 다시 시도해 주세요.'); return; }
-    showSuccess('참여했어요.'); load();
+  const mutate = async (postId: string, action: (owner: string, signal: AbortSignal) => PromiseLike<{ error: unknown }>, success?: string) => {
+    const owner = user?.id;
+    if (!owner || mutations.current.has(postId)) return;
+    mutations.current.add(postId);
+    try {
+      const { error } = await boundedClientRequest(signal => action(owner, signal), undefined, 30_000);
+      if (error) throw error;
+      if (actor.current !== owner) return;
+      if (success) showSuccess(success);
+      void load();
+    } catch {
+      if (actor.current === owner) showError('처리 결과를 확인하지 못했어요. 스터디 목록을 다시 불러와 상태를 확인해 주세요.');
+    } finally {
+      mutations.current.delete(postId);
+    }
   };
-  const leave = async (postId: string) => {
-    const { error } = await supabase.from('study_members').delete().eq('post_id', postId).eq('user_id', user!.id);
-    if (error) { showError('스터디에서 나가지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    showSuccess('스터디에서 나왔어요.'); load();
-  };
-  const del   = async (postId: string) => {
-    const { error } = await supabase.from('study_posts').delete().eq('id', postId);
-    if (error) { showError('스터디를 삭제하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    showSuccess('스터디를 삭제했어요.'); load();
-  };
-  const close = async (postId: string) => {
-    const { error } = await supabase.from('study_posts').update({ is_open: false }).eq('id', postId);
-    if (error) { showError('모집을 마감하지 못했어요. 잠시 후 다시 시도해 주세요.'); return; }
-    load();
-  };
+  const join = (postId: string) => mutate(postId, (owner, signal) => supabase.from('study_members').insert({ post_id: postId, user_id: owner }).abortSignal(signal), '참여했어요.');
+  const leave = (postId: string) => mutate(postId, (owner, signal) => supabase.from('study_members').delete().eq('post_id', postId).eq('user_id', owner).abortSignal(signal), '스터디에서 나왔어요.');
+  const del = (postId: string) => mutate(postId, (_, signal) => supabase.from('study_posts').delete().eq('id', postId).abortSignal(signal), '스터디를 삭제했어요.');
+  const close = (postId: string) => mutate(postId, (_, signal) => supabase.from('study_posts').update({ is_open: false }).eq('id', postId).abortSignal(signal));
 
   if (dbMissing) return (
     <section className="cb-page-content px-4 py-16 flex flex-col items-center gap-4 text-center max-w-lg mx-auto">

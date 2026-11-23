@@ -1,6 +1,7 @@
 'use client';
 import KakaoPageAd from '@/components/ads/KakaoPageAd';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { boundedClientRequest } from '@/lib/boundedClientRequest';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
@@ -20,6 +21,7 @@ export default function ContactPage() {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitting = useRef(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -27,23 +29,31 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting.current) return;
     if (!form.name || !form.email || !form.message) {
       showError('이름, 이메일, 문의 내용을 입력해 주세요.'); return;
     }
+    submitting.current = true;
+    const submitted = { ...form };
     setIsSubmitting(true);
     try {
+      await boundedClientRequest(async signal => {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(submitted),
+        signal,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || data?.ok !== true) throw new Error('Contact delivery unconfirmed');
+      }, undefined, 30_000);
       showSuccess('문의를 보냈어요. 입력한 이메일로 답변을 안내해요.');
-      setForm(prev => ({ ...prev, category: '', message: '' }));
+      setForm(prev => prev.name === submitted.name && prev.email === submitted.email && prev.category === submitted.category && prev.message === submitted.message
+        ? { ...prev, category: '', message: '' } : prev);
     } catch {
-      showError('문의를 보내지 못했어요. 입력한 내용은 그대로 있으니 잠시 후 다시 보내 주세요.');
+      showError('문의 전송 결과를 확인하지 못했어요. 입력한 내용은 그대로 있어요. 다시 보내면 중복 접수될 수 있어요.');
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   };
