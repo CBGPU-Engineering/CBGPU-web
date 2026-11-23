@@ -141,7 +141,7 @@ function MealPageContent() {
     try {
       const result=await fetchSchoolMeal(d,schoolId);if(generation===requestGeneration.current)setData(result);
     } catch (error) {
-      if(generation===requestGeneration.current)setData({ meals: [], date: d, today: fmtDate(new Date()), error: error instanceof Error?error.message:'불러오기 실패' });
+      if(generation===requestGeneration.current)setData({ meals: [], date: d, today: fmtDate(new Date()), error: error instanceof Error?error.message:'급식 정보를 불러오지 못했어요. 다시 불러와 주세요.' });
     } finally {
       if(generation!==requestGeneration.current)return;setLoading(false);
       setJustLoaded(true);
@@ -226,8 +226,8 @@ function MealPageContent() {
       ) : !data?.meals?.length ? (
         <Empty
           icon={<UtensilsCrossed className="size-10 mx-auto mb-3 opacity-30" />}
-          title="급식 정보가 없습니다"
-          sub={data?.note ?? '주말이나 방학일 수 있습니다'}
+          title="급식 정보가 없어요"
+          sub={data?.note ?? '선택한 날짜에 등록된 급식이 없어요.'}
         />
       ) : (
         <div className="grid gap-4">

@@ -344,7 +344,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         const { error } = await supabase.from('poll_questions').insert(rows);
         if (error) throw error;
       }
-      showSuccess('저장됐습니다!');
+      showSuccess('저장했어요.');
       onSaved();
     } catch (e: any) { showError(e.message); }
     finally { setSaving(false); }
@@ -424,7 +424,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
       const rows = visibleQs.map(q => ({ response_id: resp.id, question_id: q.id, value: answers[q.id] ?? null }));
       const { error: ae } = await supabase.from('poll_answers').insert(rows);
       if (ae) throw ae;
-      showSuccess('제출됐습니다!');
+      showSuccess('제출했어요.');
       onSubmitted();
     } catch (e: any) { showError(e.message); }
     finally { setSubmitting(false); }
@@ -578,12 +578,12 @@ export default function PollsPage() {
 
   const closePoll = async (pollId: string) => {
     await supabase.from('polls').update({ is_active: false }).eq('id', pollId);
-    showSuccess('마감됐습니다.'); loadPolls();
+    showSuccess('마감했어요.'); loadPolls();
   };
 
   const deletePoll = async (pollId: string) => {
     await supabase.from('polls').delete().eq('id', pollId);
-    showSuccess('삭제됐습니다.'); loadPolls();
+    showSuccess('삭제했어요.'); loadPolls();
   };
 
   if (dbMissing) return (
@@ -624,7 +624,7 @@ export default function PollsPage() {
       <ConfirmDialog
         open={!!confirmDeleteId}
         title="투표를 삭제하시겠습니까?"
-        description="투표와 모든 응답이 영구적으로 삭제됩니다."
+        description="투표와 모든 응답이 삭제돼요. 되돌릴 수 없어요."
         onConfirm={() => { deletePoll(confirmDeleteId!); setConfirmDeleteId(null); }}
         onCancel={() => setConfirmDeleteId(null)}
       />
@@ -648,7 +648,7 @@ export default function PollsPage() {
       {loading || justFinished ? <div className="py-16 flex items-center justify-center"><LoadingSpinner done={justFinished} size={56} label="투표 불러오는 중" /></div>
       : shown.length === 0 ? (
         <div className="py-20 text-center border-2 border-dashed rounded-2xl text-muted-foreground font-medium">
-          {tab === 'active' ? '진행 중인 투표가 없습니다.' : '마감된 투표가 없습니다.'}
+          {tab === 'active' ? '아직 진행 중인 투표가 없어요.' : '아직 마감된 투표가 없어요.'}
         </div>
       ) : (
         <div className="space-y-3">

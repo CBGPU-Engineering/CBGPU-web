@@ -65,7 +65,7 @@ export default function NewLaserJobPage() {
           const convertedFile = new File([converted], newName, { type: 'application/dxf' });
           setFileEntries(prev => [...prev, { file: convertedFile, quantity: '1', catalogId: '', convertedFrom: file.name }]);
         } catch {
-          showError(`"${file.name}" 변환 실패: 파일이 손상되었거나 지원하지 않는 구조입니다.`);
+          showError(`"${file.name}" 파일을 변환하지 못했어요. 손상됐거나 지원하지 않는 파일일 수 있어요.`);
         }
         continue;
       }
@@ -80,13 +80,13 @@ export default function NewLaserJobPage() {
   const handleSubmit = async () => {
     if (!user) return;
     if (!await fabricationPermission.verify()) { showError(fabricationPermission.reason || '제작 장비 이용 권한을 확인해 주세요.'); return; }
-    if (fileEntries.length === 0) { showError('dxf 파일을 한 개 이상 업로드해주세요.'); return; }
-    if (fileEntries.some(e => !e.file.name.toLowerCase().endsWith('.dxf'))) { showError('dxf 파일만 업로드할 수 있습니다.'); return; }
-    if (!purpose.trim()) { showError('사용 목적을 입력해주세요.'); return; }
+    if (fileEntries.length === 0) { showError('dxf 파일을 한 개 이상 올려 주세요.'); return; }
+    if (fileEntries.some(e => !e.file.name.toLowerCase().endsWith('.dxf'))) { showError('dxf 파일을 선택해 주세요.'); return; }
+    if (!purpose.trim()) { showError('사용 목적을 입력해 주세요.'); return; }
     for (const e of fileEntries) {
-      if (!e.catalogId) { showError(`"${e.file.name}"의 재질/두께를 선택해주세요.`); return; }
+      if (!e.catalogId) { showError(`"${e.file.name}"의 재질과 두께를 선택해 주세요.`); return; }
       const q = parseInt(e.quantity);
-      if (isNaN(q) || q <= 0) { showError(`"${e.file.name}"의 수량을 올바르게 입력해주세요.`); return; }
+      if (isNaN(q) || q <= 0) { showError(`"${e.file.name}"의 수량을 0보다 크게 입력해 주세요.`); return; }
     }
 
     setSubmitting(true);
@@ -98,7 +98,7 @@ export default function NewLaserJobPage() {
       const { error: uploadError } = await supabase.storage.from('manufacturing').upload(filePath, entry.file);
       if (uploadError) {
         setSubmitting(false);
-        showError(`"${entry.file.name}" 업로드 실패: ` + uploadError.message);
+        showError(`"${entry.file.name}" 파일을 올리지 못했어요. ` + uploadError.message);
         return;
       }
       rows.push({
@@ -120,12 +120,12 @@ export default function NewLaserJobPage() {
     setSubmitting(false);
 
     if (error) {
-      showError('신청 실패: ' + error.message);
+      showError('신청하지 못했어요. ' + error.message);
     } else if (rows.length === 1) {
-      showSuccess('레이저 커팅이 신청됐습니다. 담당자 승인을 기다려주세요.');
+      showSuccess('레이저 커팅을 신청했어요. 담당자 승인 후 제작을 진행해요.');
       router.push(`/manufacturing/laser/${data[0].id}`);
     } else {
-      showSuccess(`파일 ${rows.length}개가 각각 신청됐습니다. 담당자 승인을 기다려주세요.`);
+      showSuccess(`파일 ${rows.length}개를 각각 신청했어요. 담당자 승인 후 제작을 진행해요.`);
       router.push('/manufacturing/laser');
     }
   };
@@ -144,7 +144,7 @@ export default function NewLaserJobPage() {
         <div className="bg-muted p-8 rounded-full">
           <ShieldAlert className="w-16 h-16 text-muted-foreground" />
         </div>
-        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">Login</Button>
+        <Button onClick={() => router.push('/auth/login')} className="font-semibold px-10 h-12">로그인하기</Button>
       </div>
     );
   }
@@ -179,7 +179,7 @@ export default function NewLaserJobPage() {
 
         {catalog.length === 0 ? (
           <p className="text-xs text-muted-foreground font-bold opacity-60 border-2 border-dashed border-border/40 rounded-lg py-6 text-center">
-            현재 담당자가 등록해둔 재질/두께가 없습니다. 담당자에게 문의해주세요.
+            등록된 재질과 두께가 없어요. 담당자에게 문의해 주세요.
           </p>
         ) : (
           <>
@@ -188,7 +188,7 @@ export default function NewLaserJobPage() {
                 <>
                   <UploadCloud className="size-6 opacity-40" />
                   <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
-                  <span className="text-xs text-muted-foreground opacity-50">.dxf 그대로 올리거나, .svg / .dwg를 올리면 자동으로 dxf로 변환됩니다</span>
+                  <span className="text-xs text-muted-foreground opacity-50">.dxf 그대로 올리거나, .svg / .dwg를 올리면 dxf로 변환해요</span>
                 </>
               )}
               <input type="file" accept=".dxf,.svg,.dwg" multiple disabled={converting} className="hidden" onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
@@ -196,7 +196,7 @@ export default function NewLaserJobPage() {
 
             {fileEntries.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 각각 별도의 신청 건(대기열 항목)으로 접수됩니다.</p>
+                <p className="text-xs text-muted-foreground opacity-60">파일마다 재질/두께/수량을 각각 정하고, 파일별로 나눠 신청해요.</p>
                 {fileEntries.map((entry, i) => (
                   <div key={i} className="rounded-2xl border border-border/50 bg-muted/20 p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">

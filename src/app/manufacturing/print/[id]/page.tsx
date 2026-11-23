@@ -51,7 +51,7 @@ export default function PrintJobDetailPage() {
     const current=()=>request===generation.current&&expected===currentViewer.current;
     const { data, error } = await supabase.from('print_jobs').select(manufacturingJobSelect(', preferred_printer:preferred_printer_id(name)')).eq('id', id).single().returns<any>();
     if(!current())return;
-    if (error) { showError('신청 내역을 찾을 수 없습니다.'); router.push('/manufacturing/print'); return; }
+    if (error) { showError('신청 내역을 찾지 못했어요. 목록에서 다시 확인해 주세요.'); router.push('/manufacturing/print'); return; }
     const labels=await attachManufacturingManagers(supabase,'print',[data]);if(!current())return;setJobState({viewer:expected,id,value:labels.data[0]});setRequester(null);if(labels.error)showError('담당자 표시 정보를 확인하지 못했어요.');
     setLoading(false);
     if (!scopedFiles&&data.file_path) {
@@ -70,17 +70,17 @@ export default function PrintJobDetailPage() {
 
   const handleCancel = async () => {
     const { error } = await supabase.from('print_jobs').update({ status: 'canceled' }).eq('id', job.id);
-    if (error) showError('취소 실패: ' + error.message);
-    else { showSuccess('신청이 취소됐습니다.'); setCancelOpen(false); fetchJob(); }
+    if (error) showError('취소하지 못했어요. ' + error.message);
+    else { showSuccess('신청을 취소했어요.'); setCancelOpen(false); fetchJob(); }
   };
 
   const handleMarkDelivered = async () => {
     const { error } = await supabase.from('print_jobs')
       .update({ delivered_at: new Date().toISOString(), file_path: null, file_name: null })
       .eq('id', job.id);
-    if (error) { showError('처리 실패: ' + error.message); return; }
+    if (error) { showError('처리하지 못했어요. ' + error.message); return; }
     await deleteManufacturingFile(job.file_path);
-    showSuccess('전달 완료로 표시했습니다.');
+    showSuccess('전달 완료로 표시했어요.');
     fetchJob();
   };
 
@@ -142,13 +142,13 @@ export default function PrintJobDetailPage() {
 
       <div className="border-2 rounded-2xl overflow-hidden bg-card">
         <div className="px-6 py-4 border-b-2 bg-muted/20">
-          <p className="font-semibold text-xs">Details</p>
+          <p className="font-semibold text-xs">신청 정보</p>
         </div>
         <div className="p-6 grid gap-5">
           {requester && (
             <div>
               <label className={labelCls}>신청자</label>
-              <span className="font-bold text-sm">{requester.full_name || 'Unknown'} {requester.student_id ? `(${requester.student_id})` : ''}</span>
+              <span className="font-bold text-sm">{requester.full_name || '이름 정보 없음'} {requester.student_id ? `(${requester.student_id})` : ''}</span>
             </div>
           )}
           <div>
@@ -255,7 +255,7 @@ export default function PrintJobDetailPage() {
       <ConfirmDialog
         open={cancelOpen}
         title="신청 취소"
-        description="이 3D 프린팅 신청을 취소합니다. 되돌릴 수 없습니다."
+        description="이 3D 프린팅 신청을 취소해요. 취소한 신청은 되돌릴 수 없어요."
         confirmLabel="취소하기"
         onConfirm={handleCancel}
         onCancel={() => setCancelOpen(false)}
