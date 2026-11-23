@@ -1,4 +1,5 @@
 export type SchoolLifeSources = {
+  school_type?: string;
   school_id: string;
   official_id?: string|null;
   education_office_code?: string|null;

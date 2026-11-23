@@ -51,6 +51,14 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 - Say what the user can do, not what the system is. Errors tell the next step; no raw provider
   messages. Never claim success before the server result is persisted.
 
+### Korean microcopy
+
+- Apply the installed `ux-writing-kr` skill: calm 해요체 in Korean user and school-management flows, short action verbs, and a concrete next step in errors. Preserve English in the platform/developer portals.
+- Read the handler before rewriting: an accepted request is not a completed deployment; saving a draft is not sending an application; visibility is not permission to participate.
+- Explain consequential actions and privacy accurately. Do not promise delivery, permanent removal, recovery, exclusive access or instant updates unless the implementation supports it. Keep necessary warnings and limits.
+- Machine values, API codes, URLs, model prompts and user-authored content are not interface copy. Do not translate them. School introduction (도입), school membership (소속), and registration requests are different actions.
+- Keep the requested adopted-school badge “이미 도입됐어요” and introduction action “우리 학교에 도입하기”.
+
 ## 4. Layout and type
 
 - Mobile first: design at 360-430px wide, then check desktop. No horizontal page scroll, no text

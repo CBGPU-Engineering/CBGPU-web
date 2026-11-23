@@ -107,19 +107,19 @@ export default function NewServerPage() {
 
   const handleSubmit = async () => {
     if (!user||submissionRef.current||central.enabled&&!personalDraft&&central.loading) return;
-    if (!profile || profile.id !== user.id) { showError('계정 프로필을 확인할 수 없습니다. 새로고침 후 다시 시도하고, 계속되면 관리자에게 문의해 주세요.'); return; }
-    if (!permission.enabled&&!isApproved) { showError('학번 또는 이름 확인이 필요해 배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if (!profile || profile.id !== user.id) { showError('계정 정보를 확인하지 못했어요. 새로고침 후 다시 시도하고, 계속되면 관리자에게 문의해 주세요.'); return; }
+    if (!permission.enabled&&!isApproved) { showError('이름과 학번 확인이 필요해요. 프로필에서 정보를 확인해 주세요.'); return; }
     if (domainName&&!/^[a-z][a-z0-9-]{2,34}$/.test(domainName)) {showError('도메인 이름은 영문 소문자로 시작하는 3~35자 영문·숫자·하이픈으로 입력하세요.');return;}
-    if (!form.name.trim())                                         { showError('프로젝트 이름을 입력해주세요.'); return; }
-    if (form.deployType === 'docker' && !form.dockerImage.trim()) { showError('Docker 이미지를 입력해주세요.'); return; }
-    if (form.deployType !== 'docker'    && !form.gitUrl.trim())      { showError('Git 저장소 URL을 입력해주세요.'); return; }
+    if (!form.name.trim())                                         { showError('프로젝트 이름을 입력해 주세요.'); return; }
+    if (form.deployType === 'docker' && !form.dockerImage.trim()) { showError('Docker 이미지 이름을 입력해 주세요.'); return; }
+    if (form.deployType !== 'docker'    && !form.gitUrl.trim())      { showError('Git 저장소 주소를 입력해 주세요.'); return; }
     if (form.deployType==='git'&&/YOUR_PROJECT|YOUR_APP/.test(form.runCommand)){showError('실행 명령의 YOUR_PROJECT 또는 YOUR_APP을 실제 프로젝트 이름으로 바꿔 주세요.');return;}
 
 
     const hostPort      = form.hostPort.trim()?parseInt(form.hostPort):null;
     const containerPort = parseInt(form.containerPort);
-    if (hostPort!==null&&(isNaN(hostPort)      || hostPort < 1024      || hostPort > 65535))      { showError('포트는 1~65535 사이 숫자여야 합니다.'); return; }
-    if (isNaN(containerPort) || containerPort < 1 || containerPort > 65535) { showError('컨테이너 포트는 1~65535 사이 숫자여야 합니다.'); return; }
+    if (hostPort!==null&&(isNaN(hostPort)      || hostPort < 1024      || hostPort > 65535))      { showError('외부 포트는 1024~65535 사이의 숫자로 입력해 주세요.'); return; }
+    if (isNaN(containerPort) || containerPort < 1 || containerPort > 65535) { showError('컨테이너 외부 포트는 1024~65535 사이의 숫자로 입력해 주세요.'); return; }
 
     const envVarsObj: Record<string, string> = {};
     for (const e of form.envVars) if (e.key.trim()) envVarsObj[e.key.trim()] = e.value;
@@ -153,12 +153,12 @@ export default function NewServerPage() {
     setSubmitting(false);submissionRef.current=false;
 
     if (error) {
-      if (error.code === '23505') showError('이미 사용 중인 포트입니다.');
-      else if (error.code === '42501') showError('프로젝트 생성 권한을 확인할 수 없습니다. 프로필 승인 상태를 확인해 주세요.');
-      else showError('프로젝트 생성 실패: ' + error.message);
+      if (error.code === '23505') showError('이미 사용 중인 포트예요. 다른 포트를 입력해 주세요.');
+      else if (error.code === '42501') showError('프로젝트를 만들 권한을 확인하지 못했어요. 프로필 승인 상태를 확인해 주세요.');
+      else showError('프로젝트 생성 결과를 확인하지 못했어요. ' + error.message);
     } else {
-      const retainedDraft=requestedDraft||created?.execution_mode==='UNASSIGNED_V1'||deployment_requested===false;if(!retainedDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('서버 배포는 시작됐지만 도메인 설정에 실패했습니다. 프로젝트 상세에서 다시 설정하세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
-      showSuccess(warning||(retainedDraft?'프로젝트 초안을 저장했습니다. 서버 실행은 시작하지 않았어요.':'프로젝트를 생성했습니다. 배포가 자동으로 시작됩니다.'));
+      const retainedDraft=requestedDraft||created?.execution_mode==='UNASSIGNED_V1'||deployment_requested===false;if(!retainedDraft&&domainName&&created){try{await serverDomains(created.id,domainName)}catch(error){showError('배포를 요청했지만 도메인은 연결하지 못했어요. 프로젝트 상세에서 다시 연결해 주세요. '+(error instanceof Error?error.message:''));router.push('/server/'+created.id);return;}}
+      showSuccess(warning||(retainedDraft?'프로젝트 초안을 저장했어요. 서버는 아직 실행하지 않았어요.':'프로젝트를 만들고 배포를 요청했어요.'));
       router.push('/server');
     }
   };

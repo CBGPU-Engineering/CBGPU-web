@@ -38,6 +38,18 @@ export type GuideSection={title:string;body:string;steps?:string[];code?:string;
 export type Guide={updatedAt?:string;slug:string;title:string;description:string;category:DocCategoryId;features:string[];sections:GuideSection[];related:string[];keywords?:string[]};
 export const guides:Guide[] = [
   {
+    slug:'school-clubs',title:'동아리 홍보와 지원',category:'school',updatedAt:'2026-11-24',
+    description:'우리 학교의 동아리를 살펴보고 지원하세요. 학교 담당자는 필요할 때마다 모집을 열 수 있어요.',
+    features:['/clubs'],keywords:['동아리','홍보','모집','지원'],related:['school-integration'],
+    sections:[
+      {title:'우리 학교 동아리 찾기',body:'로그인한 계정의 학교를 기준으로 보여줘요. 학교를 바꾸면 해당 학교의 모집을 확인할 수 있어요. 홍보 기간에 공개된 글을 살펴보고, 지원 기간에 지원해 주세요. 모집이 열리기 전에는 학교 담당자가 정한 일정을 확인하세요.'},
+      {title:'동아리 홍보 글 준비하기',body:'학교 담당자가 모집을 열면 홍보 글을 초안으로 준비하세요. 등록 기간 안에 준비 완료로 바꾸면 홍보 기간에 자동으로 보여요. 초안은 공개되지 않아요. 지원자는 내 지원 상태를 확인하고 지원을 취소할 수 있어요.'},
+      {title:'학교 담당자가 모집 열기',body:'학교 관리자 화면의 동아리 모집에서 회차 이름과 세 기간을 설정하세요. 매년 한 번으로 제한되지 않아요. 새 학기 모집이나 추가 모집처럼 필요할 때 다시 열 수 있어요.',steps:['홍보 글 등록 기간: 동아리 운영자가 글을 준비하고 등록하는 기간이에요.','홍보 기간: 준비 완료된 글을 학생들에게 보여주는 기간이에요.','지원 접수 기간: 학생들이 지원할 수 있는 기간이에요. 홍보 기간 안에 설정하세요.','한국 시간을 확인하고 저장하세요. 잠시 멈추더라도 기존 글과 지원 기록은 유지돼요.']},
+      {title:'지원자 정보와 권한',body:'지원과 홍보 글 관리는 학교 소속과 권한을 서버에서 확인해요. 동아리 운영자는 본인 동아리의 지원자를 검토하고, 학교 담당자는 모집 현황을 확인할 수 있어요. 기간이 끝나도 기록을 자동으로 삭제하지 않아요.'}
+    ]
+  },
+
+  {
   "slug": "school-integration",
   "title": "우리 학교에 CBGPU 도입하기",
   "description": "먼저 우리 학교가 이미 도입됐거나 다른 담당자가 신청했는지 확인하세요. 새 도입이 필요할 때 디스코드 참여부터 학교 신청, 구성원 가입, 학교생활 연동까지 따라가세요. GPU 서버는 없어도 괜찮아요.",

@@ -8,3 +8,24 @@ test('parallel departments never overwrite subjects or silently choose a departm
 test('bounded official pagination requires complete nonduplicated rows and deduplicates concurrent reads',async()=>{const rows=Array.from({length:112},(_,i)=>({...row(),GRADE:String(Math.floor(i/56)+1),CLASS_NM:String(Math.floor(i%56/7)+1),PERIO:String(i%7+1)}));let reads=0;const readPage=async(_form:string,page:number)=>{reads++;return{data:rows.slice((page-1)*100,page*100),total:rows.length}};const t={...target,id:'pagination'};const[a,b]=await Promise.all([getNeisSheetTimetable(t,1,1,null,{now,readPage}),getNeisSheetTimetable(t,1,1,null,{now,readPage})]);assert.equal(reads,2);assert.equal(Object.keys(a.grid[2]).length,7);assert.equal(b.school_id,'pagination');await assert.rejects(getNeisSheetTimetable({...target,id:'partial'},1,1,null,{now,readPage:async()=>({data:[row()],total:120})}),/전체 시간표/);await assert.rejects(getNeisSheetTimetable({...target,id:'repeated'},1,1,null,{now,readPage:async()=>({data:rows.slice(0,100),total:200})}),/중복/)});
 test('fixed-provider transport rejects private DNS before opening any connection',async()=>{let requests=0;await assert.rejects(neisSheetPublicPage('rows=100',1,Date.now()+1000,{lookup:async()=>[{address:'127.0.0.1',family:4}]as any,request:()=>{requests++;throw Error('must not request')}}as any),/DNS_DENIED/);assert.equal(requests,0)});
 test('KST Monday rollover uses a new week snapshot without reusing the previous school-week cache',async()=>{const sunday=Date.parse('2026-11-15T14:59:00Z'),monday=Date.parse('2026-11-15T15:01:00Z');assert.equal(neisSheetWeek(sunday).start,'2026-11-09');assert.equal(neisSheetWeek(monday).start,'2026-11-16');let reads=0;const readPage=async(form:string)=>{reads++;const date=new URLSearchParams(form).getAll('ALL_TI_YMD')[0];return{data:[row('일반과정','1',date)],total:1}};const school={...target,id:'rollover-audit'};const old=await getNeisSheetTimetable(school,1,1,null,{now:sunday,readPage});const fresh=await getNeisSheetTimetable(school,1,1,null,{now:monday,readPage});assert.equal(old.weekStart,'2026-11-09');assert.equal(fresh.weekStart,'2026-11-16');assert.equal(fresh.school_id,school.id);await getNeisSheetTimetable(school,1,1,null,{now:monday+1000,readPage});assert.equal(reads,2)});
+
+test('authoritative school type selects the middle dataset without guessing from a school name',()=>{
+ const dto={school_id:'middle-a',status:'READY',official_id:'7003714',education_office_code:'T10',school_name:'합성중학교',school_type:'MIDDLE_SCHOOL'};
+ const middle=neisSheetTargetFromSources('middle-a',dto)!;assert.equal(middle.schoolType,'MIDDLE_SCHOOL');
+ const form=new URLSearchParams(neisSheetForm(middle,week.start,week.end));assert.equal(form.get('infId'),'OPEN15120190408165334348844');assert.equal(form.has('DDDEP_NM'),false);assert.equal(form.has('KEY'),false);
+ assert.equal(neisSheetTargetFromSources('middle-a',{...dto,school_type:'ELEMENTARY_SCHOOL'}),null);
+ assert.equal(neisSheetTargetFromSources('foreign',dto),null);
+});
+test('middle records do not require high-school department fields and still reject another school',()=>{
+ const middle={id:'middle-b',name:'합성중학교',office:'T10',code:'7003714',schoolType:'MIDDLE_SCHOOL' as const};
+ const item={ATPT_OFCDC_SC_CODE:middle.office,SD_SCHUL_CODE:middle.code,SCHUL_NM:middle.name,ALL_TI_YMD:'20261118',AY:'2026',SEM:'2',GRADE:'2',CLASS_NM:'3',PERIO:'1',ITRT_CNTNT:'수학'};
+ const parsed=readNeisSheetPage({Data:[item],Total:1},middle,week.start,week.end);
+ const result=presentNeisSheet(parsed.rows,middle,2,3,null,week,'fixture-time');assert.equal(result.grid[2][1].subject,'수학');assert.equal(result.selectionRequired,false);assert.match(result.sourceUrl,/OPEN15120190408165334348844/);
+ assert.throws(()=>readNeisSheetPage({Data:[{...item,SD_SCHUL_CODE:'7003715'}],Total:1},middle,week.start,week.end),/SCHOOL_MISMATCH/);
+ assert.throws(()=>readNeisSheetPage({Data:[item],Total:1},{...middle,schoolType:'HIGH_SCHOOL'},week.start,week.end),/ROW_INVALID/);
+});
+test('transport rejects arbitrary or repeated dataset IDs before resolving or sending requests',async()=>{
+ let lookups=0;const deps={lookup:async()=>{lookups++;return []}}as any;
+ for(const form of ['infId=unknown','infId=OPEN15120190408165334348844&infId=OPEN18620200826103326268120'])await assert.rejects(neisSheetPublicPage(form,1,Date.now()+1000,deps),/REQUEST_INVALID/);
+ assert.equal(lookups,0);
+});
