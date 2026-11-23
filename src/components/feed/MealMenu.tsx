@@ -53,20 +53,20 @@ export default function MealMenu() {
     <div className="w-full space-y-4">
       {/* date nav */}
       <div className="flex items-center justify-between bg-muted/30 rounded-2xl px-4 py-2">
-        <Button variant="ghost" size="icon" className="size-8" onClick={() => move(-1)}><ChevronLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" className="size-11" aria-label="이전 날 급식" onClick={() => move(-1)}><ChevronLeft className="size-4" /></Button>
         <div className="text-center">
           <p className="font-semibold text-sm">{display(date)}</p>
-          {fmt(date) === fmt(new Date()) && <p className="text-xs text-primary font-bold">오늘</p>}
+          {fmt(date) === fmt(new Date()) && <p className="text-sm text-primary font-bold">오늘</p>}
         </div>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="size-8" onClick={() => move(1)}><ChevronRight className="size-4" /></Button>
-          <Button variant="ghost" size="icon" className="size-7" onClick={() => load(date)} disabled={loading}>
+          <Button variant="ghost" size="icon" className="size-11" aria-label="다음 날 급식" onClick={() => move(1)}><ChevronRight className="size-4" /></Button>
+          <Button variant="ghost" size="icon" className="size-11" aria-label="급식 새로고침" onClick={() => load(date)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </div>
 
-      {error && <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg font-medium">{error}</p>}
+      {error && <p className="text-sm text-amber-600 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg font-medium">{error}</p>}
 
       {(loading || justFinished) && (
         <div className="py-10 flex items-center justify-center">
@@ -91,12 +91,12 @@ export default function MealMenu() {
             <div className="flex items-center gap-2">
               <Badge className={MEAL_COLOR[meal.type] ?? 'bg-muted text-muted-foreground'}>{meal.type}</Badge>
               {meal.calories && (
-                <span className="text-xs text-muted-foreground font-medium">{meal.calories}</span>
+                <span className="text-sm text-muted-foreground font-medium">{meal.calories}</span>
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {meal.menu?.split('\n').filter(Boolean).map((item: string, j: number) => (
-                <span key={j} className="text-xs font-medium bg-muted/40 px-2.5 py-1 rounded-lg text-foreground/80 text-center">
+                <span key={j} className="text-sm font-medium bg-muted/40 px-2.5 py-1 rounded-lg text-foreground/80 text-center">
                   {item.trim()}
                 </span>
               ))}
@@ -106,7 +106,7 @@ export default function MealMenu() {
       </div>
 
       {meals.length > 0 && (
-        <p className="text-xs text-muted-foreground text-center">출처: 나이스 교육정보 개방 포털</p>
+        <p className="text-sm text-muted-foreground text-center">출처: 나이스 교육정보 개방 포털</p>
       )}
     </div>
   );

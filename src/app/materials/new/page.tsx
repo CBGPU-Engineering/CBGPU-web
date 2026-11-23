@@ -14,7 +14,7 @@ import { MATERIALS_API_BASE as API_BASE, fetchMaterialsJson, materialsToken, for
 
 const MAX_BYTES = 1024 * 1024 * 1024;
 const cardClass = 'space-y-5 rounded-2xl border border-border/60 bg-card p-5 sm:p-6';
-const labelClass = 'mb-1.5 block text-xs font-semibold   text-muted-foreground';
+const labelClass = 'mb-1.5 block text-sm font-semibold   text-muted-foreground';
 
 const CHUNK_BYTES = 8 * 1024 * 1024;
 type UploadState = { offset: number; size_bytes: number; complete: boolean };
@@ -174,10 +174,10 @@ export default function NewMaterialPage() {
     }
   }
 
-  return <section className="cb-page-content mx-auto max-w-2xl space-y-8 px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+  return <section className="cb-page-content mx-auto max-w-2xl space-y-6 py-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
     {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서만 공유해요. 임시 권한이 끝나도 내가 올린 기록은 유지돼요.' : storagePermission.reason}</p></div>}
     <div className="flex items-center gap-4">
-      <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
+      <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
         <ArrowLeft className="size-4" />
       </button>
       <div>
@@ -190,16 +190,16 @@ export default function NewMaterialPage() {
       <section className={cardClass}>
         <div>
           <label htmlFor="material-title" className={`${labelClass} flex justify-between`}><span>제목 *</span><span className="font-bold normal-case tracking-normal">{title.length}/120</span></label>
-          <Input id="material-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="예: 물리학 실험 보고서 양식" className="h-10" />
+          <Input id="material-title" value={title} onChange={event => setTitle(event.target.value)} maxLength={120} placeholder="예: 물리학 실험 보고서 양식" className="min-h-11" />
         </div>
         <div>
           <label htmlFor="material-tag-input" className={labelClass}>태그</label>
           <div className="flex gap-2">
-            <Input id="material-tag-input" value={tagInput} onChange={event => setTagInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); addTag(); } }} placeholder="태그 입력 후 Enter" className="h-10" />
+            <Input id="material-tag-input" value={tagInput} onChange={event => setTagInput(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); addTag(); } }} placeholder="태그 입력 후 Enter" className="min-h-11" />
             <Button variant="outline" type="button" className="gap-1.5" onClick={addTag}><Tag className="size-4" />추가</Button>
           </div>
-          {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="rounded-full"><Badge className="normal-case tracking-normal text-xs px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
-          <p className="mt-2 text-xs text-muted-foreground">{tags.length}/8개 · 태그를 누르면 지울 수 있어요.</p>
+          {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="min-h-11 rounded-full"><Badge className="normal-case tracking-normal text-sm px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
+          <p className="mt-2 text-sm text-muted-foreground">{tags.length}/8개 · 태그를 누르면 지울 수 있어요.</p>
         </div>
       </section>
 
@@ -208,21 +208,21 @@ export default function NewMaterialPage() {
           <h2 className={labelClass}>파일 *</h2>
           {file ? <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"><FileText className="size-5" /></div>
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{file.name}</p><p className="text-xs text-muted-foreground">{fileSize(file.size)}{file.size > MAX_BYTES ? ' · 1GB를 넘어요' : ''}</p></div>
-            <button type="button" disabled={uploading} onClick={() => setFile(null)} aria-label="선택한 파일 제거" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><X className="size-4" /></button>
-          </div> : <label className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-9 text-center transition-colors ${dragging ? 'border-primary bg-primary/5' : 'border-border/40 hover:border-border/80 hover:bg-muted/10'}`}
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{file.name}</p><p className="text-sm text-muted-foreground">{fileSize(file.size)}{file.size > MAX_BYTES ? ' · 1GB를 넘어요' : ''}</p></div>
+            <button type="button" disabled={uploading} onClick={() => setFile(null)} aria-label="선택한 파일 제거" className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><X className="size-4" /></button>
+          </div> : <label className={`group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-9 text-center transition-colors ${dragging ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/60 hover:bg-muted/30 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2'}`}
             onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={event => { event.preventDefault(); setDragging(false); setFile(event.dataTransfer.files[0] ?? null); }}>
             <UploadCloud className={`size-7 ${dragging ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className="text-sm font-bold">클릭해서 파일 선택하거나 여기에 놓으세요</span>
-            <span className="text-xs text-muted-foreground">파일 1개 · 최대 1GB</span>
-            <input type="file" disabled={uploading} className="hidden" onChange={event => { setFile(event.target.files?.[0] ?? null); event.target.value = ''; }} />
+            <span className="text-sm font-bold">파일을 선택하거나 여기에 놓아 주세요</span>
+            <span className="text-sm text-muted-foreground">파일 1개 · 최대 1GB</span>
+            <input type="file" aria-label="공유할 파일 선택" disabled={uploading} className="absolute inset-0 size-full cursor-pointer opacity-0" onChange={event => { setFile(event.target.files?.[0] ?? null); event.target.value = ''; }} />
           </label>}
         </div>
       </section>
 
       {uploading && <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="space-y-1.5">
         <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} /></div>
-        <p className="text-right text-xs text-muted-foreground">{progress >= 1 ? '서버에서 마무리하는 중…' : `${Math.round(progress * 100)}% · ${fileSize(file?.size ?? 0)}`}</p>
+        <p className="text-right text-sm text-muted-foreground">{progress >= 1 ? '서버에서 마무리하는 중…' : `${Math.round(progress * 100)}% · ${fileSize(file?.size ?? 0)}`}</p>
       </div>}
 
       <div className="flex gap-3">

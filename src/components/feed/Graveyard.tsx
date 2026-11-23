@@ -407,20 +407,20 @@ function TombstoneCard({ s }: { s: DeadService }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 flex-wrap">
             <h3 className="font-semibold text-sm leading-tight">{s.name}</h3>
-            <span className="text-xs font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 tracking-wide">{s.category}</span>
+            <span className="text-sm font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0 tracking-wide">{s.category}</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">{s.desc}</p>
-          <p className="text-xs font-semibold text-muted-foreground/35 mt-1.5">
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed line-clamp-2">{s.desc}</p>
+          <p className="text-sm font-semibold text-muted-foreground/35 mt-1.5">
             RIP {s.year} {s.born ? `· 향년 ${s.year - s.born}세` : ''}
           </p>
         </div>
-        <span className="text-muted-foreground/30 text-xs shrink-0 mt-1 select-none">{open ? '▲' : '▼'}</span>
+        <span className="text-muted-foreground/30 text-sm shrink-0 mt-1 select-none">{open ? '▲' : '▼'}</span>
       </div>
 
       {open && (
         <div className="border-t border-border/20 px-4 py-6 flex flex-col items-center gap-4">
           <MemorialPortrait s={s} />
-          <p className="text-xs text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
+          <p className="text-sm text-muted-foreground/50 text-center max-w-xs">"{s.epitaph}"</p>
         </div>
       )}
     </div>
@@ -476,7 +476,7 @@ export default function Graveyard() {
       <div className="text-center space-y-1.5 py-2">
         <p className="text-4xl select-none">🪦</p>
         <h2 className="font-semibold tracking-tight text-xl">Digital Cemetery</h2>
-        <p className="text-xs text-muted-foreground font-medium">우리가 사랑했던 서비스들의 안식처 · {GRAVEYARD.length}위 안장</p>
+        <p className="text-sm text-muted-foreground font-medium">우리가 사랑했던 서비스들의 안식처 · {GRAVEYARD.length}위 안장</p>
       </div>
 
       {/* altar */}
@@ -485,7 +485,7 @@ export default function Graveyard() {
       {/* in memoriam list */}
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <h3 className="font-semibold text-xs text-muted-foreground flex items-center gap-1.5">
+          <h3 className="font-semibold text-sm text-muted-foreground flex items-center gap-1.5">
             In Memoriam
             <span className="font-medium opacity-50">({filtered.length})</span>
           </h3>
@@ -493,10 +493,10 @@ export default function Graveyard() {
             value={filter}
             onChange={e => setFilter(e.target.value)}
             placeholder="검색..."
-            className="h-7 px-3 text-xs bg-muted border border-border/50 rounded-lg outline-none focus:border-primary w-28 font-medium"
+            className="h-7 px-3 text-sm bg-muted border border-border/50 rounded-lg outline-none focus:border-primary w-28 font-medium"
           />
         </div>
-        <p className="text-xs text-muted-foreground/40 font-medium">▼ 클릭하면 영정사진을 볼 수 있습니다</p>
+        <p className="text-sm text-muted-foreground/40 font-medium">▼ 클릭하면 영정사진을 볼 수 있습니다</p>
         <div className="space-y-2">
           {filtered.map(s => <TombstoneCard key={s.name + s.year} s={s} />)}
         </div>

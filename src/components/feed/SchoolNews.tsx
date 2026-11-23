@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -70,18 +71,18 @@ function SchoolNewsContents({schoolId,schoolName,homepage}:{schoolId?:string;sch
           onChange={(v) => setTab(v as TabId)}
         />
         <div className="flex items-center gap-2">
-          {tab==='schedule'&&<label className="text-xs text-muted-foreground">조회 월 <input type="month" aria-label="학사일정 조회 월" value={month} min="2019-01" max="2099-12" onChange={e=>{if(/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))setMonth(e.target.value)}} className="rounded-md border border-border bg-background px-2 py-1"/></label>}
-          {updated && <span className="text-xs text-muted-foreground">{updated.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })}</span>}
-          <Button variant="ghost" size="icon" aria-label="학교 소식 새로고침" className="size-7" onClick={() => load(tab)} disabled={loading}>
+          {tab==='schedule'&&<label className="text-sm text-muted-foreground">조회 월 <Input type="month" aria-label="학사일정 조회 월" value={month} min="2019-01" max="2099-12" onChange={e=>{if(/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))setMonth(e.target.value)}} className="w-auto"/></label>}
+          {updated && <span className="text-sm text-muted-foreground">{updated.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit' })}</span>}
+          <Button variant="ghost" size="icon" aria-label="학교 소식 새로고침" className="size-11" onClick={() => load(tab)} disabled={loading}>
             <RefreshCw className={`size-3 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           {sourceUrl&&<a href={sourceUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="ghost" size="icon" aria-label="학교 홈페이지에서 원문 보기" className="size-7"><ExternalLink className="size-3" /></Button>
+            <Button variant="ghost" size="icon" aria-label="학교 홈페이지에서 원문 보기" className="size-11"><ExternalLink className="size-3" /></Button>
           </a>}
         </div>
       </div>
 
-      {error && <p className="text-destructive text-xs font-bold p-3 bg-destructive/10 rounded-lg">{error}</p>}
+      {error && <div role="alert" className="space-y-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm"><p className="text-destructive">{error}</p><Button variant="outline" disabled={loading} onClick={() => void load(tab)}>학교 소식 다시 불러오기</Button></div>}
 
       {loading && (
         <div className="py-10 flex items-center justify-center">
@@ -95,10 +96,10 @@ function SchoolNewsContents({schoolId,schoolName,homepage}:{schoolId?:string;sch
         {items.map((item, i) => (
           <a key={i} href={item.link} target="_blank" rel="noopener noreferrer"
             className="flex gap-3 items-start p-3 rounded-lg border border-border/40 hover:bg-muted/40 hover:border-border transition-all group">
-            <span className="text-xs font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
+            <span className="text-sm font-semibold text-muted-foreground/40 w-4 text-right mt-0.5 shrink-0">{i+1}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
-              <div className="flex items-center gap-2.5 mt-1 text-xs text-muted-foreground flex-wrap">
+              <p className="text-sm font-bold leading-snug group-hover:text-primary transition-colors">{item.title}</p>
+              <div className="flex items-center gap-2.5 mt-1 text-sm text-muted-foreground flex-wrap">
                 {item.author && <span className="font-medium opacity-70">{item.author}</span>}
                 {item.pubDate && <span className="opacity-40">{fmtDate(item.pubDate)}</span>}
               </div>
@@ -110,7 +111,7 @@ function SchoolNewsContents({schoolId,schoolName,homepage}:{schoolId?:string;sch
 
       {!loading&&!error&&items.length===0&&<p className="rounded-lg border border-border p-5 text-sm text-muted-foreground">{tab==='schedule'?'이 달에 등록된 학사일정이 없어요.':'등록된 소식이 없어요.'}</p>}
       {items.length > 0 && (
-        <p className="text-center text-xs text-muted-foreground pt-1">
+        <p className="text-center text-sm text-muted-foreground pt-1">
           출처:{' '}
           <a href={schoolNewsHttps(homepage)??sourceUrl} target="_blank" rel="noopener noreferrer" className="hover:underline font-bold">
             {schoolName??'학교'} 홈페이지

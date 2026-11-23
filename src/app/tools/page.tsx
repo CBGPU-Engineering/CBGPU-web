@@ -85,10 +85,10 @@ function Pomodoro() {
         <Ring pct={pct} color={phase === 'work' ? '#6366f1' : '#22c55e'} size={200} />
         <div className="absolute text-center">
           <p className="text-4xl font-semibold tabular-nums">{mm}:{ss}</p>
-          <p className={`text-xs font-semibold mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
+          <p className={`text-sm font-semibold mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
             {phase === 'work' ? '집중' : '휴식'}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{cycles} 회 완료</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{cycles} 회 완료</p>
         </div>
       </div>
 
@@ -96,12 +96,12 @@ function Pomodoro() {
         <Button onClick={() => setRunning(r => !r)} className="gap-2 font-semibold w-28">
           {running ? <><Pause className="size-4" />일시정지</> : <><Play className="size-4" />{secs === total ? '시작' : '계속'}</>}
         </Button>
-        <Button variant="outline" size="icon" onClick={reset}><RotateCcw className="size-4" /></Button>
+        <Button variant="outline" size="icon" aria-label="타이머 초기화" onClick={reset}><RotateCcw className="size-4" /></Button>
         <Button variant="ghost" size="icon" onClick={() => Notification.requestPermission()} title="알림 허용">
           <Bell className="size-4" />
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">종 모양 버튼에서 알림을 허용하면 집중과 휴식이 끝날 때 알려 드려요.</p>
+      <p className="text-sm text-muted-foreground">종 모양 버튼에서 알림을 허용하면 집중과 휴식이 끝날 때 알려 드려요.</p>
     </div>
   );
 }
@@ -146,7 +146,7 @@ function DDayCounter() {
         <div className="flex gap-1.5 flex-wrap">
           {EMOJIS.map(e => (
             <button key={e} onClick={() => setEmoji(e)}
-              className={`w-8 h-8 rounded-lg text-lg transition-all ${emoji===e?'bg-primary/20 scale-110':'hover:bg-muted'}`}>{e}</button>
+              className={`size-11 rounded-lg text-lg transition-all ${emoji===e?'bg-primary/20 scale-110':'hover:bg-muted'}`}>{e}</button>
           ))}
         </div>
         <Input value={label} onChange={e => setLabel(e.target.value)} placeholder="이벤트 이름 (예: 수학 기말고사)" className="font-medium" onKeyDown={e => e.key === 'Enter' && add()} />
@@ -166,10 +166,10 @@ function DDayCounter() {
               <span className="text-2xl select-none">{item.emoji}</span>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm truncate">{item.label}</p>
-                <p className="text-xs text-muted-foreground">{dateStr}</p>
+                <p className="text-sm text-muted-foreground">{dateStr}</p>
               </div>
               <span className={`font-semibold text-sm tabular-nums shrink-0 ${color}`}>{dl}</span>
-              <button onClick={() => remove(item.id)} className="text-muted-foreground/30 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
+              <button onClick={() => remove(item.id)} aria-label={`${item.label} 삭제`} className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"><Trash2 className="size-3.5" /></button>
             </div>
           );
         })}
@@ -188,8 +188,8 @@ type TabId = typeof TABS[number]['id'];
 export default function ToolsPage() {
   const [tab, setTab] = useState<TabId>('pomodoro');
   return (
-    <section className="cb-page-content min-h-screen px-4 py-10 flex flex-col items-center gap-8">
-      <div className="text-center space-y-1">
+    <section className="cb-page-content mx-auto max-w-3xl min-w-0 space-y-6 py-4">
+      <div className="space-y-1">
         <h1 className="cb-page-title">도구</h1>
         <p className="cb-page-sub mt-1">공부 도우미</p>
       </div>
@@ -197,16 +197,16 @@ export default function ToolsPage() {
         items={TABS.map(t => ({
           value: t.id,
           label: (
-            <span className="flex flex-col items-center gap-0.5">
+            <span className="flex flex-col items-center gap-0.5 text-center">
               <span>{t.label}</span>
-              <span className="text-xs font-medium opacity-70">{t.desc}</span>
+              <span className="text-sm font-medium">{t.desc}</span>
             </span>
           ),
         }))}
         value={tab}
         onChange={(v) => setTab(v as TabId)}
       />
-      <div className="w-full max-w-lg">
+      <div className="w-full min-w-0 max-w-lg mx-auto">
         {tab === 'pomodoro' && <Pomodoro />}
         {tab === 'dday'     && <DDayCounter />}
       </div>

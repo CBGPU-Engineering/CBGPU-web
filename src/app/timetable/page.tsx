@@ -194,7 +194,7 @@ export default function TimetablePage() {
           <h1 className="cb-page-title">시간표</h1>
           <p className="cb-page-sub mt-1">
             {schoolScope.status==='legacy'?'충북과학고등학교':schoolScope.school?.official_name} ·{' '}
-            <span className={source === 'comcigan' ? 'text-green-500' : 'text-amber-500'}>
+            <span className={source === 'comcigan' ? 'text-green-700 dark:text-green-400' : 'text-amber-800 dark:text-amber-300'}>
               {source === 'comcigan' ? '컴시간 알리미' : source==='neis-sheet'?'나이스 교육정보 개방 포털':'수동 데이터'}
             </span>
           </p>
@@ -206,19 +206,19 @@ export default function TimetablePage() {
             </Button>
           )}
           {canEditManual && !editing && (
-            <Button onClick={startEdit} disabled={loading} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
+            <Button onClick={startEdit} disabled={loading} variant="outline" size="sm" className="font-semibold text-sm gap-1.5 active:scale-95 transition-transform">
               <Edit3 className="size-3.5" /> 직접 편집
             </Button>
           )}
           {canEditManual && editing && (
             <div className="flex gap-2">
-              <Button onClick={() => setDraft({})} variant="ghost" size="sm" className="font-semibold text-xs gap-1.5 text-muted-foreground active:scale-95 transition-transform">
+              <Button onClick={() => setDraft({})} variant="ghost" size="sm" className="font-semibold text-sm gap-1.5 text-muted-foreground active:scale-95 transition-transform">
                 <RotateCcw className="size-3" />
               </Button>
-              <Button onClick={() => setEditing(false)} variant="outline" size="sm" className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
+              <Button onClick={() => setEditing(false)} variant="outline" size="sm" className="font-semibold text-sm gap-1.5 active:scale-95 transition-transform">
                 <X className="size-3" /> 취소
               </Button>
-              <Button onClick={save} size="sm" disabled={saving} className="font-semibold text-xs gap-1.5 active:scale-95 transition-transform">
+              <Button onClick={save} size="sm" disabled={saving} className="font-semibold text-sm gap-1.5 active:scale-95 transition-transform">
                 <Save className="size-3" /> {saving ? '저장 중...' : '저장'}
               </Button>
             </div>
@@ -237,26 +237,26 @@ export default function TimetablePage() {
           value={String(cls)}
           onChange={(v) => switchTo(grade, Number(v))}
         />
-        {source==='neis-sheet'&&departments.length>0&&<label className="min-w-0 max-w-full space-y-1 text-xs font-semibold"><span className="block">학과·과정</span><Dropdown aria-label="시간표 학과·과정 선택" value={department||''} disabled={loading||editing} className="w-full max-w-80" onChange={event=>{const value=event.target.value;departmentRef.current=value;setDepartment(value);setDepartmentRequired(false);setGrid({});setGridContext(null);setSubjectDetail(null);void loadComcigan(grade,cls,false,value)}}><option value="" disabled>학과·과정을 선택해 주세요</option>{departments.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}</Dropdown></label>}
-        {editing && <span className="text-xs font-semibold text-amber-500 flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
+        {source==='neis-sheet'&&departments.length>0&&<label className="min-w-0 max-w-full space-y-1 text-sm font-semibold"><span className="block">학과·과정</span><Dropdown aria-label="시간표 학과·과정 선택" value={department||''} disabled={loading||editing} className="w-full max-w-80" onChange={event=>{const value=event.target.value;departmentRef.current=value;setDepartment(value);setDepartmentRequired(false);setGrid({});setGridContext(null);setSubjectDetail(null);void loadComcigan(grade,cls,false,value)}}><option value="" disabled>학과·과정을 선택해 주세요</option>{departments.map(d=><option key={d.id} value={d.id}>{d.label}</option>)}</Dropdown></label>}
+        {editing && <span className="text-sm font-semibold text-amber-800 dark:text-amber-300 flex items-center gap-1"><Edit3 className="size-3" /> 편집 모드</span>}
       </div>
 
-      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 확인이 지연되어 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-xs">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
+      {source==='comcigan'&&freshness?.stale&&<div role="status" className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">컴시간 최신 확인이 지연되어 마지막으로 확인한 시간표를 보여드려요. 대강·변경 사항은 반영되지 않았을 수 있어요.<span className="mt-1 block text-sm">마지막 확인: {freshness.fetchedAt?new Date(freshness.fetchedAt).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'확인 불가'}{freshness.weekStart?' · '+freshness.weekStart+' 시작 주':''} · 자동으로 다시 확인해요.</span></div>}
 
       {error && source === 'manual' && (
         <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl">
           <AlertTriangle className="size-3.5 text-amber-500 mt-0.5 shrink-0" />
-          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+          <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
             컴시간에 연결하지 못해 직접 입력한 시간표를 보여 드려요.
-            <span className="block text-muted-foreground/60 mt-0.5 font-normal">{error}</span>
+            <span className="block text-muted-foreground mt-0.5 font-normal">{error}</span>
           </p>
         </div>
       )}
 
       {source==='neis-sheet'&&<InlineFeedback kind="info" message={departmentRequired?'학과·과정을 선택하면 해당 학급의 시간표를 볼 수 있어요. 같은 반 번호라도 학과에 따라 수업이 달라요.':'학교가 나이스에 공개한 주간 수업 정보예요. 당일 변경은 학교 안내도 함께 확인해 주세요. 수업 시작 시간·담당 교사 정보는 제공되지 않아요.'}/>}
-      {prepTip && !editing && <p className="flex items-start gap-2 rounded-lg border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
+      {prepTip && !editing && <p className="flex items-start gap-2 rounded-lg border border-primary/15 bg-primary/5 p-3 text-sm leading-relaxed"><Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" /><span><span className="font-semibold text-primary">오늘의 복습 힌트 · </span>{prepTip}<span className="ml-1 text-muted-foreground">과목명만 참고한 제안이에요.</span></span></p>}
 
-      <div className="flex min-h-6 flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground"><ResourceStatus value={`${gridContext?.grade}:${gridContext?.cls}:${freshness?.weekStart}`}><span>{gridContext?`${gridContext.grade}학년 ${gridContext.cls}반`:''}{weekDates.length?` · ${weekDates[0].label}–${weekDates[4].label}`:''}</span></ResourceStatus><span role="status">{loading?'시간표를 확인하고 있어요':editing?'편집 후 저장해 주세요':'수업을 누르면 자세히 볼 수 있어요'}</span></div>
+      <div className="flex min-h-6 flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground"><ResourceStatus value={`${gridContext?.grade}:${gridContext?.cls}:${freshness?.weekStart}`}><span>{gridContext?`${gridContext.grade}학년 ${gridContext.cls}반`:''}{weekDates.length?` · ${weekDates[0].label}–${weekDates[4].label}`:''}</span></ResourceStatus><span role="status">{loading?'시간표를 확인하고 있어요':editing?'편집 후 저장해 주세요':'수업을 누르면 자세히 볼 수 있어요'}</span></div>
       {loading && !gridContext ? (
         <div className="py-16 flex items-center justify-center">
           <LoadingSpinner size={56} label="시간표 불러오는 중" />
@@ -269,8 +269,8 @@ export default function TimetablePage() {
               <tr>
                 <th className="w-6 sm:w-10 p-1" scope="col"><span className="sr-only">교시</span></th>
                 {DAYS.map((day, i) => (
-                  <th key={day} scope="col" className={`px-1 py-2 text-xs font-semibold text-center ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
-                    {weekDates[i]&&<span className="block mb-0.5 text-xs font-normal text-muted-foreground">{weekDates[i].label}</span>}{day}{todayWd===i&&<span className="block text-xs text-primary/70">오늘</span>}
+                  <th key={day} scope="col" className={`px-1 py-2 text-sm font-semibold text-center ${todayWd===i?'text-primary':'text-muted-foreground'}`}>
+                    {weekDates[i]&&<span className="block mb-0.5 text-sm font-normal text-muted-foreground">{weekDates[i].label}</span>}{day}{todayWd===i&&<span className="block text-sm text-primary">오늘</span>}
                   </th>
                 ))}
               </tr>
@@ -278,7 +278,7 @@ export default function TimetablePage() {
             <tbody>
               {displayPeriods.map(p => (
                 <tr key={p}>
-                  <th scope="row" className="p-1 text-center"><span className="text-xs font-semibold text-muted-foreground">{p}</span></th>
+                  <th scope="row" className="p-1 text-center"><span className="text-sm font-semibold text-muted-foreground">{p}</span></th>
                   {DAYS.map((_, di) => {
                     const cell    = editing ? undefined : visibleGrid[di]?.[p];
                     const subject = editing ? (draft[di]?.[p] ?? '') : (cell?.subject ?? '');
@@ -291,14 +291,14 @@ export default function TimetablePage() {
                           <input value={subject}
                             onChange={e => setDraft(prev => ({ ...prev, [di]: { ...prev[di], [p]: e.target.value } }))}
                             placeholder="과목"
-                            className="w-full h-14 px-1.5 text-center text-xs font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
+                            className="w-full h-14 px-1.5 text-center text-sm font-bold rounded-lg border border-border/40 bg-muted/20 outline-none focus:border-primary focus:bg-background placeholder:text-muted-foreground/30 transition-colors"
                           />
                         ) : subject ? (
                           <button type="button" disabled={loading} onClick={event=>{subjectTrigger.current=event.currentTarget;setSubjectDetail({day:di,period:p})}} aria-label={`${DAYS[di]}요일 ${p}교시 ${subject}${teacher?' · '+teacher+' 선생님':''}${changed?' · 변경된 수업':''}`} title={`${subject}${teacher?' · '+teacher:''}${changed?' · 컴시간 실시간 변경':''}`}
                             className={`relative w-full h-16 sm:h-14 pl-2 pr-1 rounded-xl border border-border/40 bg-card text-center flex flex-col items-center justify-center gap-0.5 overflow-hidden cursor-pointer focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-1 transition-colors ${isToday?'ring-1 ring-primary/15':''} ${changed?'ring-2 ring-amber-500/60':''}`}>
                             <span className={`absolute inset-y-0 left-0 w-1 ${subjectColor(subject).bar}`} />
                             {changed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-amber-500" />}
-                            <ResourceStatus value={`${subject}:${teacher}`} className="cb-timetable-subject w-full"><span className="flex w-full min-w-0 flex-col items-center gap-0.5"><span className={`text-xs font-semibold leading-tight line-clamp-2 ${subjectColor(subject).text}`}>{subject}</span>{teacher&&<span className="block w-full truncate text-xs text-muted-foreground leading-tight">{teacher}</span>}</span></ResourceStatus>
+                            <ResourceStatus value={`${subject}:${teacher}`} className="cb-timetable-subject w-full"><span className="flex w-full min-w-0 flex-col items-center gap-0.5"><span className={`text-sm font-semibold leading-tight line-clamp-2 ${subjectColor(subject).text}`}>{subject}</span>{teacher&&<span className="block w-full truncate text-sm text-muted-foreground leading-tight">{teacher}</span>}</span></ResourceStatus>
                           </button>
                         ) : (
                           <div className="h-14 rounded-lg bg-muted/10 border border-transparent" />
@@ -314,7 +314,7 @@ export default function TimetablePage() {
       )}
       {error&&source!=='manual'&&<InlineFeedback kind="info" message={gridContext?'최신 시간표를 확인하지 못했어요. 표시된 학년·반과 마지막 조회 내역을 확인해 주세요.':'시간표 연결을 확인하지 못했어요. 다시 불러와 주세요.'}/>}
       <Dialog open={!!subjectDetail} onOpenChange={open=>{if(!open)setSubjectDetail(null)}}><DialogContent className="max-w-sm max-h-[85dvh] overflow-y-auto" onCloseAutoFocus={event=>{event.preventDefault();if(subjectTrigger.current?.isConnected)subjectTrigger.current.focus()}}><DialogHeader><DialogTitle>{detail?.subject||'수업 정보'}</DialogTitle><DialogDescription>{subjectDetail&&`${weekDates[subjectDetail.day]?.fullLabel||''} ${DAYS[subjectDetail.day]}요일 · ${subjectDetail.period}교시`}</DialogDescription></DialogHeader><dl className="grid grid-cols-[5rem_minmax(0,1fr)] gap-x-4 gap-y-4 py-2 text-sm"><dt className="text-muted-foreground">학년·반</dt><dd>{gridContext?.grade}학년 {gridContext?.cls}반</dd><dt className="text-muted-foreground">담당 교사</dt><dd className="break-words">{detail?.teacher||'등록된 정보가 없어요'}</dd><dt className="text-muted-foreground">시간표</dt><dd>{source==='manual'?'수동 시간표':freshness?.stale?'마지막 조회 내역':'학교 시간표'}</dd></dl>{detail?.changed&&<InlineFeedback kind="info" message="학교 시간표에서 변경된 수업이에요."/>}{freshness?.stale&&<InlineFeedback kind="info" message="최신 확인이 지연되어 수업이 달라졌을 수 있어요."/>}</DialogContent></Dialog>
-      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
+      <p className="text-sm text-muted-foreground text-center flex items-center justify-center gap-1.5 flex-wrap">
         <span>{source==='neis-sheet'?<a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4">출처: 나이스 교육정보 개방 포털 · 조회 내역은 최대 5분간 유지돼요</a>:<>컴시간 알리미 자동 연동{manualAllowed&&' · 제공처 오류 시 교내 수동 데이터 표시'}{canEditManual&&' · 직접 편집 가능'}</>}</span>
         {source === 'comcigan' && (
           <span className="inline-flex items-center gap-1"><span className="size-2 rounded-full bg-amber-500" />실시간 보강/결강 변경</span>

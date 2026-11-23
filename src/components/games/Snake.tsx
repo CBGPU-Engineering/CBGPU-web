@@ -173,7 +173,7 @@ export default function Snake(props: RankedGameProps) {
           <Button onClick={start} className="font-black uppercase tracking-widest">{gameOver ? '다시 하기' : '게임 시작'}</Button>
         </div>
       )}
-      <p className="text-xs text-muted-foreground font-medium">화살표/WASD 또는 화면에서 스와이프로 이동</p>
+      <p className="text-sm text-muted-foreground font-medium">화살표/WASD 또는 화면에서 스와이프로 이동</p>
     </div>
   );
 }

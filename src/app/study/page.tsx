@@ -63,10 +63,10 @@ function SeatMap({ room, seats, obstacles, occupantsBySeat, selectedPeriod, fail
   return <div className="min-w-0 space-y-4">
     <StudySeatBrowser items={rows} obstacles={obstacles} width={room.width} height={room.height} selectedId={selectedId} onSelect={seat=>setSelectedId(String(seat.id))} selectOccupied/>
     <div aria-live="polite" className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-3 shadow-sm">
-      <div className="min-w-0 flex-1">{selected?<><p className="font-semibold">{selected.seat.name}번 좌석 · {selected.available?'빈자리':selected.pending?'승인 대기':'신청됨'}</p><p className="mt-1 break-words text-xs text-muted-foreground">{selected.detail||`${selectedPeriod}교시에 신청할 수 있는 자리예요.`}</p></>:<p className="text-sm text-muted-foreground">좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.</p>}</div>
+      <div className="min-w-0 flex-1">{selected?<><p className="font-semibold">{selected.seat.name}번 좌석 · {selected.available?'빈자리':selected.pending?'승인 대기':'신청됨'}</p><p className="mt-1 break-words text-sm text-muted-foreground">{selected.detail||`${selectedPeriod}교시에 신청할 수 있는 자리예요.`}</p></>:<p className="text-sm text-muted-foreground">좌석을 누르면 신청자와 신청 가능 여부를 확인할 수 있어요.</p>}</div>
       {selected&&<Button type="button" className="min-h-11" disabled={!selected.available||!onChoose} onClick={()=>onChoose?.(selected.seat)}>{selected.available?'이 자리 신청하기':'이미 신청된 자리'}</Button>}
     </div>
-    <p className="text-xs text-muted-foreground">조회 시점의 현황이에요. 신청할 때 빈자리를 다시 확인해요.</p>
+    <p className="text-sm text-muted-foreground">조회 시점의 현황이에요. 신청할 때 빈자리를 다시 확인해요.</p>
   </div>;
 }
 
@@ -293,7 +293,7 @@ export default function StudyPage() {
 
       <SupervisorCard />
       {canStudy&&<StudyRequestPanel prefill={requestPrefill} onPrefillConsumed={consumePrefill} onChanged={()=>void loadData(true)} />}
-      <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-xs font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
+      <div className="flex flex-wrap items-end justify-between gap-2 border-t pt-6"><div><h2 className="text-xl font-semibold tracking-tight">자리 둘러보기</h2><p className="mt-1 text-sm text-muted-foreground">교시 → 교실 → 좌석 순서로 선택하세요.</p></div><span className="rounded-full bg-muted px-3 py-1.5 text-sm font-medium">{new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}).format(new Date())}</span></div>
 
       <p role="status" aria-live="polite" className="text-sm text-muted-foreground">{loading ? (roomData.length ? '현황을 새로 확인하고 있어요. 이전 결과를 보여 드려요.' : '자습 현황을 불러오는 중…') : updatedAt ? `최근 조회 ${updatedAt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}${error ? ' · 다시 조회하지 못해 이전 결과를 보여 드려요.' : ''}` : '아직 조회한 현황이 없어요.'}</p>
 
@@ -327,7 +327,7 @@ export default function StudyPage() {
           <div className="rounded-2xl border border-border/60 bg-card p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold text-sm">{formatStudentLabel(selectedStudent)}</p>
-              <Button variant="ghost" size="sm" onClick={clearStudentSearch} className="font-bold text-xs">
+              <Button variant="ghost" size="sm" onClick={clearStudentSearch} className="font-bold text-sm">
                 다른 학생 검색
               </Button>
             </div>
@@ -343,7 +343,7 @@ export default function StudyPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="shrink-0 font-bold text-xs"
+                  className="shrink-0 font-bold text-sm"
                   onClick={() => setOpenRoomId(selectedStudentEntry.roomId)}
                 >
                   {selectedStudentEntry.seatName ? '좌석 보기' : '명단 보기'}
@@ -383,7 +383,7 @@ export default function StudyPage() {
         )}
       </div>
 
-      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-xs text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>changeRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="occupied">사람 많은 순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
+      {searchMode==='room'&&<div className="flex flex-wrap items-center justify-between gap-2"><button type="button" aria-pressed={onlyAvailable} onClick={()=>setOnlyAvailable(v=>!v)} className={'min-h-11 rounded-full border px-4 text-sm font-medium '+(onlyAvailable?'border-primary bg-primary/10 text-primary':'bg-card')}>빈자리 있는 교실만</button><label className="flex items-center gap-2 text-sm text-muted-foreground">정렬<Dropdown aria-label="자습실 정렬" value={roomSort} onChange={e=>changeRoomSort(e.target.value)} className="min-h-11 rounded-lg border bg-card px-3 text-sm text-foreground"><option value="name">교실 이름순</option><option value="occupied">사람 많은 순</option><option value="free">빈자리 많은 순</option></Dropdown></label></div>}
 
       {searchMode==='student'&&studentsUnavailable&&<p role="alert" className="text-sm text-destructive">학생 검색 목록을 불러오지 못했어요. 교실별 조회는 계속 사용할 수 있어요. 새로고침해 주세요.</p>}
 
@@ -437,7 +437,7 @@ export default function StudyPage() {
                     )}
                   </div>
                   {room.hasSeats&&!failed&&total>0&&<div className="h-1.5 max-w-48 overflow-hidden rounded-full bg-muted" aria-hidden="true"><div className="h-full rounded-full bg-primary/60" style={{width:`${Math.min(100,occupiedCount/total*100)}%`}}/></div>}
-                  {clickable && <p className="text-xs text-muted-foreground">{room.hasSeats ? '좌석 선택하기' : '신청자 보기'}</p>}
+                  {clickable && <p className="text-sm text-muted-foreground">{room.hasSeats ? '좌석 선택하기' : '신청자 보기'}</p>}
                 </div>
                 {clickable && <ChevronRight aria-hidden="true" className="size-4 text-muted-foreground shrink-0" />}
               </button>

@@ -110,18 +110,18 @@ export default function SelfStudyReminderSettings() {
       <DialogContent className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>자습신청 알림</DialogTitle>
-          <DialogDescription>선택한 시각에 신청하지 않은 교시가 있으면 알려드려요. 한국 시간 기준입니다.</DialogDescription>
+          <DialogDescription>선택한 시각에 신청하지 않은 교시가 있으면 알려드려요. 한국 시간 기준이에요.</DialogDescription>
         </DialogHeader>
         <div className="min-w-0 space-y-4 py-2 sm:space-y-5">
           {!user || !profile?.student_id ? <p className="text-sm text-amber-600">로그인하고 학번을 등록하면 사용할 수 있어요.</p> : null}
           <label className="flex items-center justify-between gap-4 rounded-lg border p-4 cursor-pointer">
-            <span><strong className="block text-sm">신청 알림 받기</strong><span className="text-xs text-muted-foreground">알림을 켠 경우에만 보내요.</span></span>
+            <span><strong className="block text-sm">신청 알림 받기</strong><span className="text-sm text-muted-foreground">알림을 켠 경우에만 보내요.</span></span>
             <input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} className="peer sr-only" />
             <span aria-hidden="true" className="relative h-6 w-11 shrink-0 rounded-full bg-muted-foreground/30 transition-colors peer-checked:bg-primary peer-checked:[&>span]:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 peer-focus-visible:ring-offset-2">
               <span className="absolute left-0.5 top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform" />
             </span>
           </label>
-          {!isNativeAppHint() && <p className="text-xs text-muted-foreground">웹에서는 이 알림을 받을 수 없어요.</p>}
+          {!isNativeAppHint() && <p className="text-sm text-muted-foreground">웹에서는 이 알림을 받을 수 없어요.</p>}
           <div className="space-y-2 text-sm font-semibold">
             <span id="reminder-time-label">첫 알림 시각</span>
             <Select value={time} onValueChange={setTime}>
@@ -130,7 +130,7 @@ export default function SelfStudyReminderSettings() {
                 {TIMES.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}
               </SelectContent>
             </Select>
-            <span className="block text-xs font-normal text-muted-foreground">08:00 ~ 15:15, 15분 단위</span>
+            <span className="block text-sm font-normal text-muted-foreground">08:00 ~ 15:15, 15분 단위</span>
           </div>
           <div className="grid min-w-0 grid-cols-2 gap-3">
             <div className="min-w-0 space-y-2 text-sm font-semibold">
@@ -152,7 +152,7 @@ export default function SelfStudyReminderSettings() {
               </Select>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">신청을 마치거나 오늘 알림을 확인하면 재알림이 멈춰요. 오후 3시 15분 이후에는 보내지 않아요.</p>
+          <p className="text-sm text-muted-foreground">신청을 마치거나 오늘 알림을 확인하면 재알림이 멈춰요. 오후 3시 15분 이후에는 보내지 않아요.</p>
           {hasUnacknowledgedAlert && <Button type="button" variant="outline" className="w-full" disabled={acknowledging} onClick={acknowledge}>오늘 알림 확인 · 재알림 중단</Button>}
           <Button type="button" className="w-full" disabled={saving || !user || !profile?.student_id} onClick={save}>
             {saving && <Loader2 className="size-4 animate-spin mr-2" />}설정 저장

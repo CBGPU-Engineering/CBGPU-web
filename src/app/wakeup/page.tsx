@@ -188,15 +188,15 @@ export default function WakeupSongPage() {
           <Music className="size-5 text-primary" />
           <h2 className="text-lg font-semibold">{dorm} · {format(selectedDate, 'M/d(eee)', { locale: ko })} 대기열</h2>
           <Badge variant="default">{queue.length}곡 신청</Badge>
-          {playlistUrl && <a href={playlistUrl} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-xs font-bold text-[#1DB954] hover:underline"><ExternalLink className="size-3.5" /> Spotify 플레이리스트</a>}
+          {playlistUrl && <a href={playlistUrl} target="_blank" rel="noreferrer" className="ml-auto inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-primary hover:underline"><ExternalLink className="size-3.5" /> Spotify 플레이리스트</a>}
         </div>
-        <ul className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
+        <ul tabIndex={0} aria-label="기상송 대기열" className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
           {withFiller(queue).map((song, i) => {
             // 자동 채움 곡은 DB 행이 없어 실제 재생 여부를 정확히 알 수
             // 없으니(재생 전/중/완료 어느 쪽으로도 믿을 수 없는 값), 아예
             // 뱃지를 안 보여준다 — 실제 신청곡만 상태를 표시한다.
             return (
-              <li key={song.id ?? song._key} className="flex items-center gap-2 text-xs p-2 rounded-lg">
+              <li key={song.id ?? song._key} className="flex items-center gap-2 text-sm p-2 rounded-lg">
                 <span className="text-muted-foreground font-semibold w-4 shrink-0">{i + 1}</span>
                 <span className={`truncate flex-1 font-semibold ${song.isFiller ? 'text-muted-foreground ' : ''}`}>{song.title}</span>
               </li>
@@ -210,7 +210,7 @@ export default function WakeupSongPage() {
         <div className="flex items-center gap-2"><Send className="size-5 text-primary" /><h2 className="text-lg font-semibold">{dorm}에 신청하기</h2></div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">틀어줄 날짜</label>
+          <label className="text-sm font-semibold text-muted-foreground ml-1">틀어줄 날짜</label>
           <div className="flex gap-1.5 overflow-x-auto py-1 -mx-1 px-1">
             {NEXT_14_DAYS.map((day, i) => {
               const isSelected = isSameDay(day, selectedDate);
@@ -223,8 +223,8 @@ export default function WakeupSongPage() {
  isSelected ? 'border-primary bg-primary text-primary-foreground' : 'border-border/50 hover:bg-muted/30'
  }`}
                 >
-                  <span className="text-xs font-bold opacity-70">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
-                  <span className="text-xs font-semibold">{format(day, 'M/d')}</span>
+                  <span className="text-sm font-bold">{i === 0 ? '오늘' : i === 1 ? '내일' : format(day, 'eee', { locale: ko })}</span>
+                  <span className="text-sm font-semibold">{format(day, 'M/d')}</span>
                 </button>
               );
             })}
@@ -236,13 +236,13 @@ export default function WakeupSongPage() {
             {preview.thumbnailUrl && <Image src={preview.thumbnailUrl} alt={preview.title} width={80} height={60} className="rounded-lg object-cover shrink-0" />}
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold line-clamp-2">{preview.title}</p>
-              <p className="text-xs text-muted-foreground">{preview.artists}</p>
+              <p className="text-sm text-muted-foreground">{preview.artists}</p>
             </div>
             <Button type="button" size="sm" variant="ghost" onClick={() => setPreview(null)}>다시 고르기</Button>
           </div>
         ) : (
           <div className="space-y-1.5 relative">
-            <label htmlFor="wakeup-spotify-query" className="text-xs font-semibold text-muted-foreground ml-1">Spotify에서 노래 검색</label>
+            <label htmlFor="wakeup-spotify-query" className="text-sm font-semibold text-muted-foreground ml-1">Spotify에서 노래 검색</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -253,8 +253,8 @@ export default function WakeupSongPage() {
                 className="pl-9"
               />
             </div>
-            <div id="wakeup-search-status" aria-live="polite">{searching && <p role="status" className="text-xs text-muted-foreground">노래를 찾고 있어요…</p>}{!searching&&!searchError&&searchQuery.trim()&&searchResults.length===0&&<p className="text-xs text-muted-foreground">다른 곡명이나 가수 이름으로 검색해 보세요.</p>}</div>
-            {searchError && <p role="alert" className="text-xs text-destructive">{searchError}</p>}
+            <div id="wakeup-search-status" aria-live="polite">{searching && <p role="status" className="text-sm text-muted-foreground">노래를 찾고 있어요…</p>}{!searching&&!searchError&&searchQuery.trim()&&searchResults.length===0&&<p className="text-sm text-muted-foreground">다른 곡명이나 가수 이름으로 검색해 보세요.</p>}</div>
+            {searchError && <p role="alert" className="text-sm text-destructive">{searchError}</p>}
             {searchResults.length > 0 && (
               <ul className="space-y-1.5 max-h-72 overflow-y-auto custom-scrollbar">
                 {searchResults.map((result) => (
@@ -267,7 +267,7 @@ export default function WakeupSongPage() {
                       {result.thumbnailUrl && <Image src={result.thumbnailUrl} alt={result.title} width={64} height={48} className="rounded-lg object-cover shrink-0" />}
                       <div className="min-w-0">
                         <p className="text-sm font-bold line-clamp-2">{result.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{result.artists} · Spotify</p>
+                        <p className="text-sm text-muted-foreground truncate">{result.artists} · Spotify</p>
                       </div>
                     </button>
                   </li>
@@ -278,8 +278,8 @@ export default function WakeupSongPage() {
         )}
 
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-muted-foreground ml-1">한마디 (선택)</label>
-          <Input placeholder="누구에게, 어떤 마음으로 신청하는지 적어보세요" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={80} />
+          <label htmlFor="wakeup-message" className="text-sm font-semibold text-muted-foreground ml-1">한마디 (선택)</label>
+          <Input id="wakeup-message" placeholder="누구에게, 어떤 마음으로 신청하는지 적어 주세요" value={message} onChange={(e) => setMessage(e.target.value)} maxLength={80} />
         </div>
         <Button type="submit" disabled={!preview || submitting} className="w-full py-5 font-semibold">
           {submitting ? '신청 중...' : '신청하기'}
@@ -296,11 +296,11 @@ export default function WakeupSongPage() {
                 {song.thumbnail_url && <Image src={song.thumbnail_url} alt={song.title} width={64} height={48} className="rounded-lg object-cover shrink-0" />}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold truncate">{song.title}</p>
-                  <p className="text-xs text-muted-foreground">재생 신청 날짜 · {format(new Date(song.play_date + 'T00:00:00'), 'M/d(eee)', { locale: ko })}</p>
-                  {song.spotify_url && <a href={song.spotify_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-[#1DB954] hover:underline">Spotify에서 열기</a>}
-                  {song.message && <p className="text-xs text-muted-foreground truncate">&quot;{song.message}&quot;</p>}
+                  <p className="text-sm text-muted-foreground">재생 신청 날짜 · {format(new Date(song.play_date + 'T00:00:00'), 'M/d(eee)', { locale: ko })}</p>
+                  {song.spotify_url && <a href={song.spotify_url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">Spotify에서 열기</a>}
+                  {song.message && <p className="text-sm text-muted-foreground truncate">&quot;{song.message}&quot;</p>}
                   {song.status === 'rejected' && song.reject_reason && (
-                    <p className="text-xs text-destructive">{song.reject_reason}</p>
+                    <p className="text-sm text-destructive">{song.reject_reason}</p>
                   )}
                 </div>
                 <Button size="icon-sm" variant="ghost" onClick={() => setDeleteTarget(song)} aria-label="신청 삭제"><Trash2 className="size-4 text-destructive" /></Button>

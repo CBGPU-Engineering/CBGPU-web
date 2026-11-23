@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { signOutEverywhere } from '@/lib/signOutEverywhere';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
@@ -312,20 +313,20 @@ function ProfileSession() {
 
   if (!user) return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
-      <h2 className="text-2xl font-semibold">Access Denied</h2>
-      <p className="text-muted-foreground">Please sign in to view your profile.</p>
+      <h2 className="text-2xl font-semibold">로그인이 필요해요</h2>
+      <p className="text-muted-foreground">로그인한 뒤 내 정보를 확인하고 수정해 주세요.</p>
     </div>
   );
 
   return (
-    <div className="cb-page-content max-w-2xl mx-auto mt-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row items-center gap-6 bg-card ring-1 ring-foreground/5 p-8 rounded-2xl shadow-sm">
+    <div className="cb-page-content max-w-2xl mx-auto py-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row items-center gap-5 bg-card ring-1 ring-foreground/5 p-5 sm:p-8 rounded-2xl shadow-sm">
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploadingAvatar}
-          className="relative shrink-0 group active:scale-95 transition-transform"
+          aria-label="프로필 사진 바꾸기" className="relative shrink-0 group active:scale-95 transition-transform"
         >
           {profile?.avatar_url ? (
             <Image src={profile.avatar_url} alt="프로필 사진" width={96} height={96} className="w-24 h-24 rounded-full object-cover ring-8 ring-primary/5" />
@@ -338,9 +339,9 @@ function ProfileSession() {
             {isUploadingAvatar ? <Loader2 className="size-4 animate-spin" /> : <Camera className="size-4" />}
           </span>
         </button>
-        <div className="text-center md:text-left space-y-1">
-          <h1 className="cb-page-title">{profile?.full_name || 'Anonymous User'}</h1>
-          <p className="text-muted-foreground font-bold flex items-center justify-center md:justify-start gap-2 text-xs opacity-60">
+        <div className="min-w-0 text-center md:text-left space-y-1">
+          <h1 className="cb-page-title">{profile?.full_name || '내 프로필'}</h1>
+          <p className="break-all text-muted-foreground flex items-center justify-center md:justify-start gap-2 text-sm">
             <Mail className="size-3" /> {user.email}
           </p>
         </div>
@@ -352,7 +353,7 @@ function ProfileSession() {
       >
         <div className={multiSchoolEnabled?"grid grid-cols-1 gap-8":"grid grid-cols-1 md:grid-cols-2 gap-8"}>
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
+            <label className="text-sm font-semibold text-primary ml-1 flex items-center gap-1.5">
               <UserCircle2 className="size-3" /> 이름
             </label>
             <Input
@@ -365,7 +366,7 @@ function ProfileSession() {
             />
           </div>
           {!multiSchoolEnabled&&<div className="space-y-2">
-            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
+            <label className="text-sm font-semibold text-primary ml-1 flex items-center gap-1.5">
               <Hash className="size-3" /> 학번
             </label>
             <Input
@@ -379,7 +380,7 @@ function ProfileSession() {
               className="bg-background border h-12 px-4 rounded-lg font-medium text-sm focus:ring-primary transition-all"
               placeholder="2309"
             />
-            <p className="text-xs text-muted-foreground font-medium ml-1">{scopedIdentity?'학번은 학교별 소속 정보에서 확인하고 인증해요. 교사와 외부 계정은 학번 없이 프로필을 저장할 수 있어요.':STUDENT_ID_HINT}</p>
+            <p className="text-sm text-muted-foreground font-medium ml-1">{scopedIdentity?'학번은 학교별 소속 정보에서 확인하고 인증해요. 교사와 외부 계정은 학번 없이 프로필을 저장할 수 있어요.':STUDENT_ID_HINT}</p>
             {scopedIdentity&&<Button asChild variant="link" size="sm"><a href="/schools">학교 소속 확인하기</a></Button>}
           </div>}
         </div>
@@ -410,7 +411,7 @@ function ProfileSession() {
         </h2>
         <div className="space-y-6">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
+            <label className="text-sm font-semibold text-primary ml-1 flex items-center gap-1.5">
               <Lock className="size-3" /> 현재 비밀번호
             </label>
             <Input
@@ -425,7 +426,7 @@ function ProfileSession() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
+              <label className="text-sm font-semibold text-primary ml-1 flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호
               </label>
               <Input
@@ -439,7 +440,7 @@ function ProfileSession() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-primary ml-1 flex items-center gap-1.5">
+              <label className="text-sm font-semibold text-primary ml-1 flex items-center gap-1.5">
                 <Lock className="size-3" /> 새 비밀번호 확인
               </label>
               <Input
@@ -473,14 +474,14 @@ function ProfileSession() {
           <Button asChild variant="outline" size="sm"><a href="/dashboard/ssh-guide">SSH 사용법</a></Button>
         </div>
         <p className="text-sm text-muted-foreground">예약한 GPU 컨테이너에 SSH로 접속할 때 사용할 공개키를 등록하세요. 개인키와 서버 비밀번호는 입력하지 마세요.</p>
-        <p className="text-xs text-muted-foreground"><code>ssh-keygen -t ed25519</code>로 키를 만든 뒤 <code>~/.ssh/id_ed25519.pub</code> 파일 내용을 붙여 넣으세요.</p>
-        <textarea
+        <p className="text-sm text-muted-foreground"><code>ssh-keygen -t ed25519</code>로 키를 만든 뒤 <code>~/.ssh/id_ed25519.pub</code> 파일 내용을 붙여 넣으세요.</p>
+        <Textarea
           aria-label="SSH 공개키"
           value={sshPublicKey}
           onChange={(event) => setSshPublicKey(event.target.value)}
           placeholder="ssh-ed25519 AAAA..."
           rows={3}
-          className="w-full rounded-lg border bg-background px-4 py-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          className="font-mono"
         />
         <Button type="button" onClick={saveSshKey} disabled={savingSshKey || sshPublicKey.trim() === savedSshKey}>
           {savingSshKey ? '저장 중…' : sshPublicKey.trim() ? '공개키 저장' : '등록된 키 삭제'}
@@ -491,7 +492,7 @@ function ProfileSession() {
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <BellRing className="size-5 text-primary" /> 알림 설정
         </h2>
-        <p className="text-xs text-muted-foreground font-medium -mt-2">
+        <p className="text-sm text-muted-foreground font-medium -mt-2">
           자습 신청 알림은 자습 신청 화면의 ‘신청 알림’에서 설정해 주세요.
         </p>
         <div className="divide-y divide-foreground/5">
@@ -503,20 +504,20 @@ function ProfileSession() {
             <div key={key} className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
               <div className="min-w-0">
                 <p className="text-sm font-bold">{label}</p>
-                <p className="text-xs text-muted-foreground font-medium">{hint}</p>
+                <p className="text-sm text-muted-foreground font-medium">{hint}</p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={notifPrefs[key]}
+                aria-label={label}
                 disabled={savingNotifKey === key}
                 onClick={() => toggleNotifPref(key)}
-                className={`relative shrink-0 w-12 h-7 rounded-full transition-colors disabled:opacity-50 ${
-                  notifPrefs[key] ? 'bg-primary' : 'bg-foreground/15'
-                }`}
+                className="relative h-11 w-14 shrink-0 rounded-lg disabled:opacity-50"
               >
+                <span aria-hidden="true" className={`absolute inset-x-1 top-2 h-7 rounded-full transition-colors ${notifPrefs[key] ? 'bg-primary' : 'bg-foreground/15'}`} />
                 <span
-                  className={`absolute top-1 left-1 size-5 rounded-full bg-white shadow transition-transform ${
+                  className={`absolute top-3 left-2 size-5 rounded-full bg-white shadow transition-transform ${
                     notifPrefs[key] ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />

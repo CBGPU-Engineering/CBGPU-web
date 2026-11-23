@@ -211,9 +211,9 @@ export default function Tetris(props: RankedGameProps) {
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
       {arcade.retryButton}
       <div className="flex items-center gap-6">
-        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">점수</p><p className="text-xl font-black">{score}</p></div>
-        <div className="text-center"><p className="text-xs text-muted-foreground uppercase font-black tracking-widest">완성한 줄</p><p className="text-xl font-black">{lines}</p></div>
-        {started && !gameOver && <Button variant="outline" size="sm" onClick={togglePause} className="font-black text-xs uppercase">{paused ? '계속하기' : '일시 정지'}</Button>}
+        <div className="text-center"><p className="text-sm text-muted-foreground uppercase font-black tracking-widest">점수</p><p className="text-xl font-black">{score}</p></div>
+        <div className="text-center"><p className="text-sm text-muted-foreground uppercase font-black tracking-widest">완성한 줄</p><p className="text-xl font-black">{lines}</p></div>
+        {started && !gameOver && <Button variant="outline" size="sm" onClick={togglePause} className="font-black text-sm uppercase">{paused ? '계속하기' : '일시 정지'}</Button>}
       </div>
       <div className="relative">
         <canvas
@@ -244,7 +244,7 @@ export default function Tetris(props: RankedGameProps) {
           <button aria-label="바로 떨어뜨리기" onClick={hardDrop} className="flex items-center justify-center size-12 rounded-2xl bg-primary text-primary-foreground shadow-sm active:scale-90 transition-transform"><ChevronsDown className="size-5" /></button>
         </div>
       )}
-      <p className="text-xs text-muted-foreground font-medium hidden md:block">← → move · ↑ rotate · ↓ drop · Space hard drop · P pause</p>
+      <p className="text-sm text-muted-foreground font-medium hidden md:block">← → move · ↑ rotate · ↓ drop · Space hard drop · P pause</p>
     </div>
   );
 }

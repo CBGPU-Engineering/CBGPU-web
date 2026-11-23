@@ -138,19 +138,19 @@ export default function Minesweeper(props: RankedGameProps = {}) {
       <div className="flex items-center gap-2 flex-wrap justify-center">
         {(Object.keys(LEVELS) as Level[]).map(lv => (
           <button key={lv} onClick={() => { setLevel(lv); reset(lv); }}
-            className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-widest transition-all ${
+            className={`px-3 py-1.5 rounded-lg font-black text-sm uppercase tracking-widest transition-all ${
               level === lv ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
             }`}>{lv === 'easy' ? '쉬움' : lv === 'medium' ? '보통' : '어려움'}</button>
         ))}
-        <span className="text-xs font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
-        <span className="text-xs font-black text-muted-foreground">⏱ {time}s</span>
-        <Button variant="outline" size="sm" className="font-black text-xs uppercase" onClick={() => reset()}>다시 하기</Button>
+        <span className="text-sm font-black text-muted-foreground ml-1">💣 {cfg.mines - flags}</span>
+        <span className="text-sm font-black text-muted-foreground">⏱ {time}s</span>
+        <Button variant="outline" size="sm" className="font-black text-sm uppercase" onClick={() => reset()}>다시 하기</Button>
       </div>
 
       {/* flag toggle (touch mode) */}
       <button
         onClick={() => setFlagMode(f => !f)}
-        className={`px-4 py-1.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${
+        className={`px-4 py-1.5 rounded-xl font-black text-sm uppercase tracking-widest transition-all ${
           flagMode ? 'bg-amber-500 text-white shadow-md' : 'bg-muted text-muted-foreground'
         }`}
       >
@@ -199,7 +199,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground font-medium">
+      <p className="text-sm text-muted-foreground font-medium">
         탭=열기 · 우클릭/깃발모드=깃발 · 숫자=인접 지뢰 수
       </p>
     </div>
