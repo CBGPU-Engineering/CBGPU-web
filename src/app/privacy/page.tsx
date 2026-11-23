@@ -8,9 +8,9 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <section className="cb-page-content max-w-2xl mx-auto px-6 py-16 space-y-10">
+    <section className="cb-page-content max-w-2xl mx-auto px-4 sm:px-6 py-8 space-y-8">
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-muted-foreground">CBGPU</p>
+        <p className="text-sm font-semibold text-muted-foreground">CBGPU</p>
         <h1 className="cb-page-title">개인정보처리방침</h1>
         <p className="text-sm text-muted-foreground">최종 수정일: 2026년 11월 17일</p>
       </div>

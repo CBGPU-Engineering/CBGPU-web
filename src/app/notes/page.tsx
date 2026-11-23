@@ -49,7 +49,7 @@ function inlineMd(s: string) {
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
     .replace(/~~([^~]+)~~/g, '<del>$1</del>')
-    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-xs font-mono">$1</code>');
+    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1 py-0.5 rounded text-sm font-mono">$1</code>');
 }
 
 // ─── NoteEditor ───────────────────────────────────────────────────────────────
@@ -191,7 +191,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
           <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
           <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
-          <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-muted-foreground bg-muted shrink-0">
+          <span className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold text-muted-foreground bg-muted shrink-0">
             <Share2 className="size-3" />공개 노트
           </span>
         </div>
@@ -200,7 +200,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
         {tags.length > 0 && (
           <div className="flex items-center gap-2 px-4 py-3 border-t border-border/20 flex-shrink-0 flex-wrap">
             <Tag className="size-3 text-muted-foreground shrink-0" />
-            {tags.map(t => <span key={t} className="text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>)}
+            {tags.map(t => <span key={t} className="text-sm font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">{t}</span>)}
           </div>
         )}
       </div>
@@ -216,14 +216,14 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
           placeholder="제목 없음" className="flex-1 min-w-32 font-semibold text-base border-none shadow-none focus-visible:ring-0 px-2" />
         <div className="flex gap-1 items-center ml-auto flex-wrap">
           <button onClick={() => { const n = !shared; setShared(n); saveNow(title, content, tags, n); }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all active:scale-95 ${shared?'text-primary bg-primary/10':'text-muted-foreground bg-muted'}`}>
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-semibold transition-all active:scale-95 ${shared?'text-primary bg-primary/10':'text-muted-foreground bg-muted'}`}>
             {shared ? <Share2 className="size-3" /> : <Lock className="size-3" />}
             {shared ? '공개' : '비공개'}
           </button>
           <div className="flex gap-1 bg-muted rounded-lg p-0.5">
             {(['edit','preview'] as const).map(v => (
               <button key={v} onClick={() => setView(v)}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 ${view===v?'bg-background shadow text-foreground':'text-muted-foreground'}`}>
+                className={`px-2.5 py-1 rounded-md text-sm font-semibold transition-all active:scale-95 ${view===v?'bg-background shadow text-foreground':'text-muted-foreground'}`}>
                 {v === 'edit' ? '편집' : '미리보기'}
               </button>
             ))}
@@ -232,7 +232,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
             size="sm"
             onClick={() => saveNow()}
             disabled={saveState === 'saving'}
-            className={`font-semibold text-xs gap-1.5 transition-all active:scale-95 ${saveState === 'saved' ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : ''}`}
+            className={`font-semibold text-sm gap-1.5 transition-all active:scale-95 ${saveState === 'saved' ? 'bg-emerald-600 hover:bg-emerald-600 text-white' : ''}`}
           >
             {saveState === 'saving' ? (
               <>저장 중…</>
@@ -256,7 +256,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
         <div className="flex gap-1 px-4 py-1.5 border-b border-border/20 overflow-x-auto flex-shrink-0">
           {['H1','H2','B','I','`','```','>','—'].map((label,index) => (
             <button key={label} onClick={()=>TOOLBAR[index].action()}
-              className="px-2 py-1 rounded text-xs font-semibold text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{label}</button>
+              className="min-h-11 min-w-11 px-2 py-1 rounded text-sm font-semibold text-muted-foreground hover:bg-muted transition-all font-mono shrink-0">{label}</button>
           ))}
         </div>
       )}
@@ -264,7 +264,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
       {/* editor / preview */}
       <div className="flex-1 overflow-hidden flex flex-col">
         {view === 'edit' ? (
-          <textarea id="note-content" value={content}
+          <textarea id="note-content" aria-label="노트 내용" value={content}
             onChange={e => { setContent(e.target.value); }}
             onBlur={suggestTags}
             placeholder={'# 연구 노트 제목\n\n내용을 입력하세요...\n\n## 마크다운 문법 지원\n- **굵게**, *기울임*, `코드`\n- # H1, ## H2, ### H3\n- > 인용, --- 구분선\n- ``` 코드 블록 ```'}
@@ -280,19 +280,19 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
       <div className="flex items-center gap-2 px-4 py-2 border-t border-border/20 flex-shrink-0 flex-wrap">
         <Tag className="size-3 text-muted-foreground shrink-0" />
         {tags.map(t => (
-          <span key={t} className="flex items-center gap-1 text-xs font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full animate-in fade-in zoom-in-95 duration-200">
-            {t}<button onClick={() => { const n=tags.filter(x=>x!==t); setTags(n); saveNow(title,content,n,shared); }} className="active:scale-90 transition-transform"><X className="size-2.5" /></button>
+          <span key={t} className="flex items-center gap-1 text-sm font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full animate-in fade-in zoom-in-95 duration-200">
+            {t}<button aria-label={t+' 태그 삭제'} onClick={() => { const n=tags.filter(x=>x!==t); setTags(n); saveNow(title,content,n,shared); }} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full transition-colors hover:bg-primary/10"><X className="size-2.5" /></button>
           </span>
         ))}
         <input value={tagInput} onChange={e => setTagInput(e.target.value)}
           onKeyDown={e => (e.key === 'Enter' || e.key === ',') && (e.preventDefault(), addTag())}
-          placeholder="태그 추가 (Enter)" className="text-xs bg-transparent outline-none font-medium text-muted-foreground placeholder:text-muted-foreground/40 w-24" />
-        {(suggestingTags || suggestedTags.length > 0) && <span className="flex basis-full flex-wrap items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
+          placeholder="태그 추가 (Enter)" className="text-sm bg-transparent outline-none font-medium text-muted-foreground placeholder:text-muted-foreground/40 w-24" />
+        {(suggestingTags || suggestedTags.length > 0) && <span className="flex basis-full flex-wrap items-center gap-1.5 text-sm text-muted-foreground" aria-live="polite">
           <Sparkles className="size-3 text-primary" />{suggestingTags ? '태그를 찾는 중…' : '추천 태그'}
-          {suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => { const next = [...tags, tag]; setTags(next); setSuggestedTags(current => current.filter(item => item !== tag)); saveNow(title, content, next, shared); }} className="rounded-full border border-primary/30 px-2 py-1 font-bold text-primary hover:bg-primary/10">+ {tag}</button>)}
+          {suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => { const next = [...tags, tag]; setTags(next); setSuggestedTags(current => current.filter(item => item !== tag)); saveNow(title, content, next, shared); }} className="min-h-11 rounded-full border border-primary/30 px-3 py-2 font-bold text-primary hover:bg-primary/10">+ {tag}</button>)}
           {!suggestingTags && <span>· AI 제안은 눌렀을 때만 저장돼요</span>}
         </span>}
-        {content.trim().length >= 80 && <span className="basis-full text-xs text-muted-foreground">편집을 마치면 CBGPU 로컬 AI가 태그를 추천해요. 원문을 외부 AI에 보내지 않아요.</span>}
+        {content.trim().length >= 80 && <span className="basis-full text-sm text-muted-foreground">편집을 마치면 CBGPU 로컬 AI가 태그를 추천해요. 원문을 외부 AI에 보내지 않아요.</span>}
       </div>
     </div>
   );
@@ -377,8 +377,8 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
           onChange={(v) => setTab(v as 'mine' | 'shared')}
         />
         <div className="flex gap-2">
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="검색..." className="h-8 w-32 md:text-xs" />
-          {tab === 'mine' && <Button onClick={() => onOpen(null)} size="sm" className="font-semibold text-xs gap-1.5 h-8 active:scale-95 transition-transform"><Plus className="size-3" />새 노트</Button>}
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="검색..." className="h-8 w-32 md:text-sm" />
+          {tab === 'mine' && <Button onClick={() => onOpen(null)} size="sm" className="font-semibold text-sm gap-1.5 min-h-11 active:scale-95 transition-transform"><Plus className="size-3" />새 노트</Button>}
         </div>
       </div>
 
@@ -403,12 +403,12 @@ function NoteList({ onOpen }: { onOpen: (n: Note | null) => void }) {
                   </button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground line-clamp-2">{n.content.slice(0,100).replace(/[#*`>-]/g,'') || '(내용 없음)'}</p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{n.content.slice(0,100).replace(/[#*`>-]/g,'') || '(내용 없음)'}</p>
               <div className="flex items-center gap-2 flex-wrap">
-                {n.tags.slice(0,3).map(t=><span key={t} className="text-xs font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>)}
-                <span className="text-xs text-muted-foreground ml-auto">{new Date(n.updated_at).toLocaleDateString('ko-KR')}</span>
+                {n.tags.slice(0,3).map(t=><span key={t} className="text-sm font-bold bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">{t}</span>)}
+                <span className="text-sm text-muted-foreground ml-auto">{new Date(n.updated_at).toLocaleDateString('ko-KR')}</span>
                 {n.is_shared && (
-                  <span className="flex items-center gap-1 text-xs font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  <span className="flex items-center gap-1 text-sm font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
                     <Share2 className="size-2.5" />공개
                   </span>
                 )}

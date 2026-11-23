@@ -30,7 +30,7 @@ type Chat={site_search?:number;project?:string|null;effort?:string;model?:string
 type Summary=Pick<Chat,'id'|'title'|'updated'|'project'>;
 function chatUrl(id=''){const url=new URL(location.href);url.pathname='/ai';url.searchParams.delete('tool');url.searchParams.delete('tab');if(id)url.searchParams.set('c',id);else url.searchParams.delete('c');window.history.replaceState(null,'',url.pathname+url.search)}
 const live=(m:Message)=>['queued','running','paused'].includes(m.state);
-const suggestions=[{icon:FileText,title:'복잡한 글, 짧게 정리하기',prompt:'아래 글의 핵심과 근거를 읽기 쉽게 요약해 줘.\n\n'},{icon:Code2,title:'막힌 코드, 같이 풀어보기',prompt:'아래 코드가 어떻게 작동하는지 설명하고 오류를 찾아줘.\n\n'},{icon:FlaskConical,title:'연구 아이디어 구체화하기',prompt:'관심 있는 연구 주제로 실험 계획을 세우고 싶어. 먼저 필요한 질문을 해 줘.'},{icon:PenLine,title:'내 생각을 자연스러운 글로',prompt:'내 생각을 명확하고 자연스러운 글로 다듬는 걸 도와줘.\n\n'}];
+const suggestions=[{icon:FileText,title:'글 요약하기',prompt:'아래 글의 핵심과 근거를 읽기 쉽게 요약해 줘.\n\n'},{icon:Code2,title:'코드 오류 찾기',prompt:'아래 코드가 어떻게 작동하는지 설명하고 오류를 찾아줘.\n\n'},{icon:FlaskConical,title:'연구 계획 세우기',prompt:'관심 있는 연구 주제로 실험 계획을 세우고 싶어. 먼저 필요한 질문을 해 줘.'},{icon:PenLine,title:'문장 다듬기',prompt:'내 생각을 명확하고 자연스러운 글로 다듬는 걸 도와줘.\n\n'}];
 
 function CopyButton({text,label='복사'}:{text:string;label?:string}){
  const [copied,setCopied]=useState(false);
