@@ -1,0 +1,4 @@
+import{schoolsRequest}from'./schoolsClient';
+import{clubPath,readClubsPage,readClubApplications,readClub}from'./clubsModel';
+export*from'./clubsModel';
+export async function clubRequest<T extends{school_id:string}>(schoolId:string,owner:string,suffix='',method='GET',body?:unknown):Promise<T>{const result=await schoolsRequest<T>(clubPath(schoolId)+suffix,method,body,false,owner);if(result.school_id!==schoolId)throw Error('학교 응답을 확인하지 못했어요. 다시 불러와 주세요.');if(method==='GET'){if(!suffix||suffix.startsWith('?'))return readClubsPage(result,schoolId)as unknown as T;const applications=/^\/([-A-Za-z0-9_]+)\/applications(?:\?|$)/.exec(suffix);if(applications)return readClubApplications(result,schoolId,applications[1])as unknown as T;}const club=(result as{club?:unknown}).club;if(club!==undefined)readClub(club,schoolId);return result;}
