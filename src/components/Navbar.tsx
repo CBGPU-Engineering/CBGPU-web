@@ -93,11 +93,11 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
     try {
       const { error } = await signOutEverywhere();
       if (error) throw error;
-      showSuccess("로그아웃됐습니다.");
+      showSuccess("로그아웃했어요.");
       router.push('/auth/login');
       setIsMenuOpen(false);
     } catch (err: unknown) {
-      showError("로그아웃 실패.");
+      showError("로그아웃하지 못했어요. 다시 시도해 주세요.");
       console.error(err);
     }
   };
@@ -153,7 +153,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
         <div className="hidden sm:block"><HeaderSchoolSwitcher compact/></div>
         <div className="hidden xl:flex items-center gap-2">
           <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
-            Contact
+            문의하기
           </Link>
           <ThemeToggle />
 
@@ -179,17 +179,17 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                     className="z-50 min-w-48 rounded-lg glass-strong p-1.5 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95"
                   >
                     <div className="px-3 py-2 mb-1 border-b border-border/40">
-                      <p className="text-sm font-semibold text-foreground truncate max-w-[180px]">{profile?.full_name || 'My Profile'}</p>
+                      <p className="text-sm font-semibold text-foreground truncate max-w-[180px]">{profile?.full_name || '내 계정'}</p>
                       <p className="text-xs text-muted-foreground font-medium opacity-70 truncate max-w-[180px]">{user.email}</p>
                     </div>
                     <DropdownMenuPrimitive.Item asChild>
                       <Link href="/profile" className="block px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors outline-none">
-                        Profile
+                        내 정보
                       </Link>
                     </DropdownMenuPrimitive.Item>
                     <DropdownMenuPrimitive.Item asChild>
                       <button onClick={handleLogout} className="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors outline-none">
-                        Sign Out
+                        로그아웃
                       </button>
                     </DropdownMenuPrimitive.Item>
                   </DropdownMenuPrimitive.Content>
@@ -198,10 +198,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
             ) : (
               <div className="flex gap-2">
                 <Link href="/auth/login">
-                  <Button variant="ghost" size="sm" className="font-semibold text-sm">Log in</Button>
+                  <Button variant="ghost" size="sm" className="font-semibold text-sm">로그인</Button>
                 </Link>
                 <Link href="/auth/signup">
-                  <Button size="sm" className="font-semibold text-sm shadow-md">Sign up</Button>
+                  <Button size="sm" className="font-semibold text-sm shadow-md">계정 만들기</Button>
                 </Link>
               </div>
             )
@@ -229,7 +229,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                   )}
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-primary leading-none">
-                      {profile?.full_name || 'My Profile'}
+                      {profile?.full_name || '내 계정'}
                     </span>
                     <span className="text-xs text-muted-foreground font-medium opacity-70">
                       {user.email}
@@ -237,7 +237,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
                   </div>
                 </Link>
                 <Button variant="destructive" size="xs" onClick={handleLogout} className="font-semibold text-sm">
-                  Sign Out
+                  로그아웃
                 </Button>
               </div>
 
@@ -260,7 +260,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
               <div className="mt-3 pt-3 border-t border-border/50 flex flex-col">
                 <Link href="/contact" onClick={() => setIsMenuOpen(false)} className={`text-sm font-medium py-3 ${pathname === '/contact' ? 'text-primary' : 'text-muted-foreground'}`}>
-                  Contact
+                  문의하기
                 </Link>
                 <Link href="/privacy" onClick={() => setIsMenuOpen(false)} className={`text-sm font-medium py-3 ${pathname === '/privacy' ? 'text-primary' : 'text-muted-foreground'}`}>
                   개인정보처리방침
@@ -270,13 +270,13 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           ) : (
             <div className="flex flex-col gap-3">
               <Link href="/contact" onClick={() => setIsMenuOpen(false)} className={`text-sm font-medium py-3 ${pathname === '/contact' ? 'text-primary' : 'text-muted-foreground'}`}>
-                Contact
+                문의하기
               </Link>
               <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
-                <Button variant="outline" className="w-full font-semibold">Log in</Button>
+                <Button variant="outline" className="w-full font-semibold">로그인</Button>
               </Link>
               <Link href="/auth/signup" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full font-semibold shadow-md">Sign up</Button>
+                <Button className="w-full font-semibold shadow-md">계정 만들기</Button>
               </Link>
             </div>
           )}

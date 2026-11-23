@@ -29,7 +29,7 @@ export default function AuthCallback() {
 
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
-      <LoadingSpinner size={56} label="로그인 처리 중" />
+      <LoadingSpinner size={56} label="로그인을 확인하고 있어요" />
     </div>
   );
 }

@@ -13,14 +13,14 @@ export default function ApprovalNotice() {
   const scope=useSchoolScope();
   if(isLoading||!user)return null;
   const scoped=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
-  const notice=scoped?(profile?.account_status==='SUSPENDED'?{text:'계정 이용이 제한되어 있어요. 운영팀에 확인해주세요.',href:'/contact',label:'운영팀 문의'}:schoolMembershipNotice(user.id,scope.memberships,scope.status)):null;
+  const notice=scoped?(profile?.account_status==='SUSPENDED'?{text:'계정 이용이 제한되어 있어요. 운영팀에 문의해 주세요.',href:'/contact',label:'운영팀 문의'}:schoolMembershipNotice(user.id,scope.memberships,scope.status)):null;
   if(scoped&&!notice)return null;
   if(!scoped&&(!profile||profile.is_approved!==false))return null;
 
   return (
     <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2.5 text-center text-xs md:text-sm font-bold text-amber-700 dark:text-amber-400 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
       <AlertTriangle className="size-4 shrink-0" />
-      <span>{notice?.text||'학번 또는 이름 확인이 필요해 일부 기능이 제한됩니다.'}</span>
+      <span>{notice?.text||'학번과 이름을 확인해야 일부 기능을 이용할 수 있어요.'}</span>
       <Link href={notice?.href||"/profile"} className="underline underline-offset-2 hover:no-underline">
         {notice?.label||'프로필에서 수정하기'}
       </Link>
