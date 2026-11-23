@@ -282,11 +282,11 @@ function QuestionBuilder({ q, idx, total, prevQs, onChange, onDelete, onMove }: 
                 )}
               </div>
             )}
-            <label className="flex items-center gap-2 cursor-pointer ml-auto">
-              <div onClick={() => onChange({ ...q, required: !q.required })}
-                className={`w-8 h-4 rounded-full relative transition-all ${q.required ? 'bg-primary' : 'bg-muted'}`}>
-                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${q.required ? 'left-4' : 'left-0.5'}`} />
-              </div>
+            <label className="relative ml-auto flex min-h-11 cursor-pointer items-center gap-2 rounded-md focus-within:outline-2 focus-within:outline-ring focus-within:outline-offset-2">
+              <Input type="checkbox" role="switch" aria-label={`${idx + 1}번 질문 필수 응답`} checked={q.required} onChange={event => onChange({ ...q, required: event.target.checked })} className="sr-only size-px min-h-0 border-0 p-0" />
+              <span aria-hidden="true" className={`relative h-4 w-8 shrink-0 rounded-full transition-all ${q.required ? 'bg-primary' : 'bg-muted'}`}>
+                <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all ${q.required ? 'left-4' : 'left-0.5'}`} />
+              </span>
               <span className="text-sm font-semibold text-muted-foreground">필수</span>
             </label>
           </div>
@@ -375,7 +375,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
   return (
     <fieldset disabled={saving} className="space-y-5 max-w-2xl mx-auto min-w-0">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" aria-label="투표 목록으로 돌아가기" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <h2 className="font-semibold text-xl tracking-tight">{poll ? '투표 편집' : '새 투표 만들기'}</h2>
       </div>
       <div className="space-y-3 p-5 border border-border/50 rounded-2xl bg-card">
@@ -383,10 +383,11 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
         <div className="space-y-2"><label htmlFor="poll-description" className="text-sm font-medium">설명 (선택)</label><Input id="poll-description" aria-label="투표 설명" value={desc} onChange={e => setDesc(e.target.value)} placeholder="투표에 필요한 안내를 적어 주세요" className="font-medium" /></div>
         <div className="flex gap-3 flex-wrap">
           <div><p className="text-sm font-semibold text-muted-foreground mb-1">마감일</p><Input aria-label="마감일" type="datetime-local" value={endsAt} onChange={e => setEndsAt(e.target.value)} className="md:text-sm" /></div>
-          <label className="flex items-center gap-2 mt-5 cursor-pointer">
-            <div onClick={() => { if (!savingRef.current) setShowRes(v => !v); }} className={`w-8 h-4 rounded-full relative transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
-              <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
-            </div>
+          <label className="relative mt-5 flex min-h-11 cursor-pointer items-center gap-2 rounded-md focus-within:outline-2 focus-within:outline-ring focus-within:outline-offset-2">
+            <Input type="checkbox" role="switch" aria-label="결과 공개" checked={showRes} onChange={event => setShowRes(event.target.checked)} className="sr-only size-px min-h-0 border-0 p-0" />
+            <span aria-hidden="true" className={`relative h-4 w-8 shrink-0 rounded-full transition-all ${showRes ? 'bg-primary' : 'bg-muted'}`}>
+              <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all ${showRes ? 'left-4' : 'left-0.5'}`} />
+            </span>
             <span className="text-sm font-semibold text-muted-foreground">결과 공개</span>
           </label>
         </div>
@@ -470,7 +471,7 @@ function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll
   return (
     <fieldset disabled={submitting} className="space-y-5 max-w-2xl mx-auto min-w-0">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" aria-label="투표 목록으로 돌아가기" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
           <h2 className="font-semibold text-xl tracking-tight">{poll.title}</h2>
           {poll.description && <p className="text-sm text-muted-foreground mt-0.5">{poll.description}</p>}
@@ -506,6 +507,8 @@ function PollForm({ poll, questions, onSubmitted, onBack, notice }: { poll: Poll
 
 // ─── PollResults ──────────────────────────────────────────────────────────────
 function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Question[]; onBack: () => void }) {
+  const { isAdmin } = useAuth();
+  const canViewResults = poll.show_results || isAdmin;
   const [allAnswers, setAllAnswers] = useState<any[]>([]);
   const [resCount,   setResCount]   = useState(0);
   const [insight, setInsight] = useState('');
@@ -513,18 +516,22 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
 
   useEffect(() => {
     setInsight('');
+    if (!canViewResults) return;
+    let active = true;
     (async () => {
       const { data: responses } = await supabase.from('poll_responses').select('id').eq('poll_id', poll.id);
+      if (!active) return;
       setResCount(responses?.length ?? 0);
       if (!responses?.length) return;
       const ids = responses.map(r => r.id);
       const { data: answers } = await supabase.from('poll_answers').select('question_id, value').in('response_id', ids);
-      setAllAnswers(answers ?? []);
+      if (active) setAllAnswers(answers ?? []);
     })();
-  }, [poll.id]);
+    return () => { active = false; };
+  }, [poll.id, canViewResults]);
 
   useEffect(() => {
-    if (resCount < 3 || allAnswers.length === 0) return;
+    if (!canViewResults || resCount < 3 || allAnswers.length === 0) return;
     const key = `poll-insight:${poll.id}:${resCount}:${allAnswers.length}`;
     if (insightKeyRef.current === key) return;
     insightKeyRef.current = key;
@@ -551,12 +558,14 @@ function PollResults({ poll, questions, onBack }: { poll: Poll; questions: Quest
       try { sessionStorage.setItem(key, text); } catch { /* The visible summary remains usable when storage is unavailable. */ }
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [allAnswers, poll.id, questions, resCount]);
+  }, [allAnswers, poll.id, questions, resCount, canViewResults]);
+
+  if (!canViewResults) return <div className="space-y-4"><Button variant="outline" onClick={onBack}>투표 목록으로 돌아가기</Button><p role="status" className="text-sm text-muted-foreground">결과를 공개하지 않는 투표예요. 목록에서 내 응답의 등록 여부를 확인할 수 있어요.</p></div>;
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="size-4" /></Button>
+        <Button variant="ghost" size="icon" aria-label="투표 목록으로 돌아가기" onClick={onBack}><ArrowLeft className="size-4" /></Button>
         <div>
           <h2 className="font-semibold text-xl tracking-tight">{poll.title} — 결과</h2>
           <p className="text-sm text-muted-foreground font-medium mt-0.5">총 {resCount}명 응답</p>
@@ -613,6 +622,10 @@ function PollsSession() {
   useEffect(() => { loadPolls(); }, [loadPolls]);
 
   const openPoll = async (poll: Poll) => {
+    if (!poll.show_results && !isAdmin && (myResponses.includes(poll.id) || isClosed(poll))) {
+      showError(myResponses.includes(poll.id) ? '결과를 공개하지 않는 투표예요. 내 응답 확인으로 등록 여부를 확인해 주세요.' : '결과를 공개하지 않는 투표예요. 목록에서 다른 투표를 확인해 주세요.');
+      return;
+    }
     const { data: qs } = await supabase.from('poll_questions').select('*').eq('poll_id', poll.id).order('order_num');
     const questions = (qs ?? []).map(q => ({ ...q, options: q.options ?? [], config: q.config ?? {} })) as Question[];
     if (myResponses.includes(poll.id) || isClosed(poll)) {
@@ -675,7 +688,7 @@ function PollsSession() {
   if (view.type === 'form') return (
     <section className="cb-page-content py-4">
       <PollForm poll={view.poll} questions={view.questions} notice={view.notice}
-        onSubmitted={() => { loadPolls(); setView({ type: 'results', poll: view.poll, questions: view.questions }); }}
+        onSubmitted={() => { loadPolls(); setView(view.poll.show_results || isAdmin ? { type: 'results', poll: view.poll, questions: view.questions } : { type: 'list' }); }}
         onBack={() => { setView({ type: 'list' }); void loadPolls(); }} />
     </section>
   );
@@ -742,7 +755,7 @@ function PollsSession() {
                     {poll.ends_at && <p className="text-sm text-muted-foreground mt-1">~{fmtDate(poll.ends_at)}</p>}
                   </div>
                   <div className="flex flex-wrap gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                    {(voted || closed) && poll.show_results && (
+                    {(voted || closed) && (poll.show_results || isAdmin) && (
                       <Button variant="ghost" size="icon" aria-label="투표 결과 보기" className="size-11" onClick={() => openPoll(poll)}><BarChart3 className="size-3.5" /></Button>
                     )}
                     {isAdmin && (
@@ -754,7 +767,7 @@ function PollsSession() {
                     )}
                   </div>
                 </div>
-                {voted && !closed && <div className="mt-3" onClick={event => event.stopPropagation()}><Button variant="outline" size="sm" disabled={checkingResponse} onClick={() => void checkMyResponse(poll)}>{checkingResponse ? '확인 중…' : '내 응답 확인'}</Button></div>}
+                {voted && <div className="mt-3" onClick={event => event.stopPropagation()}><Button variant="outline" size="sm" disabled={checkingResponse} onClick={() => void checkMyResponse(poll)}>{checkingResponse ? '확인 중…' : '내 응답 확인'}</Button></div>}
               </div>
             );
           })}

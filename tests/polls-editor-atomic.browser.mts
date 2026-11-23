@@ -27,12 +27,18 @@ try { for(const config of [{width:390,dark:false,app:false},{width:390,dark:true
  await page.goto('https://fixture.local/');
  await page.getByRole('button',{name:'투표 수정',exact:true}).click();
  await page.locator('#poll-title').fill('내 수정 초안');
+ const resultSwitch=page.getByRole('switch',{name:'결과 공개',exact:true});
+ await resultSwitch.focus();await page.keyboard.press('Space');assert.equal(await resultSwitch.isChecked(),false);await page.keyboard.press('Space');assert.equal(await resultSwitch.isChecked(),true);
+ const requiredSwitch=page.getByRole('switch',{name:'1번 질문 필수 응답',exact:true});
+ await requiredSwitch.focus();await page.keyboard.press('Space');assert.equal(await requiredSwitch.isChecked(),true);await page.keyboard.press('Space');assert.equal(await requiredSwitch.isChecked(),false);
+ assert.ok(await resultSwitch.evaluate(input=>input.closest('label')!.getBoundingClientRect().height>=44));
+ assert.ok(await requiredSwitch.evaluate(input=>input.closest('label')!.getBoundingClientRect().height>=44));
  const save=page.getByRole('button',{name:'저장하기',exact:true});await save.waitFor();
  await page.waitForFunction(()=>![...document.querySelectorAll('button')].find(b=>b.textContent==='저장하기')?.disabled);
  // Two same-turn handler events must submit exactly one atomic RPC.
  await save.evaluate(button=>{button.dispatchEvent(new MouseEvent('click',{bubbles:true}));button.dispatchEvent(new MouseEvent('click',{bubbles:true}))});
  await page.waitForFunction(()=>!!(window as any).__releasePoll);
- assert.equal(await page.locator('#poll-title').isDisabled(),true);
+ assert.equal(await page.locator('#poll-title').isDisabled(),true);assert.equal(await resultSwitch.isDisabled(),true);assert.equal(await requiredSwitch.isDisabled(),true);
  const calls=await page.evaluate(()=>(window as any).__pollWrites);assert.equal(calls.length,1);assert.equal(calls[0].name,'cbgpu_save_poll');assert.equal(calls[0].payload.p_expected_revision,7);assert.equal(calls[0].payload.p_questions[0].id,'22222222-2222-4222-8222-222222222222');
  await page.evaluate(()=>(window as any).__releasePoll());
  await page.getByText('다른 곳에서 투표를 수정했어요.',{exact:false}).waitFor();assert.equal(await page.locator('#poll-title').inputValue(),'내 수정 초안');assert.equal(await page.locator('#poll-title').isEnabled(),true);
