@@ -28,7 +28,20 @@ for (const path of files) {
         const text = node.text.replace(/\s+/g, ' ').trim();
         const parent = node.parent;
         const name = ts.isJsxAttribute(parent) || ts.isPropertyAssignment(parent) ? parent.name.getText(tree).replace(/^["']|["']$/g, '') : '';
-        if (text && (/[가-힣]/.test(text) || (ts.isJsxText(node) || copyProperties.has(name)) && /[A-Za-z]/.test(text))) {
+        const branchText = ts.isJsxExpression(parent) || ts.isConditionalExpression(parent) && (parent.whenTrue === node || parent.whenFalse === node);
+        let displayBranch = false;
+        if (branchText) {
+          let ancestor: ts.Node | undefined = parent;
+          for (let depth = 0; ancestor && depth < 16; depth++, ancestor = ancestor.parent) {
+            if (ts.isJsxExpression(ancestor)) {
+              const holder = ancestor.parent;
+              displayBranch = !ts.isJsxAttribute(holder) || copyProperties.has(holder.name.getText(tree));
+              break;
+            }
+            if (ts.isSourceFile(ancestor)) break;
+          }
+        }
+        if (text && (/[가-힣]/.test(text) || (ts.isJsxText(node) || copyProperties.has(name) || displayBranch) && /[A-Za-z]/.test(text))) {
           candidates.push({ line: tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1, kind: ts.SyntaxKind[node.kind], text });
         }
       }

@@ -244,7 +244,7 @@ export default function Tetris(props: RankedGameProps) {
           <button aria-label="바로 떨어뜨리기" onClick={hardDrop} className="flex items-center justify-center size-12 rounded-2xl bg-primary text-primary-foreground shadow-sm active:scale-90 transition-transform"><ChevronsDown className="size-5" /></button>
         </div>
       )}
-      <p className="text-sm text-muted-foreground font-medium hidden md:block">← → move · ↑ rotate · ↓ drop · Space hard drop · P pause</p>
+      <p className="text-sm text-muted-foreground font-medium hidden md:block">← → 이동 · ↑ 회전 · ↓ 한 칸 내리기 · Space 바로 내리기 · P 일시 정지</p>
     </div>
   );
 }

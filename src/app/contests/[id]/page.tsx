@@ -200,7 +200,7 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
     {section!=='submissions'&&<><section className="contest-panel space-y-4"><div><h2 className="text-lg font-bold">참가 링크 공유</h2></div><p className="text-sm text-muted-foreground">참가 신청과 행사 안내, 작품 제출 화면으로 이어지는 링크예요.</p><div className="flex flex-wrap gap-2"><Input aria-label="참가 링크" className="min-w-0 flex-1" readOnly value={shareUrl} onFocus={e => e.target.select()} /><Button onClick={async () => { try { await navigator.clipboard.writeText(shareUrl); showSuccess('참가 링크를 복사했어요.'); } catch { showError('링크를 선택한 뒤 직접 복사해 주세요.'); } }}><Copy />복사</Button></div></section>
     {section==='all'&&canEditIdentity && <ContestLogoEditor contest={contest} onUpdated={onUpdated} />}</>}
     {section!=='share'&&<>
-    <section className="contest-panel space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="contest-eyebrow mb-2 text-primary">RECEPTION</p><h2 className="text-lg font-bold">접수 관리</h2></div><Button variant="outline" disabled={busy} onClick={() => void update({ is_open: !contest.is_open })}>{contest.is_open ? '접수 중지하기' : '접수 재개하기'}</Button></div>
+    <section className="contest-panel space-y-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="contest-eyebrow mb-2 text-primary">작품 제출</p><h2 className="text-lg font-bold">접수 관리</h2></div><Button variant="outline" disabled={busy} onClick={() => void update({ is_open: !contest.is_open })}>{contest.is_open ? '접수 중지하기' : '접수 재개하기'}</Button></div>
       <form onSubmit={event => {
         event.preventDefault();
         const endsAt = deadlineToISO(deadline);

@@ -3,9 +3,9 @@
   "skill": "ux-writing-kr",
   "scope": "Tracked authored web source and first-party HTML; dynamic user content, upstream messages, generated/vendor assets and native-app resources require separate review.",
   "filesScanned": 602,
-  "filesWithCandidates": 425,
-  "candidates": 10603,
-  "method": "Tracked-source AST inventory includes Korean, JSX text and English copy properties. Candidates are not equivalent to rendered phrases: machine keys, prompts, examples, templates and editorial/legal content are explicitly separated. Correct short copy is preserved rather than mechanically replaced.",
+  "filesWithCandidates": 429,
+  "candidates": 10718,
+  "method": "Tracked-source AST inventory includes Korean, JSX text and English copy properties. Candidates are not equivalent to rendered phrases: machine keys, prompts, examples, templates and editorial/legal content are explicitly separated. Correct short copy is preserved rather than mechanically replaced. Supplemental JSX conditional branches were reviewed, including explicit English mode/protocol values; game instructions, contest section captions and the guest-access page title/back link are Korean.",
   "language": "Korean users/app/school administration; English desktop platform/developer/equipment portals. Keep the established brand and time-based greeting voice.",
   "invariants": [
     "No account, school membership, permission or data migration",
@@ -41,7 +41,7 @@
     {
       "path": "src/app/admin/careers/page.tsx",
       "sourceSha256": "60ebfc81dd569cccfc3d612b23a38ed9794b9d9d3df988c147a1305c810619fd",
-      "candidates": 0,
+      "candidates": 2,
       "reviewArea": "admin",
       "reviewStatus": "no-candidate-copy",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -137,7 +137,7 @@
     {
       "path": "src/app/admin/page.tsx",
       "sourceSha256": "9bea8013845c77aa955d6d6035c3c5346f5b477334da801735e10dd4b21e5043",
-      "candidates": 5,
+      "candidates": 17,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -209,7 +209,7 @@
     {
       "path": "src/app/admin/study/page.tsx",
       "sourceSha256": "6a61a5761021c4dcc17cf26f6793100e1f60d7354cd977a061f18e294d097e18",
-      "candidates": 1,
+      "candidates": 5,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -225,7 +225,7 @@
     {
       "path": "src/app/admin/wakeup/page.tsx",
       "sourceSha256": "c2abdcd7d5a8a8c96d68ae584aa36121a023061bbb569da4c44826690ebcfe0e",
-      "candidates": 7,
+      "candidates": 8,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -873,7 +873,7 @@
     {
       "path": "src/app/compute/page.tsx",
       "sourceSha256": "4a285201487116ce0ec2e9801faf79b5c20a79a32b667d33544303dbf910c4d5",
-      "candidates": 10,
+      "candidates": 11,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -904,7 +904,7 @@
     },
     {
       "path": "src/app/contests/[id]/page.tsx",
-      "sourceSha256": "5bce7647719874d2b5a1a6e53effdf158a85b479b53de58a4e8fcc5d6c988cbc",
+      "sourceSha256": "a20d072d68f22a8a319e949e5eefc8fa21509e353a89eff9d59db6932399cd20",
       "candidates": 112,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -1209,7 +1209,7 @@
     {
       "path": "src/app/manufacturing/laser/[id]/page.tsx",
       "sourceSha256": "e95a8989369db06bc921a337382197bebd243e4d5c3e22e3046d9be4270281ad",
-      "candidates": 40,
+      "candidates": 41,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1217,7 +1217,7 @@
     {
       "path": "src/app/manufacturing/laser/new/page.tsx",
       "sourceSha256": "2313b027ed46e972b0f833d148aeed377dd4393ea4b61ab53a1e92086332c570",
-      "candidates": 46,
+      "candidates": 47,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1480,7 +1480,7 @@
     },
     {
       "path": "src/app/schools/[id]/access/page.tsx",
-      "sourceSha256": "0805c38ec27cd34a9810a6a15dab20677d29396b6299bb803fa7f6adf436b638",
+      "sourceSha256": "ad54547099ccd86165ec70007a842e0a2c484241bf871a8eb6032b9eba18e43e",
       "candidates": 2,
       "reviewArea": "school",
       "reviewStatus": "source-review",
@@ -1560,8 +1560,8 @@
     },
     {
       "path": "src/app/server/[id]/page.tsx",
-      "sourceSha256": "f66137bd6afe4078e7c2919e26c5615a9deb1816ae80b0f8d6dd89344be1effd",
-      "candidates": 102,
+      "sourceSha256": "10255a026f3021be4cc445fb3ae93a676bd5711d00e822fd6bf3701195df4965",
+      "candidates": 105,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1577,7 +1577,7 @@
     {
       "path": "src/app/server/new/page.tsx",
       "sourceSha256": "38b7285d6ba531ec17a25edbcedf2f7e8fa073ce1d7852abbcd0c7de3009abeb",
-      "candidates": 110,
+      "candidates": 111,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1721,7 +1721,7 @@
     {
       "path": "src/components/AdminShell.tsx",
       "sourceSha256": "1c61ffae89b567ee6a19b75e039b9d4b2664bc117796c13e0ae605f12ccdd8c0",
-      "candidates": 20,
+      "candidates": 28,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1761,7 +1761,7 @@
     {
       "path": "src/components/ConfirmDialog.tsx",
       "sourceSha256": "9b5229703a6663c0a161958f518fef662b0420ccf42a673ab7437d82f4d5327b",
-      "candidates": 4,
+      "candidates": 8,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -1857,7 +1857,7 @@
     {
       "path": "src/components/SiteSearch.tsx",
       "sourceSha256": "0c35e726764981dd887a9869efb74eb3f0f7b9d3042fe070e4a04824c6f1d1f8",
-      "candidates": 14,
+      "candidates": 16,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -1913,7 +1913,7 @@
     {
       "path": "src/components/admin/LaserJobDetails.tsx",
       "sourceSha256": "4cd3eac588c2f0cc09cac686c95449d85e989437056d2c493ba9ac3a156c0029",
-      "candidates": 6,
+      "candidates": 13,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1929,7 +1929,7 @@
     {
       "path": "src/components/admin/ManufacturingManagement.tsx",
       "sourceSha256": "0d4f362290e9846f1b7a7c9f79a88c844490710a3f099499f93248a528d73c68",
-      "candidates": 24,
+      "candidates": 31,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1937,7 +1937,7 @@
     {
       "path": "src/components/admin/MaterialsStorage.tsx",
       "sourceSha256": "501de4bbbf98ffad3297fb93fb224a69b9e94a0a617ba774338e46acd94624fa",
-      "candidates": 0,
+      "candidates": 2,
       "reviewArea": "admin",
       "reviewStatus": "no-candidate-copy",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1945,7 +1945,7 @@
     {
       "path": "src/components/admin/MessageReportManagement.tsx",
       "sourceSha256": "698dd5d134fc339de4f09e937050a58c10305c1266f6b9485101ee487372dd86",
-      "candidates": 65,
+      "candidates": 67,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1961,7 +1961,7 @@
     {
       "path": "src/components/admin/PrintJobDetails.tsx",
       "sourceSha256": "619fb367f5ccc229eeb888f293ca8e492a40474c8465346c0499ee7ac6e22da1",
-      "candidates": 7,
+      "candidates": 17,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1977,7 +1977,7 @@
     {
       "path": "src/components/admin/TimetableManagement.tsx",
       "sourceSha256": "90163bba3991d730ef1820fcf3b5b1d732766823d98e77376f740c0dba392e1c",
-      "candidates": 0,
+      "candidates": 2,
       "reviewArea": "admin",
       "reviewStatus": "no-candidate-copy",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -1993,7 +1993,7 @@
     {
       "path": "src/components/admin/revenue/AdRevenueDashboard.tsx",
       "sourceSha256": "20cf6fa34768eb3706ad5bdf000b3b2494e913aaeb8fcfb57b06d13fd35b11d1",
-      "candidates": 4,
+      "candidates": 6,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2065,7 +2065,7 @@
     {
       "path": "src/components/ai/CliGuide.tsx",
       "sourceSha256": "f944e263c236a3127a2c2673ddf126be0b76fb2dd56f80f3731c4a38ae514165",
-      "candidates": 27,
+      "candidates": 28,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2121,7 +2121,7 @@
     {
       "path": "src/components/ai/RoboticsGuide.tsx",
       "sourceSha256": "e121fc080b7a04d51ac96efb10303914ac457381ec39a8b573593404c454ce7a",
-      "candidates": 70,
+      "candidates": 71,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2168,7 +2168,7 @@
     },
     {
       "path": "src/components/contests/ContestApiKeys.tsx",
-      "sourceSha256": "98ff7240b38f02cf05941b4b69ab5043ff33ecded30cfe2e18b4dba42d4b3bcc",
+      "sourceSha256": "115e7724e1e6d9de9106a44f9ae5825f1019376a299357f4045f8eb5ce01b114",
       "candidates": 65,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2184,7 +2184,7 @@
     },
     {
       "path": "src/components/contests/ContestAwards.tsx",
-      "sourceSha256": "ed7894146786caaeca4c054fd5e583b05f6992acbea4622678e902cddfd3c5fd",
+      "sourceSha256": "3be18b0b0fb9abac0826e27fd9b0d9303a533360c9c462217a56e32f1006236e",
       "candidates": 71,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2224,7 +2224,7 @@
     },
     {
       "path": "src/components/contests/ContestLogoEditor.tsx",
-      "sourceSha256": "1983bd0d2af7c17ec8d657a1679b3921a8d115a5bcf0831040bb667d21dc4ba0",
+      "sourceSha256": "7ffd10e767914c83a1b666e4db192c4f60f4d75e62281e9df82dba736dd297d3",
       "candidates": 6,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2240,7 +2240,7 @@
     },
     {
       "path": "src/components/contests/ContestOrganizerSchools.tsx",
-      "sourceSha256": "21247bc9262579908fdd445197d9cc9cd99358cbb37acd4e08f3b8cb80576521",
+      "sourceSha256": "bda5a56dac8baef92e0b2b4081ab26d684da83500eff5457ef929bd999eb884a",
       "candidates": 27,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2256,7 +2256,7 @@
     },
     {
       "path": "src/components/contests/ContestPresentationEditor.tsx",
-      "sourceSha256": "14b7e1771b935549cdb1ca190afd02428bc246ae38a8cb9f9699698508af9777",
+      "sourceSha256": "e8ac39fea36844ce2902b23725d93ffb97ce557c0ad3df4d32e850a219e0f9b8",
       "candidates": 5,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2296,7 +2296,7 @@
     },
     {
       "path": "src/components/contests/EventHub.tsx",
-      "sourceSha256": "02ca7404544224fb4c942ba2553b0b22c8db5a47a252c4fa986f2e77ea16cf88",
+      "sourceSha256": "ce55512520c4ed27d9ead6468e11efa1fe6d4c195f3f2b5f518fa18512857846",
       "candidates": 208,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2345,7 +2345,7 @@
     {
       "path": "src/components/deploy/DeployConsole.tsx",
       "sourceSha256": "515f3fae0034d4d41cdb443c4deb9b7ad70376771332ef6bc21cee65742ceaf6",
-      "candidates": 146,
+      "candidates": 147,
       "reviewArea": "research",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2464,8 +2464,8 @@
     },
     {
       "path": "src/components/games/Minesweeper.tsx",
-      "sourceSha256": "64d6f347cff7158414101be91676a11ba9838503f478df5a619f9aa7034688d1",
-      "candidates": 20,
+      "sourceSha256": "8e49fff46f34e627bf4d2f488dbb8f1a803dfbd218afea75c5b8a494ab152007",
+      "candidates": 22,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -2480,7 +2480,7 @@
     },
     {
       "path": "src/components/games/Tetris.tsx",
-      "sourceSha256": "59485658f4c52c5048d6e68818042efa7629ba9f8c6f877485ead970b308d9ea",
+      "sourceSha256": "07075afa667055776c5d2171fbfc09baf8273566c59fa36a2358b4a4f7d27b4e",
       "candidates": 14,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
@@ -2497,7 +2497,7 @@
     {
       "path": "src/components/manufacturing/DxfPreview.tsx",
       "sourceSha256": "1382754c343ec9ff986971128b8a99a9254ef7b1da61e4ff09898ad800b4e274",
-      "candidates": 3,
+      "candidates": 4,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2529,7 +2529,7 @@
     {
       "path": "src/components/manufacturing/ManufacturingPage.tsx",
       "sourceSha256": "cf0b59edc4178333223a40e14e783ed85001ea8b74f6ca7885e5f33caa66aef0",
-      "candidates": 216,
+      "candidates": 219,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2537,7 +2537,7 @@
     {
       "path": "src/components/manufacturing/ManufacturingShell.tsx",
       "sourceSha256": "e35cce4a6d64f7135dd0e461323ba0cb520237ba0e86483492d8991a8edcd4a0",
-      "candidates": 25,
+      "candidates": 27,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2545,7 +2545,7 @@
     {
       "path": "src/components/manufacturing/Model3MFViewer.tsx",
       "sourceSha256": "ea92898c58e127afdd655edfd3f7fff5dea6819b2a9718ad32029e254705e010",
-      "candidates": 3,
+      "candidates": 5,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2553,7 +2553,7 @@
     {
       "path": "src/components/manufacturing/PersonSearchSelect.tsx",
       "sourceSha256": "53488f254d1ce3d598bcd8b6ecfb4edd2dda35cc7709090217801aa3b4a1acb6",
-      "candidates": 6,
+      "candidates": 11,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2673,7 +2673,7 @@
     {
       "path": "src/components/publications/SiteShell.tsx",
       "sourceSha256": "c7917568e8d52f54870349fd8c262f239f8e25d9a3cfa3edd6e31c0a1fe6d77a",
-      "candidates": 16,
+      "candidates": 18,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -2801,7 +2801,7 @@
     {
       "path": "src/components/schools/PlatformSchoolPicker.tsx",
       "sourceSha256": "62761967eb9732cb5dcfb73a85a271beafe4dda84bfc7ee100f258e3b5c6f4ce",
-      "candidates": 18,
+      "candidates": 24,
       "reviewArea": "school",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -2841,7 +2841,7 @@
     {
       "path": "src/components/schools/SchoolAdminHub.tsx",
       "sourceSha256": "f445aa7452fe49ca72566fcfa02b4efde19adb1c2cdd5c509d2126f93e66e6ec",
-      "candidates": 46,
+      "candidates": 49,
       "reviewArea": "school",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."
@@ -3121,7 +3121,7 @@
     {
       "path": "src/components/ui/dialog.tsx",
       "sourceSha256": "619a6ba3c467156befdc7d516c9f1ab629faecc22a9a86f6bf9f1bd3acbcb677",
-      "candidates": 2,
+      "candidates": 4,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -3169,7 +3169,7 @@
     {
       "path": "src/components/ui/segmented-tabs.tsx",
       "sourceSha256": "b49256eb3ca72f4f5694ad085687cb00739c26f0994e3a1ff96c35eb0ba422c8",
-      "candidates": 2,
+      "candidates": 3,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "source-review",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -3185,7 +3185,7 @@
     {
       "path": "src/components/ui/spinner.tsx",
       "sourceSha256": "5c7bb70fe0b37357a414f5a6b25a2888b9e5993f325c8cf838d37f441a660f4e",
-      "candidates": 0,
+      "candidates": 2,
       "reviewArea": "shared-public-contests-content-and-api",
       "reviewStatus": "no-candidate-copy",
       "notes": "Authored labels, accessible names, pending/empty/error and confirmation copy reviewed in source; runtime coverage is separate."
@@ -3441,7 +3441,7 @@
     {
       "path": "src/lib/alert.tsx",
       "sourceSha256": "46051d233e594722ad8c6f4883458b64f4366705eff9fe015ed31521fa77ab59",
-      "candidates": 14,
+      "candidates": 23,
       "reviewArea": "admin",
       "reviewStatus": "source-review",
       "notes": "Role-specific authored-copy review completed; preserve the language boundary, exact action and recoverable error state. Runtime/browser coverage is recorded separately in docs/UX-AUDIT.md."

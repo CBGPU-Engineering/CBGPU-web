@@ -336,7 +336,7 @@ export default function ServerDetailPage() {
                   <span className="font-bold text-sm">{project.git_branch || 'main'}</span>
                 </div>
                 <div>
-                  <label className={labelCls}>{isCompose?'배포 방식':'Runtime'}</label>
+                  <label className={labelCls}>{isCompose?'배포 방식':'실행 환경'}</label>
                   <span className="font-bold text-sm">{isCompose?'Docker Compose':RUNTIMES.find(r=>r.value===serverRuntimeOf(project))?.label||serverRuntimeOf(project)}</span>
                 </div>
                 <div>
@@ -451,7 +451,7 @@ export default function ServerDetailPage() {
                       <Input placeholder="main" value={form.gitBranch} onChange={e => set('gitBranch', e.target.value)} />
                     </div>
                     <div>
-                      <label className={labelCls}>{isCompose?'배포 방식':'Runtime'}</label>
+                      <label className={labelCls}>{isCompose?'배포 방식':'실행 환경'}</label>
                       {isCompose?<p className="text-sm py-2">Docker Compose</p>:<>
                       <Select value={form.runtime} onValueChange={v => set('runtime', v as Runtime)}>
                         <SelectTrigger className="h-9">
