@@ -38,6 +38,7 @@ jobs:
           node tests/materials-uncertain-upload.browser.mts
           node tests/ui/admin-alert-language.browser.mts
           node tests/ui/oil-ui-controls.browser.mts
+          node tests/ui/portal-action-contrast.browser.mts
       - name: Browser demo
         id: browser_demo
         run: |
