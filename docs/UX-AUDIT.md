@@ -346,3 +346,12 @@ builds and reinstallable dependencies were removed, preserving source, evidence,
 backups and operational rollback releases. Available space recovered to about
 20GiB, and deployment resumed. The final review build uses the secondary SSD;
 ongoing root capacity still needs monitoring. No deployment guard was lowered.
+
+Long-label tests also found fixed portal menus extending beyond a 320px or
+390px viewport without increasing document.scrollWidth. The common Select now
+limits its painted width and wraps option text without removing the full label.
+Eighteen real-component cases cover 80/150-character URLs and long Korean labels
+across Dropdown, popper and item-aligned positioning, including selection and
+reopening. Menu bounds and every painted text line are checked independently of
+document overflow. Styling is inherited from the option wrapper because the
+installed Radix ItemText intentionally omits className/style props.

@@ -44,7 +44,7 @@ async function assertMenu(page:Page,option:Locator,label:string,phase:string){
   if(!menu||!text)throw Error('Expected actual Select menu and ItemText');
   const box=(node:Element)=>{const r=node.getBoundingClientRect();return{left:r.left,right:r.right,width:r.width,clientWidth:node.clientWidth,scrollWidth:node.scrollWidth}};
   const range=document.createRange();range.selectNodeContents(text);
-  return{viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,menu:box(menu),item:box(item),text:box(text),content:text.textContent,lines:Array.from(range.getClientRects(),rect=>({left:rect.left,right:rect.right,width:rect.width}))};
+  return{viewport:innerWidth,documentWidth:document.documentElement.scrollWidth,menu:box(menu),item:box(item),text:box(text),textStyle:{display:getComputedStyle(text).display,minWidth:getComputedStyle(text).minWidth,width:getComputedStyle(text).width,maxWidth:getComputedStyle(text).maxWidth,overflowWrap:getComputedStyle(text).overflowWrap,whiteSpace:getComputedStyle(text).whiteSpace,flexShrink:getComputedStyle(text).flexShrink},itemStyle:{display:getComputedStyle(item).display,minWidth:getComputedStyle(item).minWidth,width:getComputedStyle(item).width,padding:getComputedStyle(item).padding},content:text.textContent,lines:Array.from(range.getClientRects(),rect=>({left:rect.left,right:rect.right,width:rect.width}))};
  });
  const detail=phase+': '+JSON.stringify(geometry);
  assert.ok(geometry.menu.left>=-1&&geometry.menu.right<=geometry.viewport+1,'Menu must fit viewport '+detail);
