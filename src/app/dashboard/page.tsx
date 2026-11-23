@@ -32,11 +32,20 @@ const GPU_COLORS: Record<number, { bg: string; text: string; border: string; dot
 const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
 
 export default function Dashboard() {
+  const {user}=useAuth();
+  return <DashboardSession key={user?.id||'anonymous'}/>;
+}
+
+function DashboardSession() {
   const { user } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [myReservations, setMyReservations] = useState<any[]>([]);
   const [gpuPasswords, setGpuPasswords] = useState<{[key: number]: string}>({});
   const [loading, setLoading] = useState(true);
+  const [reservationError,setReservationError]=useState('');
+  const [reservationRefreshing,setReservationRefreshing]=useState(false);
+  const reservationRequest=useRef(0);
+  useEffect(()=>()=>{reservationRequest.current++},[]);
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [pastShown, setPastShown] = useState(5);
@@ -58,6 +67,8 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [clientToday, setClientToday] = useState<Date | null>(null);
   const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarLoaded,setCalendarLoaded]=useState(false);
+  const [calendarError,setCalendarError]=useState('');
   const [calendarRevision,setCalendarRevision]=useState(0);
   const [extendingIds,setExtendingIds]=useState<string[]>([]);
 
@@ -75,12 +86,20 @@ export default function Dashboard() {
     let current = true;
     const fetchCalendar = async () => {
       setCalendarLoading(true);
-      const { data } = await supabase.rpc('get_gpu_reservation_schedule', {
-        p_from: gridStart.toISOString(), p_to: gridEnd.toISOString(), p_gpu_id: null,
-      });
-      if (!current) return;
-      setCalendarReservations(data ?? []);
-      setCalendarLoading(false);
+      try {
+        const { data,error } = await supabase.rpc('get_gpu_reservation_schedule', {
+          p_from: gridStart.toISOString(), p_to: gridEnd.toISOString(), p_gpu_id: null,
+        });
+        if (!current) return;
+        if (error || !Array.isArray(data)) throw error || new Error('Invalid reservation schedule');
+        setCalendarReservations(data);
+        setCalendarLoaded(true);
+        setCalendarError('');
+      } catch {
+        if (current) setCalendarError('예약 현황을 불러오지 못했어요. 기존에 보이는 예약은 최신 정보가 아닐 수 있어요. 다시 불러온 뒤 시간을 확인해 주세요.');
+      } finally {
+        if (current) setCalendarLoading(false);
+      }
     };
     void fetchCalendar();
     return () => { current = false; };
@@ -142,14 +161,24 @@ export default function Dashboard() {
   const fetchMyReservations = async () => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (!error) setMyReservations(data || []);
-    setLoading(false);
+    const request=++reservationRequest.current;
+    setReservationRefreshing(true);
+    try {
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if(request!==reservationRequest.current)return;
+      if (error || !Array.isArray(data)) throw error || new Error('Invalid reservation list');
+      setMyReservations(data);
+      setReservationError('');
+    } catch {
+      if(request!==reservationRequest.current)return;
+      setReservationError('내 예약을 불러오지 못했어요. 기존 내역은 그대로 두었어요. 다시 불러와 신청·이용 상태를 확인해 주세요.');
+    } finally {
+      if(request===reservationRequest.current){setLoading(false);setReservationRefreshing(false);}
+    }
   };
 
   const handleCancel = async () => {
@@ -322,11 +351,13 @@ export default function Dashboard() {
 
         <p className="mb-5 -mt-3 text-sm text-muted-foreground">Jupyter 연결 상태예요. 예약 가능 시간은 아래 달력에서 확인하세요.{statusCheckedAt&&Number.isFinite(Date.parse(statusCheckedAt))&&<span className="ml-2">확인 {new Date(statusCheckedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>}</p>
         {/* 전체 GPU 예약 현황 캘린더 — 구 /schedule, 누구나 볼 수 있게 항상 공개 */}
-        {calendarLoading ? (
+        {calendarError&&<div role="alert" className="mb-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{calendarError}</p><Button variant="outline" className="mt-3" disabled={calendarLoading} onClick={()=>setCalendarRevision(value=>value+1)}>예약 현황 다시 불러오기</Button></div>}
+        {calendarLoading&&calendarLoaded&&<p role="status" className="mb-3 text-sm text-muted-foreground">예약 현황을 갱신하고 있어요.</p>}
+        {calendarLoading&&!calendarLoaded ? (
           <div className="py-16 flex items-center justify-center">
             <LoadingSpinner size={56} label="예약 현황 불러오는 중" />
           </div>
-        ) : (
+        ) : calendarError&&!calendarLoaded ? null : (
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="w-full md:flex-1 md:min-w-0 border rounded-2xl overflow-hidden bg-card shadow-sm">
               <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b">
@@ -411,7 +442,7 @@ export default function Dashboard() {
                   </div>
                   <div className="p-4 space-y-3">
                     {selectedDayReservations.length === 0 ? (
-                      <p className="text-muted-foreground font-bold text-sm opacity-50 py-4 text-center">예약 없음</p>
+                      <p className="text-muted-foreground font-bold text-sm opacity-50 py-4 text-center">{calendarError?'예약 정보를 다시 확인해 주세요.':'예약 없음'}</p>
                     ) : (
                       selectedDayReservations.map((res) => {
                         const c = GPU_COLORS[res.gpu_id];
@@ -483,7 +514,7 @@ export default function Dashboard() {
               {notifPerm === 'granted' ? <Bell className="size-3" /> : <BellOff className="size-3" />}
               {notifPerm === 'granted' ? '알림 ON' : '알림 설정'}
             </Button>
-            <Button variant="ghost" size="sm" onClick={fetchMyReservations} className="hover:bg-primary/10 font-bold text-sm gap-2 h-8">
+            <Button variant="ghost" size="sm" onClick={fetchMyReservations} disabled={reservationRefreshing} aria-label="내 예약 다시 불러오기" className="hover:bg-primary/10 font-bold text-sm gap-2 h-8">
               <RefreshCw className="size-3" />
               <span className="hidden sm:inline">Refresh</span>
             </Button>
@@ -518,14 +549,15 @@ export default function Dashboard() {
           </div>
         )}
 
+        {reservationError&&<div role="alert" className="mb-4 rounded-xl border border-destructive/30 p-4 text-sm"><p>{reservationError}</p><Button variant="outline" className="mt-3" disabled={reservationRefreshing} onClick={()=>void fetchMyReservations()}>내 예약 다시 확인</Button></div>}
         {loading ? (
           <div className="py-16 flex items-center justify-center">
             <LoadingSpinner size={56} label="예약 내역 불러오는 중" />
           </div>
-        ) : myReservations.length === 0 ? (
+        ) : reservationError&&myReservations.length===0 ? null : myReservations.length === 0 ? (
           <div className="text-center py-20 border border-dashed rounded-2xl text-muted-foreground transition-colors duration-500 font-medium bg-muted/10 pop-in-3d">
             <p style={{ fontFamily: 'Tossface', fontSize: 64, lineHeight: 1 }} className="mb-3">💻</p>
-            No active reservations found.
+            아직 신청한 예약이 없어요.
           </div>
         ) : (
           <>

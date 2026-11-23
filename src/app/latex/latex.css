@@ -6,3 +6,5 @@
 
 .cb-latex-heading>div{min-width:0}.cb-latex-heading{flex-wrap:wrap}.cb-latex-actions>div{flex-wrap:wrap}.cb-latex-text-link,.cb-latex-import summary{min-height:44px}.cb-latex-import summary{cursor:pointer;padding-block:10px}.cb-latex-project-list button:hover{background:var(--muted)}
 @media(max-width:650px){.cb-latex{padding-inline:16px}.cb-latex input{font-size:16px}.cb-latex-import-title{align-items:flex-start;flex-wrap:wrap}}
+
+.cb-latex-list-error{flex-direction:column;align-items:flex-start}.cb-latex-list-error button{border:1px solid var(--border);background:var(--background);white-space:normal;min-height:44px}
