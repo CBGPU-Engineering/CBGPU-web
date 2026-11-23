@@ -492,11 +492,11 @@ export default function Graveyard() {
           <input
             value={filter}
             onChange={e => setFilter(e.target.value)}
-            placeholder="검색..."
+            placeholder="서비스 이름 검색"
             className="h-7 px-3 text-sm bg-muted border border-border/50 rounded-lg outline-none focus:border-primary w-28 font-medium"
           />
         </div>
-        <p className="text-sm text-muted-foreground/40 font-medium">▼ 클릭하면 영정사진을 볼 수 있습니다</p>
+        <p className="text-sm text-muted-foreground/40 font-medium">▼ 선택하면 서비스 이미지를 볼 수 있어요</p>
         <div className="space-y-2">
           {filtered.map(s => <TombstoneCard key={s.name + s.year} s={s} />)}
         </div>

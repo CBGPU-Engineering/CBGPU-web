@@ -109,7 +109,7 @@ export default function NewServerPage() {
     if (!user||submissionRef.current||central.enabled&&!personalDraft&&central.loading) return;
     if (!profile || profile.id !== user.id) { showError('계정 정보를 확인하지 못했어요. 새로고침 후 다시 시도하고, 계속되면 관리자에게 문의해 주세요.'); return; }
     if (!permission.enabled&&!isApproved) { showError('이름과 학번 확인이 필요해요. 프로필에서 정보를 확인해 주세요.'); return; }
-    if (domainName&&!/^[a-z][a-z0-9-]{2,34}$/.test(domainName)) {showError('도메인 이름은 영문 소문자로 시작하는 3~35자 영문·숫자·하이픈으로 입력하세요.');return;}
+    if (domainName&&!/^[a-z][a-z0-9-]{2,34}$/.test(domainName)) {showError('도메인 이름은 영문 소문자로 시작하는 3~35자의 영문·숫자·하이픈으로 입력해 주세요.');return;}
     if (!form.name.trim())                                         { showError('프로젝트 이름을 입력해 주세요.'); return; }
     if (form.deployType === 'docker' && !form.dockerImage.trim()) { showError('Docker 이미지 이름을 입력해 주세요.'); return; }
     if (form.deployType !== 'docker'    && !form.gitUrl.trim())      { showError('Git 저장소 주소를 입력해 주세요.'); return; }
@@ -124,7 +124,7 @@ export default function NewServerPage() {
     const envVarsObj: Record<string, string> = {};
     for (const e of form.envVars) if (e.key.trim()) envVarsObj[e.key.trim()] = e.value;
 
-    try{for(const line of bulkEnv.split('\n')){const text=line.trim();if(!text||text.startsWith('#'))continue;const pos=text.indexOf('=');if(pos<1)throw Error('환경변수는 KEY=value 형식으로 입력하세요.');const key=text.slice(0,pos).trim().replace(/^export\s+/,'');let value=text.slice(pos+1).trim();if((value.startsWith('\"')&&value.endsWith('\"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);envVarsObj[key]=value}}catch(error){showError(error instanceof Error?error.message:'환경변수를 확인해 주세요.');return;}
+    try{for(const line of bulkEnv.split('\n')){const text=line.trim();if(!text||text.startsWith('#'))continue;const pos=text.indexOf('=');if(pos<1)throw Error('환경변수는 KEY=value 형식으로 입력해 주세요.');const key=text.slice(0,pos).trim().replace(/^export\s+/,'');let value=text.slice(pos+1).trim();if((value.startsWith('\"')&&value.endsWith('\"'))||(value.startsWith("'")&&value.endsWith("'")))value=value.slice(1,-1);envVarsObj[key]=value}}catch(error){showError(error instanceof Error?error.message:'환경변수를 확인해 주세요.');return;}
     let deploymentEnvironment=envVarsObj;try{if(form.deployType!=='docker')deploymentEnvironment=serverGitEnvironment(envVarsObj,form.runtime,form.rootDirectory)}catch(error){showError(error instanceof Error?error.message:'폴더 설정을 확인해 주세요.');return;}
     if(form.deployType==='compose'){const {CBGPU_RUNTIME_PRESET:unused,...values}=deploymentEnvironment;void unused;deploymentEnvironment={...values,CBGPU_DEPLOY_ENGINE:'compose',CBGPU_COMPOSE_FILE:form.composeFile,CBGPU_GATEWAY_SERVICE:form.gatewayService,CBGPU_STORAGE_GB:form.storageGB};}
     submissionRef.current=true;setSubmitting(true);
@@ -205,7 +205,7 @@ export default function NewServerPage() {
           <div>
             <h1 className="cb-page-title">새 서버 프로젝트</h1>
             <p className="cb-page-sub mt-1">
-              {saveDraft?'초안은 저장하고, 학교 실행 권한이 있을 때 배포할 수 있어요.':'배포를 시작하기 전에 현재 학교 실행 권한을 확인합니다.'}
+              {saveDraft?'초안은 저장하고, 학교 실행 권한이 있을 때 배포할 수 있어요.':'배포를 시작하기 전에 현재 학교의 실행 권한을 확인해요.'}
             </p>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function NewServerPage() {
               ))}
             </div>
 
-            {form.deployType==='compose'&&<div className="rounded-2xl bg-muted/30 border p-4 space-y-4"><p className="text-sm font-semibold">docker compose up -d</p><p className="text-sm text-muted-foreground leading-relaxed">저장소 폴더와 Compose 파일을 지정하세요. DB·Storage 데이터는 코드와 분리된 프로젝트 전용 영구 볼륨에 보존됩니다. 다른 프로젝트나 호스트 파일, Docker 제어 소켓에 접근하는 설정은 허용되지 않습니다.</p><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm font-medium">Compose 파일<Input aria-label="Compose 파일" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yaml / docker-compose.yml 자동 감지"/></label><label className="text-sm font-medium">HTTPS 연결 서비스<Input aria-label="Compose 게이트웨이 서비스" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/></label></div><label className="block text-sm font-medium">영구 스토리지 (GB)<Input type="number" min="40" max="200" value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/></label><p className="text-sm text-muted-foreground">컨테이너 포트는 게이트웨이 서비스의 포트(예: 8000)를 입력하세요. 기존 데이터 복원은 별도로 진행해야 합니다.</p></div>}
+            {form.deployType==='compose'&&<div className="rounded-2xl bg-muted/30 border p-4 space-y-4"><p className="text-sm font-semibold">docker compose up -d</p><p className="text-sm text-muted-foreground leading-relaxed">저장소 폴더와 Compose 파일을 지정해 주세요. DB·Storage 데이터는 코드와 분리된 프로젝트 전용 영구 볼륨에 보관해요. 다른 프로젝트나 호스트 파일, Docker 제어 소켓에 접근하는 설정은 사용할 수 없어요.</p><div className="grid grid-cols-1 sm:grid-cols-2 gap-4"><label className="text-sm font-medium">Compose 파일<Input aria-label="Compose 파일" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yaml / docker-compose.yml 자동 감지"/></label><label className="text-sm font-medium">HTTPS 연결 서비스<Input aria-label="Compose 게이트웨이 서비스" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/></label></div><label className="block text-sm font-medium">영구 스토리지 (GB)<Input type="number" min="40" max="200" value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/></label><p className="text-sm text-muted-foreground">컨테이너 포트에는 게이트웨이 서비스의 포트(예: 8000)를 입력해 주세요. 기존 데이터는 별도로 복원해야 해요.</p></div>}
             {/* Docker 필드 */}
             {form.deployType === 'docker' && (
               <div>
@@ -336,7 +336,7 @@ export default function NewServerPage() {
                     </Select>
                   </div>
                 </div>
-<div><label className={labelCls} htmlFor="server-root-directory">프로젝트 폴더</label><Input id="server-root-directory" value={form.rootDirectory} onChange={e=>set('rootDirectory',e.target.value)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2">저장소 안의 폴더를 지정하세요. 이 폴더에서 의존성을 설치하고 실행합니다.</p></div>
+<div><label className={labelCls} htmlFor="server-root-directory">프로젝트 폴더</label><Input id="server-root-directory" value={form.rootDirectory} onChange={e=>set('rootDirectory',e.target.value)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2">저장소 안의 폴더를 지정해 주세요. 이 폴더에서 의존성을 설치하고 실행해요.</p></div>
                 <div className={form.deployType==='compose'?'hidden':''}>
                   <label className={labelCls} htmlFor="server-run-command">실행 명령어</label>
                   <Input
@@ -358,7 +358,7 @@ export default function NewServerPage() {
                 <Plus className="size-3" /> 추가
               </Button>
             </div>
-            <details className="border rounded-2xl p-4"><summary className="text-sm cursor-pointer">.env 여러 항목 한 번에 붙여넣기</summary><label className="sr-only" htmlFor="server-env-bulk">서버 환경변수 .env</label><textarea id="server-env-bulk" className="mt-3 w-full min-h-40 rounded-lg border bg-background p-3 font-mono text-sm" value={bulkEnv} onChange={e=>setBulkEnv(e.target.value)} placeholder={'POSTGRES_PASSWORD=...\nJWT_SECRET=...\nSUPABASE_PUBLIC_URL=https://my-api.server.cbgpu.com'}/><p className="mt-2 text-sm text-muted-foreground">저장소의 .env.example과 README에 필요한 항목을 확인하세요. 비밀 값은 프로젝트 소유자·편집자만 관리할 수 있습니다.</p></details>
+            <details className="border rounded-2xl p-4"><summary className="text-sm cursor-pointer">.env 여러 항목 한 번에 붙여넣기</summary><label className="sr-only" htmlFor="server-env-bulk">서버 환경변수 .env</label><textarea id="server-env-bulk" className="mt-3 w-full min-h-40 rounded-lg border bg-background p-3 font-mono text-sm" value={bulkEnv} onChange={e=>setBulkEnv(e.target.value)} placeholder={'POSTGRES_PASSWORD=...\nJWT_SECRET=...\nSUPABASE_PUBLIC_URL=https://my-api.server.cbgpu.com'}/><p className="mt-2 text-sm text-muted-foreground">저장소의 .env.example과 README에서 필요한 항목을 확인해 주세요. 비밀 값은 프로젝트 소유자·편집자만 관리할 수 있어요.</p></details>
             {form.envVars.length === 0 ? (
               <button type="button"
                 onClick={addEnvVar}
@@ -431,7 +431,7 @@ export default function NewServerPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              앱이 컨테이너 내 몇 번 포트를 쓰는지 확인하세요.<br />
+              앱이 컨테이너에서 사용하는 포트 번호를 확인해 주세요.<br />
               호스트 포트는 외부 접속용이에요. 비워두면 사용 가능한 포트를 자동으로 정해요.
             </p>
           </section>

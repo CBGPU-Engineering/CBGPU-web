@@ -7,9 +7,9 @@ import { SegmentedTabs } from '@/components/ui/segmented-tabs';
 
 // ─── Pomodoro ─────────────────────────────────────────────────────────────────
 const PRESETS = [
-  { label: '집중 25', work: 25, rest: 5 },
-  { label: '집중 50', work: 50, rest: 10 },
-  { label: '짧게 15', work: 15, rest: 3 },
+  { label: '25분 집중', work: 25, rest: 5 },
+  { label: '50분 집중', work: 50, rest: 10 },
+  { label: '15분 집중', work: 15, rest: 3 },
 ];
 
 function Ring({ pct, color, size = 160 }: { pct: number; color: string; size?: number }) {
@@ -162,7 +162,7 @@ function DDayCounter() {
       </div>
 
       <div className="space-y-2">
-        {sorted.length === 0 && <p className="text-center text-muted-foreground text-sm py-6">D-day 일정을 추가해 보세요.</p>}
+        {sorted.length === 0 && <p className="text-center text-muted-foreground text-sm py-6">기억하고 싶은 날짜를 추가해 보세요.</p>}
         {sorted.map(item => {
           const { label: dl, color } = diff(item.date);
           const dateStr = new Date(item.date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });

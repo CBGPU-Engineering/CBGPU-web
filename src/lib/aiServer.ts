@@ -21,7 +21,7 @@ export async function aiJson(path:string,owner:string,method='GET',body?:unknown
  const result=await response.json();if(!response.ok)throw new AiFailure(result.message||'AI 요청을 처리하지 못했어요.',response.status);return result;
 }
 export async function aiIdentity(request:Request,keysAllowed=true,resourceRequired=true){
- const origin=request.headers.get('origin');if(!['GET','HEAD'].includes(request.method)&&origin&&!origins.has(origin))throw new AiFailure('허용되지 않은 요청 주소입니다.',403);
+ const origin=request.headers.get('origin');if(!['GET','HEAD'].includes(request.method)&&origin&&!origins.has(origin))throw new AiFailure('허용되지 않은 요청 주소예요.',403);
  const token=request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];if(!token)throw new AiFailure('CBGPU 계정으로 로그인해 주세요.',401);
  let owner:string,isKey=false;
  let scoped:boolean;try{scoped=schoolAiMode(process.env)}catch(error){throw new AiFailure((error as Error).message,503)}

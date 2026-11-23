@@ -1,7 +1,7 @@
 /** Deployment identity/project continuity is separate from physical school compute admission. */
 export function scopedAccountMode(env:Readonly<Record<string,string|undefined>>=process.env){
  const values=[env.CBGPU_MULTISCHOOL_V1,env.CBGPU_ACCOUNT_V2];
- for(const value of values)if(value!==undefined&&!['','0','false','1','true'].includes(value))throw Error('Account authorization configuration is unavailable');
+ for(const value of values)if(value!==undefined&&!['','0','false','1','true'].includes(value))throw Error('계정의 배포 권한 설정을 확인하지 못했어요. 잠시 후 다시 확인해 주세요.');
  return values.some(value=>value==='1'||value==='true');
 }
 export const deploymentAccessV2=()=>scopedAccountMode();

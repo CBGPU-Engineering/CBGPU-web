@@ -241,7 +241,7 @@ try {
   await page.getByLabel("본인의 새 학번").fill("1309");
   await page.getByRole("button", { name: "학교 소속 확인 요청" }).click();
   await page
-    .getByText("학교에서 요구하는 새 학년과 4자리 학번을 확인해주세요.")
+    .getByText("학교에서 요구하는 새 학년과 4자리 학번을 확인해 주세요.")
     .waitFor();
   assert.equal(reverifyWrites, 0);
   await page.getByLabel("본인의 새 학번").fill("2309");

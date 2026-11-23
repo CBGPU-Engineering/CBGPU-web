@@ -28,7 +28,7 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
     if(Date.now()-heartbeat>10_000){controller.enqueue(encoder.encode(': waiting for local GPU\n\n'));heartbeat=Date.now()}
     await new Promise(r=>setTimeout(r,180));
    }
-   if(!finished&&!stopped){send({error:{message:'No GPU became available in time. Check your CBGPU AI jobs.',type:'timeout'}});void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})}
+   if(!finished&&!stopped){send({error:{message:'GPU 대기 시간이 길어졌어요. AI 작업 목록에서 처리 상태를 확인해 주세요.',type:'timeout'}});void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})}
   }catch(e){if(!stopped)send({error:{message:e instanceof Error?e.message:'Local AI failed',type:'server_error'}})}
   finally{release();request.signal.removeEventListener('abort',stop);if(!stopped){controller.enqueue(encoder.encode('data: [DONE]\n\n'));controller.close()}}
  },cancel(){stop();release()}});

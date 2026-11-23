@@ -154,7 +154,7 @@ export default function Minesweeper(props: RankedGameProps = {}) {
           flagMode ? 'bg-amber-300 text-gray-900 shadow-md' : 'bg-muted text-muted-foreground'
         }`}
       >
-        {flagMode ? '🚩 깃발 모드 ON' : '👆 클릭 모드'}
+        {flagMode ? '🚩 깃발 표시 모드' : '👆 칸 열기 모드'}
       </button>
 
       <p className="w-full text-sm text-muted-foreground">밀어서 이동 · 탭으로 열기 · 깃발 모드로 표시</p>

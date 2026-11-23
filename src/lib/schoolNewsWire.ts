@@ -1,7 +1,7 @@
 import {boundedSchoolBody} from './schoolsProxySecurity.ts';
 export interface SchoolNewsItem{title:string;link:string;pubDate:string;author:string}
 export interface SchoolNewsResult{items:SchoolNewsItem[];sourceUrl:string;school:{id:string;name:string};month:string}
-export class SchoolNewsWireError extends Error{readonly code:string;readonly status:number;constructor(code:string,status:number=0){super(status===401?'로그인 상태를 확인한 뒤 다시 시도해주세요.':status===403?'현재 학교 소식에 접근할 수 없어요. 학교 소속을 확인해주세요.':'학교 소식 응답을 확인하지 못했어요. 새로고침하거나 학교 홈페이지에서 원문을 확인해주세요.');this.code=code;this.status=status;}}
+export class SchoolNewsWireError extends Error{readonly code:string;readonly status:number;constructor(code:string,status:number=0){super(status===401?'로그인 상태를 확인한 뒤 다시 시도해 주세요.':status===403?'현재 학교 소식에 접근할 수 없어요. 학교 소속을 확인해 주세요.':'학교 소식 응답을 확인하지 못했어요. 새로고침하거나 학교 홈페이지에서 원문을 확인해 주세요.');this.code=code;this.status=status;}}
 export function schoolNewsHttps(value:unknown):string|null{if(typeof value!=='string')return null;try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null}catch{return null}}
 export async function readSchoolNewsResponse(response:Response,schoolId:string,month:string):Promise<SchoolNewsResult>{
  if(response.redirected)throw new SchoolNewsWireError('REDIRECTED_RESPONSE',response.status);

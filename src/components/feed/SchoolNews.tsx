@@ -109,7 +109,7 @@ function SchoolNewsContents({schoolId,schoolName,homepage}:{schoolId?:string;sch
         ))}
       </div>
 
-      {!loading&&!error&&items.length===0&&<p className="rounded-lg border border-border p-5 text-sm text-muted-foreground">{tab==='schedule'?'이 달에 등록된 학사일정이 없어요.':'등록된 소식이 없어요.'}</p>}
+      {!loading&&!error&&items.length===0&&<p className="rounded-lg border border-border p-5 text-sm text-muted-foreground">{tab==='schedule'?'이번 달에 등록된 학사일정이 없어요.':'등록된 소식이 없어요.'}</p>}
       {items.length > 0 && (
         <p className="text-center text-sm text-muted-foreground pt-1">
           출처:{' '}

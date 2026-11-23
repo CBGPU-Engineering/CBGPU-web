@@ -63,10 +63,10 @@ let metaCache: { meta: SiteMeta; at: number } | null = null;
 async function fetchBuffer(url: string, token?:string|null): Promise<Buffer> {
   const res = await fetch(url, { headers: { 'User-Agent': UA,...(token?{'X-Hour-Token':token}:{}) }, signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`HTTP ${res.status} (${url})`);
-  if(Number(res.headers.get('content-length')||0)>8_000_000)throw Error('시간표 제공처 응답이 너무 큽니다');
+  if(Number(res.headers.get('content-length')||0)>8_000_000)throw Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.');
   if(!res.body)return Buffer.alloc(0);
   const reader=res.body.getReader(),chunks:Uint8Array[]=[];let total=0;
-  try{while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>8_000_000){await reader.cancel();throw Error('시간표 제공처 응답이 너무 큽니다')}chunks.push(value)}}finally{reader.releaseLock()}
+  try{while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>8_000_000){await reader.cancel();throw Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.')}chunks.push(value)}}finally{reader.releaseLock()}
   return Buffer.concat(chunks,total);
 }
 
@@ -87,9 +87,9 @@ function hexEncodeEucKr(text: string): string {
 async function loadMeta(): Promise<SiteMeta> {
   const entryHtml = await fetchUtf8(ENTRY_URL);
   const frame = entryHtml.match(/<frame\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/i);
-  if (!frame) throw new Error('시간표 제공처의 접근 주소를 찾지 못했습니다');
+  if (!frame) throw new Error('시간표 제공처의 접속 주소를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const frameUrl = new URL(frame[1], ENTRY_URL);
-  if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('알 수 없는 시간표 제공처 주소');
+  if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('시간표 제공처의 주소를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const pageSource = await fetchEucKr(frameUrl.href);
   return { baseUrl: frameUrl.origin,weekField:extractComciganWeekField(pageSource), cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
@@ -107,7 +107,7 @@ async function searchSchool(meta: SiteMeta, keyword: string) {
   const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key);
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const list = JSON.parse(jsonStr)?.['학교검색'];
-  if (!list?.length) throw new Error('검색된 학교가 없습니다');
+  if (!list?.length) throw new Error('시간표 제공처에서 학교를 찾지 못했어요. 학교 이름과 지역을 확인해 주세요.');
   return extractComciganSchools(list,meta.transport.schoolCodeDivisor,meta.cellKey);
 }
 
@@ -126,7 +126,7 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {
-    if (!Array.isArray(raw[field])) throw new Error('시간표 제공처의 데이터가 올바르지 않습니다');
+    if (!Array.isArray(raw[field])) throw new Error('시간표 제공처의 응답을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
     raw[alias] = meta.cellKey&&['자료446','자료492'].includes(alias)
       ? raw[field].map((value:unknown)=>typeof value==='string'?decodeComciganCell(value,meta.cellKey):value)
       : raw[field];
@@ -239,7 +239,7 @@ export async function getTimetable(grade: number, cls: number, opts?: { forceRef
   const {grades,classes}=timetableChoices(raw?.['학급수'],grade,cls);
 
   const grid = decodeGrid(raw, grade, cls,opts?.school?12:MAX_PERIOD);
-  if (!Object.keys(grid).length) throw new Error('해당 학년·반의 시간표가 제공되지 않습니다');
+  if (!Object.keys(grid).length) throw new Error('선택한 학년·반의 시간표가 아직 제공되지 않아요.');
   return {
     grid,
     classTimes: raw?.['일과시간'] ?? [],

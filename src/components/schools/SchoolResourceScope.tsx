@@ -203,7 +203,7 @@ function ResourceSession({ children }: { children: ReactNode }) {
   }, [snapshot?.current?.expires_at, snapshot?.access?.expires_at]);
   async function select(schoolId: string) {
     if (!multiSchoolEnabled || !owner)
-      throw Error("로그인 후 자원 이용 학교를 선택해주세요.");
+      throw Error("로그인 후 자원 이용 학교를 선택해 주세요.");
     const selection=++selectionGeneration.current;
     selectionPending.current=true;
     generation.current++;

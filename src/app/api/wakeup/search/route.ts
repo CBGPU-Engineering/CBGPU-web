@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       cache: 'no-store',
     });
     if (!res.ok) {
-      return NextResponse.json({ message: '유튜브 검색에 실패했어요.' }, { status: 502 });
+      return NextResponse.json({ message: 'YouTube에서 곡을 검색하지 못했어요. 잠시 후 다시 검색해 주세요.' }, { status: 502 });
     }
     const data = await res.json();
     const items = (data.items ?? [])
@@ -37,6 +37,6 @@ export async function GET(req: NextRequest) {
       }));
     return NextResponse.json({ items });
   } catch {
-    return NextResponse.json({ message: '유튜브 검색 중 오류가 발생했어요.' }, { status: 502 });
+    return NextResponse.json({ message: 'YouTube 검색 결과를 확인하지 못했어요. 잠시 후 다시 검색해 주세요.' }, { status: 502 });
   }
 }

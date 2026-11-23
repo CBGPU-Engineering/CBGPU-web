@@ -280,7 +280,7 @@ try {
     .click();
   await page.getByRole('dialog').getByRole('button',{name:'확인',exact:true}).click();
   await page
-    .getByRole("heading", { name: "이용할 학교 또는 임시 자원을 선택해주세요" })
+    .getByRole("heading", { name: "이용할 학교 또는 임시 자원을 선택해 주세요" })
     .waitFor();
   assert.equal(reservations, 1);
   allowed = true;

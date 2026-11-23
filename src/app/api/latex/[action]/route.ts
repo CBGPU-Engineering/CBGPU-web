@@ -15,10 +15,10 @@ async function handle(req:NextRequest,ctx:{params:Promise<{action:string}>}){
   const host=['127.0.0.1','localhost'].includes(raw)?forwarded:raw;
   if(!hosts.has(host))return error('Not found',404);
   if(req.method==='POST'){
-   const origin=req.headers.get('origin');if(origin!=='https://'+host)return error('올바르지 않은 요청입니다.',403);
+   const origin=req.headers.get('origin');if(origin!=='https://'+host)return error('요청을 확인하지 못했어요. 원래 화면에서 다시 시도해 주세요.',403);
   }
-  const user=await personalProjectUser(req);if(!user)return error('로그인이 필요합니다.',401);
-  const now=Date.now();const rate=rates.get(user.id);if(action==='upload-chunk'){}else if(rate&&rate.until>now){if(++rate.count>60)return error('요청이 많습니다. 잠시 후 다시 시도해 주세요.',429)}else rates.set(user.id,{count:1,until:now+60000});if(rates.size>2000)for(const [id,r]of rates)if(r.until<now)rates.delete(id);
+  const user=await personalProjectUser(req);if(!user)return error('로그인 후 다시 시도해 주세요.',401);
+  const now=Date.now();const rate=rates.get(user.id);if(action==='upload-chunk'){}else if(rate&&rate.until>now){if(++rate.count>60)return error('요청이 많아요. 잠시 후 다시 시도해 주세요.',429)}else rates.set(user.id,{count:1,until:now+60000});if(rates.size>2000)for(const [id,r]of rates)if(r.until<now)rates.delete(id);
   const token=req.headers.get('authorization')!.replace(/^Bearer\s+/i,'');const sid=JSON.parse(Buffer.from(token.split('.')[1],'base64url').toString()).session_id;
   const key=(await readFile('/home/cbgpu/CBGPU-live/backend/private/latex/bridge-key','utf8')).trim();
   const headers:Record<string,string>={'X-CBGPU-Key':key,'X-CBGPU-Identity':Buffer.from(JSON.stringify({id:user.id,session:sid,email:user.email,name:user.user_metadata?.name||user.user_metadata?.full_name||user.email})).toString('base64')};
@@ -26,8 +26,8 @@ async function handle(req:NextRequest,ctx:{params:Promise<{action:string}>}){
   const options:RequestInit & {duplex:'half'}={method:req.method,headers,body:req.method==='POST'?req.body:undefined,duplex:'half',cache:'no-store',signal:AbortSignal.timeout(180000)};
   const upstream=await fetch('http://127.0.0.1:3520/_api/'+action,options);
   if(upstream.status===404)return error('Project or upload not found',404);
-  const text=await upstream.text();let data;try{data=JSON.parse(text)}catch{return error('논문 편집 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.',502)}
+  const text=await upstream.text();let data;try{data=JSON.parse(text)}catch{return error('논문 편집 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.',502)}
 
   return NextResponse.json(data,{status:upstream.status});
- }catch(e){console.error('LaTeX request failed',e instanceof Error?e.name:'unknown');return error('논문 편집 서비스에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.',503)}
+ }catch(e){console.error('LaTeX request failed',e instanceof Error?e.name:'unknown');return error('논문 편집 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.',503)}
 }

@@ -16,7 +16,7 @@ export function formatBytes(bytes: number) {
 
 export async function materialsToken() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('로그인이 필요합니다.');
+  if (!session) throw new Error('로그인한 뒤 자료를 다시 열어 주세요.');
   return session.access_token;
 }
 

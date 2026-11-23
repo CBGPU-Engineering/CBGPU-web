@@ -110,7 +110,7 @@ function ttlFor(pathname: string) {
 async function callUpstream(request: NextRequest, targetUrl: URL, body: string | undefined): Promise<UpstreamResult> {
   const token = await getSharedToken();
   if (!token) {
-    return { status: 503, body: JSON.stringify({ message: '학교 조회 연결을 확인하지 못했어요. 관리자에게 연결 상태 확인을 요청해주세요.' }), contentType: 'application/json' };
+    return { status: 503, body: JSON.stringify({ message: "학교 조회 연결을 확인하지 못했어요. 관리자에게 연결 상태 확인을 요청해 주세요." }), contentType: 'application/json' };
   }
 
   const send=(accessToken:string)=>readQueue(async()=>{
@@ -126,12 +126,12 @@ async function callUpstream(request: NextRequest, targetUrl: URL, body: string |
     if (refreshedToken && refreshedToken !== token) upstream = await send(refreshedToken);
   }
 
-  if(upstream.status===401)return {status:503,body:JSON.stringify({code:'school_connection_expired',message:'학교 조회 연결이 만료되었거나 해제되었습니다. 운영자가 연결을 갱신해야 합니다.'}),contentType:'application/json'};
+  if(upstream.status===401)return {status:503,body:JSON.stringify({code:'school_connection_expired',message:"학교 조회 연결이 만료됐거나 해제됐어요. 운영자에게 연결 갱신을 요청해 주세요."}),contentType:'application/json'};
 
   let responseBody=upstream.body;
   if(upstream.status>=200&&upstream.status<300&&['/selfstudy/search','/rooms','/students'].includes(targetUrl.pathname)){
     try{responseBody=JSON.stringify((targetUrl.pathname==='/rooms'?selectStudyRooms:targetUrl.pathname==='/students'?selectStudyStudents:selectSelfStudyEntries)(JSON.parse(responseBody)))}
-    catch{return {status:502,body:JSON.stringify({message:'학교 자습 조회 응답의 형식을 확인하지 못했습니다. 잠시 후 다시 조회해 주세요.'}),contentType:'application/json'}}
+    catch{return {status:502,body:JSON.stringify({message:"학교 자습 조회 응답의 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요."}),contentType:'application/json'}}
   }
   return { status: upstream.status, body: responseBody, contentType: upstream.contentType };
 }
@@ -142,16 +142,16 @@ async function proxyRequest(request: NextRequest) {
     (r) => r.method === request.method && r.pattern.test(pathname)
   );
   if (!allowed) {
-    return NextResponse.json({ message: '지원하지 않는 요청입니다.' }, { status: 403 });
+    return NextResponse.json({ message: "요청한 기능을 사용할 수 없어요. 원래 화면에서 다시 시도해 주세요." }, { status: 403 });
   }
 
-  try {if (!(await requireApprovedUser(request))) return NextResponse.json({message:'로그인 후 승인된 계정만 조회할 수 있습니다.'},{status:401});}
-  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'권한 확인 서버에 연결하지 못했습니다.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
+  try {if (!(await requireApprovedUser(request))) return NextResponse.json({message:"로그인 후 승인된 계정만 조회할 수 있어요."},{status:401});}
+  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'이용 권한을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
 
   const targetUrl = new URL(`${pathname}${request.nextUrl.search}`, BASE_URL);
   const body = request.method === 'GET' ? undefined : await request.text();
   if (body && body.length > MAX_BODY_CHARS) {
-    return NextResponse.json({ message: '요청이 너무 큽니다.' }, { status: 413 });
+    return NextResponse.json({ message: '요청 내용이 너무 커요. 원래 화면에서 다시 시도해 주세요.' }, { status: 413 });
   }
 
   const key = `${request.method} ${pathname}${request.nextUrl.search}\n${body ?? ''}`;

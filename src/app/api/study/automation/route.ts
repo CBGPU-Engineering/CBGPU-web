@@ -20,7 +20,7 @@ async function handle(req:Request){
    const body=await readJsonBody(req,8192) as Record<string,unknown>;
    if(body?.action==='disable'){
     const {error}=await db.from('study_auto_settings').update({enabled:false,updated_at:new Date().toISOString()}).eq('user_id',user.id);
-    if(error)throw Error('자동신청을 끄지 못했습니다.');
+    if(error)throw Error('자동신청을 끄지 못했어요. 설정을 다시 확인해 주세요.');
    }else{
     const settings=validateAutomation(body),context=await automaticStudyContext(user.id);
     const room=context.rooms.find(r=>String(r.id)===settings.room_id&&r.hasSeats);
@@ -28,12 +28,12 @@ async function handle(req:Request){
     const composition=await personalSchoolRead(user.id,'/rooms/'+room.id+'/composition');
     if(!composition?.seats?.some((s:{id:string|number})=>String(s.id)===settings.seat_id))throw Error('기본 자리를 다시 선택해 주세요.');
     const {error}=await db.from('study_auto_settings').upsert({user_id:user.id,...settings,starts_on:nextAutomaticStudyDate(settings.run_time,new Date()),run_time:settings.run_time+':00',updated_at:new Date().toISOString()});
-    if(error)throw Error('자동신청 설정을 저장하지 못했습니다.');
+    if(error)throw Error('자동신청 설정을 저장하지 못했어요. 설정을 다시 확인해 주세요.');
    }
   }
   const [{data,error},runs]=await Promise.all([db.from('study_auto_settings').select(fields).eq('user_id',user.id).maybeSingle(),automationRuns(user.id)]);
-  if(error)throw Error('자동신청 설정을 불러오지 못했습니다.');
+  if(error)throw Error('자동신청 설정을 불러오지 못했어요. 다시 불러와 주세요.');
   return reply({settings:data?{...data,run_time:data.run_time.slice(0,5)}:null,runs});
- }catch(error){return reply({message:error instanceof Error?error.message:'설정을 확인하지 못했습니다.'},(error as {status?:number}).status||400)}
+ }catch(error){return reply({message:error instanceof Error?error.message:'설정을 확인하지 못했어요. 다시 불러와 주세요.'},(error as {status?:number}).status||400)}
 }
 export const GET=handle;export const POST=handle;

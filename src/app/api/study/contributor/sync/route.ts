@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   const supabase=scoped&&serviceRoleKey?createClient(contributorOrigin(),serviceRoleKey,{auth:{persistSession:false,autoRefreshToken:false},global:{fetch:(input,init)=>fetch(input,{...init,cache:'no-store',redirect:'error',signal:AbortSignal.timeout(5000)})}}):legacySupabase;
   if (!supabase) return NextResponse.json({ message: '서버 동기화 키가 설정되지 않았습니다.' }, { status: 500 });
   const deviceKey = request.headers.get('x-cbgpu-device')?.trim();
-  if (!deviceKey || (scoped?!/^cbgpu_[A-Za-z0-9_-]{43}$/.test(deviceKey):!deviceKey.startsWith('cbgpu_'))) return NextResponse.json({ message: '연결 키가 필요합니다.' }, { status: 401 });
+  if (!deviceKey || (scoped?!/^cbgpu_[A-Za-z0-9_-]{43}$/.test(deviceKey):!deviceKey.startsWith('cbgpu_'))) return NextResponse.json({ message: "연결 키가 필요해요." }, { status: 401 });
 
   const keyHash = crypto.createHash('sha256').update(deviceKey).digest('hex');
   await requireContributionDevice(supabase,keyHash);

@@ -47,7 +47,7 @@ export default function MaterialsStorage() {
       if (rowsResult.error) throw rowsResult.error;
       setRows((rowsResult.data ?? []) as unknown as MaterialRow[]);
     } catch (error) {
-      showError(adminNotice(error instanceof Error ? error.message : t("Could not load storage information.")));
+      showError(adminNotice("Could not load storage information. Refresh to try again."));
     } finally { setLoading(false); }
   }, [showError]);
 

@@ -4,7 +4,7 @@ export const LOGO_BUCKET = 'contest-logos';
 export const LOGO_TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 export function logoFileError(file: Pick<File, 'type' | 'size'>) {
   if (!LOGO_TYPES[file.type]) return '로고는 PNG, JPG, WebP 이미지로 올려 주세요.';
-  if (!file.size || file.size > 2 * 1024 * 1024) return '로고는 2MB 이하의 이미지로 올려 주세요.';
+  if (!file.size || file.size > 2 * 1024 * 1024) return '내용이 있는 2MB 이하의 이미지로 올려 주세요.';
   return null;
 }
 export function contestLogoUrl(path: string | null) {

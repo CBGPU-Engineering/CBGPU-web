@@ -46,14 +46,14 @@ export default function MobileAdminPage(){
    if(ticket!==generation.current||actor.current!==owner)return;
    if(!owner||session?.user.id!==owner)throw Error('로그인 상태를 다시 확인해 주세요.');
    const [p,r]=await Promise.all([
-    fetch('/api/admin/profiles',{headers:{Authorization:`Bearer ${session?.access_token||''}`},cache:'no-store'}).then(async x=>{const j=await x.json();if(!x.ok)throw new Error(j.error||'계정을 불러오지 못했습니다.');return j.profiles||[]}),
-    supabase.from('reservations').select('*, profiles:user_id (full_name, student_id)').order('created_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(300).then(({data,error})=>{if(error)throw new Error('GPU 예약을 불러오지 못했습니다.');return data||[]}),
+    fetch('/api/admin/profiles',{headers:{Authorization:`Bearer ${session?.access_token||''}`},cache:'no-store'}).then(async x=>{const j=await x.json();if(!x.ok)throw new Error(j.error||'계정 목록을 불러오지 못했어요. 다시 시도해 주세요.');return j.profiles||[]}),
+    supabase.from('reservations').select('*, profiles:user_id (full_name, student_id)').order('created_at',{ascending:false,nullsFirst:false}).order('id',{ascending:false}).limit(300).then(({data,error})=>{if(error)throw new Error('GPU 예약을 불러오지 못했어요. 다시 시도해 주세요.');return data||[]}),
    ]);
    const currentSession=(await supabase.auth.getSession()).data.session;
    if(ticket!==generation.current||actor.current!==owner||currentSession?.user.id!==owner)return;
    setProfiles(p);setReservations(r);setGpuHasMore(r.length===300);setLoadedAt(new Date().toISOString());setNow(Date.now());
    try{const res=await fetch('/api/admin/health',{headers:{Authorization:`Bearer ${session?.access_token||''}`},cache:'no-store'});const next=res.ok?(await res.json()).study:null;if(ticket===generation.current&&actor.current===owner)setStudy(next)}catch{if(ticket===generation.current&&actor.current===owner)setStudy(null)}
-  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(t(e instanceof Error?e.message:'불러오지 못했습니다.'))}
+  }catch(e){if(ticket===generation.current&&actor.current===owner)setError(t(e instanceof Error?e.message:'목록을 불러오지 못했어요. 다시 시도해 주세요.'))}
   finally{if(reading.current?.ticket===ticket)reading.current=null;if(ticket===generation.current)setLoading(false)}
  },[user?.id]);
  useEffect(()=>{setProfiles([]);setReservations([]);setStudy(null);setLoadedAt(null);setGpuHasMore(false);setLoadingOlder(false);setGpuView('all');setGpuQuery('');setGpuFilter('all');return()=>{generation.current++}},[user?.id]);
@@ -85,13 +85,13 @@ export default function MobileAdminPage(){
   if(busyKey)return;setBusyKey(key);setError('');
   try{const failure=await run();if(failure)setError(t(failure));else await load()}catch(e){setError(t(e instanceof Error?e.message:'처리 결과를 확인하지 못했어요. 새로고침해 주세요.'))}finally{setBusyKey('')}
  }
- const approveProfile=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:true}).eq('id',id);return error?`승인하지 못했습니다: ${error.message}`:null});
- const markReview=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:false}).eq('id',id);return error?`처리하지 못했습니다: ${error.message}`:null});
- const deleteProfile=(id:string)=>act('p:'+id,async()=>{const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)return '로그인이 만료됐어요. 다시 로그인해 주세요.';const res=await fetch('/api/admin/delete-user',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({userId:id})});const body=await res.json().catch(()=>({}));return res.ok?null:(body?.message||'계정을 삭제하지 못했습니다.')});
- const approveReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';if(conflicts(r))return '이미 승인된 예약과 시간이 겹쳐 승인할 수 없습니다.';const {error}=await supabase.rpc('approve_gpu_reservation',{p_reservation_id:r.id});return error?`승인하지 못했습니다: ${error.message}`:null});
- const rejectReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';const {data,error}=await supabase.from('reservations').update({status:'rejected'}).eq('id',r.id).eq('status','pending').gt('end_time',new Date().toISOString()).select('id');return error||!data?.length?'거절하지 못했습니다. 예약 상태를 새로고침해 주세요.':null});
+ const approveProfile=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:true}).eq('id',id);return error?`승인 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
+ const markReview=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:false}).eq('id',id);return error?`변경 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
+ const deleteProfile=(id:string)=>act('p:'+id,async()=>{const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)return '로그인이 만료됐어요. 다시 로그인해 주세요.';const res=await fetch('/api/admin/delete-user',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({userId:id})});const body=await res.json().catch(()=>({}));return res.ok?null:(body?.message||'계정 삭제 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.')});
+ const approveReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';if(conflicts(r))return '이미 승인된 예약과 시간이 겹쳐요. 예약 시간을 확인해 주세요.';const {error}=await supabase.rpc('approve_gpu_reservation',{p_reservation_id:r.id});return error?`승인 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
+ const rejectReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';const {data,error}=await supabase.from('reservations').update({status:'rejected'}).eq('id',r.id).eq('status','pending').gt('end_time',new Date().toISOString()).select('id');return error||!data?.length?'거절 결과를 확인하지 못했어요. 예약 목록을 새로고침해 주세요.':null});
  if(authLoading)return <div className="flex min-h-dvh items-center justify-center"><LoadingSpinner label="권한 확인 중"/></div>;
- if(!isAdmin)return <div className="p-8 text-center text-sm text-muted-foreground">관리자만 볼 수 있습니다.</div>;
+ if(!isAdmin)return <div className="p-8 text-center text-sm text-muted-foreground">관리 권한이 있는 계정으로 로그인해 주세요.</div>;
  // 상단바와 하단 탭은 앱 관리 틀(AppAdminFrame)이 그린다. 여기서는 내용만 그린다.
  return <div className="space-y-3">
  <h1 className="cb-page-title">{tabs.find(t=>t.id===tab)?.label}</h1>
@@ -106,7 +106,7 @@ export default function MobileAdminPage(){
    <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-base font-semibold">{p.full_name||'이름 없음'}</p><p className="text-sm text-muted-foreground">{p.student_id||'학번 없음'}</p></div><span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground"><Clock className="size-3"/>{p.is_approved===false?'확인 필요':'대기'}</span></div>
    <Button className="mt-4 min-h-11 w-full gap-2" disabled={!!busyKey} onClick={()=>void approveProfile(p.id)}>{busyKey==='p:'+p.id?<Loader2 className="size-4 animate-spin"/>:<Check className="size-4"/>}승인</Button>
      <div className="mt-2 grid grid-cols-2 gap-2"><Button variant="outline" className="min-h-11 gap-2" disabled={!!busyKey||p.is_approved===false} onClick={()=>void markReview(p.id)}><HelpCircle className="size-4"/>{p.is_approved===false?'확인 필요':'보류'}</Button><Button variant="outline" className="min-h-11 gap-2 border-destructive/40 text-destructive hover:bg-destructive/10" disabled={!!busyKey} onClick={()=>setDeleteTarget({id:p.id,name:p.full_name||'이름 없음'})}><Trash2 className="size-4"/>거절</Button></div>
-  </article>):<p className="py-16 text-center text-sm text-muted-foreground">승인 대기 중인 계정이 없습니다.</p>)}
+  </article>):<p className="py-16 text-center text-sm text-muted-foreground">승인 대기 중인 계정이 없어요.</p>)}
   {tab==='gpu'&&<section aria-label="GPU 예약 전체 내역" className="space-y-3">
    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">전체 예약 내역</h2><Button variant="outline" className="min-h-11 gap-2" aria-label="GPU 예약 새로고침" disabled={loading||!!busyKey} onClick={()=>void load()}><RefreshCw className="size-4"/>새로고침</Button></div>

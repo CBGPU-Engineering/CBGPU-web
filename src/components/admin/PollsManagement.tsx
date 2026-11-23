@@ -351,7 +351,7 @@ function PollBuilder({ poll, onSaved, onBack }: { poll?: Poll; onSaved: () => vo
       }
       showSuccess(adminNotice("Saved."));
       onSaved();
-    } catch (e: any) { showError(adminNotice(e.message)); }
+    } catch (e: any) { showError(adminNotice("Could not confirm the saved poll. Refresh the list before trying again.")); }
     finally { setSaving(false); }
   };
 
@@ -432,7 +432,7 @@ function PollForm({ poll, questions, onSubmitted, onBack }: { poll: Poll; questi
       if (ae) throw ae;
       showSuccess(adminNotice("Response submitted."));
       onSubmitted();
-    } catch (e: any) { showError(adminNotice(e.message)); }
+    } catch (e: any) { showError(adminNotice("Could not confirm your response. Reopen the poll before trying again.")); }
     finally { setSubmitting(false); }
   };
 
@@ -598,9 +598,9 @@ export default function PollsPage() {
   if (dbMissing) return (
     <main className="px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">{t("Database setup required")}</h2>
+      <h2 className="font-black text-xl uppercase tracking-tight">{t("Service setup needs review")}</h2>
       <p className="text-sm text-muted-foreground">
-        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_polls_migration.sql</code>{t("in the SQL editor.")} </p>
+        {t("This service is unavailable. Ask the operator to check its database setup.")} </p>
     </main>
   );
 

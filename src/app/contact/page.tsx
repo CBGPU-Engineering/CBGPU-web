@@ -93,7 +93,7 @@ export default function ContactPage() {
               type="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="이메일 주소를 입력하세요"
+              placeholder="답변받을 이메일을 입력해 주세요"
               className="h-11 font-normal text-base"
             />
           </div>
@@ -128,7 +128,7 @@ export default function ContactPage() {
             name="message"
             value={form.message}
             onChange={handleChange}
-            placeholder="문의 내용을 자세히 작성해 주세요."
+            placeholder="어떤 화면에서 무슨 일이 있었는지 알려 주세요. 비밀번호나 인증 토큰은 적지 마세요."
             rows={6}
             className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base font-normal resize-y focus:outline-none focus:ring-2 focus:ring-ring transition-all"
           />

@@ -1,7 +1,7 @@
 /** Ordered, owner-bound note writes. A failed write is reconciled by ID before an explicit retry. */
 export type NoteDraft={title:string;content:string;tags:string[];is_shared:boolean};
 export type ResearchNote=NoteDraft&{id:string;user_id:string;created_at:string;updated_at:string};
-export class NoteConflict extends Error{constructor(){super('다른 기기에서 노트가 바뀌었어요. 입력 내용을 복사한 뒤 목록에서 다시 열어 주세요.')}}
+export class NoteConflict extends Error{constructor(){super('다른 곳에서 노트가 바뀌었어요. 입력 내용을 복사한 뒤 목록에서 다시 열어 주세요.')}}
 const same=(row:NoteDraft,draft:NoteDraft)=>row.title===(draft.title||'제목 없음')&&row.content===draft.content&&row.is_shared===draft.is_shared&&JSON.stringify(row.tags)===JSON.stringify(draft.tags);
 export function createNotePersistence(options:{id:string;owner:string;initial:ResearchNote|null;recoveredDraft?:NoteDraft;read:()=>Promise<ResearchNote|null>;create:(draft:NoteDraft)=>Promise<ResearchNote>;update:(draft:NoteDraft,version:string)=>Promise<ResearchNote|null>}){
  let saved=options.initial,uncertain:NoteDraft|null=options.recoveredDraft??null;

@@ -13,7 +13,7 @@ export function validateAutomation(input:unknown):StudyAutomationSettings{
 }
 export function automationDue(settings:StudyAutomationSettings,now:Date){const c=koreaClock(now),[h,m]=settings.run_time.split(':').map(Number);return settings.enabled&&(!settings.starts_on||settings.starts_on<=c.date)&&c.weekday>=1&&c.weekday<=5&&c.minute>=h*60+m&&c.minute<=15*60+30}
 export function nearestAvailableSeats(seats:StudySeat[],preferred:StudyId,occupied:StudyId[]){
- const target=seats.find(s=>String(s.id)===String(preferred));if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))throw Error('저장된 기본 자리의 배치 정보를 확인하지 못했습니다.');
+ const target=seats.find(s=>String(s.id)===String(preferred));if(!target||!Number.isFinite(target.x)||!Number.isFinite(target.y))throw Error('저장된 기본 자리의 배치 정보를 확인하지 못했어요. 자리를 다시 선택해 주세요.');
  const taken=new Set(occupied.map(String));
  return seats.filter(s=>Number.isFinite(s.x)&&Number.isFinite(s.y)&&!taken.has(String(s.id)))
  .sort((a,b)=>Number(String(b.id)===String(preferred))-Number(String(a.id)===String(preferred))||((a.x-target.x)**2+(a.y-target.y)**2)-((b.x-target.x)**2+(b.y-target.y)**2)||a.name.localeCompare(b.name,'ko',{numeric:true})||String(a.id).localeCompare(String(b.id)));

@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
   if (!tokenResponse.ok || !token?.access_token) return NextResponse.json({ message: 'Spotify 연결이 만료됐어요. 다시 연결해 주세요.' }, { status: 401 });
   const playlistResponse = await spotifyApi('/me/playlists', token.access_token, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description: 'CBGPU 기상송 신청곡', public: true }) });
   const playlist = await playlistResponse.json().catch(() => null);
-  if (!playlistResponse.ok || !playlist?.id) return NextResponse.json({ message: 'Spotify 플레이리스트 생성에 실패했어요.' }, { status: 502 });
+  if (!playlistResponse.ok || !playlist?.id) return NextResponse.json({ message: 'Spotify 플레이리스트를 만들지 못했어요. 잠시 후 다시 시도해 주세요.' }, { status: 502 });
   const addResponse = await spotifyApi(`/playlists/${playlist.id}/items`, token.access_token, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uris: tracks }) });
-  if (!addResponse.ok) return NextResponse.json({ message: '플레이리스트는 만들었지만 곡 추가에 실패했어요.' }, { status: 502 });
+  if (!addResponse.ok) return NextResponse.json({ message: '플레이리스트는 만들었지만 곡을 추가하지 못했어요. Spotify에서 목록을 확인해 주세요.' }, { status: 502 });
   return NextResponse.json({ id: playlist.id, url: playlist.external_urls?.spotify });
 }

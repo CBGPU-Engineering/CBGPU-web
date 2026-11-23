@@ -35,12 +35,12 @@ export function createTimetableLoader(load:()=>Promise<TimetableRaw>,store:Timet
   boot??=store.read().then(value=>{if(usableTimetableSnapshot(value,clock()))snapshot=value}).catch(()=>{});await boot;
   if(pending)return answer(pending);
   const cached=current();
-  if(clock()<retryAt){if(cached)return {...cached,stale:true};throw lastError||Error('시간표 제공처에 잠시 연결할 수 없습니다')}
+  if(clock()<retryAt){if(cached)return {...cached,stale:true};throw lastError||Error('시간표 제공처에 잠시 연결할 수 없어요. 잠시 후 다시 조회해 주세요.')}
   if(!force&&!lastError&&cached&&clock()-cached.at<FRESH)return {...cached,stale:false};
   started=Date.now();
   pending=(async()=>{
    try{
-    const raw=await load();if(!validTimetableRaw(raw))throw Error('시간표 제공처의 데이터가 비어 있습니다');
+    const raw=await load();if(!validTimetableRaw(raw))throw Error('시간표 제공처에 등록된 정보가 없어요. 잠시 후 다시 조회해 주세요.');
     snapshot={version:1,at:clock(),raw};retryAt=0;lastError=null;
     await store.write(snapshot).catch(()=>console.warn('Timetable last-good persistence unavailable'));
     return {raw,at:snapshot.at,stale:false};

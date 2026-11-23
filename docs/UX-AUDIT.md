@@ -361,3 +361,61 @@ fixed height caps overrode Radix availability, plus an item-aligned inline minim
 that exceeded its viewport maximum. Existing height caps now take the smaller
 available height, and the targeted native wrapper permits that maximum to win.
 The normal alignment API, selection callbacks and complete labels are retained.
+
+## Complete authored-copy review — 2026-11-24
+
+The follow-up review uses the installed **ux-writing-kr** skill, checks authored
+copy across the tracked web source, and records every scanned file in
+[`ux/sitewide-copy-20261124.json`](./ux/sitewide-copy-20261124.json).
+`node scripts/audit-ux-copy.mts --output /tmp/cbgpu-copy.json` reproduces the
+candidate inventory, including accessible names, metadata, conditional text,
+Korean messages and English copy properties. A candidate count is not a count of
+visible phrases or a claim that every runtime state was browser-tested.
+
+Use calm Korean 해요체 for users, the app and school administration; preserve
+English for desktop platform/developer/equipment management. A school **도입 신청**,
+a user's **학교 소속 요청**, and creating a personal account are distinct actions.
+Correct concise labels and the existing time-aware greeting voice are retained.
+Machine codes, lookup keys, URLs, commands, model instructions, user content and
+legal/editorial content are not mechanically translated.
+
+Important corrections follow the real handler rather than a prettier synonym:
+
+- `Start Session` only opens connection guidance: **접속 안내 보기**.
+- School membership requests are **학교 소속 요청**, not school creation or approval.
+- Printer actions that change a database record say **인쇄 중으로 기록** or
+  **사용 가능으로 표시**; they do not claim physical equipment was controlled.
+- A failed contest read no longer always says the connection was disconnected.
+- Deployment, domain and upload copy separates requests, preparation, verified
+  completion and uncertain results; re-check existing records before retrying writes.
+- Forms, empty states and accessible names use the same action terminology.
+- Public descriptions explain what a person can do before the relevant conditions.
+- All 51 usage guides were read against current labels. Stale CPU/memory and SDK
+  prose now points to the actual current execution/installation screen; code
+  examples and protocol values remain unchanged.
+- Recruitment and developer static portals have a separate reviewed backend PR.
+  Their raw category values and payloads are preserved while display labels are
+  clearer. The legacy developer helper still accepts an unexpected successful
+  non-JSON mutation response; the copy directs the operator to verify the refreshed
+  row instead of claiming the row changed. That helper is not represented as fixed.
+
+Verification uses synthetic local accounts/data and loopback-only fixtures.
+Final unit checks report 670 tests: 667 pass, no failures, three intentional
+skips. TypeScript/tooling checks and optimized demo build were exercised. Real
+component fixtures cover research/AI/GPU/deployment (42 configurations),
+admin/equipment (48 configurations), signup membership payloads (23 scenarios),
+and shared navigation before/after (18 configurations per version). Existing
+study application, AI flows and delayed-focus regression also run with updated
+accessible-name locators; their functional assertions remain intact. Screenshots
+use synthetic records and are not operational evidence of real emails or equipment.
+
+Source review covers conditional authored text, not arbitrary messages from an
+upstream provider or future user-authored content. Physical Android, real email
+receipt, school-site write operations and physical GPU/equipment execution remain
+outside this copy-only test. No data migration or permission change is included.
+
+The release browser fixture now waits for focus to enter each dialog before
+sending Escape and checks that focus returns to the same opener element. This
+preserves the keyboard contract without forced closes, retries or longer timeouts.
+The original fixture passed locally; the CI failure is treated as a readiness
+race hypothesis rather than a confirmed production regression.

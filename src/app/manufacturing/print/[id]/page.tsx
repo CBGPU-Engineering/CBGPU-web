@@ -128,7 +128,7 @@ export default function PrintJobDetailPage() {
             <div className="flex items-center gap-2">
               <LocateStudentButton studentId={requester?.student_id} studentName={requester?.full_name} />
               <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs gap-1.5 h-9" onClick={handleMarkDelivered}>
-                <PackageCheck className="size-3.5" /> 가져다 줌
+                <PackageCheck className="size-3.5" /> 전달 완료로 표시
               </Button>
             </div>
           )}
@@ -256,7 +256,7 @@ export default function PrintJobDetailPage() {
         open={cancelOpen}
         title="신청 취소"
         description="이 3D 프린팅 신청을 취소해요. 취소한 신청은 되돌릴 수 없어요."
-        confirmLabel="취소하기"
+        confirmLabel="신청 취소"
         onConfirm={handleCancel}
         onCancel={() => setCancelOpen(false)}
       />

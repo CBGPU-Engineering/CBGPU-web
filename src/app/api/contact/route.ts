@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
 
   let body: unknown;
   try { body = await readJsonBody(req, 24_000); } catch (error) {
-    return NextResponse.json({ error: '입력값이 올바르지 않습니다.' }, { status: error instanceof RequestBodyError ? error.status : 400 });
+    return NextResponse.json({ error: '문의 내용을 확인한 뒤 다시 보내 주세요.' }, { status: error instanceof RequestBodyError ? error.status : 400 });
   }
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: '입력값이 올바르지 않습니다.' }, { status: 400 });
+    return NextResponse.json({ error: '문의 내용을 확인한 뒤 다시 보내 주세요.' }, { status: 400 });
   }
   const { name, email, category, message } = body as Record<string, unknown>;
 
@@ -33,11 +33,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '필수 항목을 입력해 주세요.' }, { status: 400 });
   }
   if (!EMAIL_RE.test(email) || email.length > 254 || /[\r\n]/.test(email + name) || (category !== undefined && typeof category !== 'string') || name.length > 100 || message.length > 5000 || (category && String(category).length > 50)) {
-    return NextResponse.json({ error: '입력값이 올바르지 않습니다.' }, { status: 400 });
+    return NextResponse.json({ error: '문의 내용을 확인한 뒤 다시 보내 주세요.' }, { status: 400 });
   }
 
   try {
-  if (!resend) return NextResponse.json({ error: 'Email delivery is not configured.' }, { status: 503 });
+  if (!resend) return NextResponse.json({ error: '지금은 문의를 보낼 수 없어요. 잠시 후 다시 시도해 주세요.' }, { status: 503 });
   const { error } = await resend.emails.send({
     from: emailSender(),
     to: RECIPIENTS,
@@ -56,11 +56,11 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ error: '문의 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.' }, { status: 500 });
+    return NextResponse.json({ error: '문의 전송 결과를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
   } catch {
-    return NextResponse.json({ error: '문의 전송에 실패했습니다.' }, { status: 502 });
+    return NextResponse.json({ error: '문의 전송 결과를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.' }, { status: 502 });
   }
 }

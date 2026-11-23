@@ -1,3 +1,4 @@
+import {userFacingError} from './userFacingError';
 import {getNativeBridge} from './nativeBridge';
 import {supabase} from './supabase';
 export type AiJob={id:string;kind:string;title:string;state:'queued'|'running'|'paused'|'succeeded'|'failed'|'cancelled';created:number;updated:number;gpu:number|null;attempts:number;progress:string;error?:string;logs?:string;artifacts?:{path:string;size:number}[];result?:{text?:string;srt?:string;language?:string;truncated?:boolean;choices?:{message:{content:string};finish_reason?:string}[];hits?:{id:string;label:string;href:string;snippet:string;score:number}[]}};
@@ -12,7 +13,7 @@ export async function aiRequest(path:string,method='GET',body?:unknown,signal?:A
   const response=await fetch('/api/ai'+path,{method,headers:{Authorization:'Bearer '+session.access_token,...(file?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:file?body as File:JSON.stringify(body),cache:'no-store',signal:controller.signal});
   const result:unknown=await response.json().catch(()=>null);
   const record=result!==null&&typeof result==='object'&&!Array.isArray(result)?result as Record<string,any>:null;
-  if(!response.ok)throw Object.assign(Error(typeof record?.message==='string'&&record.message.length<=1000?record.message:`AI 서비스에 연결하지 못했어요 (${response.status}). 잠시 후 다시 확인해 주세요.`),{status:response.status});
+  if(!response.ok)throw Object.assign(Error(userFacingError(record?.message,`AI 요청을 처리하지 못했어요 (${response.status}). 입력 내용과 AI 작업 상태를 확인해 주세요.`)),{status:response.status});
   if(!record)throw Error('AI 서비스 응답을 확인하지 못했어요. 잠시 후 다시 확인해 주세요.');
   return record;
  }catch(error){
@@ -28,7 +29,7 @@ export async function waitForAiJob(id:string,options:{signal?:AbortSignal;onProg
   if(options.signal?.aborted)throw new DOMException('취소됨','AbortError');
   const {job}: {job:AiJob}=await aiRequest('/jobs/'+id,'GET',undefined,options.signal,undefined,Math.min(30_000,Math.max(1,deadline-Date.now())));if(!job||job.id!==id||!['queued','running','paused','succeeded','failed','cancelled'].includes(job.state))throw Error('작업 상태를 확인하지 못했어요. AI 작업 목록에서 다시 확인해 주세요.');options.onProgress?.(job);
   if(job.state==='succeeded')return job;
-  if(['failed','cancelled'].includes(job.state))throw Error(job.error||'작업이 중단됐어요. AI 작업 목록에서 확인해 주세요.');
+  if(['failed','cancelled'].includes(job.state))throw Error(userFacingError(job.error,'작업이 중단됐어요. AI 작업 목록에서 확인해 주세요.'));
   await new Promise<void>((resolve,reject)=>{const timer=setTimeout(()=>{options.signal?.removeEventListener('abort',abort);resolve()},Math.min(2500,Math.max(1,deadline-Date.now())));const abort=()=>{clearTimeout(timer);reject(new DOMException('취소됨','AbortError'))};options.signal?.addEventListener('abort',abort,{once:true})});
  }
  throw Error('GPU를 기다리고 있어요. AI → 내 작업에서 계속 확인할 수 있어요.');

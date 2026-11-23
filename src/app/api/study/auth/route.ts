@@ -16,8 +16,8 @@ async function requireCbgpuUser(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  try{if(studyScopedMode())await requireStudyUser(request);else if(!(await requireCbgpuUser(request)))return NextResponse.json({message:'로그인이 필요합니다.'},{status:401});}
-  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'권한 확인 서버에 연결하지 못했습니다.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
+  try{if(studyScopedMode())await requireStudyUser(request);else if(!(await requireCbgpuUser(request)))return NextResponse.json({message:"로그인한 뒤 다시 시도해 주세요."},{status:401});}
+  catch(error){const status=(error as {status?:number}).status;return NextResponse.json({message:error instanceof Error?error.message:'이용 권한을 확인하지 못했어요. 잠시 후 다시 시도해 주세요.'},{status:[401,403].includes(status||0)?status:503,headers:{'Cache-Control':'no-store'}});}
 
   try {
     const body = await request.json().catch(() => ({}));
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json(
         {
-          message: data?.message ?? '토큰 발급에 실패했습니다.',
+          message: data?.message ?? '학교 계정 연결을 완료하지 못했어요. 다시 연결해 주세요.',
           statusCode: response.status,
         },
         { status: response.status }
@@ -66,6 +66,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ accessToken: data?.accessToken ?? null });
   } catch (error: any) {
-    return NextResponse.json({ message: error?.message ?? '토큰 발급 중 오류가 발생했습니다.' }, { status: 500 });
+    return NextResponse.json({ message: error?.message ?? '학교 계정 연결 결과를 확인하지 못했어요. 다시 연결해 주세요.' }, { status: 500 });
   }
 }

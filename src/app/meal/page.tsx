@@ -92,7 +92,7 @@ function MealPageContent() {
           getNativeBridge()?.scheduleAlarm({
             id: MEAL_ALARM_ID,
             title: '오늘 급식',
-            body: '오늘 급식 메뉴를 확인해보세요',
+            body: '오늘 급식 메뉴를 확인해 보세요',
             whenIso: todayAt(saved.time || '12:20'),
             repeat: 'daily',
           });
@@ -116,7 +116,7 @@ function MealPageContent() {
       await bridge.scheduleAlarm({
         id: MEAL_ALARM_ID,
         title: '오늘 급식',
-        body: '오늘 급식 메뉴를 확인해보세요',
+        body: '오늘 급식 메뉴를 확인해 보세요',
         whenIso: todayAt(time),
         repeat: 'daily',
       });

@@ -99,7 +99,7 @@ export default function NewPrintJobPage() {
         }
         continue;
       }
-      showError(`"${file.name}"은(는) 지원하지 않는 형식입니다. (.3mf, .stl, .obj만 가능)`);
+      showError(`"${file.name}"은 지원하지 않는 형식이에요. .3mf, .stl, .obj 파일을 선택해 주세요.`);
     }
     setConverting(false);
   };
@@ -157,10 +157,10 @@ export default function NewPrintJobPage() {
     if (error) {
       showError('신청을 저장하지 못했어요. 입력 내용을 확인한 뒤 다시 시도해 주세요.');
     } else if (rows.length === 1) {
-      showSuccess('3D 프린팅을 신청했어요. 담당자 승인 후 제작을 진행해요.');
+      showSuccess('3D 프린팅을 신청했어요. 진행 상태는 신청 내역에서 확인해 주세요.');
       router.push(`/manufacturing/print/${data[0].id}`);
     } else {
-      showSuccess(`파일 ${rows.length}개를 각각 신청했어요. 담당자 승인 후 제작을 진행해요.`);
+      showSuccess(`파일 ${rows.length}개를 각각 신청했어요. 진행 상태는 신청 내역에서 확인해 주세요.`);
       router.push('/manufacturing/print');
     }
   };
@@ -168,7 +168,7 @@ export default function NewPrintJobPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={56} label="인증 확인 중" />
+        <LoadingSpinner size={56} label="로그인 확인 중" />
       </div>
     );
   }
@@ -214,9 +214,9 @@ export default function NewPrintJobPage() {
             >
               <span className="font-semibold text-sm">{p.name}</span>
               <Badge variant={p.status === 'printing' ? 'success' : p.status === 'maintenance' ? 'danger' : p.status === 'done' ? 'warning' : 'muted'}>
-                {p.status === 'printing' ? '사용중' : p.status === 'maintenance' ? '고장' : p.status === 'done' ? '회수대기' : '대기'}
+                {p.status === 'printing' ? '사용 중' : p.status === 'maintenance' ? '고장' : p.status === 'done' ? '회수 대기' : '대기'}
               </Badge>
-              <span className="text-xs text-muted-foreground opacity-70">밀린 플레이트 {plateBacklog[p.id] || 0}개</span>
+              <span className="text-xs text-muted-foreground opacity-70">대기 중인 플레이트 {plateBacklog[p.id] || 0}개</span>
             </button>
           ))}
         </div>
@@ -275,7 +275,7 @@ export default function NewPrintJobPage() {
           {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
             <>
               <UploadCloud className="size-6 opacity-40" />
-              <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
+              <span className="text-xs font-bold text-muted-foreground">파일 선택 · 여러 개 가능</span>
               <span className="text-xs text-muted-foreground">.3mf 그대로 올리거나, .stl / .obj를 올리면 3mf로 변환해요</span>
             </>
           )}
@@ -324,7 +324,7 @@ export default function NewPrintJobPage() {
 
         {mode === 'advanced' && (
           <p className="text-xs text-muted-foreground leading-relaxed">
-            고급자는 본인 컴퓨터의 밤부스튜디오로 미리 슬라이싱한 파일을 올려주세요. 담당자는 올린 파일로 출력을 진행해요.
+            고급자는 본인 컴퓨터의 밤부스튜디오로 미리 슬라이싱한 파일을 올려 주세요. 담당자는 올린 파일로 출력을 진행해요.
           </p>
         )}
       </section>
@@ -349,7 +349,7 @@ export default function NewPrintJobPage() {
           <textarea
             id="print-notes"
             rows={3}
-            placeholder="서포트 여부 등 요청사항... (모든 파일에 공통 적용)"
+            placeholder="서포트 여부 등 요청 사항 · 모든 파일에 공통 적용"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"

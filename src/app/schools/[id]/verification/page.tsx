@@ -2,7 +2,7 @@ import SchoolReverification from "@/components/schools/SchoolReverification";
 import { SchoolFeatureBoundary } from "@/components/schools/SchoolFeatureBoundary";
 import "@/components/schools/schools.css";
 export const metadata = {
-  title: "School reverification · CBGPU",
+  title: "학교 소속 재인증 · CBGPU",
   robots: { index: false, follow: false },
 };
 export default async function Page({

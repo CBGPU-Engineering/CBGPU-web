@@ -34,7 +34,7 @@ export default function ContestLogoEditor({ contest, onUpdated }: { contest: Con
     finally { saving.current = false; setBusy(false); }
   }
   return <section className="contest-panel space-y-4">
-    <div><p className="contest-eyebrow mb-2 text-primary">IDENTITY</p><h2 className="text-lg font-bold">대회 로고</h2></div>
+    <div><p className="contest-eyebrow mb-2 text-primary">대회 이미지</p><h2 className="text-lg font-bold">대회 로고</h2></div>
     <ContestLogoPicker file={file} currentPath={removed ? null : contest.logo_path} disabled={busy} onChange={picked => { setFile(picked); setRemoved(false); }} onRemove={() => { setFile(null); setRemoved(true); }} />
     <div className="flex items-center justify-between gap-3"><p className="text-xs text-muted-foreground">변경 사항은 저장 후 공개돼요.</p><Button type="button" variant="outline" disabled={busy || (!file && !(removed && contest.logo_path))} onClick={() => void save()}>{busy ? '저장 중…' : '로고 저장'}</Button></div>
   </section>;

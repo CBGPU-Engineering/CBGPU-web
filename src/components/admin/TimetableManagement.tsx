@@ -140,7 +140,7 @@ export default function TimetablePage() {
     const { error: dbErr } = await supabase.from('timetable')
       .upsert(rows, { onConflict: 'grade,class_num,weekday,period' });
     setSaving(false);
-    if (dbErr) { showError(adminNotice(dbErr.message)); return; }
+    if (dbErr) { showError(adminNotice("Could not save the timetable. Check the current timetable before retrying.")); return; }
     const g2: Grid = {};
     for (let wd = 0; wd < 5; wd++) { g2[wd] = {}; for (const p of PERIODS) { const s = draft[wd]?.[p] ?? ''; if (s) g2[wd][p] = { subject: s, teacher: '' }; } }
     setGrid(g2); setEditing(false); showSuccess(adminNotice("Saved."));
@@ -149,9 +149,9 @@ export default function TimetablePage() {
   if (dbMissing) return (
     <main className="px-4 py-16 flex flex-col items-center gap-5 text-center max-w-lg mx-auto">
       <p className="text-4xl">⚠️</p>
-      <h2 className="font-black text-xl uppercase tracking-tight">{t("Database setup required")}</h2>
+      <h2 className="font-black text-xl uppercase tracking-tight">{t("Service setup needs review")}</h2>
       <p className="text-sm text-muted-foreground">
-        <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-xs">supabase_timetable_migration.sql</code>{t("in the SQL editor.")} </p>
+        {t("This service is unavailable. Ask the operator to check its database setup.")} </p>
     </main>
   );
 

@@ -2,8 +2,8 @@
 export type FileReadClient={auth:{getSession:()=>PromiseLike<{data:{session:{user:{id:string}}|null};error?:unknown}>};storage:{from:(bucket:string)=>{download:(path:string)=>PromiseLike<{data:Blob|null;error:{message?:string;status?:unknown;statusCode?:unknown}|null}>}}};
 export const scopedManufacturingFilesEnabled=()=>process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'||['1','true'].includes(process.env.NEXT_PUBLIC_CBGPU_ACCOUNT_V2||'');
 export class ManufacturingFileError extends Error{status:number;constructor(message:string,status=503){super(message);this.status=status}}
-const changed=()=>new ManufacturingFileError('CBGPU 계정이나 파일이 변경되었습니다. 현재 신청에서 다시 열어 주세요.',409);
-const denied=(status:number)=>new ManufacturingFileError(status===401?'CBGPU에 다시 로그인한 뒤 파일을 열어 주세요.':'현재 파일 접근 권한을 확인하지 못했습니다. 신청 내역은 유지돼요. 다시 불러오거나 담당자에게 문의해 주세요.',status===401?401:status===403||status===404?403:503);
+const changed=()=>new ManufacturingFileError('CBGPU 계정이나 파일이 바뀌었어요. 현재 신청에서 다시 열어 주세요.',409);
+const denied=(status:number)=>new ManufacturingFileError(status===401?'CBGPU에 다시 로그인한 뒤 파일을 열어 주세요.':'현재 파일 접근 권한을 확인하지 못했어요. 신청 내역은 유지돼요. 다시 불러오거나 담당자에게 문의해 주세요.',status===401?401:status===403||status===404?403:503);
 /** Each instance owns only its own object URLs; invalidate on path/identity changes and unmount. */
 export class ManufacturingFileLease{
  private generation=0;private urls=new Set<string>();

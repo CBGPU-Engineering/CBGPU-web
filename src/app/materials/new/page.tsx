@@ -234,14 +234,14 @@ export default function NewMaterialPage() {
   }
 
   return <section className="cb-page-content mx-auto max-w-2xl space-y-6 py-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-    {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서만 공유해요. 임시 권한이 끝나도 내가 올린 기록은 유지돼요.' : storagePermission.reason}</p></div>}
+    {storagePermission.enabled && <div role="status" className="rounded-xl border border-border/60 bg-card p-4 text-sm"><p className="font-semibold">{scope.current?.school.display_name || '학교를 선택해 주세요'} · 교내 자료 공유</p><p className="mt-1 text-muted-foreground">{storagePermission.allowed ? '선택한 학교에서 공유해요. 임시 이용 권한이 끝나도 업로드 기록은 남아요.' : storagePermission.reason}</p></div>}
     <div className="flex items-center gap-4">
       <button type="button" onClick={() => router.push('/materials')} disabled={uploading} aria-label="자료 공유로 돌아가기" className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-card text-muted-foreground transition-all hover:border-border hover:text-foreground disabled:opacity-50">
         <ArrowLeft className="size-4" />
       </button>
       <div>
         <h1 className="cb-page-title">자료 올리기</h1>
-        <p className="cb-page-sub mt-1">파일 · 제목 · 태그</p>
+        <p className="cb-page-sub mt-1">공유할 파일을 고르고 제목과 태그를 입력해 주세요.</p>
       </div>
     </div>
 
@@ -258,7 +258,7 @@ export default function NewMaterialPage() {
             <Button variant="outline" type="button" disabled={uploading || retainedUpload} className="gap-1.5" onClick={addTag}><Tag className="size-4" />추가</Button>
           </div>
           {tags.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{tags.map(tag => <button key={tag} type="button" disabled={uploading || retainedUpload} onClick={() => setTags(previous => previous.filter(value => value !== tag))} aria-label={`태그 ${tag} 제거`} className="min-h-11 rounded-full"><Badge className="normal-case tracking-normal text-sm px-2.5 py-1">#{tag}<X className="size-3" /></Badge></button>)}</div>}
-          <p className="mt-2 text-sm text-muted-foreground">{tags.length}/8개 · 태그를 누르면 지울 수 있어요.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{tags.length}/8개 · 태그 옆의 삭제 버튼으로 지울 수 있어요.</p>
         </div>
       </section>
 

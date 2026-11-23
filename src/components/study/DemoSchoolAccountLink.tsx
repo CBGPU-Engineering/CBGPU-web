@@ -10,5 +10,5 @@ export default function DemoSchoolAccountLink({onConnected}:{onConnected:(token:
    await onConnected('demo.'+payload+'.not-a-real-signature');
   }catch(e){setError((e as Error).message)}finally{setBusy(false)}
  }
- return <div className="space-y-3"><p>This is a synthetic school account. No EduSet login or live school request is made.</p><Button disabled={busy} onClick={()=>void connect()}>Connect demo student</Button>{error&&<p role="alert">{error}</p>}</div>
+ return <div className="space-y-3"><p>데모 학생 계정이에요. EduSet 로그인이나 실제 학교 요청은 하지 않아요.</p><Button disabled={busy} onClick={()=>void connect()}>데모 학생 연결</Button>{error&&<p role="alert">{error}</p>}</div>
 }

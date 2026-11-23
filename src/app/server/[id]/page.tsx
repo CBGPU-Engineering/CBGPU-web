@@ -126,7 +126,7 @@ export default function ServerDetailPage() {
   const handleRedeploy = async (redeploy = true) => {
     if (!form || !project) return;
     if(!form.name.trim()){showError('프로젝트 이름을 입력해 주세요.');return;}
-    if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&(project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:!permission.canExecute)))) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'학번 또는 이름 확인이 필요해 재배포할 수 없습니다. 프로필에서 정보를 확인해 주세요.'); return; }
+    if ((!permission.enabled&&!isApproved)||(permission.enabled&&redeploy&&(project?.execution_mode==='UNASSIGNED_V1'||(project?.execution_mode==='CENTRAL_V1'?!centralCPUEnabled:!permission.canExecute)))) { showError(permission.enabled?'현재 학교 서버 실행 권한이 없어요. 설정만 저장은 계속 사용할 수 있어요.':'이름과 학번을 확인해야 재배포할 수 있어요. 프로필에서 정보를 확인해 주세요.'); return; }
     const hostPort = parseInt(form.hostPort);
     const containerPort = parseInt(form.containerPort);
     if (isNaN(hostPort)) { showError('포트 번호를 숫자로 입력해 주세요.'); return; }
@@ -212,10 +212,10 @@ export default function ServerDetailPage() {
     : serverHost ? `http://${serverHost}:${project.host_port}` : null;
 
   const STATUS_INFO: Record<string, { icon: React.ReactNode; variant: any; label: string }> = {
-    pending:  { icon: <Clock className="size-4" />,         variant: 'warning', label: 'Queued — 배포 대기 중' },
-    approved: { icon: <CheckCircle2 className="size-4" />,  variant: 'success', label: isRunning ? '최근 배포 완료' : 'Deploying — 배포 준비 중' },
-    rejected: { icon: <XCircle className="size-4" />,       variant: 'danger',  label: 'Rejected' },
-    deleted:  { icon: <Trash2 className="size-4" />,        variant: 'muted',   label: 'Deleted' },
+    pending:  { icon: <Clock className="size-4" />,         variant: 'warning', label: '배포 대기 중' },
+    approved: { icon: <CheckCircle2 className="size-4" />,  variant: 'success', label: isRunning ? '최근 배포 완료' : '배포 준비 중' },
+    rejected: { icon: <XCircle className="size-4" />,       variant: 'danger',  label: '배포 거절됨' },
+    deleted:  { icon: <Trash2 className="size-4" />,        variant: 'muted',   label: '삭제됨' },
   };
   const statusInfo = STATUS_INFO[project.status] || { icon: null, variant: 'default', label: project.status };
 
@@ -267,7 +267,7 @@ export default function ServerDetailPage() {
         </div>
       </div>
 
-      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">서버 주소</h2><p className="text-sm text-muted-foreground">Public 서버에 연결됩니다. 기존 Private·School 서버의 접근 범위는 유지됩니다.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했습니다. HTTPS 인증서는 잠시 후 활성화됩니다.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-sm text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
+      <CentralCPUProject kind="server" project={project} isOwner={isOwner} onAttached={setProject}/>{isOwner&&project.status!=='deleted'&&<section className="rounded-2xl border bg-card p-5 space-y-3"><h2 className="font-semibold text-sm">서버 주소</h2><p className="text-sm text-muted-foreground">공개(Public) 서버에 연결해요. 기존 비공개(Private)·교내(School) 서버의 접근 범위는 유지돼요.</p><div className="flex gap-2 flex-wrap"><Input aria-label="서버 도메인 이름" className="max-w-sm" value={domainDraft} onChange={e=>setDomainDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,''))}/><Button disabled={domainSaving||!domainDraft} onClick={async()=>{setDomainSaving(true);try{await serverDomains(project.id,domainDraft);setDomainSlug(domainDraft);showSuccess('서버 도메인을 저장했어요. HTTPS 연결은 인증서가 준비된 뒤 사용할 수 있어요.')}catch(e){showError(e instanceof Error?e.message:'도메인 설정 실패')}finally{setDomainSaving(false)}}}>도메인 저장</Button></div><p className="text-sm text-muted-foreground break-all">{domainDraft||'my-server'}.server.cbgpu.com</p></section>}
       {isCompose&&<ComposeStatus id={project.id}/>}
       <ProjectTeam kind="server" id={project.id}/><ProjectDomains kind="server" id={project.id}/>
       {/* 접근 정보 — 실행 중일 때만 */}
@@ -288,8 +288,8 @@ export default function ServerDetailPage() {
             </Button>}
           </div>
           <p className="text-sm text-muted-foreground mt-2 opacity-60">
-            {project.access_scope === 'private' && '※ Tailscale VPN 연결 시에만 접근 가능합니다'}
-            {project.access_scope === 'school'  && '※ 교내 네트워크에서 접근 가능합니다'}
+            {project.access_scope === 'private' && 'Tailscale VPN에 연결해야 접속할 수 있어요.'}
+            {project.access_scope === 'school'  && '교내 네트워크에서 접속할 수 있어요.'}
             {project.access_scope === 'public'  && '※ 공개 주소를 통해 인터넷에서 접근할 수 있어요'}
           </p>
         </div>
@@ -336,7 +336,7 @@ export default function ServerDetailPage() {
                   <span className="font-bold text-sm">{project.git_branch || 'main'}</span>
                 </div>
                 <div>
-                  <label className={labelCls}>{isCompose?'Deployment Mode':'Runtime'}</label>
+                  <label className={labelCls}>{isCompose?'배포 방식':'실행 환경'}</label>
                   <span className="font-bold text-sm">{isCompose?'Docker Compose':RUNTIMES.find(r=>r.value===serverRuntimeOf(project))?.label||serverRuntimeOf(project)}</span>
                 </div>
                 <div>
@@ -425,7 +425,7 @@ export default function ServerDetailPage() {
           <DialogHeader>
             <DialogTitle className="font-semibold text-xl">서버 설정 수정</DialogTitle>
             <DialogDescription className="text-sm font-bold opacity-60">
-              설정만 저장하거나, 변경사항을 저장하고 바로 재배포할 수 있습니다. 재배포 중에는 잠시 연결이 끊길 수 있습니다.
+              설정만 저장하거나, 저장하고 바로 재배포할 수 있어요. 재배포 중에는 연결이 잠시 끊길 수 있어요.
             </DialogDescription>
           </DialogHeader>
 
@@ -451,7 +451,7 @@ export default function ServerDetailPage() {
                       <Input placeholder="main" value={form.gitBranch} onChange={e => set('gitBranch', e.target.value)} />
                     </div>
                     <div>
-                      <label className={labelCls}>{isCompose?'Deployment Mode':'Runtime'}</label>
+                      <label className={labelCls}>{isCompose?'배포 방식':'실행 환경'}</label>
                       {isCompose?<p className="text-sm py-2">Docker Compose</p>:<>
                       <Select value={form.runtime} onValueChange={v => set('runtime', v as Runtime)}>
                         <SelectTrigger className="h-9">
@@ -464,13 +464,13 @@ export default function ServerDetailPage() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls} htmlFor="redeploy-root-directory">프로젝트 폴더</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더입니다.</p>{!isCompose&&<><label className={labelCls}>실행 명령어</label>
+                    <label className={labelCls} htmlFor="redeploy-root-directory">프로젝트 폴더</label><Input id="redeploy-root-directory" value={form?.rootDirectory||'.'} onChange={e=>setForm(current=>current?{...current,rootDirectory:e.target.value}:current)} placeholder="services/api"/><p className="text-sm text-muted-foreground mt-2 mb-4">저장소 안에서 의존성 설치와 실행을 시작할 폴더예요.</p>{!isCompose&&<><label className={labelCls}>실행 명령어</label>
                     <Input
                       placeholder="npm start"
                       value={form.runCommand}
                       onChange={e => set('runCommand', e.target.value)}
                     /></>}
-                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose 파일</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">게이트웨이 서비스</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">영구 저장공간 (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-sm text-muted-foreground">재배포해도 기존 데이터 볼륨을 유지합니다.</p></div>}
+                    {isCompose&&<div className="space-y-3"><label className={labelCls} htmlFor="server-edit-compose-file">Compose 파일</label><Input id="server-edit-compose-file" value={form.composeFile} onChange={e=>set('composeFile',e.target.value)} placeholder="compose.yml (자동 감지)"/><label className={labelCls} htmlFor="server-edit-gateway">게이트웨이 서비스</label><Input id="server-edit-gateway" value={form.gatewayService} onChange={e=>set('gatewayService',e.target.value)} placeholder="api-gw"/><label className={labelCls} htmlFor="server-edit-storage">영구 저장공간 (GB)</label><Input id="server-edit-storage" type="number" min={40} max={200} value={form.storageGB} onChange={e=>set('storageGB',e.target.value)}/><p className="text-sm text-muted-foreground">재배포해도 기존 데이터 볼륨은 유지돼요.</p></div>}
                   </div>
                 </div>
               )}
@@ -571,7 +571,7 @@ export default function ServerDetailPage() {
               <Trash2 className="size-5 text-destructive" /> 프로젝트 삭제
             </DialogTitle>
             <DialogDescription className="text-sm font-bold pt-1">
-              컨테이너가 종료되고 프로젝트가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+              컨테이너가 종료되고 프로젝트가 삭제돼요. 삭제하면 되돌릴 수 없어요.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">

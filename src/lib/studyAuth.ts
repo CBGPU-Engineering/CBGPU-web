@@ -41,8 +41,8 @@ export async function requireApprovedUser(request: NextRequest) {
 }
 
 /** Server flags only. Invalid flags fail closed rather than selecting legacy authority. */
-export function studyScopedMode(){try{return scopedAccountMode()}catch{throw new StudyFailure('계정 권한 설정을 확인하지 못했습니다.',503)}}
-function verificationUnavailable(){return new StudyFailure('CBGPU 권한 확인 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.',503)}
+export function studyScopedMode(){try{return scopedAccountMode()}catch{throw new StudyFailure('계정 권한 설정을 확인하지 못했어요.',503)}}
+function verificationUnavailable(){return new StudyFailure('CBGPU 권한 확인 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.',503)}
 /** Every call uses caller-bound public credentials and fresh session/resource predicates. No positive cache. */
 async function scopedStudyUser(request:Request,header='authorization'){
  const value=request.headers.get(header);const token=value?.match(/^Bearer\s+([^\s,]{1,32768})$/i)?.[1] || (header==='x-cbgpu-auth'&&value&&!/\s|,/.test(value)&&value.length<=32768?value:null);
@@ -57,10 +57,10 @@ async function scopedStudyUser(request:Request,header='authorization'){
   const session=await caller.rpc('cbgpu_self_session_status');
   if(session.error)throw verificationUnavailable();
   if(!session.data||typeof session.data.valid!=='boolean')throw verificationUnavailable();
-  if(session.data.valid!==true)throw new StudyFailure('CBGPU 로그인 세션이 만료되었습니다.',401,'cbgpu_session_expired');
+  if(session.data.valid!==true)throw new StudyFailure('CBGPU 로그인이 만료됐어요. 다시 로그인해 주세요.',401,'cbgpu_session_expired');
   const scope=await caller.rpc('cbgpu_can_use_resource',{resource:'study',target_school:'cbsh'});
   if(scope.error||typeof scope.data!=='boolean')throw verificationUnavailable();
-  if(scope.data!==true)throw new StudyFailure('충북과학고 자습 서비스 이용 권한이 없거나 승인 기간이 만료되었습니다.',403);
+  if(scope.data!==true)throw new StudyFailure('충북과학고 자습 서비스 이용 권한이 없거나 승인 기간이 만료됐어요. 이용 권한을 확인해 주세요.',403);
   return data.user;
  }catch(error){if(error instanceof StudyFailure)throw error;throw verificationUnavailable();}
 }

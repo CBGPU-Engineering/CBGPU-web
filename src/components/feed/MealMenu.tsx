@@ -77,7 +77,7 @@ export default function MealMenu() {
       {!loading && !justFinished && meals.length === 0 && !error && (
         <div className="py-16 text-center text-muted-foreground">
           <Utensils className="size-8 mx-auto mb-2 opacity-30" />
-          <p className="font-medium text-sm">이 날의 급식 정보가 없습니다.</p>
+          <p className="font-medium text-sm">이 날짜의 급식 정보가 없어요.</p>
         </div>
       )}
 

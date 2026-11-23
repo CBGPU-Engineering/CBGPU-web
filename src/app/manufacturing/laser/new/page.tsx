@@ -69,7 +69,7 @@ export default function NewLaserJobPage() {
         }
         continue;
       }
-      showError(`"${file.name}"은(는) 지원하지 않는 형식입니다. (.dxf, .svg, .dwg만 가능)`);
+      showError(`"${file.name}"은 지원하지 않는 형식이에요. .dxf, .svg, .dwg 파일을 선택해 주세요.`);
     }
     setConverting(false);
   };
@@ -122,10 +122,10 @@ export default function NewLaserJobPage() {
     if (error) {
       showError('신청을 저장하지 못했어요. 입력 내용을 확인한 뒤 다시 시도해 주세요.');
     } else if (rows.length === 1) {
-      showSuccess('레이저 커팅을 신청했어요. 담당자 승인 후 제작을 진행해요.');
+      showSuccess('레이저 커팅을 신청했어요. 진행 상태는 신청 내역에서 확인해 주세요.');
       router.push(`/manufacturing/laser/${data[0].id}`);
     } else {
-      showSuccess(`파일 ${rows.length}개를 각각 신청했어요. 담당자 승인 후 제작을 진행해요.`);
+      showSuccess(`파일 ${rows.length}개를 각각 신청했어요. 진행 상태는 신청 내역에서 확인해 주세요.`);
       router.push('/manufacturing/laser');
     }
   };
@@ -133,7 +133,7 @@ export default function NewLaserJobPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <LoadingSpinner size={56} label="인증 확인 중" />
+        <LoadingSpinner size={56} label="로그인 확인 중" />
       </div>
     );
   }
@@ -190,7 +190,7 @@ export default function NewLaserJobPage() {
               {converting ? <LoadingSpinner size={28} label="파일 변환 중" /> : (
                 <>
                   <UploadCloud className="size-6 opacity-40" />
-                  <span className="text-xs font-bold text-muted-foreground">클릭해서 파일 선택 (여러 개 가능)</span>
+                  <span className="text-xs font-bold text-muted-foreground">파일 선택 · 여러 개 가능</span>
                   <span className="text-xs text-muted-foreground">.dxf 그대로 올리거나, .svg / .dwg를 올리면 dxf로 변환해요</span>
                 </>
               )}
@@ -245,7 +245,7 @@ export default function NewLaserJobPage() {
           <textarea
             id="laser-notes"
             rows={3}
-            placeholder="원하는 완성 규격 등 요청사항... (모든 파일에 공통 적용)"
+            placeholder="원하는 완성 규격 등 요청 사항 · 모든 파일에 공통 적용"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 resize-y"
