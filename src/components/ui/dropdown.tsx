@@ -45,13 +45,18 @@ export function Dropdown({ value, onChange, children, className, disabled, requi
   const options = collect(children)
   const current = encode(String(value))
   return (
-    <Select value={current} onValueChange={next => onChange({ target: { value: decode(next) } })} disabled={disabled} required={required} name={name}>
+    <Select value={current} onValueChange={next => {
+      // The hidden native select can emit stale/empty values as options change.
+      // An explicit empty option is encoded as EMPTY, never the raw empty string.
+      if (disabled || !options.some(option => !option.disabled && encode(option.value) === next)) return
+      onChange({ target: { value: decode(next) } })
+    }} disabled={disabled} required={required} name={name}>
       <SelectTrigger id={id} aria-label={rest["aria-label"]} className={cn("min-h-11 w-fit min-w-24 rounded-lg border bg-background px-3 text-sm", className, "flex")}>
         <SelectValue>{options.find(option => encode(option.value) === current)?.label}</SelectValue>
       </SelectTrigger>
-      <SelectContent position="popper" sideOffset={6} className="max-h-72 min-w-(--radix-select-trigger-width)">
+      <SelectContent position="popper" sideOffset={6} className="max-h-[min(18rem,var(--radix-select-content-available-height,18rem))] min-w-[min(var(--radix-select-trigger-width),calc(100vw-2rem))]">
         {options.map(option => (
-          <SelectItem key={option.value} value={encode(option.value)} disabled={option.disabled} className="min-h-10 text-sm">
+          <SelectItem key={option.value} value={encode(option.value)} disabled={option.disabled} className="min-h-11 text-sm">
             {option.label}
           </SelectItem>
         ))}

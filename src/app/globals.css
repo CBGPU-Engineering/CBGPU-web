@@ -563,3 +563,7 @@ body{font-family:var(--cb-font-sans)}
 
 /* Selection text never waits on a moving background for its contrast. */
 .segmented-tabs[data-appearance="accent"] .tab-selection{inset:auto auto 1px 0;height:3px;border-radius:999px}
+
+/* The item-aligned wrapper has an inline minimum that can exceed a short window
+   when labels wrap. Keep Radix's existing viewport maximum effective. */
+div:has(> [data-slot="select-content"][data-align-trigger="true"]){min-height:0!important}

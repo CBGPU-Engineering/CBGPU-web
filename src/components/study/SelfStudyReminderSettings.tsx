@@ -126,7 +126,7 @@ export default function SelfStudyReminderSettings() {
             <span id="reminder-time-label">첫 알림 시각</span>
             <Select value={time} onValueChange={setTime}>
               <SelectTrigger aria-labelledby="reminder-time-label" className="h-10 w-full bg-background"><SelectValue /></SelectTrigger>
-              <SelectContent position="popper" className="max-h-64 bg-[var(--card-opaque)]">
+              <SelectContent position="popper" className="max-h-[min(16rem,var(--radix-select-content-available-height,16rem))] bg-[var(--card-opaque)]">
                 {TIMES.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}
               </SelectContent>
             </Select>

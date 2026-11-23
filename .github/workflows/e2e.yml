@@ -41,6 +41,9 @@ jobs:
           node tests/ui/portal-action-contrast.browser.mts
           node tests/polls-scale-ui.browser.mts
           node tests/tech-news-race.browser.mts
+          node tests/dropdown-events.browser.mts
+          node tests/select-menu-width.browser.mts
+          CBGPU_SIGNUP_MEMBERSHIP_BROWSER=1 node --test tests/school-signup-membership.browser.test.mts
       - name: Browser demo
         id: browser_demo
         run: |

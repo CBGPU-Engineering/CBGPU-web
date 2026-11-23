@@ -309,3 +309,55 @@ A separate read-only mobile school-directory check returned one result each for
 Chungbuk Science, Danjae and Gyeongbuk Drone schools while preserving search focus.
 Observed search-to-display times were about 0.8s in that single laboratory run,
 including debounce; these are not field performance measurements.
+
+## Final selector regression review — 24 November 2026
+
+A real form reproduction found a hidden native Radix select emitting a raw empty
+change after a teacher-only school changed to a school offering all member types.
+That event replaced the parent-selected `STUDENT` value with an invalid empty
+kind, leaving the account-type trigger blank and hiding the student/teacher fields.
+The shared Dropdown now forwards only current enabled options, while preserving
+explicit empty options through their existing encoded value and preserving
+keyboard selection. The signup model independently accepts only the three known
+types allowed by the selected school. Its existing school/student/teacher/external
+metadata and approval policies are unchanged.
+
+The actual signup component, SchoolSelector and Dropdown passed 23 synthetic
+payload/validation cases on desktop and mobile, including school and path changes.
+No hidden previous-type field was found leaking into the current signup payload.
+The shared-control fixture passed five phone/desktop/theme/WebView variants for
+phantom, removed, disabled and legitimate empty-option events. Twelve integrated
+control configurations cover normal and reduced motion, time conversion, errors
+with retained input, keyboard tabs, viewport-bound dialogs and focus restoration.
+Normal selection rows now meet the existing 44px target rule; reduced-motion
+menus disable CSS entrance/exit animations. No deduplication, form-reset or
+uncontrolled-state behavior was rewritten.
+
+Unit checks report 661 tests: 658 pass, no failures, and three intentional skips.
+One skip is the new opt-in signup browser test, which also ran explicitly and
+passed; the other two predate this review. TypeScript and tooling checks pass.
+Targeted signup lint still has the same two effect-state errors and one hook
+warning as its audited baseline; these are not represented as a clean whole-site
+lint run. No accounts, emails, memberships or approvals were created in production.
+
+A production deployment guard also correctly stopped a release when root-disk
+space fell below its existing 15GiB reserve. Completed review-only generated
+builds and reinstallable dependencies were removed, preserving source, evidence,
+backups and operational rollback releases. Available space recovered to about
+20GiB, and deployment resumed. The final review build uses the secondary SSD;
+ongoing root capacity still needs monitoring. No deployment guard was lowered.
+
+Long-label tests also found fixed portal menus extending beyond a 320px or
+390px viewport without increasing document.scrollWidth. The common Select now
+limits its painted width and wraps option text without removing the full label.
+Thirty-six real-component cases cover 80/150-character URLs and long Korean
+labels across Dropdown, popper and item-aligned positioning at 320/390px widths
+and 850/240px heights, including selection and reopening. Menu bounds and every painted text line are checked independently of
+document overflow. Styling is inherited from the option wrapper because the
+installed Radix ItemText intentionally omits className/style props.
+
+Short-height tests also reproduced menu bottoms below the visible window when
+fixed height caps overrode Radix availability, plus an item-aligned inline minimum
+that exceeded its viewport maximum. Existing height caps now take the smaller
+available height, and the targeted native wrapper permits that maximum to win.
+The normal alignment API, selection callbacks and complete labels are retained.
