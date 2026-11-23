@@ -56,12 +56,15 @@ function DialogContent({
   children,
   showCloseButton = true,
   onExitComplete,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
   onExitComplete?:()=>void
 }) {
   const open=React.useContext(DialogState),reduce=useReducedMotion();
+  const opener=React.useRef<HTMLElement|null>(null);
   return (
     <AnimatePresence onExitComplete={onExitComplete}>
     {open&&<DialogPortal forceMount>
@@ -73,6 +76,19 @@ function DialogContent({
           className
         )}
         {...props}
+        onOpenAutoFocus={event=>{
+          opener.current=document.activeElement instanceof HTMLElement?document.activeElement:null;
+          onOpenAutoFocus?.(event);
+        }}
+        onCloseAutoFocus={event=>{
+          onCloseAutoFocus?.(event);
+          if(event.defaultPrevented)return;
+          const target=opener.current;
+          if(target?.isConnected&&!target.matches(':disabled,[inert]')&&!target.closest('[inert]')){
+            target.focus({preventScroll:true});
+            if(document.activeElement===target)event.preventDefault();
+          }
+        }}
       >
        <motion.div data-motion-dialog initial={{opacity:0,y:reduce?0:14,scale:reduce?1:.975}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:reduce?0:8,scale:reduce?1:.985}} transition={reduce?{duration:0}:productSpring}>
         {children}
