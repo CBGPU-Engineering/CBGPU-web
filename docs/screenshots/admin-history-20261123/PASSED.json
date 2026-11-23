@@ -1,0 +1,53 @@
+{
+  "actualNext": true,
+  "syntheticOnly": true,
+  "mutations": 0,
+  "external": 0,
+  "results": [
+    {
+      "width": 1280,
+      "app": false,
+      "dark": false,
+      "allStatusesAndEndedVisible": true,
+      "olderHistoryAccessible": true,
+      "noMutation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1280,
+      "app": false,
+      "dark": true,
+      "allStatusesAndEndedVisible": true,
+      "olderHistoryAccessible": true,
+      "noMutation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "app": true,
+      "dark": false,
+      "allStatusesAndEndedVisible": true,
+      "olderHistoryAccessible": true,
+      "noMutation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "app": true,
+      "dark": true,
+      "allStatusesAndEndedVisible": true,
+      "olderHistoryAccessible": true,
+      "noMutation": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "app": true,
+      "dark": true,
+      "allStatusesAndEndedVisible": true,
+      "olderHistoryAccessible": true,
+      "noMutation": true,
+      "noOverflow": true
+    }
+  ]
+}
