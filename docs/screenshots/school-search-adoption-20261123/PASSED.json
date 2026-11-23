@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "width": 320,
+      "mode": "light",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    },
+    {
+      "width": 320,
+      "mode": "dark",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "mode": "light",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    },
+    {
+      "width": 390,
+      "mode": "dark",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1280,
+      "mode": "light",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    },
+    {
+      "width": 1280,
+      "mode": "dark",
+      "anonymousInformational": true,
+      "guideRetainsSchoolId": true,
+      "canonicalOneResult": true,
+      "catalogNoDuplicateApplication": true,
+      "signedInJoinPending": true,
+      "noOverflow": true
+    }
+  ],
+  "external": 0,
+  "errors": [],
+  "syntheticWritesOnly": true
+}

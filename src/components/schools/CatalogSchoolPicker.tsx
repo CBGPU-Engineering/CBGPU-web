@@ -1,7 +1,6 @@
 'use client';
 import {Dropdown} from '@/components/ui/dropdown';
 import{useCallback,useEffect,useRef,useState}from'react';
-import Link from'next/link';
 import{schoolsRequest,type SchoolSummary}from'@/lib/schoolsClient';
 import{Button}from'@/components/ui/button';
 import{Input}from'@/components/ui/input';
@@ -31,7 +30,7 @@ export default function CatalogSchoolPicker({value,onChange,initialId,disabled=f
   <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]"><label className="cb-school-field"><span>학교 이름 또는 지역 검색</span><Input type="search" value={query} disabled={disabled} onChange={event=>setQuery(event.target.value)} placeholder="검색 없이 아래 목록에서 선택해도 돼요"/></label><label className="cb-school-field"><span>지역으로 둘러보기</span><Dropdown className="min-h-11 rounded-lg border border-input bg-background px-3 text-sm" value={regions.includes(query)?query:''} disabled={disabled} onChange={event=>setQuery(event.target.value)}><option value="">전체 지역</option>{regions.map(region=><option key={region} value={region}>{region}</option>)}</Dropdown></label></div>
   <InlineFeedback message={error}/>{value&&<p role="status">선택한 학교: <strong>{value.official_name}</strong> · {value.region}</p>}
   <p className="cb-school-help" role="status">{loading?'학교 목록을 불러오고 있어요.':(query.trim()?'검색 결과 ':'전체 ')+total.toLocaleString()+'개 학교 · '+items.length.toLocaleString()+'개 표시'}</p>
-  {!loading&&<ul className="cb-school-options">{items.map(school=><li key={school.id}>{school.status==='LISTED'||school.status==='UNCLAIMED'?<button type="button" disabled={disabled} aria-pressed={value?.id===school.id} onClick={()=>onChange(school)}><span><strong>{school.official_name}</strong><small>{school.region} · 운영 도입 신청 가능</small></span></button>:school.status==='APPROVED'?<div className="p-3"><strong>{school.official_name}</strong><p>이미 운영 중인 학교예요. 새로 만들지 않고 이 학교에 가입할 수 있어요.</p><Button asChild variant="outline"><Link href={'/schools/'+encodeURIComponent(school.id)+'/affiliation'}>이 학교 가입하기</Link></Button></div>:<p className="p-3">{school.official_name} · 현재 도입 신청을 받을 수 없어요.</p>}</li>)}</ul>}
+  {!loading&&<ul className="cb-school-options">{items.map(school=><li key={school.id}>{school.status==='LISTED'||school.status==='UNCLAIMED'?<button type="button" disabled={disabled} aria-pressed={value?.id===school.id} onClick={()=>onChange(school)}><span><strong>{school.official_name}</strong><small>{school.region} · 아직 등록되지 않은 학교입니다.</small></span></button>:school.status==='APPROVED'?<div className="p-3"><strong>{school.official_name}</strong><p>등록이 완료된 학교입니다.</p></div>:<p className="p-3">{school.official_name} · 현재 도입 신청을 받을 수 없어요.</p>}</li>)}</ul>}
   {!loading&&offset<total&&<Button type="button" variant="outline" className="min-h-11 w-full" disabled={disabled||loadingMore} onClick={()=>void search(offset)}>{loadingMore?'다음 학교를 불러오는 중…':'학교 더 보기'}</Button>}
   {!loading&&error&&<Button type="button" variant="outline" disabled={disabled||loadingMore} onClick={()=>void search(offset?offset:0)}>학교 목록 다시 불러오기</Button>}
   {!loading&&!items.length&&!error&&<p>일치하는 학교가 없어요. 다른 검색어를 입력하거나 전체 학교 목록으로 돌아가 보세요.</p>}
