@@ -413,3 +413,9 @@ Source review covers conditional authored text, not arbitrary messages from an
 upstream provider or future user-authored content. Physical Android, real email
 receipt, school-site write operations and physical GPU/equipment execution remain
 outside this copy-only test. No data migration or permission change is included.
+
+The release browser fixture now waits for focus to enter each dialog before
+sending Escape and checks that focus returns to the same opener element. This
+preserves the keyboard contract without forced closes, retries or longer timeouts.
+The original fixture passed locally; the CI failure is treated as a readiness
+race hypothesis rather than a confirmed production regression.
