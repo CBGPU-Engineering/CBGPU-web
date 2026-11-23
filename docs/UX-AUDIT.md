@@ -234,3 +234,61 @@ Motion stays purpose-specific and respects reduced-motion settings. No conversio
 revenue, task-time improvement percentage or universal accessibility certification
 is claimed. Live role-sensitive mutations, real GPU jobs and third-party provider
 failures remain separate operational checks.
+
+## Final refinement and live verification — 24 November 2026
+
+The full-route source inventory remains 114 page files. This is source coverage,
+not a claim that every role, feature flag and dynamic production record was opened.
+The shared-foundation and platform-flow releases were deployed without replacing
+existing accounts or projects. Normal anonymous browsers confirmed the running
+release at both the web and app origins; Studio runtime settings survived the
+release. Developer/careers public assets were updated separately, retaining the
+running controller processes and their private configuration.
+
+Follow-up findings from actual rendering and synthetic races:
+
+- **Recognition / mobile navigation:** an old descendant-image rule squeezed the
+  horizontal brand artwork to 26px. Restrict it to legacy direct-child images;
+  verify the current brand image fills its wrapper at nine viewport widths in
+  both themes. Authentication steps now have distinct rendered document titles
+  and retain inherited `noindex, nofollow`. Korean authentication headings prefer
+  complete words, with safe wrapping for long content.
+- **Contrast / predictable controls:** separate filled-action blue from the bright
+  dark-theme link accent. Real Button and Link-shaped controls in administrator
+  and publication scopes pass 4.5:1 in 72 normal, hover and keyboard-focus cases;
+  the measured minimum is 6.39:1. Explicit destructive styling remains intact.
+  The developer portal's canonical action and skip-link colors use the same pair.
+  The CSS synchronization tool's missing development parser dependency is now
+  explicitly pinned. Regeneration still requires reviewing the diff: React
+  selector, typography and touch-target adaptations must be preserved.
+- **Accurate feedback / survey scales:** empty answers are not zero scores. Keep
+  valid zeroes; exclude invalid values; share the same aggregate with AI summaries.
+  Invalid legacy ranges produce recovery guidance instead of a render exception.
+  Large ranges use integer input and observed-value distributions, without
+  allocating one control for every possible number. Real component tests cover
+  71 phone/desktop/theme/WebView cases, including range repair and submission.
+- **Error recovery / news:** HTML challenge pages, incomplete feeds, redirects,
+  oversized bodies and stalled responses are failures, not successful empty
+  results. Bound requests and preserve normal RSS fields and upstream caching.
+  Category/source/generation checks prevent late headlines and AI summaries from
+  replacing the currently selected view. Thirty real-component synthetic race
+  cases verify stale successes/errors, source switches and concurrent refreshes;
+  same-scope failures preserve confirmed content and timestamps.
+
+Anonymous live Axe checks found no automated WCAG-tag violations in the tested
+signup, app login, school directory, services, web home and app home views.
+Services has six contrast checks requiring manual review; this is not an AA
+certification. Two equipment sign-in contrast failures led to the action-color
+fix above. Further read-only checks covered 16 public documentation/recruitment
+paths and six additional rendered mobile/tablet views: links, document search,
+TOC targets, skip-to-content and application entry/back navigation worked.
+
+Internal poll changes are additive and versioned in the backend repository.
+Full private database backups were restored in a network-isolated PostgreSQL
+container before guarded application. Poll row fingerprints, prior policies and
+ACLs were preserved. Synthetic PostgreSQL tests exercise editor conflicts,
+atomic submission, hidden results, expired identities and an explicit anonymous
+row-policy boundary with live-shaped table grants. No real account was
+impersonated or used to create a production response during this verification.
+Physical Android devices, real email delivery, external invitation acceptance,
+real GPU jobs and real-user performance/abandonment remain outside this run.

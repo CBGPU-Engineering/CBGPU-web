@@ -39,6 +39,8 @@ jobs:
           node tests/ui/admin-alert-language.browser.mts
           node tests/ui/oil-ui-controls.browser.mts
           node tests/ui/portal-action-contrast.browser.mts
+          node tests/polls-scale-ui.browser.mts
+          node tests/tech-news-race.browser.mts
       - name: Browser demo
         id: browser_demo
         run: |
