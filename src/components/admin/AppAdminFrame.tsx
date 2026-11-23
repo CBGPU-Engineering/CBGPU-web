@@ -19,7 +19,7 @@ const adminNav:SpaceNavItem[]=[
  ...(process.env.NEXT_PUBLIC_CBGPU_AD_REVENUE_V1==='1'?[{id:'ad-revenue',href:'/admin/ad-revenue',label:'광고 수익',Icon:LayoutDashboard}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'feature-requests',href:'/admin/feature-requests',label:'기능 요청',Icon:Files}]:[]),
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'message-reports',href:'/admin/message-reports',label:'신고',Icon:Users}]:[]),
- {id:'careers',href:'/admin/careers',label:'Careers',Icon:Briefcase},
+ {id:'careers',href:'/admin/careers',label:'채용 지원',Icon:Briefcase},
  {id:'manufacture',href:'/admin/manufacture',label:'장비 담당자',Icon:Printer},
  {id:'materials',href:'/admin/materials',label:'파일 저장',Icon:Files},
  {id:'study',href:'/admin/study',label:'자습 설정',Icon:KeyRound},

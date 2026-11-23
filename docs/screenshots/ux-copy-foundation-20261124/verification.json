@@ -1,0 +1,23 @@
+{
+  "scope": "Synthetic local demo navigation, no real accounts or services. Source labels only; chrome structure and behavior unchanged.",
+  "viewports": [
+    320,
+    360,
+    390,
+    768,
+    1024,
+    1280,
+    1440,
+    1536,
+    1920
+  ],
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "beforeCases": 18,
+  "afterCases": 18,
+  "externalRequests": 0,
+  "overflow": false,
+  "keyboardMenuFocusRestored": true
+}

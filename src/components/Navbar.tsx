@@ -27,7 +27,7 @@ interface NavLink { href: string; label: string; }
 interface NavGroup { label: string; links: NavLink[]; }
 
 const PRIMARY_LINKS: NavLink[] = [
-  { href: '/study', label: '자습신청' },
+  { href: '/study', label: '자습 신청' },
   { href: '/timetable', label: '시간표' },
   { href: '/meal', label: '급식' },
   { href: '/wakeup', label: '기상송' },
@@ -43,7 +43,7 @@ const isActivePath = (pathname: string, href: string) => canonicalServicePath(pa
 
 const BOTTOM_LINKS = [
   { href: '/', label: '홈', Icon: Home },
-  { href: '/study', label: '자습신청', Icon: BookOpen },
+  { href: '/study', label: '자습 신청', Icon: BookOpen },
   { href: '/timetable', label: '시간표', Icon: CalendarDays },
   { href: '/meal', label: '급식', Icon: UtensilsCrossed },
   { href: '/services', label: '전체', Icon: LayoutGrid },
