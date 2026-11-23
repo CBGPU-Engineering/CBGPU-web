@@ -55,6 +55,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
   const { user, profile, isLoading } = useAuth();
   const { showError, showSuccess } = useAlert();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigationRef=useRef<HTMLElement|null>(null),menuTriggerRef=useRef<HTMLButtonElement|null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   useEffect(()=>{const open=()=>setSearchOpen(true);window.addEventListener('cbgpu:open-search',open);return()=>window.removeEventListener('cbgpu:open-search',open)},[]);
   const router = useRouter();
@@ -65,11 +66,22 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
   useEffect(() => {
     if (!isMenuOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setIsMenuOpen(false); }
+      if (event.key === 'Escape'&&!document.querySelector('[role="dialog"]:not([aria-hidden="true"]),dialog[open]')) { setIsMenuOpen(false);menuTriggerRef.current?.focus(); }
     };
-    window.addEventListener('keydown', closeOnEscape);
-    return () => window.removeEventListener('keydown', closeOnEscape);
+    const closeOutside=(event:PointerEvent)=>{if(event.target instanceof Node&&!navigationRef.current?.contains(event.target))setIsMenuOpen(false)};
+    window.addEventListener('keydown', closeOnEscape);document.addEventListener('pointerdown',closeOutside);
+    return () => {window.removeEventListener('keydown', closeOnEscape);document.removeEventListener('pointerdown',closeOutside)};
   }, [isMenuOpen]);
+
+  useLayoutEffect(()=>{
+    if(!isMenuOpen)return;
+    const nav=navigationRef.current;if(!nav)return;let frame=0;
+    const measure=()=>nav.style.setProperty('--cb-navbar-bottom',Math.max(0,Math.ceil(nav.getBoundingClientRect().bottom))+'px');
+    const schedule=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;measure()})};
+    measure();const observer=new ResizeObserver(schedule);observer.observe(nav);
+    window.addEventListener('resize',schedule);window.addEventListener('scroll',schedule,{passive:true});
+    return()=>{observer.disconnect();cancelAnimationFrame(frame);window.removeEventListener('resize',schedule);window.removeEventListener('scroll',schedule)};
+  },[isMenuOpen]);
 
   const activeGroupLink = !PRIMARY_LINKS.some(l => isActivePath(pathname, l.href)) && GROUPS.some(g => g.links.some(l => isActivePath(pathname, l.href)));
   const activePrimaryLink = primaryLinks.find(l => isActivePath(pathname, l.href));
@@ -104,7 +116,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
   return (
     <>
-    <nav aria-label="주 메뉴" className="cb-main-navbar flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
+    <nav ref={navigationRef} aria-label="주 메뉴" className="cb-main-navbar flex items-center justify-between gap-2 px-3 sm:px-6 md:px-10 py-4 border-b border-border bg-card sticky top-0 z-50">
       <div className="flex items-center gap-4 md:gap-8">
         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
           <CBGPULogo variant="horizontal" width={130} height={30} alt="CBGPU"/>
@@ -112,7 +124,7 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
         {brandSuffix}
         {user && !isLoading && (
-          <div ref={railRef} className="hidden xl:flex items-center gap-1 relative">
+          <div ref={railRef} className="hidden 2xl:flex items-center gap-1 relative">
             {indicator && (
               <div
                 className="absolute bottom-0 h-0.5 bg-primary transition-all duration-150 motion-reduce:transition-none"
@@ -135,10 +147,10 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
         )}
       </div>
 
-      <div className="flex gap-2 md:gap-4 items-center">
-        <Link href="/download" aria-label="앱 다운로드" className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+      <div className="flex shrink-0 gap-2 md:gap-4 items-center">
+        <Link href="/download" aria-label="앱 다운로드" className="inline-flex shrink-0 whitespace-nowrap min-h-11 items-center gap-1.5 rounded-lg px-2 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <Smartphone className="size-4" aria-hidden="true" />
-          <span className="hidden sm:inline">앱 다운로드</span>
+          <span className="hidden md:inline">앱 다운로드</span>
         </Link>
         <button
           type="button"
@@ -147,12 +159,12 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
           className="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary"
         >
           <Search className="size-4" aria-hidden="true" />
-          <span className="hidden sm:inline">기능 찾기</span>
+          <span className="hidden md:inline">기능 찾기</span>
           <span className="hidden lg:inline rounded border border-border px-1.5 py-0.5 text-xs">⌘ K</span>
         </button>
         <div className="hidden sm:block"><HeaderSchoolSwitcher compact/></div>
         <div className="hidden xl:flex items-center gap-2">
-          <Link href="/contact" className={`text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
+          <Link href="/contact" className={`whitespace-nowrap min-h-11 inline-flex items-center text-sm font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-muted ${pathname === '/contact' ? 'text-foreground' : 'text-muted-foreground'}`}>
             문의하기
           </Link>
           <ThemeToggle />
@@ -209,9 +221,9 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
         </div>
 
         {/* Mobile Menu Toggle */}
-        <div className="xl:hidden flex items-center gap-2">
-          <ThemeToggle />
-          <Button variant="ghost" size="icon" onClick={() => { setIsMenuOpen(!isMenuOpen); }} className="xl:hidden" aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'} aria-expanded={isMenuOpen}>
+        <div className="2xl:hidden flex items-center gap-2">
+          <span className="cb-mobile-theme-toggle xl:hidden"><ThemeToggle /></span>
+          <Button variant="ghost" size="icon" onClick={() => { setIsMenuOpen(!isMenuOpen); }} ref={menuTriggerRef} aria-controls="cb-main-mobile-menu" className="2xl:hidden" aria-label={isMenuOpen ? '메뉴 닫기' : '메뉴 열기'} aria-expanded={isMenuOpen}>
             {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
         </div>
@@ -219,7 +231,8 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
 
       {/* Mobile Menu Overlay */}
       {isMenuOpen && (
-        <div className="absolute top-full left-0 w-full bg-card border-b border-border pt-6 px-6 pb-28 xl:hidden flex flex-col gap-1 max-h-[calc(100dvh-72px)] overflow-y-auto">
+        <div id="cb-main-mobile-menu" className="absolute top-full left-0 w-full bg-card border-b border-border pt-6 px-6 pb-28 2xl:hidden flex flex-col gap-1 max-h-[calc(100dvh-var(--cb-navbar-bottom,72px))] overflow-y-auto overscroll-contain">
+          <div className="cb-narrow-theme-row"><span>화면 테마</span><ThemeToggle /></div>
           {user ? (
             <>
               <div className="flex items-center justify-between pb-4 mb-3 border-b border-border/50">

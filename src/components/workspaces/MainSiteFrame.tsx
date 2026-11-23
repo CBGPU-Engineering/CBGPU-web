@@ -24,7 +24,7 @@ export default function MainSiteFrame({children}:{children:React.ReactNode}){con
                     <span className="font-bold tracking-tight">CBGPU</span>
                   </div>
                   <div className="space-y-1">
-                    <p className="font-bold text-foreground/80 px-4">Chungbuk Science High School Computing Service</p>
+                    <p className="font-bold text-foreground/80 px-4">CBGPU · 학교생활·연구·개발</p>
                     <p className="flex items-center justify-center gap-3 text-xs font-bold">
                       <Link href="/privacy" className="underline-offset-4 transition-colors hover:text-foreground hover:underline">개인정보처리방침</Link>
                       <span className="opacity-30" aria-hidden="true">·</span>

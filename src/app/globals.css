@@ -7,8 +7,8 @@
 
 @theme inline {
   /* 글자 크기 체계: 본문이 너무 작게 읽히던 문제를 풀기 위해 가장 작은 두 단계를 한 칸씩 올렸다. 12px 미만은 쓰지 않는다. */
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.25rem;
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.375rem;
   --text-sm: 0.9375rem;
   --text-sm--line-height: 1.5rem;
   --color-background: var(--background);
@@ -79,7 +79,7 @@
   --accent-foreground: #191f28;
   --destructive: #b42332;
   --border: #e4e4e7;
-  --input: #b0b8c1;
+  --input: #7f8995;
   --ring: #004fe8;
   --chart-1: #3182f6;
   --chart-2: #f59e0b;
@@ -95,7 +95,7 @@
   --sidebar-accent-foreground: #191f28;
   --sidebar-border: #e4e4e7;
   --sidebar-ring: #004fe8;
-  --success: oklch(0.6 0.16 145);
+  --success: oklch(0.47 0.13 145);
   --success-foreground: oklch(0.985 0 0);
   /* 토스 스타일 모션 토큰: 탭 인디케이터/토스트 진입처럼 살짝 튀는 느낌이 필요한 곳엔 spring, 그 외엔 quick */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -132,7 +132,7 @@
   --accent-foreground: #f2f4f6;
   --destructive: #ff9ba5;
   --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 15%);
+  --input: #707684;
   --ring: #3b82f6;
   --chart-1: #3b82f6;
   --chart-2: #f59e0b;
@@ -417,7 +417,7 @@ input[data-no-focus-ring]:focus-visible {
   transition: transform 280ms var(--ease-settle), width 280ms var(--ease-settle);
 }
 .segmented-tabs[data-motion-ready] .tab-selection { visibility: visible; }
-.segmented-tabs[data-motion-ready] button[aria-pressed="true"] {
+.segmented-tabs[data-motion-ready][data-appearance="neutral"] button[aria-pressed="true"] {
   background: transparent;
   box-shadow: none;
 }
@@ -495,12 +495,12 @@ body{font-family:var(--cb-font-sans)}
    본문 폭 3단계: narrow(폼·단일 열) / page(기본) / wide(대시보드·콘솔). */
 :root{
   --cb-page-narrow:672px;--cb-page:896px;--cb-page-wide:1152px;
-  --cb-title-size:30px;--cb-title-weight:600;--cb-title-ls:-.025em;--cb-title-lh:36px;
+  --cb-title-size:clamp(24px, 2.6vw, 30px);--cb-title-weight:600;--cb-title-ls:-.025em;--cb-title-lh:1.35;
   --cb-sub-size:14px;--cb-sub-lh:1.6;
   --cb-section-gap:24px;--cb-card-radius:18px;--cb-card-pad:20px;--cb-control-radius:10px;
 }
-.cb-page-title{font-size:var(--cb-title-size);font-weight:var(--cb-title-weight);letter-spacing:var(--cb-title-ls);line-height:var(--cb-title-lh);font-style:normal;text-transform:none}
-.cb-page-sub{font-size:var(--cb-sub-size);line-height:var(--cb-sub-lh);font-weight:400;color:var(--muted-foreground)}
+.cb-page-title{text-wrap:balance;overflow-wrap:anywhere;font-size:var(--cb-title-size);font-weight:var(--cb-title-weight);letter-spacing:var(--cb-title-ls);line-height:var(--cb-title-lh);font-style:normal;text-transform:none}
+.cb-page-sub{word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;font-size:var(--cb-sub-size);line-height:var(--cb-sub-lh);font-weight:400;color:var(--muted-foreground)}
 
 /* ── 스크롤바 ───────────────────────────────────────────────────────────────
    브라우저 기본(두껍고 각진 트랙 + 화살표)은 카드형 UI와 어울리지 않아서, 화면 전체와 표·목록 안의 스크롤을 한 가지
@@ -549,3 +549,17 @@ body{font-family:var(--cb-font-sans)}
 .cb-main-content > .cb-school-page,
 .cb-workspace-content > .cb-school-page { padding-inline: 0; padding-top: 0; }
 @media (min-width:1280px) { .cb-main-content { padding-bottom:64px; } }
+
+/* Compact desktop actions retain their density; phone controls stay reachable. */
+@media(max-width:639px){
+ [data-slot="button"]{min-height:44px}
+ [data-slot="button"][data-size^="icon"]{min-width:44px}
+ [data-slot="select-trigger"],[data-slot="select-item"]{min-height:44px}
+ [data-slot="input"],textarea{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* Selection text never waits on a moving background for its contrast. */
+.segmented-tabs[data-appearance="accent"] .tab-selection{inset:auto auto 1px 0;height:3px;border-radius:999px}
