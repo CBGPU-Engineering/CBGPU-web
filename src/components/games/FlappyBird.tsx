@@ -172,8 +172,8 @@ export default function FlappyBird(props: RankedGameProps) {
       <p role="status" className="text-sm text-muted-foreground text-center">{arcade.statusText}</p>
       {arcade.retryButton}
       <div className="flex items-center gap-6">
-        <span className="text-sm font-black uppercase tracking-widest">Score: {score}</span>
-        <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Best: {best}</span>
+        <span className="text-sm font-black uppercase tracking-widest">점수: {score}</span>
+        <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">최고: {best}</span>
       </div>
       <div className="relative select-none">
         <canvas
@@ -187,14 +187,14 @@ export default function FlappyBird(props: RankedGameProps) {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/40 rounded-2xl">
             <p className="text-white font-black text-2xl uppercase tracking-tight drop-shadow-lg">Flappy Bird</p>
             <p className="text-white/80 text-sm font-medium">탭 / 스페이스바로 점프</p>
-            <Button onClick={flap} className="font-black uppercase tracking-widest">Start</Button>
+            <Button onClick={flap} className="font-black uppercase tracking-widest">시작하기</Button>
           </div>
         )}
         {phase === 'over' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 rounded-2xl">
-            <p className="text-white font-black text-2xl uppercase drop-shadow-lg">Game Over</p>
-            <p className="text-white/80 text-sm font-bold">Score: {score}  ·  Best: {best}</p>
-            <Button onClick={reset} className="font-black uppercase tracking-widest">Restart</Button>
+            <p className="text-white font-black text-2xl uppercase drop-shadow-lg">게임이 끝났어요</p>
+            <p className="text-white/80 text-sm font-bold">점수: {score}  ·  최고: {best}</p>
+            <Button onClick={reset} className="font-black uppercase tracking-widest">다시 하기</Button>
           </div>
         )}
       </div>

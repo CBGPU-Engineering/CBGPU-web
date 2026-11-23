@@ -171,7 +171,7 @@ export default function Game2048(props: RankedGameProps = {}) {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground font-medium">화살표 또는 스와이프로 타일 밀기 · 2048을 만들어보세요!</p>
+      <p className="text-xs text-muted-foreground font-medium">화살표 또는 스와이프로 타일 밀기 · 2048을 만들어 보세요!</p>
     </div>
   );
 }

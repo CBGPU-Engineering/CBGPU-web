@@ -53,11 +53,11 @@ function Pomodoro() {
       setSecs(s => {
         if (s <= 1) {
           if (phase === 'work') {
-            notify('휴식 시간! 5분간 쉬세요 🎉');
+            notify('휴식 시간이에요. 잠깐 쉬어가세요.');
             setPhase('rest');
             return cfg.rest * 60;
           } else {
-            notify('집중 시간! 다시 시작하세요 💪');
+            notify('집중 시간이에요. 다시 시작해 볼까요?');
             setCycles(c => c + 1);
             setPhase('work');
             return cfg.work * 60;
@@ -88,7 +88,7 @@ function Pomodoro() {
           <p className={`text-xs font-semibold mt-1 ${phase === 'work' ? 'text-primary' : 'text-green-500'}`}>
             {phase === 'work' ? '집중' : '휴식'}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{cycles} 사이클 완료</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{cycles} 회 완료</p>
         </div>
       </div>
 
@@ -101,7 +101,7 @@ function Pomodoro() {
           <Bell className="size-4" />
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground">Bell 아이콘으로 알림 허용 시 세션 종료마다 알림을 받습니다</p>
+      <p className="text-xs text-muted-foreground">종 모양 버튼에서 알림을 허용하면 집중과 휴식이 끝날 때 알려 드려요.</p>
     </div>
   );
 }
