@@ -103,7 +103,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   if(process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'){const path=requestHeaders.get('x-cbgpu-path')||'',match=path.match(/^\/(projects|explore\/contests|explore\/schools)\/([^/]+)$/);if(match){const kind=match[1]==='projects'?'projects':match[1]==='explore/contests'?'contests':'schools',result=await publicDetail(kind,match[2]);if(result.ok&&!result.data.item||!result.ok&&result.status===404)notFound();}}
   const publicBrowsingPage=process.env.NEXT_PUBLIC_CBGPU_PUBLIC_BROWSING_V1==='1'&&isPublicBrowsingPath(requestHeaders.get('x-cbgpu-path')||'');
   const sessionHint=/(?:^|;)\s*sb-cbgpu-auth-token(?:\.\d+)?=/.test(requestHeaders.get('cookie')||'');
-  const schoolAdminPage=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&/^\/schools\/[A-Za-z0-9_-]{1,100}\/admin$/.test(requestHeaders.get('x-cbgpu-path')||'');
+  const schoolAdminPage=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&(/^(?:\/schools\/[A-Za-z0-9_-]{1,100}\/admin|\/school-admin)$/.test(requestHeaders.get('x-cbgpu-path')||''));
   const adminSite = host === 'admin.cbgpu.com';
   const appWebView=/;\s*wv\)/.test(requestHeaders.get('user-agent')||'');
   const manufacturingSite=['manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(host||'');
@@ -112,7 +112,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const publicSite = section === 'docs' || section === 'arxiv' || host === 'docs.cbgpu.com' || host === 'arxiv.cbgpu.com';
 
   return (
-    <html lang={adminSite||schoolAdminPage||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
+    <html lang={adminSite||manufacturingSite ? "en" : "ko"} className={pretendard.variable} suppressHydrationWarning>
       <head>
         {portalGate&&<script dangerouslySetInnerHTML={{ __html: 'window.__CBGPU_PORTAL_GATE=true' }} />}
         {process.env.CBGPU_DEMO!=='1'&&<link rel="preconnect" href="https://cdn.jsdelivr.net" />}
@@ -133,8 +133,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         >
           {process.env.CBGPU_DEMO==='1'&&<DemoBanner/>}
           <AuthProvider siteHost={host || undefined} portalGate={portalGate}>
-            <AdIdentityBoundary><SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||schoolAdminPage||manufacturingSite}>
-              {adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : schoolAdminPage ? <ScopedSchoolAdminShell><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : publicBrowsingPage ? <PublicShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite} sessionHint={sessionHint}><AuthGate workspaceSite>{children}</AuthGate></PublicShell> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
+            <AdIdentityBoundary><SchoolScopeProvider><ProductExperienceProvider><AlertProvider english={adminSite||manufacturingSite}>
+              {adminSite ? <AdminShell appWebView={appWebView}><AuthGate>{children}</AuthGate></AdminShell> : schoolAdminPage ? <ScopedSchoolAdminShell appWebView={appSite||appWebView}><AuthGate>{children}</AuthGate></ScopedSchoolAdminShell> : manufacturingSite ? <ManufacturingShell equipmentKind={host==='laser.cbgpu.com'?'laser':'print'} appWebView={appWebView}>{children}</ManufacturingShell> : publicSite ? <AuthGate publicSite>{children}</AuthGate> : publicBrowsingPage ? <PublicShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite} sessionHint={sessionHint}><AuthGate workspaceSite>{children}</AuthGate></PublicShell> : workspace||appSite||host==='cbgpu.com'||host==='www.cbgpu.com' ? <WorkspaceShell workspace={workspace||(isWorkspace(savedMode)?savedMode:'student')} isApp={appSite}><SiteBanner/><ApprovalNotice/><AuthGate workspaceSite><SchoolResourceBoundary>{children}</SchoolResourceBoundary></AuthGate></WorkspaceShell> : <MainSiteFrame>{children}</MainSiteFrame>}
               {appSite&&<AppUpdateNotice/>}
               {(adminSite||manufacturingSite)&&<ReturnToApp/>}
               {!adminSite && !manufacturingSite && <SiteTraffic />}

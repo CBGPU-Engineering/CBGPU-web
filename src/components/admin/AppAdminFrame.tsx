@@ -1,4 +1,6 @@
 'use client';
+import {useEffect} from 'react';
+import {siteHref} from '@/lib/siteHref';
 import {usePathname,useSearchParams} from 'next/navigation';
 import {Cpu,Server,Users,Printer,Files,KeyRound,CalendarDays,Vote,UserPlus,LayoutDashboard,Briefcase,Music,Building2,Settings,GraduationCap,Link2,Handshake,UserCheck,Flag} from 'lucide-react';
 import {useAuth} from '@/lib/useAuth';
@@ -31,6 +33,9 @@ const wakeupNav:SpaceNavItem[]=[{id:'wakeup',href:'/admin/wakeup',label:'기상�
 export default function AppAdminFrame({children}:{children:React.ReactNode}){
  const pathname=usePathname(),params=useSearchParams(),tab=params.get('tab'),{isAdmin}=useAuth();
  const multi=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1',school=multi?platformAdminSchool(pathname,params.get('section')):null;
+ const schoolEntry=multi&&pathname!=='/admin/wakeup'&&!pathname.startsWith('/admin/wakeup/');
+ useEffect(()=>{if(schoolEntry)window.location.replace(siteHref('https://app.cbgpu.com/school-admin?from=app'));},[schoolEntry]);
+ if(schoolEntry)return <p role="status" className="p-6">학교 관리자 화면으로 이동하고 있어요.</p>;
  if(pathname==='/admin/wakeup'||pathname.startsWith('/admin/wakeup/'))return <AppSpaceFrame current="wakeup" nav={wakeupNav} activeId="wakeup">{children}</AppSpaceFrame>;
  const isM=pathname==='/admin/m'||pathname.startsWith('/admin/m/');
  const activeId=isM?(tab==='signups'?'m:signups':tab==='gpu'?'m:gpu':'m'):(pathname==='/admin'?(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?'schools':'gpu'):pathname.split('/')[2]);

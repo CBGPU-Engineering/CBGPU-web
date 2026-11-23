@@ -8,3 +8,21 @@ test('only bearer authentication reaches protected upstreams; device proof bodie
 test('untrusted hosts, HTML, redirects and raw provider failures fail closed without leaking a credential',async()=>{process.env.CBGPU_GPU_REGISTRY_URL='http://192.168.1.1';let called=false;let r=await proxyGpuRegistry(request(),['schools',sid,'gpu','nodes'],false,(async()=>{called=true;return Response.json({})})as typeof fetch);assert.equal(r.status,503);assert.equal(called,false);process.env.CBGPU_GPU_REGISTRY_URL='http://127.0.0.1:3548';for(const response of[new Response('<!DOCTYPE html>',{headers:{'Content-Type':'text/html'}}),new Response('{broken',{headers:{'Content-Type':'application/json'}})]){r=await proxyGpuRegistry(request(),['schools',sid,'gpu','nodes'],false,(async()=>response)as typeof fetch);assert.equal(r.status,503)}r=await proxyGpuRegistry(request(),['schools',sid,'gpu','nodes'],false,(async()=>Response.json({error:'private token secret',detail:'never return me'},{status:403}))as typeof fetch);assert.equal(r.status,403);assert.deepEqual(await r.json(),{error:'GPU_REQUEST_FAILED'})});
 
 test('notebook and reservation routes require explicit shapes and never disclose a job credential',async()=>{process.env.CBGPU_GPU_REGISTRY_ENABLED='1';const resource=['schools',sid,'gpu','resources'];assert.equal(gpuRegistryPath(resource,'GET'),'/v1/schools/cbsh/gpu/resources');assert.equal(gpuRegistryPath([...resource,nid,'reservations'],'POST'),'/v1/schools/cbsh/gpu/resources/'+nid+'/reservations');assert.equal(gpuRegistryPath(['notebooks',nid,'session'],'POST'),'/v1/gpu/notebooks/'+nid+'/session');assert.equal(gpuRegistryPath(['notebooks','claim'],'POST',true),'/v1/gpu/notebooks/claim');assert.equal(gpuRegistryPath(['notebooks','arbitrary'],'POST',true),null);assert.equal(gpuRegistryPath(['schools',sid,'gpu','reservations',nid],'DELETE'),'/v1/schools/cbsh/gpu/reservations/'+nid);const response=await proxyGpuRegistry(request('POST','{}'),['schools',sid,'gpu','reservations',nid,'session'],false,(async()=>Response.json({job_id:nid,url:'/notebooks/'+nid+'/lab',expires_at:new Date(Date.now()+60000).toISOString(),cookie_token:'must-stay-server-side'}))as typeof fetch);assert.equal(response.status,200);assert.ok(!(await response.text()).includes('must-stay-server-side'));assert.equal(response.headers.get('set-cookie'),null)});
+
+test('school GPU admin lists and mutations have fixed school paths and exact methods',()=>{
+ const base=['schools',sid,'gpu','admin','reservations'];
+ assert.equal(gpuRegistryPath(base,'GET'),'/v1/schools/cbsh/gpu/admin/reservations');
+ assert.equal(gpuRegistryPath([...base,nid,'action'],'POST'),'/v1/schools/cbsh/gpu/admin/reservations/'+nid+'/action');
+ for(const [parts,method] of [[base,'POST'],[base,'DELETE'],[[...base,nid,'action'],'GET'],[[...base,'../other','action'],'POST'],[['schools','../other','gpu','admin','reservations'],'GET'],[[...base,nid,'action','extra'],'POST']]as [string[],string][])assert.equal(gpuRegistryPath(parts,method),null);
+});
+
+test('scoped admin pagination forwards only bounded list filters and never permits arbitrary queries',async()=>{
+ process.env.CBGPU_GPU_REGISTRY_ENABLED='1';
+ const parts=['schools',sid,'gpu','admin','reservations'];let calls=0;
+ const send=(async(url:URL)=>{calls++;assert.equal(url.pathname,'/v1/schools/cbsh/gpu/admin/reservations');assert.equal(url.searchParams.get('q'),'test');return Response.json({school_id:sid,items:[],next_cursor:null,server_now:new Date().toISOString()})}) as typeof fetch;
+ const req=(query:string)=>new Request('https://cbgpu.com/api/compute/'+parts.join('/')+query,{headers:{authorization:'Bearer fixture-only',host:'cbgpu.com'}});
+ assert.equal((await proxyGpuRegistry(req('?limit=50&status=all&q=test&gpu=all'),parts,false,send)).status,200);
+ for(const query of['?limit=51','?limit=0','?status=admin','?q=a&q=b','?upstream=https://other.invalid','?gpu=../../other','?cursor='+ 'x'.repeat(4097)])assert.equal((await proxyGpuRegistry(req(query),parts,false,send)).status,400);
+ assert.equal(calls,1);
+ assert.equal((await proxyGpuRegistry(req('?q=test'),['schools',sid,'gpu','nodes'],false,send)).status,400);
+});

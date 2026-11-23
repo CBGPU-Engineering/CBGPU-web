@@ -42,7 +42,8 @@ mechanical rules live in `tests/ui-conventions.test.mts`; the rest depends on yo
 ## 3. Language and wording
 
 - Student/researcher UI and the **app, including the app admin frame, are Korean**. The desktop
-  admin portal (admin.cbgpu.com in a browser) and developer portal stay English by decision.
+  platform admin portal (admin.cbgpu.com in a browser) and developer portal stay English by decision.
+  **Owner correction (2026-11-23): school-specific administration is Korean on desktop and app.**
   Do not mix the two inside one screen.
 - App tab and menu labels are **short Korean**, at most 12 characters, so they fit the bottom bar
   without wrapping ("배포" not "프론트엔드 배포", "가입 승인" not "Membership reviews").
