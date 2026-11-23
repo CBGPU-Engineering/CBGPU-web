@@ -1,10 +1,10 @@
 "use client";
+import{schoolAdminError}from'@/lib/schoolAdminKorean';
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useAuth } from "@/lib/useAuth";
 import { schoolsRequest } from "@/lib/schoolsClient";
 import {
   academicConfirmation,
-  academicError,
   academicPreviewValid,
   type AcademicHistory,
   type AcademicPreview,
@@ -44,7 +44,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       if (live.current)
         setHistory(data.items.filter((item) => item.school_id === schoolId));
     } catch (e) {
-      if (live.current) setError(academicError((e as Error).message));
+      if (live.current) setError(schoolAdminError(e, "학년도 전환 정보를 확인하지 못했어요. 처리 이력과 현재 권한을 확인해 주세요."));
     }
   }
   useEffect(() => {
@@ -68,11 +68,11 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       if (!live.current) return;
       if (value.school_id !== schoolId || value.school_year !== year)
         throw Error(
-          "Preview school or year does not match. No changes were made.",
+          "미리보기의 학교 또는 학년도가 맞지 않아 변경하지 않았어요.",
         );
       setPreview(value);
     } catch (e) {
-      if (live.current) setError(academicError((e as Error).message));
+      if (live.current) setError(schoolAdminError(e, "학년도 전환 정보를 확인하지 못했어요. 처리 이력과 현재 권한을 확인해 주세요."));
     } finally {
       if (live.current) setBusy(false);
     }
@@ -106,7 +106,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
         value.school_year !== year
       )
         throw Error(
-          "Review execution history before retrying: the result could not be verified.",
+          "실행 결과를 확인하지 못했어요. 다시 실행하기 전에 처리 이력을 확인해 주세요.",
         );
       setResult(value);
       clearPreview();
@@ -114,7 +114,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       await loadHistory();
     } catch (e) {
       if (live.current) {
-        setError(academicError((e as Error).message));
+        setError(schoolAdminError(e, "학년도 전환 정보를 확인하지 못했어요. 처리 이력과 현재 권한을 확인해 주세요."));
         clearPreview();
         await loadHistory();
       }
@@ -125,23 +125,15 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
   if (schoolId !== "cbsh")
     return (
       <section className="rounded-xl border p-5 space-y-3">
-        <h2 className="text-xl font-semibold">Academic Year Rollover</h2>
-        <p className="text-sm text-muted-foreground">
-          This school’s student-number and grade policy is not supported yet. No
-          rollover action is available. Memberships, accounts and projects
-          remain unchanged.
-        </p>
+        <h2 className="text-xl font-semibold">{"학년도 전환"}</h2>
+        <p className="text-sm text-muted-foreground">{"이 학교의 학번·학년 규칙은 아직 지원하지 않아 학년도 전환을 실행할 수 없어요. 학교 소속과 계정, 프로젝트는 그대로 유지돼요."}</p>
       </section>
     );
   return (
     <section className="space-y-5">
       <header>
-        <h2 className="text-xl font-semibold">Academic Year Rollover</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          School: {schoolId}. Only this school’s verified, active student
-          memberships are considered. Teacher and external memberships, global
-          identity and projects are preserved. Nothing runs automatically.
-        </p>
+        <h2 className="text-xl font-semibold">{"학년도 전환"}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{"학교: "}{schoolId}{" · 이 학교에서 소속 확인을 마친 활성 학생만 대상이에요. 교사·외부인 소속, 계정과 프로젝트는 유지되며 자동으로 실행하지 않아요."}</p>
       </header>
       <InlineFeedback message={error} />
       <form
@@ -149,7 +141,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
         onSubmit={prepare}
       >
         <label className="cb-school-field">
-          <span>Target academic year</span>
+          <span>{"대상 학년도"}</span>
           <Input
             type="number"
             min={currentYear}
@@ -166,17 +158,17 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
           />
         </label>
         <Button type="submit" variant="outline" disabled={busy}>
-          {busy ? "Checking…" : "Preview membership changes"}
+          {busy ? "확인 중…" : "변경 미리보기"}
         </Button>
       </form>
       {preview && (
         <>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              ["Grade 1 → grade 2 verification", preview.counts.grade1],
-              ["Grade 2 → grade 3 verification", preview.counts.grade2],
-              ["Grade 3 → external membership", preview.counts.grade3],
-              ["Invalid student numbers", preview.counts.invalid],
+              ["1학년 → 2학년 재인증", preview.counts.grade1],
+              ["2학년 → 3학년 재인증", preview.counts.grade2],
+              ["3학년 → 외부인 소속", preview.counts.grade3],
+              ["확인이 필요한 학번", preview.counts.invalid],
             ].map(([label, count]) => (
               <div key={label} className="rounded-xl border p-4">
                 <p className="text-sm text-muted-foreground">{label}</p>
@@ -188,15 +180,14 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
             <table className="w-full text-left text-sm">
               <caption className="p-3 text-left">
                 {preview.school_id} · {preview.school_year} ·{" "}
-                {preview.items.length} target memberships
-              </caption>
+                {preview.items.length}{"명 전환 대상"}</caption>
               <thead>
                 <tr>
                   {[
-                    "Membership",
-                    "Student number",
-                    "Current grade",
-                    "Result",
+                    "학교 소속",
+                    "학번",
+                    "현재 학년",
+                    "처리 결과",
                   ].map((title) => (
                     <th key={title} className="p-3">
                       {title}
@@ -216,10 +207,10 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                     <td className="p-3">{item.grade || "—"}</td>
                     <td className="p-3">
                       {item.action === "REVERIFICATION_REQUIRED"
-                        ? "Student-number reset and manual reverification"
+                        ? "학번 초기화 후 관리자 재인증"
                         : item.action === "EXTERNAL"
-                          ? "External school membership"
-                          : "Invalid — review required"}
+                          ? "이 학교의 외부인 소속으로 전환"
+                          : "오류 · 확인 필요"}
                     </td>
                   </tr>
                 ))}
@@ -227,36 +218,20 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
             </table>
           </div>
           {!academicPreviewValid(preview, schoolId, year) ? (
-            <InlineFeedback message="This preview cannot execute. Resolve invalid data or unsupported policy and request a new preview." />
+            <InlineFeedback message="이 미리보기로는 실행할 수 없어요. 학번 오류와 지원 규칙을 확인한 뒤 다시 미리보기를 요청해 주세요." />
           ) : (
             <form
               onSubmit={execute}
               className="cb-school-step-body rounded-xl border border-amber-500/40 p-4"
             >
-              <h3 className="font-semibold">
-                Final administrator confirmation
-              </h3>
-              <p className="text-sm">
-                School {schoolId} · target year {year} ·{" "}
-                {preview.counts.grade1 + preview.counts.grade2} awaiting
-                reverification · {preview.counts.grade3} external memberships.
-              </p>
+              <h3 className="font-semibold">{"관리자 최종 확인"}</h3>
+              <p className="text-sm">{"학교 "}{schoolId}{" · 대상 학년도 "}{year} ·{" "}
+                {preview.counts.grade1 + preview.counts.grade2}{"명 재인증 대기 · "}{preview.counts.grade3}{"명 외부인 전환."}</p>
               <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                <li>
-                  Grades 1–2 lose their old student numbers and school resource
-                  access until the new number is reviewed.
-                </li>
-                <li>
-                  Grade 3 becomes an external membership in this school only.
-                </li>
-                <li>
-                  Accounts, passwords, personal projects and project memberships
-                  are retained. Other schools’ memberships are unchanged.
-                </li>
-                <li>
-                  The server rejects duplicate years and changes made since this
-                  preview.
-                </li>
+                <li>{"1·2학년은 기존 학번을 초기화하고 새 학번이 검토될 때까지 학교 자원 이용이 제한돼요."}</li>
+                <li>{"3학년은 이 학교에서만 외부인 소속으로 바뀌어요."}</li>
+                <li>{"계정·비밀번호·개인 프로젝트와 프로젝트 멤버십은 유지돼요. 다른 학교의 소속은 바뀌지 않아요."}</li>
+                <li>{"이미 처리한 학년도나 미리보기 이후 변경된 내용은 실행할 수 없어요."}</li>
               </ul>
               <label className="flex items-start gap-3 text-sm">
                 <input
@@ -266,13 +241,9 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                   required
                   disabled={busy}
                   onChange={(e) => setAck(e.target.checked)}
-                />
-                I reviewed the target school, year, accounts and student-number
-                interpretation, and confirmed a valid backup and recovery
-                procedure.
-              </label>
+                />{"대상 학교·학년도·계정·학년 판별을 검토했고, 유효한 백업과 복구 절차를 확인했어요."}</label>
               <label className="cb-school-field">
-                <span>Type {academicConfirmation(schoolId, year)}</span>
+                <span>{"다음 확인 문구를 입력하세요: "}{academicConfirmation(schoolId, year)}</span>
                 <Input
                   autoComplete="off"
                   required
@@ -287,9 +258,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                   type="button"
                   disabled={busy}
                   onClick={clearPreview}
-                >
-                  Cancel preview
-                </Button>
+                >{"미리보기 취소"}</Button>
                 <Button
                   type="submit"
                   disabled={
@@ -298,7 +267,7 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                     confirmation !== academicConfirmation(schoolId, year)
                   }
                 >
-                  {busy ? "Executing transaction…" : "Execute school rollover"}
+                  {busy ? "전환 처리 중…" : "학년도 전환 실행"}
                 </Button>
               </div>
             </form>
@@ -307,28 +276,24 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
       )}
       {result && (
         <div role="status" className="rounded-xl border p-4 space-y-2">
-          <h3 className="font-semibold">School rollover completed</h3>
+          <h3 className="font-semibold">{"학년도 전환 완료"}</h3>
           <p className="text-sm">
             {result.school_id} · {result.school_year} ·{" "}
-            {result.counts.grade1 + result.counts.grade2} reverifications ·{" "}
-            {result.counts.grade3} external memberships.
-          </p>
-          <p className="break-all text-xs text-muted-foreground">
-            Execution {result.id} ·{" "}
-            {new Date(result.completed_at).toLocaleString()}
+            {result.counts.grade1 + result.counts.grade2}{"명 재인증 대기 · "}{" "}
+            {result.counts.grade3}{"명 외부인 전환."}</p>
+          <p className="break-all text-xs text-muted-foreground">{"실행 번호 "}{result.id} ·{" "}
+            {new Date(result.completed_at).toLocaleString("ko-KR")}
           </p>
         </div>
       )}
       <section className="rounded-xl border p-4 space-y-3">
         <div className="flex flex-wrap justify-between gap-3">
-          <h3 className="font-semibold">Completed execution history</h3>
+          <h3 className="font-semibold">{"학년도 전환 이력"}</h3>
           <Button
             variant="outline"
             disabled={busy}
             onClick={() => void loadHistory()}
-          >
-            Refresh history
-          </Button>
+          >{"이력 새로고침"}</Button>
         </div>
         {history.length ? (
           history.map((item) => (
@@ -337,18 +302,15 @@ function AcademicWorkspace({ schoolId }: { schoolId: string }) {
                 {item.school_id} · {item.school_year}
               </strong>
               <p>
-                {item.counts.grade1 + item.counts.grade2} reverifications ·{" "}
-                {item.counts.grade3} external memberships
-              </p>
+                {item.counts.grade1 + item.counts.grade2}{"명 재인증 대기 · "}{" "}
+                {item.counts.grade3}{"명 외부인 전환"}</p>
               <p className="break-all text-xs text-muted-foreground">
-                {item.id} · {new Date(item.completed_at).toLocaleString()}
+                {item.id} · {new Date(item.completed_at).toLocaleString("ko-KR")}
               </p>
             </article>
           ))
         ) : (
-          <p className="text-sm text-muted-foreground">
-            No completed rollover is recorded for this school.
-          </p>
+          <p className="text-sm text-muted-foreground">{"이 학교에서 완료된 학년도 전환이 없어요."}</p>
         )}
       </section>
     </section>

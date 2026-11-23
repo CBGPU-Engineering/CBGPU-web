@@ -1,4 +1,5 @@
 "use client";
+import{schoolStatusLabel,schoolAdminError}from'@/lib/schoolAdminKorean';
 import {Dropdown} from '@/components/ui/dropdown';
 import {
   useCallback,
@@ -22,11 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InlineFeedback } from "@/components/ui/product-motion";
 const labels = {
-  homepage_url: "Official homepage",
-  news_url: "School news",
-  letter_url: "School letters",
-  calendar_url: "School calendar",
-  meal_url: "Meal source",
+  homepage_url: "학교 홈페이지",
+  news_url: "학교 소식",
+  letter_url: "가정통신문",
+  calendar_url: "학사 일정",
+  meal_url: "급식 정보",
 };
 export default function SchoolLifeSettings({
   schoolId,
@@ -69,12 +70,12 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
       );
       if (!live.current) return;
       if (value.school_id !== schoolId)
-        throw Error("Source response belongs to another school.");
+        throw Error("다른 학교의 정보 출처가 응답했어요. 다시 확인해 주세요.");
       setSource(value);
       setDraft(lifeDraft(value));
       setStale(false);
     } catch (e) {
-      if (live.current) setError((e as Error).message);
+      if (live.current) setError(schoolAdminError(e));
     } finally {
       if (live.current) setLoading(false);
     }
@@ -96,7 +97,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
     try {
       payload = reviewedLifePayload(draft, source, schoolId, ack);
     } catch (e) {
-      setError((e as Error).message);
+      setError(schoolAdminError(e));
       return;
     }
     setBusy(true);
@@ -108,9 +109,9 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
       );
       if (!live.current) return;
       if (value.ok !== true)
-        throw Error("Source review was not confirmed by the server.");
+        throw Error("정보 출처 검토 결과를 확인하지 못했어요.");
       setNotice(
-        "Reviewed sources saved for this school. Runtime availability remains subject to source and feature checks.",
+        "학교의 정보 출처를 저장했어요. 실제 사용 가능 여부는 연결 상태와 기능 설정을 따로 확인해요.",
       );
       await load();
       window.dispatchEvent(new Event("cbgpu-school-changed"));
@@ -124,35 +125,28 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
           setStale(true);
           setAck(false);
           setError(
-            "Another review changed these sources. Your edits are retained below. Reload the latest version, compare your edits, and confirm a new review before saving.",
+            "다른 관리자가 연결 설정을 변경했어요. 아래 입력은 유지되니 최신 설정과 비교하고 다시 검토해 주세요.",
           );
-        } else setError(message);
+        } else setError(schoolAdminError(message));
       }
     } finally {
       if (live.current) setBusy(false);
     }
   }
   if (isLoading || loading)
-    return <p role="status">Loading school integrations…</p>;
+    return <p role="status">{"학교 연동을 불러오고 있어요…"}</p>;
   if (!user || (editor && !isAdmin))
     return (
-      <p role="alert">
-        Platform administrator access is required to review source
-        configuration.
-      </p>
+      <p role="alert">{"정보 출처를 검토하려면 플랫폼 관리자 권한이 필요해요."}</p>
     );
   return (
     <section className="space-y-5">
       <header className="flex flex-wrap justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">
-            {editor ? "Reviewed school sources" : "School integrations"}
+            {editor ? "학교 정보 출처 검토" : "학교 연동"}
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            School-specific timetable, news, calendar and meal integrations.
-            Only platform administrators can approve provider mappings or source
-            hosts.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{"학교별 시간표·소식·학사 일정·급식 연동이에요. 제공 기관과 정보 출처 호스트는 플랫폼 관리자만 승인할 수 있어요."}</p>
         </div>
         <Button
           className="h-auto min-h-11 max-w-full whitespace-normal text-center"
@@ -160,69 +154,54 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
           disabled={busy}
           onClick={() => void load()}
         >
-          {stale ? "Reload latest (discard unsaved edits)" : "Reload sources"}
+          {stale ? "최신 설정 불러오기 (미저장 입력 삭제)" : "연동 새로고침"}
         </Button>
       </header>
       <InlineFeedback message={error} />
       <InlineFeedback kind="success" message={notice} />
       {!source ? (
-        <p className="text-sm text-muted-foreground">
-          Current sources could not be read. Editing is unavailable. The server
-          must verify your current platform role and session for this school.
-        </p>
+        <p className="text-sm text-muted-foreground">{"현재 연결 설정을 불러오지 못해 수정할 수 없어요. 이 학교에 대한 현재 관리 권한과 로그인 상태를 확인해 주세요."}</p>
       ) : (
         <>
           {!editor&&<SchoolLifeReadiness source={source}/>}
           <dl className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs text-muted-foreground">School</dt>
+              <dt className="text-xs text-muted-foreground">{"학교"}</dt>
               <dd>
                 {source.school_name} · {source.region}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Configuration version (not provider health)
-              </dt>
+              <dt className="text-xs text-muted-foreground">{"설정 버전 (연결 상태와 별개)"}</dt>
               <dd>
-                {source.version} · {source.status}
+                {source.version} · {schoolStatusLabel(source.status)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">
-                Timetable provider
-              </dt>
+              <dt className="text-xs text-muted-foreground">{"시간표 제공 기관"}</dt>
               <dd>
-                {source.comcigan.status}
+                {schoolStatusLabel(source.comcigan.status)}
                 {source.comcigan.school_code
                   ? ` · ${source.comcigan.school_code}`
                   : ""}
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Meal provider</dt>
-              <dd>{source.meal_provider || "Not configured"}</dd>
+              <dt className="text-xs text-muted-foreground">{"급식 제공 기관"}</dt>
+              <dd>{source.meal_provider==='NEIS'?'나이스':source.meal_provider==='SCHOOL_WEBSITE'?'학교 홈페이지':'미설정'}</dd>
             </div>
           </dl>
           {source.status === "DISABLED" ? (
-            <p className="text-sm text-muted-foreground">
-              School life is disabled. Enable the school feature before
-              inspecting or replacing reviewed sources; existing data remains
-              stored.
-            </p>
+            <p className="text-sm text-muted-foreground">{"학교생활 기능이 꺼져 있어요. 연결 설정을 검토·교체하려면 먼저 학교 기능을 켜 주세요. 기존 데이터는 유지돼요."}</p>
           ) : editor && draft ? (
             <form
               onSubmit={save}
               className="cb-school-step-body rounded-xl border p-4"
             >
-              <p className="text-sm text-muted-foreground">
-                This replaces the complete reviewed source configuration for{" "}
-                {schoolId}. Blank optional URLs remove that source. Confirm
-                every URL and the provider mapping against official school
-                information.
-              </p>
+              <p className="text-sm text-muted-foreground">{"다음 학교의 정보 출처 설정 전체를 교체해요: "}{" "}
+                {schoolId}{" · 빈 선택 주소는 해당 연동을 제거해요. 모든 주소와 제공 기관 정보를 공식 학교 정보와 비교해 주세요."}</p>
               <label className="cb-school-field">
-                <span>Reviewed allowed hosts (one per line)</span>
+                <span>{"검토한 허용 호스트 (한 줄에 하나)"}</span>
                 <textarea
                   required
                   rows={3}
@@ -237,7 +216,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
               </label>
               {LIFE_URL_FIELDS.map((field) => (
                 <label key={field} className="cb-school-field">
-                  <span>{labels[field]} URL (optional)</span>
+                  <span>{labels[field]}{" 주소 (선택)"}</span>
                   <Input
                     type="url"
                     maxLength={2048}
@@ -251,7 +230,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                 </label>
               ))}
               <label className="cb-school-field">
-                <span>Meal provider</span>
+                <span>{"급식 제공 기관"}</span>
                 <Dropdown
                   disabled={busy}
                   value={draft.meal_provider}
@@ -264,13 +243,13 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                     setAck(false);
                   }}
                 >
-                  <option value="">Not configured</option>
-                  <option value="NEIS">NEIS</option>
-                  <option value="SCHOOL_WEBSITE">School website</option>
+                  <option value="">{"미설정"}</option>
+                  <option value="NEIS">나이스 (NEIS)</option>
+                  <option value="SCHOOL_WEBSITE">{"학교 홈페이지"}</option>
                 </Dropdown>
               </label>
               <label className="cb-school-field">
-                <span>Reviewed Comcigan school code (optional)</span>
+                <span>{"검토한 컴시간 학교 코드 (선택)"}</span>
                 <Input
                   inputMode="numeric"
                   maxLength={9}
@@ -285,11 +264,8 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                   }}
                 />
               </label>
-              <p className="text-sm text-muted-foreground">
-                Canonical mapping: {source.comcigan.school_name} ·{" "}
-                {source.comcigan.region}. Leave the code empty to use exact
-                canonical lookup; no CBsh fallback is assigned to other schools.
-              </p>
+              <p className="text-sm text-muted-foreground">{"공식 학교 정보: "}{source.comcigan.school_name} ·{" "}
+                {source.comcigan.region}{" · 코드가 비어 있으면 공식 학교명·지역을 정확히 조회해요. 다른 학교에 충북과고 정보를 대신 적용하지 않아요."}</p>
               <label className="flex gap-3 text-sm">
                 <input
                   type="checkbox"
@@ -297,42 +273,33 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                   disabled={busy}
                   checked={ack}
                   onChange={(e) => setAck(e.target.checked)}
-                />
-                I independently verified this school, each public source host
-                and provider mapping, and reviewed the complete replacement
-                including removed fields.
-              </label>
+                />{"이 학교와 각 공개 호스트, 제공 기관 정보를 독립적으로 확인했고 삭제 항목을 포함한 전체 변경을 검토했어요."}</label>
               <Button
                 className="h-auto min-h-11 max-w-full whitespace-normal text-center"
                 type="submit"
                 disabled={busy || !ack || stale}
               >
-                {busy ? "Saving review…" : "Save reviewed source configuration"}
+                {busy ? "검토 저장 중…" : "검토한 정보 출처 저장"}
               </Button>
             </form>
           ) : (
             <div className="rounded-xl border p-4 space-y-3">
-              <h3 className="font-semibold">Configured sources</h3>
+              <h3 className="font-semibold">{"설정된 정보 출처"}</h3>
               {LIFE_URL_FIELDS.map((field) => (
                 <div key={field} className="text-sm">
                   <p className="text-muted-foreground">{labels[field]}</p>
                   <p className="break-all">
-                    {source[field] || "Not configured"}
+                    {source[field] || "미설정"}
                   </p>
                 </div>
               ))}
-              <p className="text-sm text-muted-foreground">
-                School roles cannot approve new hosts or arbitrary source URLs.
-                Request a curated integration from the platform team.
-              </p>
+              <p className="text-sm text-muted-foreground">{"학교 권한만으로 새 호스트나 임의 주소를 승인할 수 없어요. 플랫폼 운영진에게 연동 검토를 요청해 주세요."}</p>
               <Button asChild variant="outline">
                 <Link
                   href={
                     "/schools/" + encodeURIComponent(schoolId) + "/features"
                   }
-                >
-                  Request integration review
-                </Link>
+                >{"연동 검토 요청"}</Link>
               </Button>
               {isAdmin && (
                 <Button asChild variant="outline">
@@ -342,9 +309,7 @@ function Settings({ schoolId, editor }: { schoolId: string; editor: boolean }) {
                       encodeURIComponent(schoolId) +
                       "/life-sources"
                     }
-                  >
-                    Open platform source review
-                  </Link>
+                  >{"플랫폼 정보 출처 검토"}</Link>
                 </Button>
               )}
             </div>

@@ -1,8 +1,8 @@
-import SchoolAdministration from '@/components/schools/SchoolAdministration';
-import {SchoolFeatureBoundary} from '@/components/schools/SchoolFeatureBoundary';
-export const metadata={title:'Manage school · CBGPU Admin',robots:{index:false,follow:false}};
-export default async function Page({params}:{params:Promise<{id:string}>}) {
- if(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1!=='1')return <SchoolFeatureBoundary/>;
- const{id}=await params;
- return <div className="cb-school-page"><SchoolAdministration schoolId={id} platform showSectionNavigation={false}/></div>;
+import {redirect} from 'next/navigation';
+import {schoolAdminHref} from '@/lib/schoolAdministration';
+export const metadata={title:'학교 관리자 · CBGPU',robots:{index:false,follow:false}};
+/** Legacy platform URL: school administration now lives on the user-facing host. */
+export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{section?:string}>}){
+ const {id}=await params,{section}=await searchParams;
+ redirect('https://cbgpu.com'+schoolAdminHref(id,section));
 }

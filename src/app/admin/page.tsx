@@ -1,6 +1,4 @@
 'use client';
-import {SchoolAffiliationReview} from '@/components/schools/SchoolAffiliation';
-import SchoolAccountApproval from '@/components/admin/SchoolAccountApproval';
 import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
 import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay,schoolAccountApprovalScope,schoolAccountApprovalState,accountSchools}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
@@ -217,7 +215,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   };
 
   async function setProfileApproval(id: string, approved: boolean) {
-    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError('Use the selected school membership approval controls.');return;}
+    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError('School membership is managed in the authorized school workspace.');return;}
     return runRowAction('account:' + id, async () => {
     const { error } = await supabase.from('profiles').update({ is_approved: approved }).eq('id', id);
     if (error) showError("Operation failed: " + error.message);
@@ -379,7 +377,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      fetchReservations();
+      if(initialTab==='gpu')fetchReservations();
       fetchCpuProjects();
       fetchProfiles();
       fetchBanner();
@@ -455,17 +453,15 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
       <section>
         <div className="page-heading">
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{tab==='gpu'?'GPU reservations':tab==='server'?'Server deployments':tab==='accounts'?'Accounts & memberships':'Administration'}</h1>
+            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight">{tab==='gpu'?'GPU reservations':tab==='server'?'Server deployments':tab==='accounts'?'Platform accounts':'Administration'}</h1>
           </div>
 
         </div>
 
         {tab!=='gpu'&&<div className="mb-8 grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Review queues">
           {([
-            ['gpu', "Upcoming GPU requests", pendingGpuCount, gpuLoading],
             ['server', "Pending deployments", pendingCpuCount, cpuLoading],
             ['accounts', "Account access reviews", unreviewedCount, profilesLoading],
-            ['accounts', "Student ID & affiliation requests", null, false],
           ] as const).filter(([, ,count])=>count!==null||process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1').map(([target, label, count, loading]) => (
             <button key={label} type="button" onClick={() => selectTab(target, count!==null)} className="rounded-2xl border bg-card p-3 sm:p-5 text-left transition-colors hover:border-primary focus-visible:ring-2 focus-visible:ring-primary" aria-pressed={tab===target&&(count===null?!needsReviewOnly:needsReviewOnly)}>
               <span className="block text-sm text-muted-foreground">{label}</span>
@@ -477,7 +473,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
 
 
         {hasList && <div className="surface admin-list-toolbar mb-5 p-4 sm:p-6 space-y-4">
-          {tab!=='gpu'&&<h2 className="font-semibold text-lg">{tab === 'server' ? "Server deployments" : "Accounts & school membership"}</h2>}
+          {tab!=='gpu'&&<h2 className="font-semibold text-lg">{tab === 'server' ? "Server deployments" : "Platform accounts"}</h2>}
           {tab==='gpu'&&<><p className="text-sm text-muted-foreground">Chungbuk Science High School · GPU #1–4 · All approvals and reservation history</p><div className="flex flex-wrap gap-2" role="group" aria-label="Reservation views">{adminGpuViews.map(view=><Button key={view} type="button" variant={gpuView===view?'secondary':'outline'} className="min-h-11 gap-2" aria-pressed={gpuView===view} aria-label={gpuViewLabels[view]} onClick={()=>{setNeedsReviewOnly(false);setStatusFilter(view);setPage(1)}}>{view==='all'?'All':view==='pending'?'Pending':gpuViewLabels[view]}<span className="tabular-nums">{reservations.filter(row=>matchesAdminGpuView(row,view,clockNow)).length}</span></Button>)}</div>{gpuView!=='all'&&<p role="status" className="text-sm">Showing {gpuViewLabels[gpuView]||gpuView}. <Button variant="link" className="min-h-11 px-1" onClick={()=>{setNeedsReviewOnly(false);setStatusFilter('all')}}>Show all reservations</Button></p>}</>}
           <div className="flex flex-wrap items-end gap-3">
             <Input type="search" aria-label="Search current list" placeholder={tab === 'server' ? "Search project name or email" : tab === 'accounts' ? "Search name, school, student ID or email" : "Search name, student ID, GPU, purpose or reservation ID"} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
@@ -503,7 +499,6 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
           {Object.values(rowActions).some(Boolean) && <p role="status" className="text-sm text-primary">Saving changes and refreshing the list…</p>}
         </div>}
 
-        {tab==='accounts'&&process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'&&<div id="admin-school-affiliation-requests" className="surface mb-6 p-4 sm:p-6"><SchoolAffiliationReview platform pendingOnly schoolFilter={schoolFilter==='all'?null:schoolFilter} schoolNames={Object.fromEntries(schoolOptions.map(school=>[school.id,school.name]))} onReviewed={()=>void fetchProfiles()}/></div>}
 
         {/* ── GPU 예약 탭 ── */}
         {tab === 'gpu' && (
@@ -814,7 +809,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         {accountStatusBadge(p)}
                       </div>
                       <div className="flex gap-2 flex-wrap justify-end">
-                        {modernSchoolAccount(p)?<SchoolAccountApproval account={p} schoolFilter={schoolFilter} onUpdated={fetchProfiles}/>:<>{p.is_approved !== true && (
+                        {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">School membership is managed in the authorized school workspace.</p>:<>{p.is_approved !== true && (
                           <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
                             Approve
@@ -872,7 +867,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2 flex-wrap">
-                            {modernSchoolAccount(p)?<SchoolAccountApproval account={p} schoolFilter={schoolFilter} onUpdated={fetchProfiles}/>:<>{p.is_approved !== true && (
+                            {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">School membership is managed in the authorized school workspace.</p>:<>{p.is_approved !== true && (
                               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
 
                                 Approve

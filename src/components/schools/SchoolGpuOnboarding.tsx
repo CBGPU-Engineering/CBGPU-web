@@ -1,7 +1,7 @@
 'use client';
+
 import{useCallback,useEffect,useRef,useState}from'react';
 import{Server,Plus,RefreshCw,Download,Copy,ShieldCheck,Check,Clock3}from'lucide-react';
-import{useAppFrame}from'@/lib/useAppFrame';
 import{useAuth}from'@/lib/useAuth';import{supabase}from'@/lib/supabase';
 import{Button}from'@/components/ui/button';import{Input}from'@/components/ui/input';
 import{Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle}from'@/components/ui/dialog';
@@ -124,7 +124,7 @@ function installCommand(artifact:Artifact,filePath:string,policyPath=''){if(!fil
 const time=(value:string,app=false)=>new Date(value).toLocaleString(app?'ko-KR':'en',{dateStyle:'medium',timeStyle:'short'});
 export default function SchoolGpuOnboarding({schoolId}:{schoolId:string}){const{user}=useAuth();return <GpuWorkspace key={schoolId+':'+user?.id} schoolId={schoolId}/>}
 function GpuWorkspace({schoolId}:{schoolId:string}){
- const app=useAppFrame(false),t=(text:string)=>app?(appCopy[text]||text):text;
+ const app=true,t=(text:string)=>appCopy[text]||text;
  const{user,isLoading}=useAuth(),[nodes,setNodes]=useState<Node[]|null>(null),[capabilities,setCapabilities]=useState<Capabilities|null>(null),[loading,setLoading]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState(''),[adding,setAdding]=useState(false),[name,setName]=useState(''),[supported,setSupported]=useState(false),[enrollment,setEnrollment]=useState<Enrollment|null>(null),[activeNode,setActiveNode]=useState<string|null>(null),[filePath,setFilePath]=useState(''),[notebooks,setNotebooks]=useState(false),[policyPath,setPolicyPath]=useState(''),[downloaded,setDownloaded]=useState(false),[revoking,setRevoking]=useState<Node|null>(null);
  const actor=useRef(user?.id),live=useRef(true),readVersion=useRef(0),operation=useRef(0),enrollmentRef=useRef<Enrollment|null>(null),reading=useRef(false),addTrigger=useRef<HTMLButtonElement>(null),downloadUrls=useRef(new Set<string>());actor.current=user?.id;enrollmentRef.current=enrollment;
  useEffect(()=>{live.current=true;return()=>{live.current=false;readVersion.current++;operation.current++;for(const url of downloadUrls.current)URL.revokeObjectURL(url)}},[]);
