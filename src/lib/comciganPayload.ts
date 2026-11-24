@@ -1,10 +1,11 @@
 import {createDecipheriv,createHash,createHmac,timingSafeEqual} from 'node:crypto';
 
 /** Decode the same authenticated public response as the official browser viewer. */
-export function decodeComciganPayload(body:string,keyHex:string|null):string{
+export function decodeComciganPayload(body:string,keyHex:string|null,format?:string):string{
  if(body.length>8_000_000)throw Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.');
  body=body.replace(/\x00+$/,'');
- if(!/^enc\d+:/.test(body))return body;
+ const numberedFormat=typeof format==='string'&&/^\d{1,9}$/.test(format)&&body.startsWith(format+':');
+ if(!/^enc\d+:/.test(body)&&!numberedFormat)return body;
  if(!keyHex||!/^\w{64}$/.test(keyHex)||!/^[\da-f]+$/i.test(keyHex))throw Error('시간표 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
  const parts=body.split(':');if(parts.length!==4)throw Error('시간표 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
  const encoding=parts[0]==='enc1'?'hex':'base64';
