@@ -3,7 +3,7 @@ import {NextRequest,NextResponse} from 'next/server';
 import {AiFailure,aiIdentity,aiInternal,aiJson,waitAi,aiUserClient} from '@/lib/aiServer';
 import {conversationStream} from '@/lib/aiConversationStream';
 import {agentChatModelId,chatModelIds} from '@/lib/aiModels';
-import {aiStream,takeAiStream} from '@/lib/aiStream';
+import {agentGreeting,aiStream,greetingResponse,takeAiStream} from '@/lib/aiStream';
 import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
 import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
@@ -75,13 +75,18 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
     if(body.model&&!chatModelIds.has(String(body.model)))throw new AiFailure('지원하지 않는 로컬 모델입니다. /v1/models에서 모델 목록을 확인해 주세요.');
     const model=String(body.model||'cbgpu-chat');
     const agentModel=model===agentChatModelId;
+    const includeUsage=!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage;
+    if(agentModel){
+     const greeting=agentGreeting(body);
+     if(greeting)return greetingResponse(model,greeting,!!body.stream,includeUsage);
+    }
     const hasTools=Array.isArray(body.tools)&&body.tools.length>0&&body.tool_choice!=='none';
     const defaultMaxTokens=agentModel&&hasTools?4096:model==='cbgpu-oss'?3072:1024;
     const release=body.stream?takeAiStream(owner):undefined;
     try{
      const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??defaultMaxTokens,model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
      if(release){
-      return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,agentModel?720_000:undefined,agentModel,release);
+      return aiStream(request,owner,job.id,model,includeUsage,agentModel?720_000:undefined,agentModel,release);
      }
      return NextResponse.json(await waitAi(owner,job.id));
     }catch(error){

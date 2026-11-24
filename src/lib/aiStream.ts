@@ -2,6 +2,49 @@ import {NextResponse} from 'next/server';
 import {AiFailure,aiJson} from './aiServer';
 const owners=new Map<string,number>();let total=0;
 export function takeAiStream(owner:string){if((owners.get(owner)||0)>=4||total>=64)throw new AiFailure('실시간 연결이 많아요. 사용하지 않는 AI 창을 닫아 주세요.',429);owners.set(owner,(owners.get(owner)||0)+1);total++;let released=false;return()=>{if(released)return;released=true;total--;const n=(owners.get(owner)||1)-1;if(n)owners.set(owner,n);else owners.delete(owner)}}
+/**
+ * A greeting can be answered without reserving a GPU. Any task, tool history,
+ * context-dependent reply, or explicit tool selection uses normal inference.
+ */
+export function agentGreeting(body:Record<string,unknown>):string|null{
+ const choice=body.tool_choice;
+ if((choice!==undefined&&choice!=='auto'&&choice!=='none')||body.response_format!==undefined)return null;
+ const limit=body.max_tokens??body.max_completion_tokens;
+ if(limit!==undefined&&(!Number.isInteger(limit)||Number(limit)<32||Number(limit)>4096))return null;
+ if(!Array.isArray(body.messages)||body.messages.length>256)return null;
+ const english=/^(?:(?:hi|hello|hey)\s*)[.!]*$/i;
+ const korean=/^(?:안녕(?:하세요|하십니까)?\s*)[.!]*$/;
+ let reply:null|string=null;
+ for(const message of body.messages){
+  const content:unknown=message?.content;
+  if(typeof content!=='string'||message.tool_calls!==undefined||message.tool_call_id!==undefined)return null;
+  if(message.role==='system'||message.role==='developer'||message.role==='assistant')continue;
+  if(message.role!=='user')return null;
+  const lines=content.trim().split(/\r?\n/).filter(line=>line.trim());
+  if(!lines.length)return null;
+  reply=lines.every(line=>korean.test(line.trim()))?'안녕하세요! 무엇을 도와드릴까요?'
+   :lines.every(line=>english.test(line.trim()))?'Hello! How can I help?':null;
+  if(!reply)return null;
+ }
+ return body.messages.at(-1)?.role==='user'?reply:null;
+}
+
+export function greetingResponse(model:string,content:string,stream:boolean,includeUsage:boolean){
+ const base={id:'chatcmpl-'+crypto.randomUUID(),created:Math.floor(Date.now()/1000),model};
+ // This response is served directly without consuming inference tokens.
+ const usage={prompt_tokens:0,completion_tokens:0,total_tokens:0};
+ const headers={'Cache-Control':'private, no-store'};
+ if(!stream)return NextResponse.json({...base,object:'chat.completion',choices:[{index:0,message:{role:'assistant',content},finish_reason:'stop'}],usage},{headers});
+ const chunk={...base,object:'chat.completion.chunk'};
+ const chunks=[
+  {...chunk,choices:[{index:0,delta:{role:'assistant',content},finish_reason:null}]},
+  {...chunk,choices:[{index:0,delta:{},finish_reason:'stop'}]},
+ ];
+ const frames=chunks.map(value=>'data: '+JSON.stringify(value)+'\n\n');
+ if(includeUsage)frames.push('data: '+JSON.stringify({...chunk,choices:[],usage})+'\n\n');
+ return new NextResponse(frames.join('')+'data: [DONE]\n\n',{headers:{...headers,'Content-Type':'text/event-stream','X-Accel-Buffering':'no'}});
+}
+
 /** Forward real inference deltas while the private GPU job is running.
  * Tool calls are emitted only after validation; keep-alives are never answer text.
  */
