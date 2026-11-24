@@ -14,3 +14,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## CBGPU 2.0 preview
+
+For changes under `preview/`, read [the preview design system](docs/redesign/DESIGN.md).
+Project skills under `.agents/skills/` cover art direction, the component system,
+motion and browser review. Use the preview's own layout and tokens and keep the
+existing app's render tree and caching independent. Track covered routes in
+[the feature parity matrix](docs/redesign/feature-parity.csv).

@@ -1,0 +1,115 @@
+original_route,preview_route,domain,status,permission_or_data_note
+/admin/accounts,/new/admin/accounts,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/ad-revenue,/new/admin/ad-revenue,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/careers,/new/admin/careers,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/central-cpu,/new/admin/central-cpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/feature-requests,/new/admin/feature-requests,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/gpu,/new/admin/gpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/m,/new/admin/m,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/manufacture,/new/admin/manufacture,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/manufacturing/laser/[id],/new/admin/manufacturing/laser/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/manufacturing,/new/admin/manufacturing,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/manufacturing/print/[id],/new/admin/manufacturing/print/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/materials,/new/admin/materials,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/message-reports,/new/admin/message-reports,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin,/new/admin,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/polls,/new/admin/polls,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/school-applications,/new/admin/school-applications,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/schools/[id]/central-cpu,/new/admin/schools/[id]/central-cpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/schools/[id]/life-sources,/new/admin/schools/[id]/life-sources,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/schools/[id]/manage,/new/admin/schools/[id]/manage,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/schools/[id],/new/admin/schools/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/schools,/new/admin/schools,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/server,/new/admin/server,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/study,/new/admin/study,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/timetable,/new/admin/timetable,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/admin/wakeup,/new/admin/wakeup,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
+/ai/chat,/new/ai/chat,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/ai/cli,/new/ai/cli,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/ai,/new/ai,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/arxiv/[id],/new/arxiv/[id],arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/arxiv,/new/arxiv,arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/arxiv/submit,/new/arxiv/submit,arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/auth/callback,/new/auth/callback,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/auth/forgot-password,/new/auth/forgot-password,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/auth/login,/new/auth/login,auth,Preview screen implemented,Uses existing Supabase client. Failure handling tested with synthetic data. Production session transfer pending.
+/auth/reset-password,/new/auth/reset-password,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/auth/signup,/new/auth/signup,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/auth/transfer,/new/auth/transfer,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/clubs,/new/clubs,clubs,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/community,/new/community,community,Public feed implemented; authenticated actions pending,Existing public listing read. School rooms and DMs remain in existing UI.
+/compute,/new/compute,compute,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contact,/new/contact,contact,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contests/[id]/manage,/new/contests/[id]/manage,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contests/[id],/new/contests/[id],contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contests/api,/new/contests/api,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contests/new,/new/contests/new,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/contests,/new/contests,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/dashboard,/new/dashboard,dashboard,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/dashboard/ssh-guide,/new/dashboard/ssh-guide,dashboard,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/demo,/new/demo,demo,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/deploy/[id],/new/deploy/[id],deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/deploy/new,/new/deploy/new,deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/deploy,/new/deploy,deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/docs/[slug],/new/docs/[slug],docs,Document search or reading implemented,"Existing guide corpus, constrained links and school application context. Preview carries no live ads."
+/docs,/new/docs,docs,Document search or reading implemented,"Existing guide corpus, constrained links and school application context. Preview carries no live ads."
+/download,/new/download,download,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/explore/contests/[id],/new/contests/[id],explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/explore/contests,/new/contests,explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/explore/schools/[id],/new/schools/[id],explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/explore/schools,/new/schools,explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/explore/services/[service],/new/explore/services/[service],explore,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/feed,/new/feed,feed,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/games,/new/games,games,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/latex,/new/latex,latex,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manage/manufacturing/filament,/new/manage/manufacturing/filament,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing/laser/[id],/new/manage/manufacturing/laser/[id],manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing/materials,/new/manage/manufacturing/materials,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing,/new/manage/manufacturing,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing/print/[id],/new/manage/manufacturing/print/[id],manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing/queues,/new/manage/manufacturing/queues,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manage/manufacturing/requests,/new/manage/manufacturing/requests,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
+/manufacturing/laser/[id],/new/manufacturing/laser/[id],manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing/laser/new,/new/manufacturing/laser/new,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing/laser,/new/manufacturing/laser,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing,/new/manufacturing,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing/print/[id],/new/manufacturing/print/[id],manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing/print/new,/new/manufacturing/print/new,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/manufacturing/print,/new/manufacturing/print,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/match,/new/match,match,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/materials/[id],/new/materials/[id],materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/materials/new,/new/materials/new,materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/materials,/new/materials,materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/meal,/new/meal,meal,School-scoped date navigation implemented; native alarms remain in original,"Existing auth and membership providers, school visibility and meal client."
+/messages,/new/messages,messages,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/notebooks/[jobId]/lab,/new/notebooks/[jobId]/lab,notebooks,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/notes,/new/notes,notes,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/,/new/,home,Preview screen implemented,presentation route mapping proposed; implementation and runtime parity unverified
+/polls,/new/polls,polls,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/privacy,/new/privacy,privacy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/profile,/new/profile,profile,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/projects/[id],/new/projects/[id],projects,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/projects,/new/projects,projects,Preview screen implemented,Existing public serialization and opaque contest asset paths.
+/publications,/new/publications,publications,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schedule,/new/schedule,schedule,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/school-admin,/new/school-admin,school-admin,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/[id]/access,/new/schools/[id]/access,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/[id]/admin,/new/schools/[id]/admin,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/[id]/affiliation,/new/schools/[id]/affiliation,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/[id]/features,/new/schools/[id]/features,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/[id]/verification,/new/schools/[id]/verification,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/applications/[id],/new/schools/applications/[id],schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools/new,/new/schools/new,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/schools,/new/schools,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/server/[id]/open,/new/server/[id]/open,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/server/[id],/new/server/[id],server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/server/new,/new/server/new,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/server,/new/server,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/services,/new/services,services,Preview screen implemented,presentation route mapping proposed; implementation and runtime parity unverified
+/study/contribute,/new/study/contribute,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/study/link,/new/study/link,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/study,/new/study,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/timetable,/new/timetable,timetable,School-scoped viewing implemented; manual administration and AI preparation remain in original,"Existing tenant authority, timetable endpoint and provider choice. New weekday and week presentations."
+/tools,/new/tools,tools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/wakeup,/new/wakeup,wakeup,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/workspace,/new/workspace,workspace,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
