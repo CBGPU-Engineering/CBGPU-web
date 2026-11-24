@@ -16,10 +16,11 @@ export function agentGreeting(body:Record<string,unknown>):string|null{
  const korean=/^(?:안녕(?:하세요|하십니까)?\s*)[.!]*$/;
  let reply:null|string=null;
  for(const message of body.messages){
-  if(!message||typeof message.content!=='string'||message.tool_calls!==undefined||message.tool_call_id!==undefined)return null;
+  const content:unknown=message?.content;
+  if(typeof content!=='string'||message.tool_calls!==undefined||message.tool_call_id!==undefined)return null;
   if(message.role==='system'||message.role==='developer'||message.role==='assistant')continue;
   if(message.role!=='user')return null;
-  const lines=message.content.trim().split(/\r?\n/).filter(line=>line.trim());
+  const lines=content.trim().split(/\r?\n/).filter(line=>line.trim());
   if(!lines.length)return null;
   reply=lines.every(line=>korean.test(line.trim()))?'안녕하세요! 무엇을 도와드릴까요?'
    :lines.every(line=>english.test(line.trim()))?'Hello! How can I help?':null;
