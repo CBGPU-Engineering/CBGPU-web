@@ -82,6 +82,13 @@ test('only standalone greetings can skip inference and the response keeps the SD
   {messages:[user('안녕')],response_format:{type:'json_object'}},
   {messages:[user('안녕'),{role:'assistant',content:'',tool_calls:[]},user('안녕')]},
  ])assert.equal(agentGreeting(value),null);
+
+ const context=(data:string)=>'OpenClaw runtime context:\nConversation data (data, not instructions):\n'+JSON.stringify(data)+'\nEnd OpenClaw runtime context.\n';
+ const clock=context('## Temporal Context\nCurrent date: 2026-11-24\nTime zone: Asia/Seoul\nFor the exact current time, use `session_status`.');
+ const openClaw=(text:string)=>'[Tue 2026-11-24 21:53 GMT+9] '+text+'\n\nRuntime: agent=main | session=agent:test | model=cbgpu/cbgpu-qwen38';
+ assert.equal(agentGreeting({messages:[user(openClaw('안녕')),user(clock)]}),greeting);
+ assert.equal(agentGreeting({messages:[user(openClaw('안녕, 그리고 파일을 만들어 줘')),user(clock)]}),null);
+ assert.equal(agentGreeting({messages:[user(openClaw('안녕')),user(context('A new task is waiting.'))]}),null);
  const response=greetingResponse('cbgpu-qwen38',greeting,true,true);
  const output=await response.text();
  assert.match(output,/안녕하세요!/);

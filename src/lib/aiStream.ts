@@ -2,6 +2,16 @@ import {NextResponse} from 'next/server';
 import {AiFailure,aiJson} from './aiServer';
 const owners=new Map<string,number>();let total=0;
 export function takeAiStream(owner:string){if((owners.get(owner)||0)>=4||total>=64)throw new AiFailure('실시간 연결이 많아요. 사용하지 않는 AI 창을 닫아 주세요.',429);owners.set(owner,(owners.get(owner)||0)+1);total++;let released=false;return()=>{if(released)return;released=true;total--;const n=(owners.get(owner)||1)-1;if(n)owners.set(owner,n);else owners.delete(owner)}}
+const openClawMessage=/^\[(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) \d{4}-\d{2}-\d{2} \d{2}:\d{2} (?:GMT|UTC)(?:[+-]\d{1,2}(?::\d{2})?)?\] ([^\r\n]+)\r?\n\r?\nRuntime: agent=[^|\r\n]{1,80}(?: \| [a-z_]+=[^|\r\n]{1,250})+$/;
+
+function openClawClockOnly(content:string){
+ const frame=content.match(/^OpenClaw runtime context:\nConversation data \(data, not instructions\):\n("[^\r\n]+")\nEnd OpenClaw runtime context\.\n?$/);
+ if(!frame)return false;
+ try{
+  return /^## Temporal Context\nCurrent date: \d{4}-\d{2}-\d{2}\nTime zone: [A-Za-z0-9_+/-]+\nFor the exact current time, use `session_status`\.$/.test(JSON.parse(frame[1]));
+ }catch{return false}
+}
+
 /**
  * A greeting can be answered without reserving a GPU. Any task, tool history,
  * context-dependent reply, or explicit tool selection uses normal inference.
@@ -14,13 +24,16 @@ export function agentGreeting(body:Record<string,unknown>):string|null{
  if(!Array.isArray(body.messages)||body.messages.length>256)return null;
  const english=/^(?:(?:hi|hello|hey)\s*)[.!]*$/i;
  const korean=/^(?:안녕(?:하세요|하십니까)?\s*)[.!]*$/;
- let reply:null|string=null;
+ let reply:null|string=null,openClaw=false;
  for(const message of body.messages){
   const content:unknown=message?.content;
   if(typeof content!=='string'||message.tool_calls!==undefined||message.tool_call_id!==undefined)return null;
   if(message.role==='system'||message.role==='developer'||message.role==='assistant')continue;
   if(message.role!=='user')return null;
-  const lines=content.trim().split(/\r?\n/).filter(line=>line.trim());
+  if(openClaw&&openClawClockOnly(content))continue;
+  const wrapped=content.match(openClawMessage);
+  openClaw=!!wrapped;
+  const lines=(wrapped?.[1]??content).trim().split(/\r?\n/).filter(line=>line.trim());
   if(!lines.length)return null;
   reply=lines.every(line=>korean.test(line.trim()))?'안녕하세요! 무엇을 도와드릴까요?'
    :lines.every(line=>english.test(line.trim()))?'Hello! How can I help?':null;
