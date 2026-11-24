@@ -7,7 +7,7 @@ export default function DeployMcpSetup(){
  const [copied,setCopied]=useState(''),[error,setError]=useState('');
  async function copy(value:string,label:string){try{await navigator.clipboard.writeText(value);setCopied(label);setError('')}catch{setError('자동 복사가 안 되면 아래 텍스트를 직접 선택해서 복사해 주세요.')}}
  return <section className="cb-mcp-setup" aria-label="배포 MCP 연결">
-  <div className="cb-mcp-heading"><span className="cb-mcp-icon"><Terminal size={20}/></span><div><span className="cb-mcp-eyebrow">코딩 에이전트로 배포하기</span><h2>Codex · Claude Code에서 바로 배포</h2><p>아래 프롬프트를 코딩 에이전트에 보내 설치와 연결을 요청해 보세요.</p></div></div>
+  <div className="cb-mcp-heading"><span className="cb-mcp-icon"><Terminal size={20}/></span><div><span className="cb-mcp-eyebrow">코딩 에이전트로 배포하기</span><h2>Codex · Claude Code에서 배포하고 명령 실행</h2><p>아래 프롬프트를 에이전트에 보내 연결하세요. 내가 소유한 Docker Compose 서비스에서 명령을 실행할 수 있어요.</p></div></div>
   <div className="cb-mcp-prompt"><div><strong>1. 에이전트에게 설치 맡기기</strong><button type="button" onClick={()=>void copy(deploymentMcpPrompt,'prompt')}>{copied==='prompt'?<Check size={15}/>:<Copy size={15}/>}프롬프트 {copied==='prompt'?'복사됨':'복사'}</button></div><details><summary>설치 프롬프트 보기</summary><pre tabIndex={0}>{deploymentMcpPrompt}</pre></details></div>
   <details className="cb-mcp-manual"><summary>2. 직접 연결하기 · 로그인과 MCP 명령어</summary><p>Node.js 22 이상이 필요해요. 사용하는 컴퓨터의 터미널에서 로그인한 뒤 에이전트에 등록해 주세요.</p>{[
    ['로그인',run+' login'],['Codex','codex mcp add cbgpu-deploy -- '+run],['Claude Code','claude mcp add --scope user cbgpu-deploy -- '+run],
