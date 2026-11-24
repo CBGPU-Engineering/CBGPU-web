@@ -1,0 +1,310 @@
+.pv-collaboration-action {
+  width: fit-content;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.pv-page-header > .pv-collaboration-action {
+  margin-block-start: 16px;
+}
+
+.pv-collaboration-gate {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pv-collaboration-gate > header {
+  display: grid;
+  gap: 12px;
+  max-width: 52ch;
+  padding-block: 12px 0;
+}
+
+.pv-collaboration-gate :is(header p, [role="status"]),
+.pv-collaboration-heading p {
+  color: var(--pv-secondary);
+}
+
+.pv-collaboration-workspace {
+  --cb-card-radius: var(--pv-panel);
+  --cb-control-radius: var(--pv-control);
+  --cb-card-pad: clamp(16px, 3vw, 26px);
+  --cb-control-height: var(--pv-tap);
+  --cb-title-weight: 720;
+  --cb-panel-padding: clamp(14px, 3vw, 24px);
+  --cb-section-gap: 24px;
+  --cb-page-gutter: 0px;
+  --ease-settle: var(--pv-ease);
+  min-inline-size: 0;
+}
+
+.pv-collaboration-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-block-end: 24px;
+}
+
+.pv-collaboration-heading h1 {
+  margin-block: 4px 10px;
+}
+
+.pv-collaboration-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-end: 24px;
+}
+
+.pv-collaboration-toolbar .pv-search {
+  margin-block-start: 0;
+  flex: 1 1 215px;
+  max-width: 315px;
+}
+
+.pv-collaboration-toolbar .pv-search > input { inline-size: 100%; }
+
+.pv-collaboration-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--pv-control);
+  background: var(--pv-raised);
+}
+
+.pv-collaboration-filters button {
+  isolation: isolate;
+  position: relative;
+  padding: 8px 12px;
+  min-height: var(--pv-tap);
+  border: 0;
+  border-radius: calc(var(--pv-control) - 4px);
+  background: transparent;
+  color: var(--pv-secondary);
+  font-weight: 620;
+  transition: background-color var(--pv-press) var(--pv-ease), color var(--pv-press) var(--pv-ease);
+}
+
+.pv-collaboration-filters button:is(:hover, [aria-pressed="true"]) {
+  background: var(--pv-surface);
+  color: var(--pv-brand);
+}
+
+.pv-collaboration-filter-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--pv-surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--pv-ink) 12%, transparent);
+}
+
+.pv-collaboration-list {
+  overflow: clip;
+  border: 1px solid var(--pv-line);
+  border-radius: var(--pv-panel);
+  background: var(--pv-surface);
+}
+
+.pv-collaboration-list > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+}
+
+.pv-collaboration-list li + li { border-block-start: 1px solid var(--pv-line); }
+.pv-collaboration-list :is(h2, h3) { font-size: 1.125rem; overflow-wrap: anywhere; }
+.pv-collaboration-list :is(h2,h3) a { display: inline-flex; align-items: center; min-height: var(--pv-tap); }
+.pv-collaboration-list :is(h2,h3) a:hover { color: var(--pv-brand); }
+
+.pv-collaboration-meta,
+.pv-collaboration-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px 10px;
+  flex-wrap: wrap;
+  color: var(--pv-secondary);
+  font-size: .875rem;
+}
+
+.pv-collaboration-row-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--pv-tap);
+  padding-inline: 9px;
+  border-radius: 8px;
+  color: var(--pv-brand);
+  font-weight: 650;
+}
+
+.pv-collaboration-row-actions a:hover { background: var(--pv-brand-soft); }
+.pv-collaboration-section + .pv-collaboration-section { margin-block-start: 28px; }
+.pv-collaboration-group-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 14px;
+  margin-block-end: 12px;
+}
+
+.pv-collaboration-group-heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--pv-tap);
+  color: var(--pv-brand);
+  font-size: .875rem;
+  font-weight: 650;
+}
+.pv-notice > .pv-primary { margin-block-start: 12px; }
+
+.pv-collaboration-workspace .contest-page {
+  --contest-green: var(--pv-brand);
+  --contest-soft: var(--pv-brand-soft);
+  --contest-ink: var(--pv-ink);
+  --primary: var(--pv-brand);
+  --primary-hover: color-mix(in srgb, var(--pv-brand) 86%, var(--pv-ink));
+  --primary-foreground: var(--pv-on-brand);
+  --ring: var(--pv-focus);
+}
+
+.pv-collaboration-workspace .contest-detail-hero,
+.pv-collaboration-workspace .contest-management-header {
+  background: var(--pv-surface);
+  border-color: var(--pv-line);
+  border-radius: var(--pv-panel);
+}
+
+.pv-collaboration-workspace .contest-management-header {
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid var(--pv-line);
+  gap: 14px;
+}
+
+.pv-collaboration-workspace .contest-management-content > div:not([hidden]) + div:not([hidden]),
+.pv-collaboration-workspace .contest-management-content > div:not([hidden]) > .contest-panel + .contest-panel {
+  margin-block-start: 14px;
+}
+
+.pv-collaboration-workspace .cb-success-feedback {
+  background: color-mix(in srgb, var(--pv-ok) 8%, var(--pv-surface));
+  border: 1px solid color-mix(in srgb, var(--pv-ok) 24%, var(--pv-line));
+  border-radius: var(--pv-panel);
+}
+
+.pv-collaboration-workspace .contest-artwork-original { background: var(--pv-ambient); }
+.pv-collaboration-workspace .contest-management-layout { min-width: 0; }
+.pv-collaboration-workspace a[data-slot="button"].bg-primary { color: var(--pv-on-brand); }
+.pv-collaboration-workspace .contest-countdown .opacity-65 { opacity: 1; color: var(--pv-secondary); }
+.pv-collaboration-workspace .contest-page [role="status"] > .text-emerald-600 { color: var(--pv-ok); }
+.pv-collaboration-workspace .contest-management-nav > button { min-height: var(--pv-tap); }
+.pv-collaboration-workspace .cb-public-editor,
+.pv-collaboration-workspace .cb-community { padding: 0; }
+.pv-collaboration-community-back { margin-block-end: 12px; }
+.pv-collaboration-workspace .cb-public-editor { max-width: none; }
+.pv-collaboration-workspace .cb-public-page-heading { margin-block-end: 20px; }
+.pv-collaboration-workspace .cb-project-team { margin-block-start: 12px; }
+.pv-collaboration-workspace .cb-team-member > button {
+  min-height: var(--pv-tap);
+  min-width: var(--pv-tap);
+}
+.pv-collaboration-workspace :is(fieldset, form, textarea, input, .contest-field-card) { min-inline-size: 0; }
+
+.pv-collaboration-workspace :is([data-slot="button"], .cb-community-tabs button) {
+  min-height: var(--pv-tap);
+}
+
+@media (max-width: 1023px) {
+  .pv-collaboration-workspace .contest-management-nav {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 6px;
+  }
+  .pv-collaboration-workspace .contest-management-nav > button { padding-inline: 10px; }
+}
+
+@media (max-width: 680px) {
+  .pv-collaboration-list > li {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+  .pv-collaboration-list .pv-row-icon { margin-block-start: 3px; }
+  .pv-collaboration-row-actions { grid-column: 2; }
+  .pv-collaboration-row-actions a { padding-inline: 3px 9px; }
+  .pv-collaboration-toolbar { align-items: stretch; }
+  .pv-collaboration-toolbar .pv-search { max-width: 100%; }
+  .pv-collaboration-workspace .cb-community-header { margin-block-end: 14px; }
+  .pv-list-contests .pv-collaboration-contest-cover { width: clamp(72px, 23%, 110px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pv-collaboration-filters button { transition: none; }
+}
+
+.pv-collaboration-contest-cover {
+  width: clamp(92px, 20%, 136px);
+  flex: none;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--pv-raised);
+}
+
+.pv-collaboration-contest-cover > img,
+.pv-collaboration-contest-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pv-collaboration-contest-fallback {
+  display: grid;
+  place-items: center;
+  color: var(--pv-brand);
+  background: var(--pv-ambient);
+}
+
+.pv-collaboration-contest-fallback span {
+  display: grid;
+  place-items: center;
+  width: clamp(48px, 45%, 72px);
+  aspect-ratio: 1;
+  border-radius: 35%;
+  background: var(--pv-glass);
+  border: 1px solid var(--pv-line);
+  box-shadow: var(--pv-shadow);
+}
+
+.pv-detail > .pv-collaboration-contest-cover {
+  width: min(100%, 680px);
+  max-height: 360px;
+  border-radius: var(--pv-panel);
+}
+
+.pv-collaboration-contest-flight-root {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.pv-collaboration-contest-flight {
+  position: absolute;
+  overflow: hidden;
+}
+
+.pv-collaboration-contest-flight > .pv-collaboration-contest-cover {
+  width: 100%;
+  height: 100%;
+}

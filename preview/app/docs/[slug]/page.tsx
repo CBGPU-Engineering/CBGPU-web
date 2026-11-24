@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, ArrowUpRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { guides, type GuideSection } from '@/components/publications/docs';
 import { schoolApplicationHref, schoolIntegrationId } from '@/lib/schoolIntegrationLink';
-import { previewSchoolPaths } from '../../../components/navigation';
+import { previewServicePaths } from '../../../components/navigation';
 
 type GuideLink = NonNullable<GuideSection['links']>[number];
 
@@ -16,7 +16,7 @@ function DocumentLink({ link }: { link: GuideLink }) {
   }
   const local = url.hostname === 'cbgpu.com';
   const href = url.pathname + url.search + url.hash;
-  if (local && (previewSchoolPaths.includes(url.pathname) || ['/services', '/schools', '/projects', '/docs'].includes(url.pathname))) {
+  if (local && (previewServicePaths.includes(url.pathname) || ['/services', '/schools', '/projects', '/docs'].includes(url.pathname))) {
     return <Link href={href}>{link.label}</Link>;
   }
   return <a href={local ? href : url.href} target={link.newTab ? '_blank' : undefined} rel={link.newTab ? 'noopener noreferrer' : undefined}>

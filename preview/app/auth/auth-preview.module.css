@@ -1,0 +1,15 @@
+.field { display: grid; gap: 5px; margin-block-end: 6px; min-width: 0; }
+.field small, .note, .sent p { color: var(--pv-secondary); }
+.paths { min-width: 0; padding: 0; margin: 0 0 12px; border: 0; display: grid; gap: 7px; }
+.paths legend { padding: 0; margin-bottom: 7px; font-weight: 670; }
+.paths label { display: grid; grid-template-columns: 18px minmax(0, 1fr); place-items: start; gap: 10px; align-items: center; min-height: var(--pv-tap); padding: 9px 11px; border: 1px solid var(--pv-line); border-radius: var(--pv-control); cursor: pointer; }
+.paths label:has(input:checked) { border-color: var(--pv-focus); background: var(--pv-brand-soft); }
+.paths input[type='radio'] { width: 16px; height: 16px; min-height: 16px; align-self: center; margin: 0; padding: 0; accent-color: var(--pv-brand); }
+.options { min-width: 0; padding: 0; border: 0; display: grid; gap: 13px; margin: 0 0 10px; }
+.options :global(.cb-school-select-trigger) { display: flex; gap: 8px; min-height: var(--pv-tap); width: 100%; }
+.note { font-size: .875rem; }
+.sent { display: flex; align-items: flex-start; gap: 12px; padding: 14px; margin-block: 19px; color: var(--pv-ok); background: var(--pv-raised); border: 1px solid var(--pv-line); border-radius: var(--pv-control); overflow-wrap: anywhere; }
+.sent p { margin-top: 4px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.secondary { display: inline-flex; align-items: center; min-height: var(--pv-tap); gap: 7px; border: 1px solid var(--pv-line); border-radius: var(--pv-control); background: var(--pv-surface); color: var(--pv-brand); padding: 7px 12px; font-weight: 650; }
+.secondary:hover { background: var(--pv-brand-soft); }

@@ -1,115 +1,119 @@
 original_route,preview_route,domain,status,permission_or_data_note
-/admin/accounts,/new/admin/accounts,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/ad-revenue,/new/admin/ad-revenue,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/careers,/new/admin/careers,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/central-cpu,/new/admin/central-cpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/feature-requests,/new/admin/feature-requests,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/gpu,/new/admin/gpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/m,/new/admin/m,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/manufacture,/new/admin/manufacture,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/manufacturing/laser/[id],/new/admin/manufacturing/laser/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/manufacturing,/new/admin/manufacturing,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/manufacturing/print/[id],/new/admin/manufacturing/print/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/materials,/new/admin/materials,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/message-reports,/new/admin/message-reports,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin,/new/admin,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/polls,/new/admin/polls,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/school-applications,/new/admin/school-applications,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/schools/[id]/central-cpu,/new/admin/schools/[id]/central-cpu,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/schools/[id]/life-sources,/new/admin/schools/[id]/life-sources,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/schools/[id]/manage,/new/admin/schools/[id]/manage,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/schools/[id],/new/admin/schools/[id],admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/schools,/new/admin/schools,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/server,/new/admin/server,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/study,/new/admin/study,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/timetable,/new/admin/timetable,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/admin/wakeup,/new/admin/wakeup,admin,Pending host-specific preview,requires host-preserving adapter; main host admin API requests are blocked
-/ai/chat,/new/ai/chat,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/ai/cli,/new/ai/cli,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/ai,/new/ai,ai,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/arxiv/[id],/new/arxiv/[id],arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/arxiv,/new/arxiv,arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/arxiv/submit,/new/arxiv/submit,arxiv,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/auth/callback,/new/auth/callback,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/auth/forgot-password,/new/auth/forgot-password,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/auth/login,/new/auth/login,auth,Preview screen implemented,Uses existing Supabase client. Failure handling tested with synthetic data. Production session transfer pending.
-/auth/reset-password,/new/auth/reset-password,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/auth/signup,/new/auth/signup,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/auth/transfer,/new/auth/transfer,auth,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/clubs,/new/clubs,clubs,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/community,/new/community,community,Public feed implemented; authenticated actions pending,Existing public listing read. School rooms and DMs remain in existing UI.
-/compute,/new/compute,compute,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contact,/new/contact,contact,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contests/[id]/manage,/new/contests/[id]/manage,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contests/[id],/new/contests/[id],contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contests/api,/new/contests/api,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contests/new,/new/contests/new,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/contests,/new/contests,contests,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/dashboard,/new/dashboard,dashboard,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/dashboard/ssh-guide,/new/dashboard/ssh-guide,dashboard,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/demo,/new/demo,demo,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/deploy/[id],/new/deploy/[id],deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/deploy/new,/new/deploy/new,deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/deploy,/new/deploy,deploy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/docs/[slug],/new/docs/[slug],docs,Document search or reading implemented,"Existing guide corpus, constrained links and school application context. Preview carries no live ads."
-/docs,/new/docs,docs,Document search or reading implemented,"Existing guide corpus, constrained links and school application context. Preview carries no live ads."
-/download,/new/download,download,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/explore/contests/[id],/new/contests/[id],explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/explore/contests,/new/contests,explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/explore/schools/[id],/new/schools/[id],explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/explore/schools,/new/schools,explore,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/explore/services/[service],/new/explore/services/[service],explore,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/feed,/new/feed,feed,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/games,/new/games,games,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/latex,/new/latex,latex,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manage/manufacturing/filament,/new/manage/manufacturing/filament,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing/laser/[id],/new/manage/manufacturing/laser/[id],manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing/materials,/new/manage/manufacturing/materials,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing,/new/manage/manufacturing,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing/print/[id],/new/manage/manufacturing/print/[id],manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing/queues,/new/manage/manufacturing/queues,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manage/manufacturing/requests,/new/manage/manufacturing/requests,manage,Pending host-specific preview,requires equipment host route admission or approved external handoff; do not broaden policy
-/manufacturing/laser/[id],/new/manufacturing/laser/[id],manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing/laser/new,/new/manufacturing/laser/new,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing/laser,/new/manufacturing/laser,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing,/new/manufacturing,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing/print/[id],/new/manufacturing/print/[id],manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing/print/new,/new/manufacturing/print/new,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/manufacturing/print,/new/manufacturing/print,manufacturing,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/match,/new/match,match,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/materials/[id],/new/materials/[id],materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/materials/new,/new/materials/new,materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/materials,/new/materials,materials,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/meal,/new/meal,meal,School-scoped date navigation implemented; native alarms remain in original,"Existing auth and membership providers, school visibility and meal client."
-/messages,/new/messages,messages,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/notebooks/[jobId]/lab,/new/notebooks/[jobId]/lab,notebooks,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/notes,/new/notes,notes,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/,/new/,home,Preview screen implemented,presentation route mapping proposed; implementation and runtime parity unverified
-/polls,/new/polls,polls,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/privacy,/new/privacy,privacy,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/profile,/new/profile,profile,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/projects/[id],/new/projects/[id],projects,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/projects,/new/projects,projects,Preview screen implemented,Existing public serialization and opaque contest asset paths.
-/publications,/new/publications,publications,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schedule,/new/schedule,schedule,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/school-admin,/new/school-admin,school-admin,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/[id]/access,/new/schools/[id]/access,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/[id]/admin,/new/schools/[id]/admin,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/[id]/affiliation,/new/schools/[id]/affiliation,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/[id]/features,/new/schools/[id]/features,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/[id]/verification,/new/schools/[id]/verification,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/applications/[id],/new/schools/applications/[id],schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools/new,/new/schools/new,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/schools,/new/schools,schools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/server/[id]/open,/new/server/[id]/open,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/server/[id],/new/server/[id],server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/server/new,/new/server/new,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/server,/new/server,server,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/services,/new/services,services,Preview screen implemented,presentation route mapping proposed; implementation and runtime parity unverified
-/study/contribute,/new/study/contribute,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/study/link,/new/study/link,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/study,/new/study,study,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/timetable,/new/timetable,timetable,School-scoped viewing implemented; manual administration and AI preparation remain in original,"Existing tenant authority, timetable endpoint and provider choice. New weekday and week presentations."
-/tools,/new/tools,tools,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/wakeup,/new/wakeup,wakeup,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
-/workspace,/new/workspace,workspace,Pending design and functional parity,presentation route mapping proposed; implementation and runtime parity unverified
+/admin/accounts,https://admin.cbgpu.com/new/admin/accounts,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/ad-revenue,https://admin.cbgpu.com/new/admin/ad-revenue,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/careers,https://admin.cbgpu.com/new/admin/careers,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/central-cpu,https://admin.cbgpu.com/new/admin/central-cpu,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/feature-requests,https://admin.cbgpu.com/new/admin/feature-requests,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/gpu,https://admin.cbgpu.com/new/admin/gpu,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/m,https://admin.cbgpu.com/new/admin/m,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/manufacture,https://admin.cbgpu.com/new/admin/manufacture,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/manufacturing/laser/[id],https://admin.cbgpu.com/new/admin/manufacturing/laser/[id],admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/manufacturing,https://admin.cbgpu.com/new/admin/manufacturing,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/manufacturing/print/[id],https://admin.cbgpu.com/new/admin/manufacturing/print/[id],admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/materials,https://admin.cbgpu.com/new/admin/materials,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/message-reports,https://admin.cbgpu.com/new/admin/message-reports,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin,https://admin.cbgpu.com/new/admin,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/polls,https://admin.cbgpu.com/new/admin/polls,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/school-applications,https://admin.cbgpu.com/new/admin/school-applications,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/schools/[id]/central-cpu,https://admin.cbgpu.com/new/admin/schools/[id]/central-cpu,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/schools/[id]/life-sources,https://admin.cbgpu.com/new/admin/schools/[id]/life-sources,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/schools/[id]/manage,https://admin.cbgpu.com/new/admin/schools/[id]/manage,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/schools/[id],https://admin.cbgpu.com/new/admin/schools/[id],admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/schools,https://admin.cbgpu.com/new/admin/schools,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/server,https://admin.cbgpu.com/new/admin/server,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/study,https://admin.cbgpu.com/new/admin/study,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/timetable,https://admin.cbgpu.com/new/admin/timetable,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/admin/wakeup,https://admin.cbgpu.com/new/admin/wakeup,admin,Pending separate host,A preview must run on the platform administration host and preserve its API permissions.
+/ai/chat,/new/ai,ai,Adapted feature UI,The original chat alias already resolves to the shared AI tool. The preview uses the same workspace at its canonical path.
+/ai/cli,/new/ai?tool=cli,ai,Adapted feature UI,The original CLI alias already selects the shared AI tool. The preview exposes the same CLI entry mode.
+/ai,/new/ai,ai,Adapted feature UI,"Existing AI chat, model picker, streaming, attachments, settings and tools use the preview shell. No hosted inference fixture was run."
+/arxiv/[id],/new/arxiv/[id],arxiv,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/arxiv,/new/arxiv,arxiv,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/arxiv/submit,/new/arxiv/submit,arxiv,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/auth/callback,/new/auth/callback,auth,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/auth/forgot-password,/new/auth/forgot-password,auth,New preview UI,The recovery form calls the existing Supabase provider with the approved callback URL. No live recovery email was sent.
+/auth/login,/new/auth/login,auth,New preview UI,Uses the existing Supabase client and same-origin session broker. Synthetic sign-in and safe preview return were verified.
+/auth/reset-password,/new/auth/reset-password,auth,Existing service handoff,Preview provides a recovery-link entry. The existing callback and recovery session remain responsible for changing the password.
+/auth/signup,/new/auth/signup,auth,New preview UI,"School, personal and school registration entry paths use the existing signup validation and email verification. The school setup wizard remains at its existing route."
+/auth/transfer,/new/auth/transfer,auth,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/clubs,/new/clubs,clubs,Adapted feature UI,Preview uses the selected school and its club feature policy before loading the existing recruitment workspace.
+/community,/new/community,community,New preview UI,The public feed uses the public field allowlist. Signed-in boards and direct messages are available from the preview.
+/compute,/new/compute,compute,Adapted feature UI,Selected school and guest resource policy choose the GPU workspace or existing CBSH reservation workflow inside the preview.
+/contact,/new/contact,contact,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/contests/[id]/manage,/new/contests/[id]/manage,contests,Adapted feature UI,"Uses the existing organizer and check-in roles, with a separate participant preview. Synthetic non-organizer denial and organizer navigation were verified."
+/contests/[id],/new/contests/[id]/participate,contests,Adapted feature UI,"The public detail remains under the canonical preview path. The signed-in participant workspace reuses the existing team, registration, submission and award logic."
+/contests/api,/new/contests/api,contests,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/contests/new,/new/contests/new,contests,Adapted feature UI,"Uses the original creation workflow, audience checks, media inputs, team settings and date validation. No live contest was created."
+/contests,/new/contests,contests,New preview UI,Public discovery and authenticated participation and organizer filtering have separate preview entry points. Existing authorization applies.
+/dashboard,/new/dashboard,dashboard,Adapted feature UI,Existing authorized CBSH GPU reservation and extension interface is rendered in the preview. Notebook launch stays on the existing authorized endpoint.
+/dashboard/ssh-guide,/new/dashboard/ssh-guide,dashboard,Adapted feature UI,The existing SSH guide is shown in the preview compute shell.
+/demo,/new/demo,demo,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/deploy/[id],/new/deploy/[id],deploy,Adapted feature UI,"Existing frontend project settings, collaborators, production deployment and log controls use the preview shell."
+/deploy/new,/new/deploy/new,deploy,Adapted feature UI,Existing frontend creation workflow remains subject to its deployment and allocation policies. No live deployment was started.
+/deploy,/new/deploy,deploy,Adapted feature UI,Uses the existing frontend project list and authorized deployment endpoints.
+/docs/[slug],/new/docs/[slug],docs,New preview UI,Existing guide content with a preview reading layout and constrained links.
+/docs,/new/docs,docs,New preview UI,Existing guide corpus and search. Contextual links retain school application context.
+/download,/new/download,download,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/explore/contests/[id],/new/contests/[id],explore,New preview UI,Reads public contest content and opaque artwork only. Participant actions require separate sign-in.
+/explore/contests,/new/contests,explore,New preview UI,Reads public allowlisted fields and opaque artwork URLs. Public cover transition respects reduced motion.
+/explore/schools/[id],/new/schools/[id],explore,New preview UI,Reads the public school record and exposes the existing enrollment or application entry.
+/explore/schools,/new/schools,explore,New preview UI,"Reads public school cards with search, adoption state and pagination."
+/explore/services/[service],/new/explore/services/[service],explore,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/feed,/new/feed,feed,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/games,/new/games,games,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/latex,/new/latex,latex,Adapted feature UI,The existing owned-project and LaTeX workflows use the preview shell. Hosted compilation was not exercised.
+/manage/manufacturing/filament,Equipment host /new/manage/manufacturing/filament,manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing/laser/[id],Equipment host /new/manage/manufacturing/laser/[id],manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing/materials,Equipment host /new/manage/manufacturing/materials,manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing,Equipment host /new/manage/manufacturing,manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing/print/[id],Equipment host /new/manage/manufacturing/print/[id],manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing/queues,Equipment host /new/manage/manufacturing/queues,manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manage/manufacturing/requests,Equipment host /new/manage/manufacturing/requests,manage,Pending separate host,A preview needs equipment-host admission checks or a handoff to existing staff tools.
+/manufacturing/laser/[id],/new/manufacturing/laser/[id],manufacturing,Adapted feature UI,Uses the existing requester and role-scoped detail.
+/manufacturing/laser/new,/new/manufacturing/laser/new,manufacturing,Adapted feature UI,Existing requester form preserves laser material and request policies. No live request was created.
+/manufacturing/laser,/new/manufacturing/laser,manufacturing,Adapted feature UI,Existing permitted laser request list uses the equipment navigation.
+/manufacturing,/new/manufacturing,manufacturing,Adapted feature UI,Preview equipment navigation opens requester workflows under the existing school and request access rules. Staff operations remain on their dedicated hosts.
+/manufacturing/print/[id],/new/manufacturing/print/[id],manufacturing,Adapted feature UI,Uses the existing requester and role-scoped detail.
+/manufacturing/print/new,/new/manufacturing/print/new,manufacturing,Adapted feature UI,Existing requester form preserves printer selection and access policies. No live request was created.
+/manufacturing/print,/new/manufacturing/print,manufacturing,Adapted feature UI,Existing permitted printer request list uses the equipment navigation.
+/match,/new/match,match,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/materials/[id],/new/materials/[id],materials,New preview UI,Preview detail and download use the existing file and school checks.
+/materials/new,/new/materials/new,materials,New preview UI,"Preview upload form uses existing authorization, scoped uploads and retry reconciliation."
+/materials,/new/materials,materials,New preview UI,Preview file listing preserves school and storage entitlement with the existing server API.
+/meal,/new/meal,meal,New preview UI,"Selected school, dates, empty states and refresh use the existing school and meal APIs. Native reminders remain in the existing app."
+/messages,/new/community/boards,messages,Adapted feature UI,"Existing authenticated school and nationwide boards, direct messages and moderation actions use the preview shell."
+/notebooks/[jobId]/lab,/notebooks/[jobId]/lab,notebooks,Existing service handoff,The GPU workspace opens the existing same-origin notebook proxy. Its job and origin checks remain in force.
+/notes,/new/notes,notes,Adapted feature UI,"The existing research notes editor, owned data and autosave use the preview shell."
+/,/new/,home,New preview UI,Preview shell and public discovery remain accessible to guests. Signed-in summary uses the existing session.
+/polls,/new/polls,polls,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/privacy,/new/privacy,privacy,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/profile,/new/profile,profile,New preview UI,"Account settings, school membership, SSH key and existing account controls use authenticated endpoints. No live data was changed."
+/projects/[id],/new/projects/[id],projects,New preview UI,Only the allowlisted public introduction is rendered. Private project files and settings remain protected.
+/projects,/new/projects,projects,New preview UI,Reads allowlisted public project introductions. The preview has a separate authorized personal project and collaborators workspace.
+/publications,/new/projects/manage/publication,publications,Adapted feature UI,Existing project ownership and visibility rules apply. Creating a private draft and withholding public posting until opt-in were tested with synthetic data.
+/schedule,/new/schedule,schedule,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/school-admin,/new/school-admin,school-admin,New preview UI,Preview school selector uses the active account’s authorized school memberships.
+/schools/[id]/access,/new/schools/[id]/access,schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools/[id]/admin,/new/schools/[id]/admin,schools,Adapted feature UI,Existing tenant-scoped administrator tools are presented in the preview. GPU roles are limited to their allowed sections.
+/schools/[id]/affiliation,/new/schools/[id]/affiliation,schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools/[id]/features,/new/schools/[id]/features,schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools/[id]/verification,/new/schools/[id]/verification,schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools/applications/[id],/new/schools/applications/[id],schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools/new,/new/schools/new,schools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/schools,/new/schools,schools,New preview UI,Public search and school adoption status are rendered in the preview. School application and affiliation management remain distinct workflows.
+/server/[id]/open,/new/server/[id]/open,server,Existing service handoff,Preview wraps the existing TeacherStudio launcher. Session and project admission are still verified by the existing service.
+/server/[id],/new/server/[id],server,Adapted feature UI,"Existing authorized settings, collaborators, deployment logs and actions run in the preview."
+/server/new,/new/server/new,server,Adapted feature UI,Original server project setup and resource allocation checks remain in force. No live project was started.
+/server,/new/server,server,Adapted feature UI,Original server projects and permission checks run in the preview compute shell.
+/services,/new/services,services,New preview UI,Preview search includes implemented routes and identifies services that still open in the existing product.
+/study/contribute,/new/study/contribute,study,Adapted feature UI,Existing school connection contribution form uses its original verification checks in the preview.
+/study/link,/study/link,study,Existing service handoff,The existing official EduSet opener and validated message origin remain the link transport.
+/study,/new/study,study,New preview UI,"Existing school permissions and application actions are used by a new room, period, seat and sort interface. No official EduSet application was submitted."
+/timetable,/new/timetable,timetable,New preview UI,Existing school and timetable APIs feed separate mobile day and desktop week views. Administrative timetable tools remain in the existing product.
+/tools,/new/tools,tools,Pending preview,Existing route serves the feature. The listed preview destination is proposed.
+/wakeup,/new/wakeup,wakeup,New preview UI,"Preview Spotify search, requests and playlist history use the existing permitted wake-up endpoints."
+/workspace,/new/,workspace,New preview UI,The existing home alias still works. The preview has one home destination for the corresponding overview.
+/contests (authorized workspace),/new/contests/workspace,contests,New preview UI,Authorized discovery and organizer filtering. Archived and unlisted contests appear only to authorized operators.
+/projects (authorized workspace),/new/projects/manage,projects,New preview UI,Lists the frontend and server projects returned by existing authorized deployment endpoints.
+/deploy/[id] and /server/[id] collaborators,/new/projects/manage/[kind]/[id],projects,Adapted feature UI,"Uses the original ownership and collaborator role rules, with an explicit preview confirmation before removal."
+Preview-only design system,/new/design-system,preview,New preview UI,Environment-gated design review page. It returns 404 when its preview flag is disabled.

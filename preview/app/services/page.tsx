@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, BookOpen, CalendarDays, FolderOpen, Graduatio
 import { serviceGroups, type Service } from '@/lib/serviceNavigation';
 import { SearchForm, type DirectoryParams } from '../../components/Directory';
 import { Notice } from '../../components/DirectoryFeedback';
-import { previewSchoolPaths, schoolTools } from '../../components/navigation';
+import { previewServicePaths, schoolTools } from '../../components/navigation';
 import { ToolArt } from '../../components/ToolArt';
 
 const discovery = [
@@ -42,7 +42,7 @@ export default async function Page({ searchParams }: { searchParams: DirectoryPa
       <ul className="pv-list">
         {group.entries.map(entry => {
           const art = schoolTools.find(tool => tool.href === entry.href)?.art;
-          const preview = group.id === 'discover' || previewSchoolPaths.includes(entry.href);
+          const preview = group.id === 'discover' || previewServicePaths.includes(entry.href);
           const content = <>
             <span className="pv-row-icon">{art ? <ToolArt kind={art} /> : <entry.icon size={23} aria-hidden="true" />}</span>
             <span className="pv-item-body"><strong>{entry.label}</strong><span>{entry.description}</span></span>

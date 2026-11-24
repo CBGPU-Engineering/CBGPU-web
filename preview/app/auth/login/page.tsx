@@ -6,8 +6,10 @@ import { useState, type FormEvent } from 'react';
 import { authErrorMessage } from '@/lib/authCopy';
 import { accountConfigured, previewReturn } from '../../../components/session';
 import { Notice } from '../../../components/DirectoryFeedback';
+import { previewAuthHref, usePreviewReturn } from '../PreviewAuth';
 
 export default function Login() {
+  const next = usePreviewReturn();
   const [visible, setVisible] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +57,7 @@ export default function Login() {
         {error && <p className="pv-auth-error" id="preview-login-error" role="alert">{error}</p>}
         <button className="pv-primary" type="submit" disabled={busy}>{busy ? '로그인 중…' : '로그인하기'}</button>
       </form>}
-      <div className="pv-auth-links"><a href="/auth/signup">계정 만들기</a><a href="/auth/forgot-password">비밀번호 찾기</a></div>
+      <div className="pv-auth-links"><Link href={previewAuthHref('/auth/signup', next)}>계정 만들기</Link><Link href={previewAuthHref('/auth/forgot-password', next)}>비밀번호 찾기</Link></div>
     </div>
   </section>;
 }

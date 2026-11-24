@@ -5,7 +5,7 @@ import { Dialog } from 'radix-ui';
 import { ArrowUpRight, Search, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { serviceGroups } from '@/lib/serviceNavigation';
-import { navigation, previewSchoolPaths } from './navigation';
+import { navigation, previewServicePaths } from './navigation';
 
 const destinations = [
   ...navigation.map(item => ({
@@ -17,7 +17,7 @@ const destinations = [
   ...serviceGroups.flatMap(group => group.services).map(item => ({
     href: item.href,
     label: item.label,
-    preview: previewSchoolPaths.includes(item.href),
+    preview: previewServicePaths.includes(item.href),
     terms: [item.label, item.description, item.keywords].filter(Boolean).join(' '),
   })),
 ];

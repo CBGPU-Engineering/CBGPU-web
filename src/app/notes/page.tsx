@@ -58,8 +58,8 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   const frame=useRef<HTMLDivElement>(null);
   const [frameHeight,setFrameHeight]=useState('calc(100dvh - 220px)');
   useEffect(()=>{
-    const fit=()=>{if(!frame.current)return;const viewport=window.visualViewport;const bottom=(viewport?.height??innerHeight)+(viewport?.offsetTop??0);const nav=document.querySelector('.cb-bottom-nav');const rect=nav?.getBoundingClientRect();const limit=rect&&rect.height>0&&rect.top>0?Math.min(bottom,rect.top):bottom;setFrameHeight(`${Math.max(120,limit-frame.current.getBoundingClientRect().top-12)}px`)};
-    fit();const observer=new ResizeObserver(fit);for(const element of document.querySelectorAll('header,.cb-bottom-nav'))observer.observe(element);window.addEventListener('resize',fit);window.visualViewport?.addEventListener('resize',fit);
+    const fit=()=>{if(!frame.current)return;const viewport=window.visualViewport;const bottom=(viewport?.height??innerHeight)+(viewport?.offsetTop??0);const nav=document.querySelector('.cb-bottom-nav, .pv-dock');const rect=nav?.getBoundingClientRect();const limit=rect&&rect.height>0&&rect.top>0?Math.min(bottom,rect.top):bottom;setFrameHeight(`${Math.max(120,limit-frame.current.getBoundingClientRect().top-12)}px`)};
+    fit();const observer=new ResizeObserver(fit);for(const element of document.querySelectorAll('header,.cb-bottom-nav,.pv-dock'))observer.observe(element);window.addEventListener('resize',fit);window.visualViewport?.addEventListener('resize',fit);
     return()=>{observer.disconnect();window.removeEventListener('resize',fit);window.visualViewport?.removeEventListener('resize',fit)};
   },[]);
   const { showError, confirm } = useAlert();
@@ -187,7 +187,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   // 편집 UI를 그대로 보여주면 한참 고치고 저장할 때야 에러를 보게 돼서 미리 분기한다.
   if (!isOwner) {
     return (
-      <div ref={frame} className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
+      <div ref={frame} data-note-editor className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0">
           <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
           <h1 className="flex-1 font-semibold text-base truncate px-2">{title || '제목 없음'}</h1>
@@ -208,7 +208,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
   }
 
   return (
-    <div ref={frame} className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
+    <div ref={frame} data-note-editor className="flex min-h-0 flex-col overflow-y-auto" style={{height:frameHeight}}>
       {/* header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border/40 flex-shrink-0 flex-wrap gap-y-2">
         <Button variant="ghost" size="icon" aria-label="노트 목록으로 돌아가기" onClick={()=>void leave()} className="active:scale-90 transition-transform"><ArrowLeft className="size-4" /></Button>
@@ -286,7 +286,7 @@ function NoteEditor({ note, recovery, onBack, onSaved }: { note: Note | null; re
         ))}
         <input value={tagInput} onChange={e => setTagInput(e.target.value)}
           onKeyDown={e => (e.key === 'Enter' || e.key === ',') && (e.preventDefault(), addTag())}
-          placeholder="태그 추가 (Enter)" className="text-sm bg-transparent outline-none font-medium text-muted-foreground placeholder:text-muted-foreground/40 w-24" />
+          aria-label="추가할 태그" title="Enter를 눌러 태그 추가" enterKeyHint="done" placeholder="태그 추가" className="text-sm bg-transparent outline-none font-medium text-muted-foreground placeholder:text-muted-foreground/40 w-24" />
         {(suggestingTags || suggestedTags.length > 0) && <span className="flex basis-full flex-wrap items-center gap-1.5 text-sm text-muted-foreground" aria-live="polite">
           <Sparkles className="size-3 text-primary" />{suggestingTags ? '태그를 찾는 중…' : '추천 태그'}
           {suggestedTags.filter(tag => !tags.includes(tag)).map(tag => <button key={tag} type="button" onClick={() => { const next = [...tags, tag]; setTags(next); setSuggestedTags(current => current.filter(item => item !== tag)); saveNow(title, content, next, shared); }} className="min-h-11 rounded-full border border-primary/30 px-3 py-2 font-bold text-primary hover:bg-primary/10">+ {tag}</button>)}

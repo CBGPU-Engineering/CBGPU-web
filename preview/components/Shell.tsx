@@ -32,11 +32,9 @@ function Navigation({ mobile = false }: { mobile?: boolean }) {
 function Logo() {
   return (
     <Link href="/" aria-label="CBGPU 홈" className="pv-logo">
-      <picture>
-        <source srcSet="/new/brand/horizontal_white.svg" media="(prefers-color-scheme: dark)" />
-        {/* The original wordmark is a tiny, vector brand asset. */}
-        <img src="/new/brand/horizontal_black.svg" width="118" height="25" alt="" />
-      </picture>
+      {/* The original wordmarks are small vector brand assets. */}
+      <img className="pv-logo-light" src="/new/brand/horizontal_black.svg" width="118" height="25" alt="" />
+      <img className="pv-logo-dark" src="/new/brand/horizontal_white.svg" width="118" height="25" alt="" />
     </Link>
   );
 }
@@ -47,7 +45,7 @@ function Account({ pathname }: { pathname: string }) {
   const path = pathname.startsWith('/auth/') ? '/' : pathname;
   const next = '/new' + path + (parameters.size && path !== '/' ? '?' + parameters : '');
   return signedIn
-    ? <a href="/profile" className="pv-account"><UserRound size={18} aria-hidden="true" /> 내 계정</a>
+    ? <Link href="/profile" className="pv-account"><UserRound size={18} aria-hidden="true" /> 내 계정</Link>
     : <Link href={'/auth/login?next=' + encodeURIComponent(next)} className="pv-account"><UserRound size={18} aria-hidden="true" /> 로그인</Link>;
 }
 

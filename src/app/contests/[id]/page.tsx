@@ -1,6 +1,6 @@
 'use client';
 import{scopedProfilesEnabled,initialContestStudentNumber,canShareContestStudentNumber}from'@/lib/scopedProfiles';
-import {ScrollSection} from '@/components/ui/product-motion';
+import {ScrollSection,SuccessFeedback} from '@/components/ui/product-motion';
 import ContestMarkdown from '@/components/contests/ContestMarkdown';
 import ContestPresentationEditor from '@/components/contests/ContestPresentationEditor';
 import ContestParticipantPolicyEditor from '@/components/contests/ContestParticipantPolicyEditor';
@@ -12,7 +12,7 @@ import {ContestArtwork} from '@/components/contests/ContestArtwork';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, CheckCircle2, Copy, Download, RefreshCw, Send, Users, FileUp, ShieldCheck, Layers3, FileText, Link2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -52,8 +52,10 @@ function FileDownload({ file }: { file: SubmittedFile }) {
   }}><Download /><span className="truncate">{busy ? '다운로드 중…' : file.name}</span></Button>;
 }
 
-function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team, pending=false,preview=false }: {
+function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team, pending=false,preview=false,completion,previewWorkspace=false }: {
   preview?:boolean;
+  previewWorkspace?:boolean;
+  completion?: string;
   pending?:boolean;
   team?: ContestTeam|null;
   contest: Contest; submission: ContestSubmission | null; closed: boolean; clockReady: boolean;
@@ -69,6 +71,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
   const submitting = useRef(false);
+  const savedFiles = Object.values(submission?.answers || {}).filter((value): value is SubmittedFile => typeof value === 'object');
   const update = (id: string, value: string) => setAnswers(prev => ({ ...prev, [id]: value }));
 
   async function submit(event: React.FormEvent) {
@@ -117,7 +120,7 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
         const { error: cleanupError } = await supabase.storage.from(CONTEST_BUCKET).remove(replaced);
         if (cleanupError) console.error('Contest file cleanup:', cleanupError.message);
       }
-      showSuccess(submission ? '제출 내용을 수정했어요.' : '제출을 완료했어요!');
+      if (!previewWorkspace) showSuccess(submission ? '제출 내용을 수정했어요.' : '제출을 완료했어요!');
       onSaved(data);
     } catch (error) {
       if (uploaded.length) await supabase.storage.from(CONTEST_BUCKET).remove(uploaded).catch(() => {});
@@ -168,7 +171,8 @@ function SubmissionForm({ contest, submission, closed, clockReady, onSaved, team
         <p className="text-xs text-muted-foreground">{team?'팀당 한 건을 제출해요. 참가와 팀 구성이 확정되면 팀원과 공동 제출물을 수정할 수 있어요.':'계정당 한 건을 제출해요. 다시 제출하면 기존 내용이 바뀌어요.'}</p>
         <Button type="submit" size="lg" className="w-full"><Send />{preview?'참가자 화면 미리보기':busy ? progress || '제출 중…' : closed ? '제출이 마감됐어요' : pending?'아직 제출 시작 전이에요':!clockReady ? '서버 시각 확인 중…' : submission ? '수정 내용 다시 제출하기' : '작품 제출하기'}</Button>
       </fieldset>
-      {submission && <section className="space-y-3"><h2 className="font-bold">저장된 제출 파일</h2>{Object.values(submission.answers).filter((value): value is SubmittedFile => typeof value === 'object').map(file => <div key={file.path}><FileDownload file={file} /></div>)}</section>}
+      {completion && <SuccessFeedback compact title={completion} description={contest.title} />}
+      {submission && (!previewWorkspace || savedFiles.length > 0) && <section className="space-y-3"><h2 className="font-bold">저장된 제출 파일</h2>{savedFiles.map(file => <div key={file.path}><FileDownload file={file} /></div>)}</section>}
     </form>
   );
 }
@@ -220,17 +224,20 @@ function HostPanel({ contest, submissions, onUpdated, refresh, now, canEditIdent
   </div>;
 }
 
-export default function ContestDetailPage({managementRoute=false}:{managementRoute?:boolean}={}) {
+export default function ContestDetailPage({managementRoute=false,previewWorkspace=false}:{managementRoute?:boolean;previewWorkspace?:boolean}={}) {
   const{id}=useParams<{id:string}>(),{user}=useAuth();
-  return <ContestSession key={`${id}:${user?.id||'anonymous'}:${managementRoute}`} managementRoute={managementRoute}/>;
+  return <ContestSession key={`${id}:${user?.id||'anonymous'}:${managementRoute}`} managementRoute={managementRoute} previewWorkspace={previewWorkspace}/>;
 }
-function ContestSession({managementRoute}:{managementRoute:boolean}) {
+function ContestSession({managementRoute,previewWorkspace}:{managementRoute:boolean;previewWorkspace:boolean}) {
+  const router = useRouter();
+  const listPath = previewWorkspace ? "/contests/workspace" : "/contests";
   const [activeSection,setActiveSection]=useState<ContestManagementSection>('overview');
   const [eventSection,setEventSection]=useState<ContestEventSection>('overview');
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [contest, setContest] = useState<Contest | null>(null);
   const [submissions, setSubmissions] = useState<ContestSubmission[]>([]);
+  const [submissionCompletion, setSubmissionCompletion] = useState('');
   const [eventOperatorRole, setEventOperatorRole] = useState<'owner' | 'manager' | 'checkin' | null>(null);
   const [ownTeam,setOwnTeam]=useState<ContestTeam|null>(null);
   const [teamSubmissionReady,setTeamSubmissionReady]=useState(false);
@@ -289,35 +296,35 @@ function ContestSession({managementRoute}:{managementRoute:boolean}) {
     return () => { disposed = true; clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
   }, [id, user,contest?.participation_mode,load]);
   if (loading) return <div className="flex justify-center py-20"><LoadingSpinner /></div>;
-  if (error || !contest) return <div className="mx-auto max-w-2xl space-y-4 rounded-2xl border p-8"><p role="alert">{error || '대회를 찾을 수 없어요.'}</p><Button variant="outline" onClick={() => void load()}>다시 불러오기</Button><Button asChild variant="ghost"><Link href="/contests">대회 목록</Link></Button></div>;
+  if (error || !contest) return <div className="mx-auto max-w-2xl space-y-4 rounded-2xl border p-8"><p role="alert">{error || '대회를 찾을 수 없어요.'}</p><Button variant="outline" onClick={() => void load()}>다시 불러오기</Button><Button asChild variant="ghost"><Link href={listPath}>대회 목록</Link></Button></div>;
   const isOwner = contest.host_id === user?.id;
   const isHost = isOwner || !!eventOperatorRole;
   const canManage = isOwner || eventOperatorRole === 'manager';
   const ownSubmission = submissions.find(entry => ownTeam?entry.team_id===ownTeam.id:entry.user_id===user?.id) || null;
   const phase=contestEventPhase(contest,now),phaseLabel={checking:'일정 확인 중',cancelled:'취소됨',archived:'보관됨',ended:'대회 종료',upcoming:'시작 예정',ongoing:'진행 중',unscheduled:'일정 미정'}[phase];
-  const participantPath=contestParticipantHref(contest.id),managementPath=contestManagementHref(contest.id);
+  const participantPath=contestParticipantHref(contest.id)+(previewWorkspace?'/participate':''),managementPath=contestManagementHref(contest.id);
   const sections=contestWorkspaceSections(canManage,isOwner),selected=sections.find(section=>section.id===activeSection)||sections[0];
   const chooseSection=(section:ContestManagementSection)=>{setActiveSection(section);if(contestEventSection(section))setEventSection(section)};
   if(managementRoute&&!isHost)return <section className="contest-panel mx-auto max-w-2xl space-y-4"><h1 className="text-xl font-bold">대회 운영진만 관리할 수 있어요</h1><p className="text-sm text-muted-foreground">참가자 화면에서 안내와 본인 신청 내역을 확인해 주세요.</p><Button asChild variant="outline"><Link href={participantPath}>참가자 화면으로</Link></Button></section>;
   if(managementRoute)return <div className="contest-page mx-auto max-w-6xl space-y-6" data-contest-management>
-    <Link href="/contests" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4"/>대회 목록</Link>
+    <Link href={listPath} className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4"/>대회 목록</Link>
     <header className="contest-management-header"><div className="min-w-0"><p className="contest-eyebrow">대회 관리</p><h1>{contest.title}</h1><p>참가 신청과 제출물을 관리해요. 참가자에게 보이는 화면도 따로 확인할 수 있어요.</p></div><div className="contest-management-actions"><span className="contest-event-state" data-phase={phase}>{phaseLabel}</span><Button asChild variant="outline"><Link href={participantPath}>참가자 화면 보기</Link></Button><Button variant="ghost" onClick={()=>void load()}><RefreshCw/>새로고침</Button></div></header>
     <div className="contest-management-layout"><nav className="contest-management-nav" aria-label="대회 관리 항목">{sections.map(section=><button type="button" key={section.id} aria-pressed={selected.id===section.id} onClick={()=>chooseSection(section.id)}>{section.label}</button>)}</nav>
     <div className="contest-management-content"><header className="contest-management-section-heading"><h2>{selected.label}</h2><p>{selected.description}</p></header>
       <div hidden={selected.id!=='overview'}><HostPanel section="share" contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={false}/>{isOwner&&<ContestParticipantPolicyEditor contest={contest} onUpdated={setContest}/>}</div>
-      <div hidden={!contestEventSection(selected.id)}><EventHub now={now} view="management" managementSection={canManage?eventSection:'guests'} contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest}/></div>
+      <div hidden={!contestEventSection(selected.id)}><EventHub now={now} view="management" onDuplicated={previewWorkspace ? id => router.push(contestManagementHref(id)) : undefined} managementSection={canManage?eventSection:'guests'} contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest}/></div>
       {canManage&&<><div hidden={selected.id!=='submissions'}><HostPanel section="submissions" contest={contest} submissions={submissions} onUpdated={setContest} refresh={load} now={now} canEditIdentity={false}/></div><div hidden={selected.id!=='awards'}><ContestAwards view="management" contestId={contest.id} submissionOwnerId={ownSubmission?.user_id||null}/></div><div hidden={selected.id!=='presentation'}><div className="space-y-6"><ContestPresentationEditor contest={contest} onUpdated={setContest}/>{isOwner&&<ContestLogoEditor contest={contest} onUpdated={setContest}/>}</div></div></>}
     </div></div>
   </div>;
   const preview=isHost;
   return <div className="contest-page mx-auto max-w-6xl space-y-7" data-contest-participant>
-    <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/contests" className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4"/>대회 목록</Link><span className="contest-event-state" data-phase={phase}>{phaseLabel}</span></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><Link href={listPath} className="inline-flex min-h-11 items-center gap-2 text-sm text-muted-foreground"><ArrowLeft className="size-4"/>대회 목록</Link><span className="contest-event-state" data-phase={phase}>{phaseLabel}</span></div>
     {preview&&<section className="contest-preview-notice"><div><strong>참가자 화면 미리보기</strong><p>관리 도구 없이 안내와 신청·제출 화면을 확인해요. 미리보기에서는 신청·제출·투표가 실행되지 않아요.</p></div><Button asChild variant="outline"><Link href={managementPath}>대회 관리로 돌아가기</Link></Button></section>}
     <header className="contest-detail-hero"><div className="contest-detail-art" data-contest-detail-art={contest.id}><ContestArtwork id={contest.id} banner={contest.banner_path}/></div><div className="contest-detail-hero-body"><div className="contest-detail-identity"><ContestLogo path={contest.logo_path} title={contest.title} className="contest-logo-large"/><div className="min-w-0"><p className="contest-eyebrow">대회 안내</p><h1>{contest.title}</h1></div></div><div className="contest-detail-tags"><span><Layers3 className="size-3.5"/>제출 항목 {contest.fields.length}개</span><span><Users className="size-3.5"/>{contest.participation_mode==='team'?`팀 ${contest.team_min_size}–${contest.team_max_size}명`:'개인 참가'}</span><span><ShieldCheck className="size-3.5"/>{contest.participant_policy?contestParticipantPolicyLabels[contest.participant_policy]||'참가 안내 확인':'참가 안내 확인'}</span></div></div><div className="px-5 pb-6 sm:px-8"><Button asChild><Link href="#contest-participation">참가 안내 보기</Link></Button></div></header>
     {contest.description&&<ScrollSection className="contest-panel" title="대회 소개"><ContestMarkdown>{contest.description}</ContestMarkdown></ScrollSection>}
     <div className="contest-detail-layout"><aside className="contest-summary space-y-4"><ScrollSection><ContestClock startsAt={contest.starts_at||null} endsAt={contest.ends_at} isOpen={contest.is_open} now={now} syncError={syncError}/></ScrollSection><section className="contest-panel"><h2 className="mb-4 text-sm font-bold">제출 항목 안내</h2><ul className="space-y-4">{contest.fields.map(field=><li key={field.id} className="min-w-0"><p className="break-words text-sm font-semibold">{field.label} · {field.required?'필수':'선택'}</p><p className="mt-1 break-words text-xs text-muted-foreground">{FIELD_LABELS[field.type]}{field.type==='file'?` · ${field.extensions||'모든 형식'} · ${field.max_size_mb}MB`:''}</p></li>)}</ul></section></aside>
     <div className="contest-detail-main space-y-7"><div id="contest-participation" className="scroll-mt-24"><EventHub view={preview?'preview':'participant'} now={now} contest={contest} isHost={isHost} isOwner={isOwner} canManage={canManage} onContestUpdated={setContest}/></div>
-      {!preview&&contest.participation_mode==='team'&&(!ownTeam||!teamSubmissionReady)?<section className="contest-panel text-sm text-muted-foreground">{ownTeam?'본인 참가와 팀 구성 인원이 확정되면 팀 공동 제출물을 작성할 수 있어요.':'팀 참가 신청을 완료하면 팀 공동 제출물을 작성할 수 있어요. 개인 신청자는 마감 후 팀 배정을 기다려 주세요.'}</section>:<SubmissionForm preview={preview} pending={contestSubmissionPhase(contest,now)==='pending'} team={preview?null:ownTeam} key={`${contest.id}-${ownSubmission?.submitted_at||'new'}`} contest={contest} submission={preview?null:ownSubmission} closed={now!==null&&contestClosed(contest,now)} clockReady={now!==null} onSaved={entry=>setSubmissions([entry])}/>}
+      {!preview&&contest.participation_mode==='team'&&(!ownTeam||!teamSubmissionReady)?<section className="contest-panel text-sm text-muted-foreground">{ownTeam?'본인 참가와 팀 구성 인원이 확정되면 팀 공동 제출물을 작성할 수 있어요.':'팀 참가 신청을 완료하면 팀 공동 제출물을 작성할 수 있어요. 개인 신청자는 마감 후 팀 배정을 기다려 주세요.'}</section>:<SubmissionForm preview={preview} previewWorkspace={previewWorkspace} completion={submissionCompletion} pending={contestSubmissionPhase(contest,now)==='pending'} team={preview?null:ownTeam} key={`${contest.id}-${ownSubmission?.submitted_at||'new'}`} contest={contest} submission={preview?null:ownSubmission} closed={now!==null&&contestClosed(contest,now)} clockReady={now!==null} onSaved={entry=>{setSubmissions([entry]);if(previewWorkspace)setSubmissionCompletion(ownSubmission?'제출 내용을 저장했어요':'제출을 완료했어요')}}/>}
       <ContestAwards view={preview?'preview':'participant'} contestId={contest.id} submissionOwnerId={preview?null:ownSubmission?.user_id||null}/>
     </div></div>
   </div>;

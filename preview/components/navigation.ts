@@ -18,4 +18,9 @@ export const schoolTools = [
 ] as const;
 
 
-export const previewSchoolPaths: readonly string[] = ['/meal', '/timetable'];
+export const previewServicePaths: readonly string[] = [
+  '/ai', '/clubs', '/community', '/compute', '/contests', '/dashboard',
+  '/dashboard/ssh-guide', '/deploy', '/latex', '/manufacturing/laser',
+  '/manufacturing/print', '/materials', '/meal', '/notes', '/server', '/study',
+  '/timetable', '/wakeup',
+];

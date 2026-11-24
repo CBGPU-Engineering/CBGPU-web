@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CalendarDays, ChevronLeft, ChevronRight, FolderOpen, GraduationCap, MessagesSquare, Search, Trophy } from 'lucide-react';
 import { publicExcerpt, publicLabel, publicPath, publicTitles, type PublicItem, type PublicKind } from '@/lib/publicContentModel';
 import { fetchPublicContent, publicDetail } from '@/lib/publicContentServer';
 import PublicMarkdown from '@/components/public-browsing/PublicMarkdown';
 import { notFound } from 'next/navigation';
+import { ContestCover, ContestCoverLink } from './CollaborationContestTransition';
 import { Notice } from './DirectoryFeedback';
 
 const symbols = { schools: GraduationCap, projects: FolderOpen, contests: Trophy, community: MessagesSquare };
@@ -46,15 +48,6 @@ export function SectionHeading({ title, href }: { title: string; href?: string }
   </div>;
 }
 
-function ContestCover({ item }: { item: PublicItem }) {
-  if (typeof item.banner_url !== 'string') return null;
-  return (
-    // The existing public model permits only the same-origin opaque banner route.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img className="pv-cover" src={item.banner_url} alt="" width={640} height={360} loading="lazy" decoding="async" />
-  );
-}
-
 function ItemBody({ kind, item }: { kind: PublicKind; item: PublicItem }) {
   const Icon = symbols[kind];
   const meta = kind === 'contests'
@@ -63,7 +56,7 @@ function ItemBody({ kind, item }: { kind: PublicKind; item: PublicItem }) {
   const when = kind === 'contests' ? date(item.registration_closes_at || item.event_start_at) : date(item.created_at);
   const description = publicExcerpt(item.summary || item.description || item.body || item.public_description, kind === 'community' ? 500 : 160);
   return <>
-    {kind === 'contests' && item.banner_url ? <ContestCover item={item} /> : <span className="pv-row-icon"><Icon size={23} aria-hidden="true" /></span>}
+    {kind === 'contests' ? <ContestCover id={item.id} banner={text(item.banner_url) || undefined} /> : <span className="pv-row-icon"><Icon size={23} aria-hidden="true" /></span>}
     <div className="pv-item-body">
       {meta && <p className="pv-meta">{meta}</p>}
       <h3>{publicLabel(item)}</h3>
@@ -80,6 +73,7 @@ function ItemBody({ kind, item }: { kind: PublicKind; item: PublicItem }) {
 export function Items({ kind, items }: { kind: PublicKind; items: PublicItem[] }) {
   return <ul className={'pv-list pv-list-' + kind}>{items.map(item => {
     const detail = kind !== 'community' && publicPath([kind, item.id]);
+    if (kind === 'contests' && detail) return <li key={item.id}><ContestCoverLink id={item.id} banner={text(item.banner_url) || undefined}><ItemBody kind={kind} item={item} /></ContestCoverLink></li>;
     return <li key={item.id}>
       {detail
         ? <Link className="pv-item" href={`/${kind}/${encodeURIComponent(item.id)}`}><ItemBody kind={kind} item={item} /></Link>
@@ -102,7 +96,7 @@ function cleanQuery(query: unknown) {
   return typeof query === 'string' ? Array.from(query.trim().replace(/[\u0000-\u001f\u007f]/g, '')).slice(0, 50).join('') : '';
 }
 
-export async function Directory({ kind, searchParams }: { kind: PublicKind; searchParams: DirectoryParams }) {
+export async function Directory({ kind, searchParams, toolbar }: { kind: PublicKind; searchParams: DirectoryParams; toolbar?: ReactNode }) {
   const params = await searchParams;
   const query = cleanQuery(params.query);
   const offset = typeof params.offset === 'string' && /^\d{1,5}$/.test(params.offset) ? Math.min(Number(params.offset), 10_000) : 0;
@@ -114,6 +108,7 @@ export async function Directory({ kind, searchParams }: { kind: PublicKind; sear
       <h1>{publicTitles[kind]}</h1>
       <p>{descriptions[kind]}</p>
       <SearchForm action={'/new/' + kind} label={publicTitles[kind] + ' 검색'} value={query} />
+      {toolbar}
     </header>
     <h2 className="pv-visually-hidden">검색 결과</h2>
     {!data ? <Notice title="목록을 불러오지 못했어요">
@@ -133,7 +128,7 @@ export async function Directory({ kind, searchParams }: { kind: PublicKind; sear
   </section>;
 }
 
-export async function Detail({ kind, id }: { kind: Exclude<PublicKind, 'community'>; id: string }) {
+export async function Detail({ kind, id, actions }: { kind: Exclude<PublicKind, 'community'>; id: string; actions?: ReactNode }) {
   if (!publicPath([kind, id])) notFound();
   const result = await publicDetail(kind, id);
   if ((!result.ok && result.status === 404) || (result.ok && !result.data.item)) notFound();
@@ -161,14 +156,16 @@ export async function Detail({ kind, id }: { kind: Exclude<PublicKind, 'communit
     {back}
     <h1>{publicLabel(item)}</h1>
     {item.summary && <p className="pv-detail-summary">{text(item.summary)}</p>}
-    {kind === 'contests' && <ContestCover item={item} />}
+    {kind === 'contests' && <ContestCover id={item.id} banner={text(item.banner_url) || undefined} destination />}
     {facts.some(([, value]) => value) && <dl className="pv-facts">
       {facts.filter(([, value]) => value).map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
     </dl>}
     <PublicMarkdown>{text(item.body_markdown || item.description || item.public_description) || '추가 공개 설명이 없어요.'}</PublicMarkdown>
     <div className="pv-actions">
+      {actions ?? <>
       <a className="pv-primary" href={action.href}>{action.label} <ArrowRight size={16} aria-hidden="true" /></a>
       <p>기존 CBGPU에서 이어서 진행해요.</p>
+      </>}
     </div>
   </article>;
 }

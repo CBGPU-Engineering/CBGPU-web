@@ -3,6 +3,7 @@
 import GpuReservationExtension from '@/components/gpu/GpuReservationExtension';
 import GpuQueueHint from '@/components/ai/GpuQueueHint';
 import { useEffect, useState, useRef, Fragment } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { fetchGpuEndpoints, FALLBACK_GPU_ENDPOINTS, type GpuEndpoint } from '@/lib/gpuEndpoints';
 import GPUCard from '@/components/GPUCard';
@@ -667,10 +668,10 @@ function DashboardSession() {
                               </div>
                             </div>
                             <p className="text-sm text-muted-foreground font-medium">
-                              최초 1회 SSH 설정 · 예약 시간에 이용 · <a href="/dashboard/ssh-guide" className="text-primary underline underline-offset-2">사용법</a>
+                              최초 1회 SSH 설정 · 예약 시간에 이용 · <Link href="/dashboard/ssh-guide" className="text-primary underline underline-offset-2">사용법</Link>
                             </p>
                             <Button asChild variant="outline" className="mt-auto w-full h-11 border text-sm font-semibold">
-                              <a href="/profile#gpu-ssh-key">SSH 공개키 등록</a>
+                              <Link href="/profile#gpu-ssh-key">SSH 공개키 등록</Link>
                             </Button>
                           </div>
                         </div>

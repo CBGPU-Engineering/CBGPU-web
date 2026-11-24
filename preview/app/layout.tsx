@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import type { ReactNode } from 'react';
+import { ThemeProvider } from '@/components/theme-provider';
 import { Shell } from '../components/Shell';
 import './preview.css';
 
@@ -26,8 +27,12 @@ export const viewport: Viewport = {
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <html lang="ko" className={pretendard.variable}>
-      <body><Shell>{children}</Shell></body>
+    <html lang="ko" className={pretendard.variable} suppressHydrationWarning>
+      <body>
+        <ThemeProvider attribute="class" storageKey="cbgpu-preview-theme" defaultTheme="system" enableSystem>
+          <Shell>{children}</Shell>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

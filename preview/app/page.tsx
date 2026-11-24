@@ -3,7 +3,7 @@ import { ArrowRight, ArrowUpRight, CalendarDays, GraduationCap } from 'lucide-re
 import { publicList } from '@/lib/publicContentServer';
 import { Items, SearchForm, SectionHeading } from '../components/Directory';
 import { Notice } from '../components/DirectoryFeedback';
-import { previewSchoolPaths, schoolTools } from '../components/navigation';
+import { previewServicePaths, schoolTools } from '../components/navigation';
 import { ToolArt } from '../components/ToolArt';
 import { HomeGreeting } from '../components/PreviewIdentity';
 
@@ -32,9 +32,9 @@ export default async function Home() {
               <span className="pv-tool-tile"><ToolArt kind={tool.art} /></span>
               <strong>{tool.label}</strong>
               <span className="pv-shortcut-description">{tool.description}</span>
-              {!previewSchoolPaths.includes(tool.href) && <ArrowUpRight size={16} className="pv-shortcut-arrow" aria-label="기존 CBGPU" />}
+              {!previewServicePaths.includes(tool.href) && <ArrowUpRight size={16} className="pv-shortcut-arrow" aria-label="기존 CBGPU" />}
             </>;
-            return <li key={tool.href}>{previewSchoolPaths.includes(tool.href)
+            return <li key={tool.href}>{previewServicePaths.includes(tool.href)
               ? <Link href={tool.href} className="pv-shortcut">{content}</Link>
               : <a href={tool.href} className="pv-shortcut">{content}</a>}
             </li>;

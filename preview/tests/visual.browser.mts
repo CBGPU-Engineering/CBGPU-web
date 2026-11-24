@@ -11,6 +11,7 @@ const output = process.env.CBGPU_PREVIEW_OUTPUT || '/tmp/cbgpu-v2-browser';
 const port = 14630;
 const origin = 'http://127.0.0.1:' + port;
 const contestId = 'a53344aa-6a66-40be-9792-ee9c118241aa';
+const contestBanner = '/api/public-assets/contests/' + contestId + '/banner';
 const projectId = '08de2965-aa27-4ac3-b884-65cd26a95469';
 const user = { id: 'e6036a90-5978-4ce4-ad9c-1f2e0ea6af56', aud: 'authenticated', role: 'authenticated', email: 'browser-test@example.invalid', user_metadata: { full_name: '박예시' }, app_metadata: {}, created_at: '2026-11-01T00:00:00Z' };
 const school = { id: 'fixture-school-0', official_name: '예시과학고등학교', display_name: '예시과학고등학교', type: 'HIGH', region: '충청북도', status: 'APPROVED', features: ['school_life'], life_capabilities: { timetable: true, meal: true, news: false } };
@@ -32,6 +33,7 @@ const fixtures = {
   contests: [{
     id: contestId,
     title: '교내 연구 발표회',
+    banner_url: contestBanner,
     organizer: '예시과학고등학교',
     description: '학생의 연구 결과를 발표하고 서로의 작업을 살펴봐요.',
     registration_closes_at: '2026-12-05T06:30:00Z',
@@ -146,6 +148,9 @@ try {
         const request = route.request();
         const url = new URL(request.url());
         if (url.origin === origin && url.pathname.startsWith('/new')) return route.continue();
+        if (url.origin === origin && url.pathname === contestBanner) {
+          return route.fulfill({ path: 'preview/public/visuals/study-space.webp', contentType: 'image/webp' });
+        }
         if (url.origin === origin && url.pathname === '/backend/auth/v1/user') return route.fulfill({ json: user });
         if (url.origin === origin && url.pathname === '/backend/auth/v1/token' && acceptLogin) {
           return route.fulfill({ json: { access_token: token, refresh_token: 'synthetic-refresh', expires_in: 3600, token_type: 'bearer', user } });
@@ -206,6 +211,9 @@ try {
         assert.equal(response?.headers()['x-robots-tag'], 'noindex, nofollow');
         await page.locator('main h1').waitFor();
         await page.evaluate(() => document.fonts.ready);
+        await page.locator('img[src="' + contestBanner + '"]').evaluateAll(images =>
+          Promise.all(images.map(image => (image as HTMLImageElement).decode())),
+        );
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, name + ' overflow at ' + width);
         assert.equal(await page.locator('body').getByText(privateMarker).count(), 0);
         assert.ok(!(await page.content()).includes(privateMarker), 'Private fields must not be serialized');
@@ -238,6 +246,44 @@ try {
           assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false, href);
         }
         results.push({ guideBodiesChecked: guides.length, width, height });
+      }
+
+      if (width === 390 || width === 1440) {
+        const reduced = width === 390;
+        await page.emulateMedia({ reducedMotion: reduced ? 'reduce' : 'no-preference' });
+        await page.goto(origin + '/new/contests', { waitUntil: 'networkidle' });
+        const card = page.locator('main .pv-list-contests a').filter({ hasText: '교내 연구 발표회' });
+        const flight = '.pv-collaboration-contest-flight';
+        await card.locator('img').evaluate(image => (image as HTMLImageElement).decode());
+        await page.evaluate(selector => {
+          let opened = false;
+          let animated = false;
+          const observer = new MutationObserver(records => {
+            opened ||= !!document.querySelector(selector);
+            animated ||= records.some(record => {
+              if (!(record.target instanceof HTMLElement) || !record.target.matches(selector)) return false;
+              const transform = record.target.style.transform;
+              return transform !== '' && transform !== 'none';
+            });
+          });
+          observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
+          Object.defineProperty(window, '__previewCoverFlight', {
+            value: () => { observer.disconnect(); return { opened, animated }; },
+            configurable: true,
+          });
+        }, flight);
+        await card.click();
+        await page.waitForURL(origin + '/new/contests/' + contestId);
+        const cover = page.locator('[data-pv-contest-cover="' + contestId + '"]');
+        await cover.locator('img').evaluate(image => (image as HTMLImageElement).decode());
+        await page.locator(flight).waitFor({ state: 'hidden' });
+        const animation = await page.evaluate(() => (window as Window & {
+          __previewCoverFlight: () => { opened: boolean; animated: boolean };
+        }).__previewCoverFlight());
+        assert.deepEqual(animation, { opened: !reduced, animated: !reduced }, 'Contest cover respects the motion preference');
+        assert.equal(await cover.locator('img').getAttribute('src'), contestBanner);
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        results.push({ contestCoverTransition: animation.animated, reducedMotion: reduced, width, height });
       }
 
       if (width === 1440) {

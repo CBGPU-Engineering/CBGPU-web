@@ -52,3 +52,16 @@ node preview/tests/compare-screenshots.mts /path/to/baseline /path/to/candidate
 
 Review any flagged screenshot visually before updating the baseline. The
 fixture also saves every requested viewport, including dark mobile screens.
+
+The branch includes an opt-in apex ingress using `CBGPU_PREVIEW_ORIGIN`. Set
+it to the origin of a separate loopback Next.js preview listener. The ingress
+accepts only GET and HEAD for `/new` and its descendants. It excludes proxy
+and portal credentials from the preview renderer. Leave the setting unset to
+roll back the route. The APIs continue to be served through the existing app.
+
+The integrated preview contains 56 page implementations. Registration, project,
+competition, community, study, school management, compute, and other
+workflows are listed in the [parity matrix](./feature-parity.csv). Some
+sensitive or platform-specific workflows still use the established original
+pages. The staging ingress was tested on loopback, including root health, asset
+delivery, search-index exclusion, and protection of the platform admin API.

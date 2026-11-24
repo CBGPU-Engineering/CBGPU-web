@@ -41,6 +41,7 @@ function combineDateTime(day: Date, hhmm: string): Date {
 }
 
 export default function GPUCard({ id, name }: { id: number; name: string }) {
+  const sharedGpu = id === 1 && process.env.NEXT_PUBLIC_CBGPU_SHARE_RESERVED_GPU_ONE === '1';
   const { showAlert, showError } = useAlert();
   const { isApproved } = useAuth();
   const gpuPermission=useSchoolResourcePermission('gpu',isApproved);
@@ -192,6 +193,11 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
           </div>
         </div>
 
+        {sharedGpu && <div id="gpu-one-shared-use" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+          <p className="font-semibold">AI와 함께 쓰는 GPU예요</p>
+          <p className="mt-1 text-muted-foreground">네 장이 모두 예약되면 AI가 GPU 1번을 함께 써요. 작업이 느려지거나 GPU 메모리가 부족할 수 있어요.</p>
+        </div>}
+
         {showSchedule ? (
           <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-300">
             <div className="max-h-60 overflow-y-auto space-y-4 pr-1 custom-scrollbar">
@@ -304,7 +310,8 @@ export default function GPUCard({ id, name }: { id: number; name: string }) {
       {completedRequest&&<div className="px-4 pb-4"><SuccessFeedback compact title="예약 신청을 보냈어요" description={completedRequest}><a href="#my-gpu-reservations" className="text-sm font-semibold text-primary">내 예약에서 처리 상태 확인하기</a></SuccessFeedback></div>}
       <CardFooter className="p-4 pt-0">
         <Button 
-          onClick={handleRequest} 
+          onClick={handleRequest}
+          aria-describedby={sharedGpu ? "gpu-one-shared-use" : undefined}
           disabled={isSubmitting||!gpuPermission.allowed}
           className="w-full font-bold py-5 transition-all active:scale-95 text-xs"
         >
