@@ -7,7 +7,7 @@ import {aiStream} from '@/lib/aiStream';
 import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
 import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
-export const runtime='nodejs';export const maxDuration=360;
+export const runtime='nodejs';export const maxDuration=780;
 let activeUploads=0;
 const robotPairing=new WindowRateLimiter(12,60_000);
 async function audioForm(request:NextRequest){
