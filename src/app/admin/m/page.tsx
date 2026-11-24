@@ -2,7 +2,7 @@
 import {useAdminLanguage} from '@/components/admin/admin-language';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {useRouter,useSearchParams} from 'next/navigation';
-import {Check,Clock,Cpu,ExternalLink,UserPlus,X,ArrowLeft,Loader2,Activity,Trash2,HelpCircle,RefreshCw} from 'lucide-react';
+import {Check,Clock,Cpu,ExternalLink,UserPlus,X,ArrowLeft,Loader2,Activity,RefreshCw} from 'lucide-react';
 import {supabase} from '@/lib/supabase';
 import {useAuth} from '@/lib/useAuth';
 import {siteHref} from '@/lib/siteHref';
@@ -12,12 +12,13 @@ import {Input} from '@/components/ui/input';
 import {Dropdown} from '@/components/ui/dropdown';
 import {filterAdminGpuReservations,matchesAdminGpuView,adminGpuHistoryBefore,type AdminGpuView} from '@/lib/adminGpuReservations';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import {accountStudentNumberDisplay,signupReviewState} from '@/lib/adminAccountSchools';
 /**
  * 앱(폰) 전용 관리 화면. 데이터·권한은 기존 관리자 화면과 같다(같은 Supabase 쿼리와 RLS, 같은 /api/admin/profiles).
  * admin.cbgpu.com 안에 있으므로 별도 인증 경계는 그대로이고, 표 대신 카드 + 하단 네비게이션으로 보여 준다.
  */
 type Tab='home'|'signups'|'gpu'|'more';
-const tabs:{id:Tab;label:string}[]=[{id:'home',label:'요약'},{id:'signups',label:'가입 승인'},{id:'gpu',label:'GPU 예약'},{id:'more',label:'더보기'}];
+const tabs:{id:Tab;label:string}[]=[{id:'home',label:'요약'},{id:'signups',label:'가입 확인'},{id:'gpu',label:'GPU 예약'},{id:'more',label:'더보기'}];
 type StudyHealth={state:'ok'|'warning'|'critical'|'unknown';label:string;detail:string;minutesAgo:number|null;hoursLeft:number|null;rooms:number|null};
 const healthTone={ok:'text-emerald-500',warning:'text-amber-500',critical:'text-destructive',unknown:'text-muted-foreground'} as const;
 const leftText=(h:number|null)=>h===null?'':h<=0?'만료됨':h<24?`${Math.max(1,Math.round(h))}시간`:`${Math.floor(h/24)}일 ${Math.round(h%24)}시간`;
@@ -33,7 +34,7 @@ export default function MobileAdminPage(){
  const [profiles,setProfiles]=useState<any[]>([]),[reservations,setReservations]=useState<any[]>([]);
  const [loading,setLoading]=useState(true),[error,setError]=useState(''),[busyKey,setBusyKey]=useState('');
  const [study,setStudy]=useState<StudyHealth|null>(null);
- const [deleteTarget,setDeleteTarget]=useState<{id:string;name:string}|null>(null);
+ const [rejectTarget,setRejectTarget]=useState<{id:string;name:string}|null>(null);
  const [gpuView,setGpuView]=useState<AdminGpuView>('all'),[gpuQuery,setGpuQuery]=useState(''),[gpuFilter,setGpuFilter]=useState('all'),[visibleGpu,setVisibleGpu]=useState(30),[now,setNow]=useState(Date.now()),[loadedAt,setLoadedAt]=useState<string|null>(null);
  const reading=useRef<{owner:string;ticket:number}|null>(null),generation=useRef(0),actor=useRef(user?.id);actor.current=user?.id;
  const [gpuHasMore,setGpuHasMore]=useState(false),[loadingOlder,setLoadingOlder]=useState(false),olderReading=useRef<{owner:string;ticket:number}|null>(null);
@@ -77,7 +78,7 @@ export default function MobileAdminPage(){
   }catch(e){if(ticket===generation.current&&actor.current===owner)setError(t(e instanceof Error?e.message:'이전 예약을 불러오지 못했어요.'))}
   finally{if(olderReading.current===current)olderReading.current=null;if(ticket===generation.current&&actor.current===owner)setLoadingOlder(false)}
  }
- const pendingProfiles=useMemo(()=>profiles.filter(p=>p.is_approved!==true),[profiles]);
+ const pendingProfiles=useMemo(()=>profiles.filter(p=>!p.is_admin&&signupReviewState(p)==='unreviewed'),[profiles]);
  const pendingReservations=useMemo(()=>reservations.filter(r=>matchesAdminGpuView(r,'pending',now)),[reservations,now]);
  const gpuHistory=useMemo(()=>filterAdminGpuReservations(reservations,{view:gpuView,gpu:gpuFilter,query:gpuQuery,now}),[reservations,gpuView,gpuFilter,gpuQuery,now]);
  const conflicts=(t:any)=>reservations.some(r=>r.id!==t.id&&r.gpu_id===t.gpu_id&&r.status==='approved'&&new Date(r.start_time)<new Date(t.end_time)&&new Date(r.end_time)>new Date(t.start_time));
@@ -85,9 +86,10 @@ export default function MobileAdminPage(){
   if(busyKey)return;setBusyKey(key);setError('');
   try{const failure=await run();if(failure)setError(t(failure));else await load()}catch(e){setError(t(e instanceof Error?e.message:'처리 결과를 확인하지 못했어요. 새로고침해 주세요.'))}finally{setBusyKey('')}
  }
- const approveProfile=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:true}).eq('id',id);return error?`승인 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
- const markReview=(id:string)=>act('p:'+id,async()=>{const {error}=await supabase.from('profiles').update({is_approved:false}).eq('id',id);return error?`변경 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
- const deleteProfile=(id:string)=>act('p:'+id,async()=>{const {data:{session}}=await supabase.auth.getSession();if(!session?.access_token)return '로그인이 만료됐어요. 다시 로그인해 주세요.';const res=await fetch('/api/admin/delete-user',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({userId:id})});const body=await res.json().catch(()=>({}));return res.ok?null:(body?.message||'계정 삭제 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.')});
+ const reviewSignup=(id:string,decision:'APPROVE'|'REJECT')=>act('p:'+id,async()=>{
+  const {error}=await supabase.rpc('cbgpu_review_signup',{p_user_id:id,p_decision:decision});
+  return error?'가입 확인 결과를 저장하지 못했어요. 목록을 새로고침해 주세요.':null;
+ });
  const approveReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';if(conflicts(r))return '이미 승인된 예약과 시간이 겹쳐요. 예약 시간을 확인해 주세요.';const {error}=await supabase.rpc('approve_gpu_reservation',{p_reservation_id:r.id});return error?`승인 결과를 확인하지 못했어요. 목록을 새로고침해 주세요.`:null});
  const rejectReservation=(r:any)=>act('r:'+r.id,async()=>{if(!matchesAdminGpuView(r,'pending',Date.now()))return '진행 중인 승인 대기 예약만 처리할 수 있어요. 새로고침해 주세요.';const {data,error}=await supabase.from('reservations').update({status:'rejected'}).eq('id',r.id).eq('status','pending').gt('end_time',new Date().toISOString()).select('id');return error||!data?.length?'거절 결과를 확인하지 못했어요. 예약 목록을 새로고침해 주세요.':null});
  if(authLoading)return <div className="flex min-h-dvh items-center justify-center"><LoadingSpinner label="권한 확인 중"/></div>;
@@ -99,14 +101,19 @@ export default function MobileAdminPage(){
  {loading&&!profiles.length&&!reservations.length?<div className="flex justify-center py-16"><LoadingSpinner label="불러오는 중"/></div>:<>
   {tab==='home'&&<div className="space-y-3">
    {study&&<a href="/admin/study" className="flex w-full items-start gap-4 rounded-2xl border border-border bg-card p-5"><span className={`mt-0.5 ${healthTone[study.state]}`}><Activity className="size-6"/></span><span className="min-w-0 flex-1"><span className="block text-sm text-muted-foreground">자습 연결</span><span className={`block text-lg font-semibold ${healthTone[study.state]}`}>{study.label}</span><span className="mt-1 block text-sm text-muted-foreground">{study.detail}</span><span className="mt-2 block text-xs text-muted-foreground">{study.hoursLeft!==null&&<>토큰 만료까지 {leftText(study.hoursLeft)}</>}{study.minutesAgo!==null&&<>{study.hoursLeft!==null?' · ':''}마지막 점검 {study.minutesAgo}분 전</>}</span></span></a>}
-   <button onClick={()=>go('signups')} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left"><span><span className="block text-sm text-muted-foreground">승인 대기 계정</span><span className="block text-3xl font-semibold">{pendingProfiles.length}<span className="ml-1 text-base font-medium">명</span></span></span><UserPlus className="size-6 text-primary"/></button>
+   <button onClick={()=>go('signups')} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left"><span><span className="block text-sm text-muted-foreground">확인할 새 계정</span><span className="block text-3xl font-semibold">{pendingProfiles.length}<span className="ml-1 text-base font-medium">명</span></span></span><UserPlus className="size-6 text-primary"/></button>
    <button onClick={()=>go('gpu')} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left"><span><span className="block text-sm text-muted-foreground">대기 중인 GPU 예약</span><span className="block text-3xl font-semibold">{pendingReservations.length}<span className="ml-1 text-base font-medium">건</span></span></span><Cpu className="size-6 text-primary"/></button>
   </div>}
   {tab==='signups'&&(pendingProfiles.length?pendingProfiles.map(p=><article key={p.id} className="rounded-2xl border border-border bg-card p-4">
-   <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-base font-semibold">{p.full_name||'이름 없음'}</p><p className="text-sm text-muted-foreground">{p.student_id||'학번 없음'}</p></div><span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground"><Clock className="size-3"/>{p.is_approved===false?'확인 필요':'대기'}</span></div>
-   <Button className="mt-4 min-h-11 w-full gap-2" disabled={!!busyKey} onClick={()=>void approveProfile(p.id)}>{busyKey==='p:'+p.id?<Loader2 className="size-4 animate-spin"/>:<Check className="size-4"/>}승인</Button>
-     <div className="mt-2 grid grid-cols-2 gap-2"><Button variant="outline" className="min-h-11 gap-2" disabled={!!busyKey||p.is_approved===false} onClick={()=>void markReview(p.id)}><HelpCircle className="size-4"/>{p.is_approved===false?'확인 필요':'보류'}</Button><Button variant="outline" className="min-h-11 gap-2 border-destructive/40 text-destructive hover:bg-destructive/10" disabled={!!busyKey} onClick={()=>setDeleteTarget({id:p.id,name:p.full_name||'이름 없음'})}><Trash2 className="size-4"/>거절</Button></div>
-  </article>):<p className="py-16 text-center text-sm text-muted-foreground">승인 대기 중인 계정이 없어요.</p>)}
+   <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="min-w-0 space-y-1"><p className="break-words text-base font-semibold">{p.full_name||'이름 없음'}</p>{p.email&&<p className="break-all text-sm text-muted-foreground">{p.email}</p>}<p className="text-sm text-muted-foreground">{accountStudentNumberDisplay(p)}</p></div>
+    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-sm text-muted-foreground"><Clock className="size-3"/>이용 중 · 확인 필요</span>
+   </div>
+   <div className="mt-4 grid grid-cols-2 gap-2">
+    <Button className="min-h-11 gap-2" disabled={!!busyKey} onClick={()=>void reviewSignup(p.id,'APPROVE')}>{busyKey==='p:'+p.id?<Loader2 className="size-4 animate-spin"/>:<Check className="size-4"/>}승인</Button>
+    <Button variant="outline" className="min-h-11 gap-2 border-destructive/40 text-destructive hover:bg-destructive/10" disabled={!!busyKey} onClick={()=>setRejectTarget({id:p.id,name:p.full_name||'선택한 계정'})}><X className="size-4"/>거절</Button>
+   </div>
+  </article>):<p className="py-16 text-center text-sm text-muted-foreground">확인할 새 계정이 없어요.</p>)}
   {tab==='gpu'&&<section aria-label="GPU 예약 전체 내역" className="space-y-3">
    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-semibold">전체 예약 내역</h2><Button variant="outline" className="min-h-11 gap-2" aria-label="GPU 예약 새로고침" disabled={loading||!!busyKey} onClick={()=>void load()}><RefreshCw className="size-4"/>새로고침</Button></div>
@@ -134,6 +141,6 @@ export default function MobileAdminPage(){
    <a href={siteHref('https://app.cbgpu.com/')} className="flex min-h-14 items-center justify-between rounded-2xl border border-border bg-card px-5 text-base font-semibold">CBGPU 앱으로 돌아가기 <ArrowLeft className="size-4 text-muted-foreground"/></a>
   </div>}
  </>}
- <ConfirmDialog open={!!deleteTarget} title="가입을 거절할까요?" description={`${deleteTarget?.name??''} 님의 계정이 삭제되고 더 이상 로그인할 수 없어요. 되돌릴 수 없어요.`} confirmLabel={busyKey?'삭제 중…':'거절하고 삭제'} cancelLabel="취소" onConfirm={()=>{const t=deleteTarget;setDeleteTarget(null);if(t)void deleteProfile(t.id)}} onCancel={()=>setDeleteTarget(null)}/>
+ <ConfirmDialog open={!!rejectTarget} title="이 계정의 이용을 제한할까요?" description={`${rejectTarget?.name??''} 님의 서비스 이용이 제한돼요. 계정과 데이터는 보관돼요.`} confirmLabel="거절하고 이용 제한" cancelLabel="취소" onConfirm={()=>{const target=rejectTarget;setRejectTarget(null);if(target)void reviewSignup(target.id,'REJECT')}} onCancel={()=>setRejectTarget(null)}/>
  </div>;
 }

@@ -1,7 +1,7 @@
 'use client';
 import {useAdminLanguage,adminNotice} from '@/components/admin/admin-language';
 import AccountSchoolDetails from '@/components/admin/AccountSchoolDetails';
-import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay,schoolAccountApprovalScope,schoolAccountApprovalState,accountSchools}from'@/lib/adminAccountSchools';
+import{accountMatchesSchool,accountSchoolOptions,accountSchoolSearch,accountStudentNumberDisplay,signupReviewState,accountSchools}from'@/lib/adminAccountSchools';
 import SchoolAdminHub from'@/components/schools/SchoolAdminHub';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAlert } from '@/lib/alert';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/useAuth';
-import { ShieldAlert, CheckCircle2, XCircle, Clock, Undo2, Server, Container, GitBranch, Globe, School, Lock, Users, HelpCircle, Megaphone, Printer, Scissors, Plus, X, Music, RefreshCw } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, XCircle, Clock, Undo2, Server, Container, GitBranch, Globe, School, Lock, Users, Megaphone, Printer, Scissors, Plus, X, Music, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -35,7 +35,7 @@ export default function AdminPage({sectionOverride}:{sectionOverride?:AdminTab})
 
 function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialReview:boolean}) {
   const {t,app}=useAdminLanguage();
-  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isAdmin, isLoading: authLoading } = useAuth();
   const { showError, showSuccess, confirm } = useAlert();
   const [tab, setTab] = useState<AdminTab>(initialTab);
   const [query, setQuery] = useState('');
@@ -46,10 +46,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const [gpuFilter, setGpuFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [schoolFilter,setSchoolFilter]=useState('all');
-  const schoolAccountsEnabled=process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1';
-  const modernSchoolAccount=(account:any)=>schoolAccountsEnabled&&schoolAccountApprovalScope(account,schoolFilter).kind!=='legacy';
-  const accountState=(account:any)=>modernSchoolAccount(account)?schoolAccountApprovalState(account,schoolFilter):account.is_approved===true?'approved':account.is_approved===false?'restricted':'unreviewed';
-  const accountStatusBadge=(account:any)=>{const state=accountState(account),personal=modernSchoolAccount(account)&&!account.school_id&&Array.isArray(account.school_affiliations)&&account.school_affiliations.length===0;return <Badge variant={state==='approved'?'success':state==='restricted'?'danger':state==='multiple'?'default':'warning'}>{personal?t('Personal account'):state==='approved'?t('Approved'):state==='restricted'?t('Restricted'):state==='multiple'?t('Select school'):state==='unavailable'?t('School unavailable'):t('Unreviewed')}</Badge>};
+  const accountState=signupReviewState;
+  const accountStatusBadge=(account:any)=>{const state=accountState(account);return <Badge variant={state==='approved'?'success':state==='restricted'?'danger':'warning'}>{t(state==='approved'?'Approved':state==='restricted'?'Restricted':state==='unconfirmed'?'Email unconfirmed':'Active · Needs review')}</Badge>};
 
   const [rowActions, setRowActions] = useState<Record<string, boolean>>({});
   const activeRowActions = useRef(new Set<string>());
@@ -216,16 +214,33 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
     setTimeout(() => setProfilesJustFinished(false), 600);
   };
 
-  async function setProfileApproval(id: string, approved: boolean) {
-    const account=profiles.find(profile=>profile.id===id);if(account&&modernSchoolAccount(account)){showError(adminNotice('School membership is managed in the authorized school workspace.'));return;}
+  async function reviewSignup(id: string, name: string, decision: 'APPROVE'|'REJECT') {
+    if (decision==='REJECT' && !await confirm({
+      title: t('Restrict this account?'),
+      message: t('This will restrict access for {name}. Their account and data are kept.').replace('{name}',name),
+      confirmLabel: t('Reject and restrict'),
+      cancelLabel: t('Cancel'),
+    })) return;
     return runRowAction('account:' + id, async () => {
-    const { error } = await supabase.from('profiles').update({ is_approved: approved }).eq('id', id);
-    if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
-    else {
-      showSuccess(adminNotice(approved ? t("Account approved.") : t("Account marked for identity review.")));
-      await fetchProfiles();
-    }
+      const { error } = await supabase.rpc('cbgpu_review_signup',{p_user_id:id,p_decision:decision});
+      if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
+      else {
+        showSuccess(adminNotice(decision==='APPROVE'?'Account reviewed.':'Account access restricted.'));
+        await fetchProfiles();
+      }
     });
+  }
+
+  function signupActions(account:{id:string;full_name?:string|null;is_admin?:boolean;is_approved?:boolean|null;account_status?:string;email_confirmed?:boolean}){
+    const pending=accountState(account)==='unreviewed';
+    const legacyRestricted=account.is_approved===false&&account.account_status!=='SUSPENDED'&&account.email_confirmed!==false;
+    if(account.is_admin||account.id===user?.id||(!pending&&!legacyRestricted))return null;
+    const busy=rowActions['account:'+account.id];
+    const name=account.full_name||t('Selected account');
+    return <>
+      <Button size="sm" variant="outline" className="min-h-11" disabled={busy} onClick={()=>void reviewSignup(account.id,name,'APPROVE')}>{t('Approve')}</Button>
+      {pending&&<Button size="sm" variant="destructive" className="min-h-11" disabled={busy} onClick={()=>void reviewSignup(account.id,name,'REJECT')}>{t('Reject')}</Button>}
+    </>;
   }
 
   async function handleDeleteUser() {
@@ -415,7 +430,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   }
 
   const pendingCpuCount = cpuProjects.filter(p => p.status === 'pending').length;
-  const unreviewedCount = profiles.filter(p => accountState(p)!=='approved').length;
+  const unreviewedCount = profiles.filter(p => accountState(p)==='unreviewed').length;
   const pendingGpuCount = reservations.filter(r => r.status === 'pending' && new Date(r.end_time) > new Date()).length;
   const conflictsWithApproved = (target: any) => target.status === 'pending' && reservations.some(r =>
     r.id !== target.id && r.gpu_id === target.gpu_id && r.status === 'approved' &&
@@ -428,11 +443,11 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   const gpuViewLabels:Record<string,string>={all:'All reservations',pending:'Pending approval',approved:'Approved',active:'In use',upcoming:'Upcoming',ended:'Ended',rejected:'Rejected'};
   const filteredProjects = cpuProjects.filter(p => (!needsReviewOnly || p.status === 'pending') && (statusFilter === 'all' || p.status === statusFilter) && matchesQuery(p.name, p.user_email, p.profiles?.full_name, p.profiles?.student_id));
   const schoolOptions=accountSchoolOptions(profiles);
-  const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || accountState(p)!=='approved') && (statusFilter==='all'||accountState(p)===statusFilter) && (roleFilter==='all'||(['student','teacher','external'].includes(roleFilter)?accountSchools(p).some(school=>(schoolFilter==='all'||school.school_id===schoolFilter)&&school.membership_type===roleFilter.toUpperCase()):roleFilter==='admin'?p.is_admin===true:p.is_laser_cut_manager===true||p.is_wakeup_manager===true)) && matchesQuery(p.full_name,accountStudentNumberDisplay(p,schoolFilter),p.email,...accountSchoolSearch(p)));
+  const filteredProfiles = profiles.filter(p => accountMatchesSchool(p,schoolFilter) && (!needsReviewOnly || accountState(p)==='unreviewed') && (statusFilter==='all'||accountState(p)===statusFilter) && (roleFilter==='all'||(['student','teacher','external'].includes(roleFilter)?accountSchools(p).some(school=>(schoolFilter==='all'||school.school_id===schoolFilter)&&school.membership_type===roleFilter.toUpperCase()):roleFilter==='admin'?p.is_admin===true:p.is_laser_cut_manager===true||p.is_wakeup_manager===true)) && matchesQuery(p.full_name,accountStudentNumberDisplay(p,schoolFilter),p.email,...accountSchoolSearch(p)));
   const sortRows = (rows: any[]) => [...rows].sort((a, b) => {
     if (sortOrder === 'name') return String(a.profiles?.full_name || a.full_name || a.name || '').localeCompare(String(b.profiles?.full_name || b.full_name || b.name || ''));
     if (sortOrder === 'oldest' || sortOrder === 'newest') return (Date.parse(a.created_at || '') - Date.parse(b.created_at || '') || 0) * (sortOrder === 'newest' ? -1 : 1);
-    if (sortOrder === 'review') return Number(tab==='accounts'?accountState(b)!=='approved':b.status==='pending')-Number(tab==='accounts'?accountState(a)!=='approved':a.status==='pending');
+    if (sortOrder === 'review') return Number(tab==='accounts'?accountState(b)==='unreviewed':b.status==='pending')-Number(tab==='accounts'?accountState(a)==='unreviewed':a.status==='pending');
     return 0;
   });
   const resultTotal = tab === 'gpu' ? filteredReservations.length : tab === 'server' ? filteredProjects.length : filteredProfiles.length;
@@ -478,7 +493,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
             <Input type="search" aria-label={t("Search current list")} placeholder={tab === 'server' ? t("Search project name or email") : tab === 'accounts' ? t("Search name, school, student ID or email") : t("Search name, student ID, GPU, purpose or reservation ID")} value={query} onChange={e => { setQuery(e.target.value); setVisibleLimit(30); }} className="h-11 min-w-0 flex-1 basis-full lg:basis-64" />
             {tab!=='gpu'&&<Button variant={needsReviewOnly ? 'secondary' : 'outline'} className="min-h-11" aria-pressed={needsReviewOnly} onClick={() => { setNeedsReviewOnly(v => !v); setStatusFilter('all'); setVisibleLimit(30); }}>{tab === 'accounts' ? t("Needs review only") : t("Pending only")}</Button>}
             {(query || needsReviewOnly || statusFilter !== 'all' || gpuFilter !== 'all' || roleFilter !== 'all' || schoolFilter !== 'all') && <Button variant="ghost" className="min-h-11" onClick={resetFilters}>{t("Clear filters")}</Button>}
-            {tab!=='gpu'&&<label className="text-xs font-semibold space-y-2"><span className="block">{t("Status")}</span><Dropdown aria-label={t("Filter by status")} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All statuses")}</option>{tab === 'accounts' ? <><option value="unreviewed">{t("Unreviewed")}</option><option value="approved">{t("Approved")}</option><option value="restricted">{t("Restricted")}</option></> : <><option value="pending">{t("Pending approval")}</option><option value="approved">{t("Approved")}</option><option value="rejected">{t("Rejected")}</option></>}</Dropdown></label>}
+            {tab!=='gpu'&&<label className="text-xs font-semibold space-y-2"><span className="block">{t("Status")}</span><Dropdown aria-label={t("Filter by status")} value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setNeedsReviewOnly(false); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All statuses")}</option>{tab === 'accounts' ? <><option value="unreviewed">{t("Active · Needs review")}</option><option value="unconfirmed">{t("Email unconfirmed")}</option><option value="approved">{t("Approved")}</option><option value="restricted">{t("Restricted")}</option></> : <><option value="pending">{t("Pending approval")}</option><option value="approved">{t("Approved")}</option><option value="rejected">{t("Rejected")}</option></>}</Dropdown></label>}
             {tab === 'gpu' && <label className="text-xs font-semibold space-y-2"><span className="block">GPU</span><Dropdown aria-label={t("Filter by GPU")} value={gpuFilter} onChange={e => { setGpuFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All GPUs")}</option>{[1,2,3,4].map(id => <option key={id} value={String(id)}>{t("GPU #")}{id}</option>)}</Dropdown></label>}
             {tab==='accounts'&&<label className="min-w-0 max-w-full text-xs font-semibold space-y-2"><span className="block">{t("School")}</span><Dropdown aria-label={t("Filter accounts by school")} value={schoolFilter} disabled={profilesLoading} onChange={event=>{setSchoolFilter(event.target.value);setPage(1)}} className="block min-h-11 w-full max-w-72 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All schools")}</option>{schoolOptions.map(school=><option key={school.id} value={school.id}>{school.name}</option>)}<option value="none">{t("No school affiliation")}</option>{profiles.some(profile=>accountMatchesSchool(profile,'unavailable'))&&<option value="unavailable">{t("School information unavailable")}</option>}</Dropdown></label>}
             {tab === 'accounts' && <label className="text-xs font-semibold space-y-2"><span className="block">{t("Role")}</span><Dropdown aria-label={t("Filter by role")} value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setVisibleLimit(30); }} className="block min-h-11 rounded-lg border bg-background px-3 text-sm"><option value="all">{t("All accounts")}</option><option value="student">{t("Students")}</option><option value="teacher">{t("Teachers")}</option><option value="external">{t("External collaborators")}</option><option value="admin">{t("Platform administrators")}</option><option value="manager">{t("Laser and music managers")}</option></Dropdown></label>}
@@ -801,17 +816,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         {accountStatusBadge(p)}
                       </div>
                       <div className="flex gap-2 flex-wrap justify-end">
-                        {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">{t("School membership is managed in the authorized school workspace.")}</p>:<>{p.is_approved !== true && (
-                          <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
-
-                             {t("Approve")} </Button>
-                        )}
-                        {p.is_approved !== false && (
-                          <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, false)}>
-
-                             {t("Mark for review")} </Button>
-                        )}
-                        </>}
+                        {signupActions(p)}
                         <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || t("Selected account")} ${t("Delete")}`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
                           <Trash2 className="size-3" />
                         </Button>
@@ -857,17 +862,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
                         </TableCell>
                         <TableCell className="text-right py-5 px-6">
                           <div className="flex justify-end gap-2 flex-wrap">
-                            {modernSchoolAccount(p)?<p className="text-sm text-muted-foreground">{t("School membership is managed in the authorized school workspace.")}</p>:<>{p.is_approved !== true && (
-                              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, true)}>
-
-                                 {t("Approve")} </Button>
-                            )}
-                            {p.is_approved !== false && (
-                              <Button size="sm" variant="destructive" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-4 rounded-xl shadow-lg shadow-destructive/20 transition-all active:scale-95" disabled={rowActions['account:' + p.id]} onClick={() => setProfileApproval(p.id, false)}>
-
-                                 {t("Mark for review")} </Button>
-                            )}
-                            </>}
+                            {signupActions(p)}
                         <Button size="sm" variant="outline" className="font-black text-[10px] uppercase min-h-11 md:min-h-8 h-auto px-3 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 transition-all active:scale-95 gap-1.5" disabled={rowActions['account:' + p.id]} aria-label={`${p.full_name || p.student_id || t("Selected account")} ${t("Delete")}`} onClick={() => setDeleteTarget({ id: p.id, name: p.full_name || p.student_id || "Account unavailable" })}>
                               <Trash2 className="size-3" />   {t("Delete")} </Button>
                           </div>
