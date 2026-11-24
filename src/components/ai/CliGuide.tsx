@@ -5,7 +5,7 @@ export default function CliGuide(){return <div className="cb-page-content mx-aut
   <p className="text-sm leading-6 text-muted-foreground">내 컴퓨터에 개인 비서를 설치하고 앱 조작, 파일 접근, 로그인·가입 권한을 선택할 수 있어요. Windows, macOS, Linux에서 사용할 수 있어요.</p>
   <p className="text-sm leading-6 text-muted-foreground">두 에이전트 모두 Telegram으로 작업을 맡길 수 있어요. 브라우저와 여러 앱을 오가는 작업에는 OpenClaw, 긴 작업을 이어가거나 반복 작업을 스킬로 저장할 때는 Hermes를 골라 보세요.</p>
   <div className="flex flex-wrap gap-2">
-    <a href="https://github.com/CBGPU-Engineering/CBGPU-agent-setup/releases/tag/v0.3.0" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground">실행파일 받기<ArrowRight size={16}/></a>
+    <a href="https://github.com/CBGPU-Engineering/CBGPU-agent-setup/releases" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground">실행파일 받기<ArrowRight size={16}/></a>
   </div>
   <p className="text-sm leading-6 text-muted-foreground">Windows에서는 .exe, Linux에서는 .AppImage를 실행하세요. macOS에서는 압축을 풀고 앱을 여세요. 설치가 끝나면 내려받은 도우미 파일은 삭제할 수 있어요.</p>
   <p className="text-sm leading-6 text-muted-foreground">설치 화면은 미리 써 볼 수 있어요. CBGPU 모델 연결은 공개 API에 호환 모델이 추가되면 사용할 수 있어요.</p>
