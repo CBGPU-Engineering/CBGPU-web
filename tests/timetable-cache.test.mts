@@ -31,9 +31,10 @@ test('failed or empty responses cannot overwrite the last valid stored schedule'
 });
 
 test('a hanging provider does not hold an available timetable hostage',async()=>{
- let now=initial,slow=false,finish;const store=memory(),loader=createTimetableLoader(async()=>{if(slow)await new Promise(resolve=>{finish=resolve});return raw()},store,()=>now);
+ let now=initial,slow=false,finish,operatorFinished=false;const store=memory(),loader=createTimetableLoader(async()=>{if(slow)await new Promise(resolve=>{finish=resolve});return raw()},store,()=>now);
  await loader.get();now+=6*60_000;slow=true;const start=Date.now();
+ const warming=loader.get(true,{waitForRefresh:true}).then(result=>{operatorFinished=true;return result});
  const fallback=await loader.get();assert.equal(fallback.stale,true);assert.ok(Date.now()-start<4500);assert.equal(fallback.at,initial);
  const again=Date.now();assert.equal((await loader.get()).stale,true);assert.ok(Date.now()-again<500);
- finish();await new Promise(resolve=>setTimeout(resolve,5));assert.equal((await loader.get()).stale,false);
+ assert.equal(operatorFinished,false);finish();assert.equal((await warming).stale,false);assert.equal((await loader.get()).stale,false);
 });

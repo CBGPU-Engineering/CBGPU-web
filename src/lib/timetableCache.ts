@@ -31,9 +31,9 @@ export function createTimetableLoader(load:()=>Promise<TimetableRaw>,store:Timet
   const budget=Math.max(0,3000-(Date.now()-started));
   return Promise.race([work,new Promise<{raw:TimetableRaw;at:number;stale:boolean}>(resolve=>{timer=setTimeout(()=>resolve({...saved,stale:true}),budget)})]).finally(()=>clearTimeout(timer));
  };
- return {async get(force=false):Promise<{raw:TimetableRaw;at:number;stale:boolean}>{
+ return {async get(force=false,{waitForRefresh=false}={}):Promise<{raw:TimetableRaw;at:number;stale:boolean}>{
   boot??=store.read().then(value=>{if(usableTimetableSnapshot(value,clock()))snapshot=value}).catch(()=>{});await boot;
-  if(pending)return answer(pending);
+  if(pending)return waitForRefresh?pending:answer(pending);
   const cached=current();
   if(clock()<retryAt){if(cached)return {...cached,stale:true};throw lastError||Error('시간표 제공처에 잠시 연결할 수 없어요. 잠시 후 다시 조회해 주세요.')}
   if(!force&&!lastError&&cached&&clock()-cached.at<FRESH)return {...cached,stale:false};
@@ -46,6 +46,6 @@ export function createTimetableLoader(load:()=>Promise<TimetableRaw>,store:Timet
     return {raw,at:snapshot.at,stale:false};
    }catch(error){lastError=error;retryAt=clock()+RETRY;console.warn('Timetable refresh unavailable; last-good fallback checked');const saved=current();if(saved)return {...saved,stale:true};throw error}
    finally{pending=null}
-  })();return answer(pending);
+  })();return waitForRefresh?pending:answer(pending);
  }};
 }

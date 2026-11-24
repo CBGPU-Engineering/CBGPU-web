@@ -13,7 +13,9 @@ export async function POST(req:NextRequest){
   const endpoint=trustedInternalServiceUrl(process.env.CBGPU_SCHOOLS_API_URL||'http://127.0.0.1:3546',process.env.CBGPU_INTERNAL_NETWORK_MODE);endpoint.pathname='/v1/schools/'+encodeURIComponent(input.school_id);endpoint.search='';endpoint.hash='';
   const response=await fetch(endpoint,{headers:{Accept:'application/json'},cache:'no-store',redirect:'error',signal:AbortSignal.timeout(12000)});if(!response.ok)return reply({error:'Canonical school source unavailable'},503);
   const target=timetableWarmTarget(input.school_id,JSON.parse(await boundedSchoolBody(response.body,65536)));
-  const result=await getTimetable(input.grade,input.class,{school:target,forceRefresh:true});
+  // Operator warming can wait for the bounded provider requests. Interactive
+  // callers still get their saved timetable when a fetch takes over three seconds.
+  const result=await getTimetable(input.grade,input.class,{school:target,forceRefresh:true,waitForRefresh:true});
   const days=Object.values(result.grid),cells=days.reduce((n,day)=>n+Object.keys(day).length,0);
   if(result.stale||cells===0)return reply({error:'Fresh timetable unavailable'},503);
   // Never return the timetable, teacher names, provider URL or secret to a cron job.

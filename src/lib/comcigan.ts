@@ -235,8 +235,8 @@ function decodeGrid(raw: RawData, grade: number, cls: number,maxPeriod=MAX_PERIO
   return grid;
 }
 
-export async function getTimetable(grade: number, cls: number, opts?: { forceRefresh?: boolean;school?:ComciganSchoolTarget }): Promise<TimetableResult> {
-  const {raw,at,stale} = await loaderFor(opts?.school).get(opts?.forceRefresh);
+export async function getTimetable(grade: number, cls: number, opts?: { forceRefresh?: boolean;waitForRefresh?: boolean;school?:ComciganSchoolTarget }): Promise<TimetableResult> {
+  const {raw,at,stale} = await loaderFor(opts?.school).get(opts?.forceRefresh,{waitForRefresh:opts?.waitForRefresh});
 
   const {grades,classes}=timetableChoices(raw?.['학급수'],grade,cls);
 
