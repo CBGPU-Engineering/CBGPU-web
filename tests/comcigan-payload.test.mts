@@ -34,6 +34,14 @@ test('fails closed for tampered ciphertext, wrong tags/keys and malformed encodi
  assert.throws(()=>decodeComciganPayload(body,'cd'.repeat(32)));assert.throws(()=>decodeComciganPayload(body,null));
  assert.throws(()=>decodeComciganPayload('x'.repeat(8_000_001),key));
 });
+test('recognizes rotated row aliases and rejects ambiguous school codes',()=>{
+ const source='Math.floor(data[i][0]/6347)+2; Math.floor(H학교명단.학교검색[i][0]/6347)+2;';
+ const {schoolCodeDivisor}=extractComciganTransport(source);
+ assert.equal(schoolCodeDivisor,6347);
+ assert.deepEqual(extractComciganSchools([[12694,'충북','충북과학고등학교',123,71507,456]],schoolCodeDivisor),[{region:'충북',name:'충북과학고등학교',code:71507}]);
+ assert.throws(()=>extractComciganTransport(source+'Math.floor(data[i][0]/6000)+2'));
+ assert.throws(()=>extractComciganSchools([[12694,'a','b',123,71507,456]],null,[17,29]));
+});
 test('derives rotating public transport constants and school-code column from official source',()=>{
  const source=`var sc3='./123?'+btoa(s7+'_'+da1+'_'+r+'_enc2');var key=CryptoJS.enc.Hex.parse('${key}');var r=Math.floor(학교명단[i][0]/6000)+2;`;
  assert.deepEqual(extractComciganTransport(source),{suffix:'_enc2',key,schoolCodeDivisor:6000});
