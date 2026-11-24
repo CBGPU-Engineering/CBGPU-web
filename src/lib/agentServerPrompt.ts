@@ -20,6 +20,7 @@ export const serverAgentPermissions = {
   sudo: '운영체제 승인 후 관리자 명령 실행',
   accounts: '사이트 로그인·가입',
   skills: '추가 스킬 설치',
+  awake: '에이전트가 실행 중일 때 절전 방지',
 } as const;
 
 export type ServerAgent = keyof typeof serverAgents;
@@ -27,7 +28,21 @@ export type ServerAgentPermission = keyof typeof serverAgentPermissions;
 export const serverPermissionKeys = Object.keys(serverAgentPermissions) as ServerAgentPermission[];
 export const telegramUserIdPattern = '[1-9][0-9]{0,15}';
 const telegramUserId = new RegExp('^' + telegramUserIdPattern + '$');
+const telegramBotIdentity = /^(?:[1-9][0-9]{4,19}|@?[A-Za-z][A-Za-z0-9_]{4,31})$/;
 const endpoint = 'https://cbgpu.com/api/ai/v1';
+
+export function buildAgentServerEnvironment(apiKey: string, botToken: string) {
+  if (apiKey && !/^cbgpu_ai_[A-Za-z0-9_-]{12,250}$/.test(apiKey)) {
+    throw new Error('CBGPU에서 발급한 API 키를 다시 확인해 주세요.');
+  }
+  if (botToken && !/^[0-9]{5,20}:[A-Za-z0-9_-]{25,100}$/.test(botToken)) {
+    throw new Error('BotFather에서 받은 토큰을 콜론 앞뒤까지 모두 입력해 주세요.');
+  }
+  return [
+    ...(apiKey ? [`CBGPU_API_KEY=${apiKey}`] : []),
+    ...(botToken ? [`TELEGRAM_BOT_TOKEN=${botToken}`] : []),
+  ].join('\n');
+}
 
 export function permissionAvailable(permission: ServerAgentPermission, agent: ServerAgent, telegram: boolean) {
   if (permission === 'vault' || permission === 'sudo') return agent === 'hermes';
@@ -43,12 +58,17 @@ export function serverSetupDependency(permission: ServerAgentPermission, agent: 
 export function buildAgentServerPrompt(options: {
   agent: ServerAgent;
   telegramUser?: string;
+  telegramBot?: string;
+  hasEnvironmentFile?: boolean;
   autoStart: boolean;
   permissions: readonly ServerAgentPermission[];
 }) {
-  const {agent, telegramUser, autoStart, permissions} = options;
+  const {agent, telegramUser, telegramBot, hasEnvironmentFile, autoStart, permissions} = options;
   if (telegramUser !== undefined && !telegramUserId.test(telegramUser)) {
     throw new Error('Telegram 숫자 사용자 ID를 확인해 주세요.');
+  }
+  if (telegramBot && (telegramUser === undefined || !telegramBotIdentity.test(telegramBot))) {
+    throw new Error('Telegram의 @봇이름이나 숫자 봇 ID를 다시 확인해 주세요.');
   }
 
   const selected = new Set(permissions.filter(permission => permissionAvailable(permission, agent, telegramUser !== undefined)));
@@ -76,10 +96,16 @@ export function buildAgentServerPrompt(options: {
       ? `models.providers.cbgpu에서 api를 openai-completions, 기본 모델을 cbgpu/${model.id}로 설정하고 API 키는 비밀 환경변수 CBGPU_API_KEY로 참조하세요.`
       : `model.provider는 custom, model.base_url은 위 API 주소, model.default는 ${model.id}, model.key_env는 CBGPU_API_KEY로 설정하세요.`,
     '필요한 비밀값이 없으면 서버에서 직접 입력할 위치를 알려주세요. 실제 API 키와 봇 토큰은 채팅, 명령 인자, 소스, 출력 및 로그에 남기지 마세요.',
+    ...(hasEnvironmentFile ? [
+      '사용자가 내려받은 cbgpu-agent.env를 개인 서버 경로로 전달할 수 있도록 안내하세요. 파일이 이미 있으면 내용을 출력하거나 파싱 결과를 기록하지 말고, 권한 600과 소유자를 확인한 뒤 서비스가 읽는 비밀 설정으로 연결하세요.',
+    ] : []),
     telegramUser
-      ? `Telegram 봇 토큰은 TELEGRAM_BOT_TOKEN 비밀 설정에서 읽으세요. 사용자 ID ${telegramUser}의 개인 메시지만 허용하고 그룹을 비활성화하세요. 외부 메시지를 전송하지 않고 getMe와 게이트웨이 상태로 연결을 확인하세요.`
+      ? `Telegram 봇 토큰은 TELEGRAM_BOT_TOKEN 비밀 설정에서 읽으세요. 사용자 ID ${telegramUser}의 개인 메시지만 허용하고 그룹을 비활성화하세요. 외부 메시지를 전송하지 않고 getMe와 게이트웨이 상태로 연결을 확인하세요.${telegramBot ? ' 연결 확인 시 봇 이름 또는 ID가 ' + telegramBot + '와 일치하는지도 확인하세요.' : ''}`
       : '새 Telegram 채널을 추가하지 마세요. 설정된 기존 채널은 보존하세요.',
     `허용할 도구 권한은 ${allowed.length ? allowed.map(permission => serverAgentPermissions[permission]).join(', ') : '없음'}입니다. 적용할 수 없는 권한은 이유를 알려주세요. 선택하지 않은 도구 권한을 열지 말고, 서비스는 비특권 계정으로 실행하세요. 관리자 인증이 필요하면 운영체제의 승인 절차를 따르세요.`,
+    ...(selected.has('awake') ? [
+      '운영체제가 지원하면 에이전트 실행 중에만 절전을 막는 서비스를 설정하세요. 기존 전원 정책 전체를 바꾸기 전에 이 기기에서 실제 지원하는지 확인하세요.',
+    ] : []),
     autoStart
       ? '서버가 재부팅된 뒤에도 시작하도록 자동 실행을 설정하세요. systemd 환경은 서비스, 컨테이너 환경은 재시작 정책과 영구 볼륨을 사용하세요.'
       : '신규 자동 실행을 등록하지 말고 수동 실행 명령을 알려주세요.',
