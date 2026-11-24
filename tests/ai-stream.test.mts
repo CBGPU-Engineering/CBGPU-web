@@ -52,3 +52,17 @@ test('a disconnected client cancels an unfinished job only once',async()=>{
  await reader.cancel();
  assert.deepEqual(cancellations,['jobs/job/cancel']);
 });
+
+test('a scheduler interruption after text keeps the job available in history',async()=>{
+ const operations=[];
+ let phase=0;
+ const api=async(path)=>{
+  operations.push(path);
+  return {job:++phase===1?{state:'running',partial:'Draft response'}:{state:'paused'}};
+ };
+ const response=load(api)(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38');
+ const text=await response.text();
+ assert.ok(text.includes('Draft response'));
+ assert.ok(text.includes('작업 내역에서 결과를 확인'));
+ assert.deepEqual(operations,['jobs/job','jobs/job']);
+});
