@@ -74,9 +74,12 @@ export function extractComciganTransport(html:string){
   const split=source.match(/Hex\.parse\(\(function\(a\)\{return ([a\[\]\d+]+);\}\)\(\[((?:['"][\da-f]+['"],?)+)\]\)\)/i);
   if(split){const values=[...split[2].matchAll(/['"]([\da-f]+)['"]/gi)].map(m=>m[1]);key=split[1].split('+').map(v=>values[Number(v.match(/a\[(\d+)\]/)?.[1])]).join('')}
  }
- const divisor=source.match(/Math\.floor\(학교명단\[i\]\[0\]\/(\d+)\)\+2/)?.[1];
+ const columns=source.matchAll(/Math\.floor\(\s*[A-Za-z_$가-힣][\w$가-힣]*(?:\.학교검색)?\s*\[\s*i\s*\]\s*\[\s*0\s*\]\s*\/\s*(\d{1,9})\s*\)\s*\+\s*2\b/g);
+ const divisors=new Set(Array.from(columns, match=>Number(match[1])));
+ const divisor=divisors.values().next().value??null;
+ if(divisor===0||divisors.size>1)throw new Error('시간표 제공처의 학교 코드 위치를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
  if(suffix&&(!key||!/^[\da-f]{64}$/i.test(key)))throw new Error('시간표 제공처의 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
- return {suffix,key:key||null,schoolCodeDivisor:divisor?Number(divisor):null};
+ return {suffix,key:key||null,schoolCodeDivisor:divisor};
 }
 
 export function extractComciganRequest(html:string){
@@ -114,6 +117,7 @@ export function extractComciganSchools(value:unknown,divisor:number|null,key:rea
  if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
  return value.flatMap(row=>{
   if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
+  if(key&&!divisor&&row.length>4)throw new Error('시간표 제공처의 학교 코드 위치를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const index=divisor?Math.floor(Number(row[0])/divisor)+2:3;
   if(divisor&&row[0]===0)return [];
   const encoded=row[index];
