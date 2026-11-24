@@ -29,12 +29,18 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
     }
     if(stopped)break;
     const partial=typeof job.partial==='string'?job.partial:'';
-    if(partial&&job.state!=='succeeded'){if(previous&&!partial.startsWith(previous))throw Error('GPU 재시작으로 생성이 다시 시작됐어요. 작업 내역에서 이어서 확인해 주세요.');if(partial.length>previous.length){send({...base,choices:[{index:0,delta:{...(!roleSent?{role:'assistant'}:{}),content:partial.slice(previous.length)},finish_reason:null}]});roleSent=true;previous=partial}}
-    if(job.state==='paused'&&previous)throw Error('GPU 예약에 양보했어요. 작업 내역에서 계속 확인할 수 있어요.');
+    if(previous&&(job.state==='paused'||(partial&&!partial.startsWith(previous)&&job.state!=='succeeded'))){
+     // The scheduler can resume the job, but replaying its tokens into this
+     // response would corrupt text already received by the client.
+     finished=true;
+     throw Error('GPU에서 작업이 다시 시작될 수 있어요. 작업 내역에서 결과를 확인해 주세요.');
+    }
+    if(partial&&job.state!=='succeeded'&&partial.length>previous.length){send({...base,choices:[{index:0,delta:{...(!roleSent?{role:'assistant'}:{}),content:partial.slice(previous.length)},finish_reason:null}]});roleSent=true;previous=partial}
     if(job.state==='succeeded'){
+     finished=true;
      const result=job.result,choice=result.choices[0],message=choice.message;if(previous&&message.content&&!message.content.startsWith(previous)&&previous.trimEnd()!==message.content.trimEnd())throw Error('생성이 재시작됐어요. 작업 내역에서 최종 결과를 확인해 주세요.');
      send({...base,choices:[{index:0,delta:{role:'assistant',...(message.content?{content:message.content.startsWith(previous)?message.content.slice(previous.length):previous.trimEnd()===message.content.trimEnd()?'':message.content}:{}),...(message.tool_calls?{tool_calls:message.tool_calls.map((t:Record<string,unknown>,index:number)=>({index,...t}))}:{})},finish_reason:null}]});
-     send({...base,choices:[{index:0,delta:{},finish_reason:choice.finish_reason||'stop'}]});if(includeUsage)send({...base,choices:[],usage:result.usage});finished=true;break;
+     send({...base,choices:[{index:0,delta:{},finish_reason:choice.finish_reason||'stop'}]});if(includeUsage)send({...base,choices:[],usage:result.usage});break;
     }
     if(['failed','cancelled','deleted'].includes(job.state)){finished=true;throw Error(job.error||'AI job stopped')}
     const now=Date.now();
