@@ -4,4 +4,5 @@ export const chatModels=[
  {id:'cbgpu-coder',name:'CBGPU Coder',description:'Qwen2.5 Coder 7B · 코드와 에이전트'},
  {id:'cbgpu-pro',name:'CBGPU Pro',description:'Qwen2.5 14B · 글쓰기와 분석'},
 ] as const;
-export const chatModelIds=new Set<string>(chatModels.map(m=>m.id));
+export const agentChatModelId='cbgpu-qwen38';
+export const chatModelIds=new Set<string>([...chatModels.map(m=>m.id),agentChatModelId]);
