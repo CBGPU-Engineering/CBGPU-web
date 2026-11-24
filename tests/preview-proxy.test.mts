@@ -5,7 +5,7 @@ import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { trustedInternalServiceUrl } from '../src/lib/internalServiceUrl.ts';
 const code = readFileSync(new URL('../src/lib/previewProxyTarget.ts', import.meta.url), 'utf8');
-const exports: Record<string, typeof import('../src/lib/previewProxyTarget').previewProxyTarget> = {};
+const exports: Record<string, typeof import('../src/lib/previewProxyTarget.ts').previewProxyTarget> = {};
 runInNewContext(ts.transpileModule(code, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, {
   exports, URL, decodeURIComponent,
   require(name: string) { assert.equal(name, './internalServiceUrl'); return { trustedInternalServiceUrl }; },
