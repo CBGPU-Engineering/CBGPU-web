@@ -11,7 +11,7 @@ const limits=new WindowRateLimiter(120,60000),ipLimits=new WindowRateLimiter(240
 export const runtime='nodejs';
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[a-f0-9-]{36}$/.test(value);
 const error=(message:string,status:number)=>NextResponse.json({message},{status,headers:{'Cache-Control':'no-store'}});
-async function backend(parts:string[],owner:string,method='GET',body?:unknown,resourceOwner?:string,actorSession?:string){const key=(await readFile('/home/cbgpu/CBGPU-live/backend/private/frontend-deploy-key')).toString('hex');return fetch('http://127.0.0.1:3510/'+parts.join('/'),{method,headers:{Host:'deploy.internal','x-cbgpu-deploy-key':key,'x-cbgpu-owner':owner,'content-type':'application/json',...(resourceOwner?{'x-cbgpu-resource-owner':resourceOwner}:{}),...(actorSession?{'x-cbgpu-actor-session':actorSession}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:AbortSignal.timeout(20000)})}
+async function backend(parts:string[],owner:string,method='GET',body?:unknown,resourceOwner?:string,actorSession?:string){const key=(await readFile('/home/cbgpu/CBGPU-live/backend/private/frontend-deploy-key')).toString('hex');return fetch('http://127.0.0.1:3510/'+parts.join('/'),{method,headers:{Host:'deploy.internal','x-cbgpu-deploy-key':key,'x-cbgpu-owner':owner,'content-type':'application/json',...(resourceOwner?{'x-cbgpu-resource-owner':resourceOwner}:{}),...(actorSession?{'x-cbgpu-actor-session':actorSession}:{})},body:body===undefined?undefined:JSON.stringify(body),cache:'no-store',signal:AbortSignal.timeout(parts[0]==='compose'&&parts[2]==='terminal'?26000:20000)})}
 async function forward(response:Response){return new NextResponse(await response.text(),{status:response.status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}})}
 function publicCPU(project:Record<string,unknown>,role:string){const{deploy_actor_session_id:_privateSession,...visible}=project;project=visible;if(role==='viewer'){const values=project.env_vars as Record<string,string>||{};project={...project,env_vars:Object.fromEntries(Object.entries(values).filter(([key])=>['CBGPU_RUNTIME_PRESET','CBGPU_ROOT_DIRECTORY','CBGPU_DEPLOY_ENGINE','CBGPU_COMPOSE_FILE','CBGPU_GATEWAY_SERVICE','CBGPU_STORAGE_GB'].includes(key))),environment_keys:Object.keys(values).filter(key=>!key.startsWith('CBGPU_'))};if(typeof project.git_url==='string')try{const url=new URL(project.git_url);url.username='';url.password='';project.git_url=url.href}catch{project.git_url=null}}return{...project,collaboration_role:role}}
 function invalidEngine(env:Record<string,string>,previous?:Record<string,string>){
@@ -37,7 +37,14 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
  if(!['GET','HEAD'].includes(request.method)){const chunks:Uint8Array[]=[];let length=0;const reader=request.body?.getReader();if(reader)while(true){const part=await reader.read();if(part.done)break;length+=part.value.byteLength;if(length>65536){await reader.cancel();return error('Request too large',413)}chunks.push(part.value)}try{value=JSON.parse(Buffer.concat(chunks).toString()||'{}')}catch{return error('Invalid JSON',400)}if(!value||Array.isArray(value)||typeof value!=='object')return error('Invalid JSON',400)}
  const client=preprintsClient();
  if(path[0]==='compose'){
-  if(path.length!==2||!uuid(path[1]))return error('Not found',404);const {data}=await client.from('cpu_projects').select('id,user_id').eq('id',path[1]).neq('status','deleted').maybeSingle();if(!data)return error('Project not found',404);return forward(await backend(path,user.id,request.method,value,data.user_id));
+  if(!uuid(path[1])||!(path.length===2||path.length===3&&path[2]==='terminal'))return error('Not found',404);
+  const terminal=path.length===3;
+  if(terminal&&!['GET','POST'].includes(request.method))return error('Method not allowed',405);
+  const lookup=client.from('cpu_projects').select('id,user_id').eq('id',path[1]);
+  const {data,error:lookupError}=await (terminal?lookup.eq('user_id',user.id).eq('status','approved'):lookup.neq('status','deleted')).maybeSingle();
+  if(terminal&&lookupError)return error('프로젝트 권한을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.',503);
+  if(!data||terminal&&data.user_id!==user.id)return error('Project not found',404);
+  return forward(await backend(path,user.id,request.method,value,data.user_id));
  }
  if(path[0]==='domains'){
   if(!['frontend','server'].includes(path[1])||!uuid(path[2])||(path.length!==3&&!(path.length===4&&path[3]==='verify')))return error('Not found',404);let resourceOwner:string|undefined;if(path[1]==='server'){const {data}=await client.from('cpu_projects').select('id,user_id').eq('id',path[2]).neq('status','deleted').maybeSingle();if(!data)return error('Project not found',404);resourceOwner=data.user_id}return forward(await backend(path,user.id,request.method,value,resourceOwner));

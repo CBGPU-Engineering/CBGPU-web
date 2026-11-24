@@ -10,10 +10,10 @@ import * as crypto from 'node:crypto';
 import * as deployAccess from '../src/lib/deployAccess.ts';
 const code=ts.transpileModule(fs.readFileSync(new URL('../src/app/api/deploy/[...path]/route.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const owner='11111111-1111-4111-8111-111111111111';
-function fixture({approved=true,active=true,v2=false,compute=false,accountStatus='ACTIVE',centralMode=false,unassigned=false,sealAllowed=true,launchFails=false}={}){
+function fixture({approved=true,active=true,v2=false,compute=false,accountStatus='ACTIVE',centralMode=false,unassigned=false,sealAllowed=true,launchFails=false,serverOwner=owner}={}){
  const exports: Record<string, any> = {},backendCalls=[],filters=[],writes=[];
  let stored:Record<string,unknown>|null=null;
- const rows=[{id:'22222222-2222-4222-8222-222222222222',user_id:owner,name:'Existing server',deploy_type:'docker',status:'approved',created_at:'2026-11-01',execution_mode:unassigned?'UNASSIGNED_V1':null}];
+ const rows=[{id:'22222222-2222-4222-8222-222222222222',user_id:serverOwner,name:'Existing server',deploy_type:'docker',status:'approved',created_at:'2026-11-01',execution_mode:unassigned?'UNASSIGNED_V1':null}];
  const client={auth:{getUser:async()=>({data:{user:{id:owner,email:'owner@example.invalid',email_confirmed_at:'2026-01-01'}},error:null})},rpc:async(name,args)=>{if(name==='cbgpu_platform_cpu_service'){if(sealAllowed&&stored)stored={...stored,execution_mode:'CENTRAL_V1',allocation_school_id:args.payload.school_id};return{data:{allowed:sealAllowed},error:null}}return{data:compute,error:null}},from(table){if(table==='profiles'){const q={select(){return this},eq(){return this},maybeSingle:async()=>({data:{id:owner,is_approved:approved,account_status:accountStatus},error:null})};return q}assert.equal(table,'cpu_projects');const query={insert(v){writes.push(v);stored={id:rows[0].id,...v,deploy_actor_session_id:'private-session-not-for-client'};return this},update(v){writes.push(v);stored={...(stored||rows[0]),...v,deploy_actor_session_id:'private-session-not-for-client'};return this},single(){return Promise.resolve(launchFails&&stored?.deploy_requested_at?{data:null,error:{code:'fixture-write-outage'}}:{data:stored||{...rows[0],deploy_actor_session_id:'private-session-not-for-client'},error:null})},maybeSingle(){return Promise.resolve({data:rows[0],error:null})},select(){return this},eq(key,value){filters.push([key,value]);return this},neq(){return this},order(){return this},then(resolve){return Promise.resolve({data:rows,error:null}).then(resolve)}};return query}};
  vm.runInNewContext(code,{exports,URL,Date,Map,Buffer,AbortSignal,process:{env:{}},fetch:async(url,options)=>{assert.equal(options.headers['x-cbgpu-owner'],owner);backendCalls.push(url);return Response.json(url.endsWith('/servers')?{shared_project_ids:[]}:url.includes('/teams/')?{my_role:'owner'}:{projects:[{id:'existing-frontend',collaboration_role:'owner'}]})},require(name){
   if(name==='@/lib/centralCpuDeploy')return {...central,centralCPUEnabled:()=>centralMode,selectedCentralAllocation:async(_r,school)=>{assert.equal(school,'school-b');return school},deploymentActorSession:()=> '33333333-3333-4333-8333-333333333333'};if(name==='node:crypto')return crypto;
@@ -35,6 +35,23 @@ test('all supported deployment origins retain their authenticated listing route'
 test('host repair does not bypass approval, active-session checks or origin validation',async()=>{
  for(const options of [{approved:false},{active:false}]){const h=fixture(options);for(const path of ['projects','servers/projects'])assert.equal((await h.request(path)).status,401);assert.equal(h.backendCalls.length,0)}
  const h=fixture();assert.equal((await h.request('projects',{host:'docs.cbgpu.com'})).status,404);assert.equal((await h.request('projects',{method:'POST',origin:'https://attacker.invalid'})).status,403);assert.equal(h.backendCalls.length,0);
+});
+
+test('server terminal reaches the private worker for an active owner session only',async()=>{
+ const path='compose/22222222-2222-4222-8222-222222222222/terminal';
+ const options={method:'POST',origin:'https://researcher.cbgpu.com',body:{service:'app',argv:['pwd']}};
+ const permitted=fixture();
+ assert.equal((await permitted.request(path,options)).status,200);
+ assert.equal(permitted.backendCalls.length,1);
+ assert.ok(permitted.filters.some(([key,value])=>key==='status'&&value==='approved'));
+ for(const [change,status] of [[{serverOwner:'55555555-5555-4555-8555-555555555555'},404],[{active:false},401]] as const){
+  const denied=fixture(change);
+  assert.equal((await denied.request(path,options)).status,status);
+  assert.equal(denied.backendCalls.length,0);
+ }
+ assert.equal((await permitted.request(path,{...options,method:'DELETE'})).status,405);
+ assert.equal((await permitted.request(path,{...options,origin:'https://other.invalid'})).status,403);
+ assert.equal(permitted.backendCalls.length,1);
 });
 
 test('server create and settings accept 8/16 GB but reject values above the 16 GB cap',async()=>{
