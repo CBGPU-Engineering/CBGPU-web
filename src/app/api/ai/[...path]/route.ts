@@ -2,7 +2,7 @@ import {aiResourceRequired} from '@/lib/aiRouteAccess';
 import {NextRequest,NextResponse} from 'next/server';
 import {AiFailure,aiIdentity,aiInternal,aiJson,waitAi,aiUserClient} from '@/lib/aiServer';
 import {conversationStream} from '@/lib/aiConversationStream';
-import {chatModelIds} from '@/lib/aiModels';
+import {agentChatModelId,chatModelIds} from '@/lib/aiModels';
 import {aiStream} from '@/lib/aiStream';
 import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
@@ -73,7 +73,10 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    if(path.join('/')==='v1/models'&&request.method==='GET')return NextResponse.json(await aiJson('models',owner));
    if(path.join('/')==='v1/chat/completions'&&request.method==='POST'){
     if(body.model&&!chatModelIds.has(String(body.model)))throw new AiFailure('지원하지 않는 로컬 모델입니다. /v1/models에서 모델 목록을 확인해 주세요.');
-    const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??(body.model==='cbgpu-oss'?3072:1024),model:body.model||'cbgpu-chat',effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});if(body.stream)return aiStream(request,owner,job.id,String(body.model||'cbgpu-chat'),!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage);return NextResponse.json(await waitAi(owner,job.id));
+    const model=String(body.model||'cbgpu-chat');
+    const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??(model==='cbgpu-oss'?3072:1024),model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
+    if(body.stream)return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,model===agentChatModelId?720_000:undefined);
+    return NextResponse.json(await waitAi(owner,job.id));
    }
    if(path.join('/')==='v1/embeddings'&&request.method==='POST'){
     if(body.model&&body.model!=='cbgpu-embeddings')throw new AiFailure('model은 cbgpu-embeddings를 사용해 주세요.');const {job}=await aiJson('jobs',owner,'POST',{kind:'embed',input:{input:body.input},title:'API embeddings'});return NextResponse.json(await waitAi(owner,job.id));
