@@ -5,17 +5,29 @@ export function takeAiStream(owner:string){if((owners.get(owner)||0)>=4||total>=
 /** Forward real inference deltas while the private GPU job is running.
  * Tool calls are emitted only after validation; keep-alives are never answer text.
  */
-export function aiStream(request:Request,owner:string,id:string,model:string,includeUsage=false,waitMilliseconds=300_000,reportProgress=false){
- const release=takeAiStream(owner);let previous='',roleSent=false;const base={id:'chatcmpl-'+id,object:'chat.completion.chunk',created:Math.floor(Date.now()/1000),model};
- let stopped=false,finished=false;const encoder=new TextEncoder();
- const stop=()=>{stopped=true;if(!finished)void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})};
+export function aiStream(request:Request,owner:string,id:string,model:string,includeUsage=false,waitMilliseconds=300_000,reportProgress=false,release=takeAiStream(owner)){
+ let previous='',roleSent=false;const base={id:'chatcmpl-'+id,object:'chat.completion.chunk',created:Math.floor(Date.now()/1000),model};
+ let stopped=false,finished=false,cancelSent=false;const encoder=new TextEncoder();
+ const cancelJob=()=>{if(finished||cancelSent)return;cancelSent=true;void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})};
+ const stop=()=>{stopped=true;cancelJob()};
  const stream=new ReadableStream<Uint8Array>({async start(controller){
   const send=(value:unknown)=>{if(!stopped)controller.enqueue(encoder.encode('data: '+JSON.stringify(value)+'\n\n'))};
-  request.signal.addEventListener('abort',stop,{once:true});let heartbeat=-Infinity,lastState='';
+  request.signal.addEventListener('abort',stop,{once:true});let heartbeat=-Infinity,lastState='',pollErrors=0;
   try{
+   if(request.signal.aborted){cancelJob();return}
    controller.enqueue(encoder.encode(': queued\n\n'));const deadline=Date.now()+waitMilliseconds;
    while(!stopped&&Date.now()<deadline){
-    const {job}=await aiJson('jobs/'+id,owner);
+    let job;
+    try{
+     ({job}=await aiJson('jobs/'+id,owner));
+     pollErrors=0;
+    }catch(error){
+     // Recover a temporary status lookup failure on the same job. Re-enqueuing
+     // here would replay the request and could duplicate the agent's next action.
+     if(!reportProgress||!(error instanceof AiFailure)||![404,502,503,504].includes(error.status)||++pollErrors>2)throw error;
+     await new Promise(resolve=>setTimeout(resolve,250*pollErrors));continue;
+    }
+    if(stopped)break;
     const partial=typeof job.partial==='string'?job.partial:'';
     if(partial&&job.state!=='succeeded'){if(previous&&!partial.startsWith(previous))throw Error('GPU 재시작으로 생성이 다시 시작됐어요. 작업 내역에서 이어서 확인해 주세요.');if(partial.length>previous.length){send({...base,choices:[{index:0,delta:{...(!roleSent?{role:'assistant'}:{}),content:partial.slice(previous.length)},finish_reason:null}]});roleSent=true;previous=partial}}
     if(job.state==='paused'&&previous)throw Error('GPU 예약에 양보했어요. 작업 내역에서 계속 확인할 수 있어요.');
@@ -24,7 +36,7 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
      send({...base,choices:[{index:0,delta:{role:'assistant',...(message.content?{content:message.content.startsWith(previous)?message.content.slice(previous.length):previous.trimEnd()===message.content.trimEnd()?'':message.content}:{}),...(message.tool_calls?{tool_calls:message.tool_calls.map((t:Record<string,unknown>,index:number)=>({index,...t}))}:{})},finish_reason:null}]});
      send({...base,choices:[{index:0,delta:{},finish_reason:choice.finish_reason||'stop'}]});if(includeUsage)send({...base,choices:[],usage:result.usage});finished=true;break;
     }
-    if(['failed','cancelled','deleted'].includes(job.state))throw Error(job.error||'AI job stopped');
+    if(['failed','cancelled','deleted'].includes(job.state)){finished=true;throw Error(job.error||'AI job stopped')}
     const now=Date.now();
     if(reportProgress&&['queued','running','paused'].includes(job.state)&&(job.state!==lastState||now-heartbeat>=10_000)){
      // OpenAI SDKs discard SSE comments. Send the confirmed job state in a
@@ -36,8 +48,8 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
     }
     await new Promise(r=>setTimeout(r,180));
    }
-   if(!finished&&!stopped){send({error:{message:'GPU 대기 시간이 길어졌어요. AI 작업 목록에서 처리 상태를 확인해 주세요.',type:'timeout'}});void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})}
-  }catch(e){if(!stopped)send({error:{message:e instanceof Error?e.message:'Local AI failed',type:'server_error'}})}
+   if(!finished&&!stopped){send({error:{message:'GPU 대기 시간이 길어졌어요. 잠시 후 다시 시도해 주세요.',type:'timeout',code:'job_timeout'}});cancelJob()}
+  }catch(e){if(!stopped){send({error:{message:e instanceof Error?e.message:'Local AI failed',type:'server_error',code:'job_stream_failed'}});cancelJob()}}
   finally{release();request.signal.removeEventListener('abort',stop);if(!stopped){controller.enqueue(encoder.encode('data: [DONE]\n\n'));controller.close()}}
  },cancel(){stop();release()}});
  return new NextResponse(stream,{headers:{'Content-Type':'text/event-stream','Cache-Control':'no-store','X-Accel-Buffering':'no'}});
