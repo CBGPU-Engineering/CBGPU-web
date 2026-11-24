@@ -7,7 +7,7 @@
  * baSplit/splitData)을 직접 포팅해서 eval 없이 순수 데이터 디코딩만 수행한다.
  */
 import iconv from 'iconv-lite';
-import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest, extractComciganCellKey, decodeComciganCell,extractComciganWeekField } from './comciganSource';
+import { extractComciganMetadata, extractComciganFields, extractComciganTransport, extractComciganSchools, extractComciganRequest, extractComciganCellKey, decodeComciganCell,extractComciganWeekField,extractComciganTimesField } from './comciganSource';
 import {decodeComciganPayload} from './comciganPayload';
 import {createTimetableLoader} from './timetableCache';
 import {fileTimetableStore,schoolTimetableStore} from './timetableStore';
@@ -25,6 +25,7 @@ interface SiteMeta {
   baseUrl: string;
   cellKey:number[]|null;
   weekField:string|null;
+  timesField:string|null;
   request: ReturnType<typeof extractComciganRequest>;
   transport: ReturnType<typeof extractComciganTransport>;
   extractCode: string; // e.g. "/36179?17384l"
@@ -91,7 +92,7 @@ async function loadMeta(): Promise<SiteMeta> {
   const frameUrl = new URL(frame[1], ENTRY_URL);
   if (!['comci.net', 'www.comci.net'].includes(frameUrl.hostname)) throw new Error('시간표 제공처의 주소를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const pageSource = await fetchEucKr(frameUrl.href);
-  return { baseUrl: frameUrl.origin,weekField:extractComciganWeekField(pageSource), cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
+  return { baseUrl: frameUrl.origin,weekField:extractComciganWeekField(pageSource), timesField:extractComciganTimesField(pageSource), cellKey:extractComciganCellKey(pageSource), request:extractComciganRequest(pageSource), ...extractComciganMetadata(pageSource), fields: extractComciganFields(pageSource), transport: extractComciganTransport(pageSource) };
 }
 
 async function getMeta(forceRefresh = false): Promise<SiteMeta> {
@@ -104,7 +105,7 @@ async function getMeta(forceRefresh = false): Promise<SiteMeta> {
 async function searchSchool(meta: SiteMeta, keyword: string) {
   const query=meta.request.base64Search?encodeURIComponent(Buffer.from(meta.extractCode.split('?')[1]+encodeURIComponent(keyword)+meta.transport.suffix).toString('base64')):null;
   const url = meta.baseUrl + (query?meta.extractCode.split('?')[0]+'?'+query:meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix);
-  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key,meta.transport.suffix.slice(1));
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const list = JSON.parse(jsonStr)?.['학교검색'];
   if (!list?.length) throw new Error('시간표 제공처에서 학교를 찾지 못했어요. 학교 이름과 지역을 확인해 주세요.');
@@ -122,7 +123,7 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const payload = `${meta.scPrefix}${schoolCode}_0_${meta.scSuffix}${meta.transport.suffix}`;
   const b64 = Buffer.from(payload).toString('base64');
   const url = meta.baseUrl + path + '?' + b64;
-  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key,meta.transport.suffix.slice(1));
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {
@@ -133,6 +134,7 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   }
   const week=meta.weekField?raw[meta.weekField]:raw['시작일'];
   raw['시작일']=validateComciganWeek(typeof week==='string'?decodeComciganCell(week,meta.cellKey):week);
+  if(meta.timesField&&Array.isArray(raw[meta.timesField]))raw['일과시간']=raw[meta.timesField];
   return raw;
 }
 

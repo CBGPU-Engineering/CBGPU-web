@@ -3,16 +3,29 @@ import {createCipheriv,createHash,createHmac} from 'node:crypto';
 import {decodeComciganPayload} from '../src/lib/comciganPayload.ts';
 import {extractComciganTransport,extractComciganSchools} from '../src/lib/comciganSource.ts';
 const key='ab'.repeat(32);
-function encrypt(value: string,encoding: 'base64'|'hex'='base64'){
+function encrypt(value: string,encoding: 'base64'|'hex'='base64',format=encoding==='base64'?'enc2':'enc1'){
  const iv=Buffer.alloc(16,7),cipher=createCipheriv('aes-256-cbc',Buffer.from(key,'hex'),iv);
  const data=Buffer.concat([cipher.update(value,'utf8'),cipher.final()]);
- const payload=[encoding==='base64'?'enc2':'enc1',iv.toString(encoding),data.toString(encoding)].join(':');
+ const payload=[format,iv.toString(encoding),data.toString(encoding)].join(':');
  return payload+':'+createHmac('sha256',createHash('sha256').update(Buffer.from(key,'hex')).digest()).update(payload).digest(encoding);
 }
 test('decodes authenticated enc2 and legacy enc1 Korean payloads and plain JSON',()=>{
  const value=JSON.stringify({학교검색:[[7000,'충북','충북과학고등학교',100,71507]]});
  for(const encoding of ['base64','hex'] as const)assert.equal(decodeComciganPayload(encrypt(value,encoding)+'\x00',key),value);
  assert.equal(decodeComciganPayload(value,null),value);
+});
+test('validates rotated numbered payloads and skips display-only search rows',()=>{
+ const source="var q=btoa(s7+'_'+da1+'_'+r+'_1234');"
+  + "var key=CryptoJS.enc.Hex.parse((function(a){return a[1]+a[0];})(['"+key.slice(32)+"','"+key.slice(0,32)+"']));"
+  + "var r=Math.floor(학교명단[i][0]/6000)+2;";
+ const transport=extractComciganTransport(source);
+ assert.deepEqual(transport,{suffix:'_1234',key,schoolCodeDivisor:6000});
+ const content=JSON.stringify({학교검색:[[0,'충북','구분'],[12000,'충북','충북과학고등학교',999,71507]]});
+ const payload=encrypt(content,'base64','1234');
+ const data=JSON.parse(decodeComciganPayload(payload,transport.key,transport.suffix.slice(1)));
+ assert.deepEqual(extractComciganSchools(data.학교검색,transport.schoolCodeDivisor),[{region:'충북',name:'충북과학고등학교',code:71507}]);
+ assert.throws(()=>decodeComciganPayload(payload,'00'.repeat(32),'1234'));
+ assert.throws(()=>decodeComciganPayload(payload+'!',transport.key,'1234'));
 });
 test('fails closed for tampered ciphertext, wrong tags/keys and malformed encoding',()=>{
  const body=encrypt('{"학교검색":[]}');const parts=body.split(':');

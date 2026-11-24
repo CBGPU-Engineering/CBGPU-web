@@ -31,23 +31,28 @@ export function decodeComciganSource(html: string): string {
   return html+'\n'+decoded.join('\n');
 }
 
+const modernSearch = /\burl\s*:\s*['"]\.?(\/\d+\?)['"]\s*\+\s*(?:encodeURIComponent\(\s*)?btoa\(\s*['"](\d+l)['"]\s*\+\s*encodeURIComponent\(/;
+const viewerField = '(자료\\d{1,6}|[A-Z]{2,8}\\d{1,6}|시작일)';
+
 export function extractComciganMetadata(html: string) {
   const source = decodeComciganSource(html);
-  const modern=source.match(/function\s+QAjaxSchool[\s\S]{0,300}?url\s*:\s*['"]\.?(\/\d+\?)['"][\s\S]{0,100}?btoa\(['"](\d+l)['"]/);
+  const modern=source.match(modernSearch)
+    ||source.match(/function\s+QAjaxSchool[\s\S]{0,300}?url\s*:\s*['"]\.?(\/\d+\?)['"][\s\S]{0,100}?btoa\(['"](\d+l)['"]/);
   const search = source.match(/function\s+school_ra\s*\(\s*sc\s*\)[\s\S]{0,200}?url\s*:\s*['"]\.?(\/\d+\?[^'"\s]+)['"]/i);
-  const data = source.match(/sc_data\(\s*['"](\d+_)['"]\s*,[^,]+,\s*(\d+)/);
+  const data = source.match(/sc_data\(\s*['"](\d+_)['"]\s*,[^,]+,\s*(\d+)/)
+    ||(modern&&source.match(/\b[A-Za-z_$][\w$]*\(\s*['"](\d+_)['"]\s*,\s*(?:storage\.)?sc\s*,\s*(\d+)\s*,\s*['"][01]['"]\s*\)/));
   if ((!search&&!modern) || !data) throw new Error('시간표 제공처의 조회 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
-  return { extractCode: search?.[1]||(modern![1]+modern![2]), scPrefix: data[1], scSuffix: data[2] };
+  return { extractCode: modern?modern[1]+modern[2]:search![1], scPrefix: data[1], scSuffix: data[2] };
 }
 
 /** The provider rotates data field numbers too; derive their meaning from its renderer. */
 export function extractComciganFields(html: string) {
   const source=decodeComciganSource(html);
   const patterns={
-    base:/원자료\s*=\s*Q자료\(자료\.(자료\d+)\[/,
-    daily:/일일자료\s*=\s*Q자료\(자료\.(자료\d+)\[/,
-    teachers:/성명\s*=\s*Q성명\(자료\.(자료\d+)\[/,
-    subjects:/과목명\s*=\s*Q과목명\(자료\.(자료\d+)\[/,
+    base:new RegExp('원자료\\s*=\\s*Q자료\\(\\s*자료\\.'+viewerField+'\\['),
+    daily:new RegExp('일일자료\\s*=\\s*Q자료\\(\\s*자료\\.'+viewerField+'\\['),
+    teachers:new RegExp('성명\\s*=\\s*[\\w$가-힣]+\\(\\s*자료\\.'+viewerField+'\\['),
+    subjects:new RegExp('과목명\\s*=\\s*[\\w$가-힣]+\\(\\s*자료\\.'+viewerField+'\\['),
   };
   const fields={} as Record<keyof typeof patterns,string>;
   for(const [name,pattern] of Object.entries(patterns)){
@@ -61,7 +66,7 @@ export function extractComciganFields(html: string) {
 /** Read public transport constants from the viewer without executing its code. */
 export function extractComciganTransport(html:string){
  const source=decodeComciganSource(html);
- const suffix=source.match(/btoa\([^;]{0,300}?['"](_enc\d+)['"]\)/)?.[1]||'';
+ const suffix=source.match(/btoa\([^;]{0,300}?['"](_(?:enc)?\d{1,9})['"]\s*\)/)?.[1]||'';
  let key=source.match(/CryptoJS\.enc\.Hex\.parse\(['"]([\da-f]{64})['"]\)/i)?.[1];
  // New viewers concatenate literal key fragments. Accept only indexed literal
  // concatenation, not arbitrary JavaScript expressions.
@@ -76,15 +81,20 @@ export function extractComciganTransport(html:string){
 
 export function extractComciganRequest(html:string){
  const source=decodeComciganSource(html);
- return {base64Search:/function\s+QAjaxSchool/.test(source),token:source.match(/window\.__HourRequestToken\s*=\s*['"]([\da-f]+)['"]/i)?.[1]||null};
+ return {base64Search:modernSearch.test(source)||/function\s+QAjaxSchool/.test(source),token:source.match(/window\.__HourRequestToken\s*=\s*['"]([\da-f]+)['"]/i)?.[1]||null};
 }
 
 /** Literal byte keys in the public viewer are data, never executable code. */
 export function extractComciganCellKey(html:string):number[]|null{
  const source=decodeComciganSource(html);
- if(!/function\s+QnmsbChange\(/.test(source))return null;
- const match=source.match(/function\s+QnmsbChange\([^)]*\)\s*\{[\s\S]{0,300}?String\.fromCharCode\(([\d,\s]+)\)/);
- if(!match)throw new Error('시간표 제공처의 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
+ const legacy=/function\s+QnmsbChange\(/.test(source);
+ const match=legacy
+  ?source.match(/function\s+QnmsbChange\([^)]*\)\s*\{[\s\S]{0,300}?String\.fromCharCode\(([\d,\s]+)\)/)
+  :source.match(/function\s+[\w$]+\([^)]*\)\s*\{[^{}]{0,300}?String\.fromCharCode\(([\d,\s]+)\)[^{}]{0,150}?\batob\(/);
+ if(!match){
+  if(legacy)throw new Error('시간표 제공처의 응답을 읽지 못했어요. 잠시 후 다시 조회해 주세요.');
+  return null;
+ }
  const key=match[1].split(',').map(value=>Number(value.trim()));
  if(key.length<2||key.length>128||key.some(value=>!Number.isInteger(value)||value<0||value>255)){
   throw new Error('시간표 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
@@ -102,22 +112,27 @@ export function decodeComciganCell(value:string,key:readonly number[]|null):stri
 
 export function extractComciganSchools(value:unknown,divisor:number|null,key:readonly number[]|null=null){
  if(!Array.isArray(value))throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
- return value.map(row=>{
+ return value.flatMap(row=>{
   if(!Array.isArray(row)||typeof row[1]!=='string'||typeof row[2]!=='string')throw new Error('시간표 제공처의 학교 목록을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
   const index=divisor?Math.floor(Number(row[0])/divisor)+2:3;
+  if(divisor&&row[0]===0)return [];
   const encoded=row[index];
   const code=key&&typeof encoded==='string'?Number(decodeComciganCell(encoded,key)):encoded;
   if(!Number.isInteger(index)||index<3||!Number.isSafeInteger(code)||code<=0)throw new Error('시간표 제공처의 학교 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
-  return {region:decodeComciganCell(row[1],key),name:decodeComciganCell(row[2],key),code:code as number};
+  return [{region:decodeComciganCell(row[1],key),name:decodeComciganCell(row[2],key),code:code as number}];
  });
 }
 
 /** The provider's weekday renderer defines the selected week's first date. Data only. */
 export function extractComciganWeekField(html:string):string|null{
  const source=decodeComciganSource(html),fields=new Set<string>();
- const identifier='[A-Za-z_$가-힣][\\w$가-힣]*',value='(?:'+identifier+'\\s*\\(\\s*)?(?:자료|H시간표)\\.(자료\\d{1,4}|시작일)\\s*\\)?';
+ const identifier='[A-Za-z_$가-힣][\\w$가-힣]*',value='(?:'+identifier+'\\s*\\(\\s*)?(?:자료|H시간표)\\.'+viewerField+'\\s*\\)?';
  for(const expression of [new RegExp('(?:var|let|const)\\s+시작일\\s*=\\s*new\\s+Date\\s*\\(\\s*'+value+'\\s*\\)','g'),new RegExp('요일출력하기\\s*\\(\\s*'+value+'\\s*\\)','g')]){
   for(const match of source.matchAll(expression)){fields.add(match[1]);if(fields.size>1)throw Error('시간표 제공처의 주간 날짜 정보가 서로 달라요. 잠시 후 다시 조회해 주세요.');}
  }
  return fields.values().next().value??null;
+}
+
+export function extractComciganTimesField(html:string):string|null{
+ return decodeComciganSource(html).match(new RegExp('자료\\.'+viewerField+'\\[\\s*교시\\s*-\\s*1\\s*\\]'))?.[1]??null;
 }
