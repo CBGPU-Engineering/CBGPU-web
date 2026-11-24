@@ -5,7 +5,7 @@ import {Copy} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Input} from '@/components/ui/input';
 import {
-  buildAgentServerPrompt, permissionAvailable, serverAgentModel, serverAgentPermissions, serverAgents,
+  buildAgentServerEnvironment, buildAgentServerPrompt, permissionAvailable, serverAgentModel, serverAgentPermissions, serverAgents,
   serverPermissionKeys, telegramUserIdPattern, type ServerAgent, type ServerAgentPermission,
 } from '@/lib/agentServerPrompt';
 
@@ -14,8 +14,11 @@ export default function AgentServerPrompt() {
   const preview = useRef<HTMLTextAreaElement>(null);
   const editing = useRef(0);
   const [agent, setAgent] = useState<ServerAgent>('openclaw');
+  const [apiKey, setApiKey] = useState('');
   const [telegram, setTelegram] = useState(false);
   const [telegramUser, setTelegramUser] = useState('');
+  const [telegramBot, setTelegramBot] = useState('');
+  const [telegramToken, setTelegramToken] = useState('');
   const [autoStart, setAutoStart] = useState(false);
   const [permissions, setPermissions] = useState<ServerAgentPermission[]>([]);
   const [prompt, setPrompt] = useState('');
@@ -34,19 +37,35 @@ export default function AgentServerPrompt() {
     clearResult();
     const submission = editing.current;
     let result: string;
+    let environment: string;
     try {
-      result = buildAgentServerPrompt({agent, telegramUser: telegram ? telegramUser.trim() : undefined, autoStart, permissions});
+      environment = buildAgentServerEnvironment(apiKey.trim(), telegram ? telegramToken.trim() : '');
+      result = buildAgentServerPrompt({
+        agent, telegramUser: telegram ? telegramUser.trim() : undefined, telegramBot: telegram ? telegramBot.trim() : undefined,
+        hasEnvironmentFile: Boolean(environment), autoStart, permissions,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '선택한 설정을 다시 확인해 주세요.');
       return;
     }
     setPrompt(result);
+    if (environment) {
+      const file = URL.createObjectURL(new Blob([environment + '\n'], {type: 'application/octet-stream'}));
+      const link = document.createElement('a');
+      link.href = file;
+      link.download = 'cbgpu-agent.env';
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(file), 30_000);
+    }
+    const fileMessage = environment ? ' 내려받은 cbgpu-agent.env는 설치할 서버의 비공개 경로에 옮기세요.' : '';
     try {
       await navigator.clipboard.writeText(result);
-      if (submission === editing.current) setStatus('복사했어요. 서버에 접속한 코딩 에이전트에 붙여 넣으세요.');
+      if (submission === editing.current) setStatus('복사했어요. 서버에 접속한 코딩 에이전트에 붙여 넣으세요.' + fileMessage);
     } catch {
       if (submission !== editing.current) return;
-      setStatus('자동으로 복사하지 못했어요. 아래 프롬프트를 복사해 주세요.');
+      setStatus('자동으로 복사하지 못했어요. 아래 프롬프트를 복사해 주세요.' + fileMessage);
       requestAnimationFrame(() => {
         if (submission !== editing.current) return;
         preview.current?.focus();
@@ -78,7 +97,13 @@ export default function AgentServerPrompt() {
             ))}
           </div>
         </fieldset>
-        <p className="text-sm"><span className="font-semibold">모델</span><span className="ml-3 text-muted-foreground">{serverAgentModel.name}</span></p>
+        <div className="space-y-2">
+          <p className="text-sm"><span className="font-semibold">모델</span><span className="ml-3 text-muted-foreground">{serverAgentModel.name}</span></p>
+          <label htmlFor={uid + '-api-key'} className="block text-sm font-medium">CBGPU API 키</label>
+          <Input id={uid + '-api-key'} type="password" value={apiKey} autoComplete="off" placeholder="cbgpu_ai_…"
+            aria-describedby={uid + '-secrets-help'} onChange={event => {setApiKey(event.target.value); clearResult();}} />
+          <p className="text-sm text-muted-foreground">이미 서버에 키를 저장했다면 비워도 돼요.</p>
+        </div>
         <fieldset className="space-y-1">
           <legend className="mb-1 text-sm font-semibold">연결 및 실행</legend>
           <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
@@ -86,11 +111,18 @@ export default function AgentServerPrompt() {
             Telegram으로 연결하기
           </label>
           {telegram && (
-            <div className="max-w-xs space-y-2 pb-2 pl-7">
-              <label htmlFor={uid + '-telegram'} className="block text-sm font-medium">Telegram 숫자 사용자 ID</label>
+            <div className="max-w-sm space-y-2 pb-2 pl-7">
+              <label htmlFor={uid + '-telegram'} className="block text-sm font-medium">내 Telegram 숫자 사용자 ID</label>
               <Input id={uid + '-telegram'} value={telegramUser} onChange={event => {setTelegramUser(event.target.value); clearResult();}}
                 placeholder="예: 123456789" inputMode="numeric" pattern={telegramUserIdPattern} maxLength={16} required />
               <p className="text-xs leading-5 text-muted-foreground">이 사용자만 봇에 개인 메시지를 보낼 수 있어요.</p>
+              <label htmlFor={uid + '-telegram-bot'} className="block text-sm font-medium">연결할 봇 이름 또는 숫자 ID <span className="font-normal text-muted-foreground">선택</span></label>
+              <Input id={uid + '-telegram-bot'} value={telegramBot} placeholder="@my_bot" autoComplete="off"
+                onChange={event => {setTelegramBot(event.target.value); clearResult();}} />
+              <label htmlFor={uid + '-telegram-token'} className="block text-sm font-medium">Telegram 봇 토큰</label>
+              <Input id={uid + '-telegram-token'} type="password" value={telegramToken} placeholder="BotFather에서 받은 토큰"
+                autoComplete="off" aria-describedby={uid + '-secrets-help'} onChange={event => {setTelegramToken(event.target.value); clearResult();}} />
+              <p className="text-xs leading-5 text-muted-foreground">이미 서버에 봇 토큰을 저장했다면 비워도 돼요.</p>
             </div>
           )}
           <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
@@ -115,7 +147,13 @@ export default function AgentServerPrompt() {
             ))}
           </div>
         </details>
-        <p className="text-sm leading-6 text-muted-foreground">API 키와 Telegram 봇 토큰은 설치할 서버의 비밀 설정에 입력하세요.</p>
+        <p id={uid + '-secrets-help'} className="text-sm leading-6 text-muted-foreground">
+          입력한 키와 토큰은 이 기기에 설정 파일로만 내려받아요. 복사한 프롬프트에는 비밀값이 들어가지 않아요.
+        </p>
+        <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-sm leading-6">
+          <input type="checkbox" required className="mt-1 size-4 shrink-0 accent-primary" />
+          에이전트가 선택한 권한으로 서버의 파일이나 프로그램을 사용할 수 있다는 점을 확인했어요.
+        </label>
         <Button type="submit"><Copy aria-hidden="true" />서버 설치 프롬프트 복사</Button>
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         <p role="status" className={status ? 'text-sm leading-6' : 'sr-only'}>{status}</p>
