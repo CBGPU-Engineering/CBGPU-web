@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 
 export default function AgentInstallPage() {
   return (
-    <main id="main-content" className="px-4 py-8 sm:px-8">
+    <div className="px-4 py-8 sm:px-8">
       <CliGuide />
-    </main>
+    </div>
   );
 }
