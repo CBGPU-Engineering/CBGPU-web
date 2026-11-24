@@ -75,7 +75,10 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
     if(body.model&&!chatModelIds.has(String(body.model)))throw new AiFailure('지원하지 않는 로컬 모델입니다. /v1/models에서 모델 목록을 확인해 주세요.');
     const model=String(body.model||'cbgpu-chat');
     const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??(model==='cbgpu-oss'?3072:1024),model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
-    if(body.stream)return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,model===agentChatModelId?720_000:undefined);
+    if(body.stream){
+     const agentModel=model===agentChatModelId;
+     return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,agentModel?720_000:undefined,agentModel);
+    }
     return NextResponse.json(await waitAi(owner,job.id));
    }
    if(path.join('/')==='v1/embeddings'&&request.method==='POST'){
