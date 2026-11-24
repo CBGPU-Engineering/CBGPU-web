@@ -3,7 +3,7 @@ import {NextRequest,NextResponse} from 'next/server';
 import {AiFailure,aiIdentity,aiInternal,aiJson,waitAi,aiUserClient} from '@/lib/aiServer';
 import {conversationStream} from '@/lib/aiConversationStream';
 import {agentChatModelId,chatModelIds} from '@/lib/aiModels';
-import {aiStream} from '@/lib/aiStream';
+import {aiStream,takeAiStream} from '@/lib/aiStream';
 import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
 import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
@@ -18,8 +18,8 @@ async function audioForm(request:NextRequest){
 }
 const uuid=(v:string)=>/^[a-f0-9-]{36}$/.test(v);
 async function handle(request:NextRequest,context:{params:Promise<{path:string[]}>}){
+ const {path}=await context.params;
  try{
-  const {path}=await context.params;
   if(path.join('/')==='v1/robotics/agent/enroll'||path.join('/')==='v1/robotics/agent/sync'){
    if(request.method!=='POST')throw new AiFailure('Method not allowed',405);
    const value=await readJsonBody(request,3*1024*1024);if(!value||typeof value!=='object'||Array.isArray(value))throw new AiFailure('Use a JSON object');
@@ -74,12 +74,18 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
    if(path.join('/')==='v1/chat/completions'&&request.method==='POST'){
     if(body.model&&!chatModelIds.has(String(body.model)))throw new AiFailure('지원하지 않는 로컬 모델입니다. /v1/models에서 모델 목록을 확인해 주세요.');
     const model=String(body.model||'cbgpu-chat');
-    const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??(model==='cbgpu-oss'?3072:1024),model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
-    if(body.stream){
-     const agentModel=model===agentChatModelId;
-     return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,agentModel?720_000:undefined,agentModel);
+    const release=body.stream?takeAiStream(owner):undefined;
+    try{
+     const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??(model==='cbgpu-oss'?3072:1024),model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
+     if(release){
+      const agentModel=model===agentChatModelId;
+      return aiStream(request,owner,job.id,model,!!(body.stream_options as {include_usage?:boolean}|undefined)?.include_usage,agentModel?720_000:undefined,agentModel,release);
+     }
+     return NextResponse.json(await waitAi(owner,job.id));
+    }catch(error){
+     release?.();
+     throw error;
     }
-    return NextResponse.json(await waitAi(owner,job.id));
    }
    if(path.join('/')==='v1/embeddings'&&request.method==='POST'){
     if(body.model&&body.model!=='cbgpu-embeddings')throw new AiFailure('model은 cbgpu-embeddings를 사용해 주세요.');const {job}=await aiJson('jobs',owner,'POST',{kind:'embed',input:{input:body.input},title:'API embeddings'});return NextResponse.json(await waitAi(owner,job.id));
@@ -132,7 +138,15 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
   const result=await response.json();
   if(response.ok&&request.method==='GET'&&result.job?.kind==='search'&&result.job?.result?.hits){if(isKey)throw new AiFailure('웹 검색 결과에는 CBGPU 계정 로그인이 필요해요.',403);const current=new Map((await aiSources(token)).map(s=>[s.id,s]));result.job.result.hits=result.job.result.hits.filter((h:{id:string})=>current.has(h.id)).map((h:{id:string;score:number;snippet?:string})=>({...current.get(h.id),snippet:/^(material|paper):/.test(h.id)&&typeof h.snippet==='string'?h.snippet.slice(0,350):current.get(h.id)?.snippet,score:h.score,text:undefined}))}
   return NextResponse.json(result,{status:response.status,headers:{'Cache-Control':'no-store'}});
- }catch(error){const status=error instanceof AiFailure?error.status:error instanceof RequestBodyError?error.status:503;return NextResponse.json({message:error instanceof AiFailure?error.message:'AI 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.'},{status,headers:{'Cache-Control':'no-store'}})}
+ }catch(error){
+  const known=error instanceof AiFailure||error instanceof RequestBodyError;
+  const status=known?error.status:503;
+  const message=known?error.message:'AI 서비스에 연결하지 못했어요. 잠시 후 다시 시도해 주세요.';
+  const type=status===401?'authentication_error':status===403?'permission_error':status===429?'rate_limit_error':status>=500?'server_error':'invalid_request_error';
+  const headers:Record<string,string>={'Cache-Control':'no-store'};
+  if(path[0]==='v1'&&status===429)headers['Retry-After']='5';
+  return NextResponse.json(path[0]==='v1'?{message,error:{message,type}}:{message},{status,headers});
+ }
 }
 async function route(request:NextRequest,context:{params:Promise<{path:string[]}>}){const response=await handle(request,context);response.headers.set('Cache-Control','no-store');response.headers.set('X-Robots-Tag','noindex, nofollow');return response}
 export {route as GET,route as POST,route as DELETE};

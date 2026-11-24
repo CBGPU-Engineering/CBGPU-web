@@ -1,5 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';import {NextResponse} from 'next/server.js';
-function load(api,clock:Pick<DateConstructor,'now'>=Date){const exports: Record<string, any> = {};const code=ts.transpileModule(fs.readFileSync(new URL('../src/lib/aiStream.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports,Date:clock,ReadableStream,TextEncoder,setTimeout,Error,require(n){if(n==='next/server')return{NextResponse};if(n==='./aiServer')return{aiJson:api};throw Error(n)}});return exports.aiStream}
+class AiFailure extends Error { status:number; constructor(message:string,status:number){super(message);this.status=status} }
+function load(api,clock:Pick<DateConstructor,'now'>=Date){const exports: Record<string, any> = {};const code=ts.transpileModule(fs.readFileSync(new URL('../src/lib/aiStream.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports,Date:clock,ReadableStream,TextEncoder,setTimeout,Error,require(n){if(n==='next/server')return{NextResponse};if(n==='./aiServer')return{aiJson:api,AiFailure};throw Error(n)}});return exports.aiStream}
 test('SSE coding transport preserves tool call IDs, JSON arguments, finish reason and usage',async()=>{const api=async()=>({job:{state:'succeeded',result:{id:'fixture',model:'cbgpu-coder',choices:[{message:{role:'assistant',content:null,tool_calls:[{id:'call-fixture',type:'function',function:{name:'read',arguments:'{"filePath":"README.md"}'}}]},finish_reason:'tool_calls'}],usage:{prompt_tokens:10,completion_tokens:5,total_tokens:15}}}});const response=load(api)(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-coder',true);assert.equal(response.headers.get('content-type'),'text/event-stream');const text=await response.text();const events=text.split('\n').filter(l=>l.startsWith('data: ')&&!l.includes('[DONE]')).map(l=>JSON.parse(l.slice(6)));assert.equal(events[0].choices[0].delta.tool_calls[0].index,0);assert.equal(events[0].choices[0].delta.tool_calls[0].id,'call-fixture');assert.deepEqual(JSON.parse(events[0].choices[0].delta.tool_calls[0].function.arguments),{filePath:'README.md'});assert.equal(events[1].choices[0].finish_reason,'tool_calls');assert.equal(events[2].usage.total_tokens,15);assert.ok(text.endsWith('data: [DONE]\n\n'))});
 test('a failed model emits an explicit error rather than an invented success',async()=>{const response=load(async()=>({job:{state:'failed',error:'Synthetic failure'}}))(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-chat');const text=await response.text();assert.ok(text.includes('Synthetic failure'));assert.ok(!text.includes('chat.completion.chunk'));assert.ok(text.includes('[DONE]'))});
 test('client disconnect cancels only the associated private job',async()=>{const calls=[],abort=new AbortController();const api=async(path,owner,method)=>{calls.push({path,owner,method});return{job:{state:'queued'}}};const response=load(api)(new Request('https://cbgpu.com/api/ai/v1/chat/completions',{signal:abort.signal}),'owner-A','job-A','cbgpu-chat');const reader=response.body.getReader();await reader.read();abort.abort();await new Promise(r=>setTimeout(r,20));assert.ok(calls.some(c=>c.path==='jobs/job-A/cancel'&&c.owner==='owner-A'&&c.method==='POST'));await reader.cancel()});
@@ -21,4 +22,33 @@ test('slow coding requests send observed progress as SDK-visible chunks before a
  assert.equal(events[3].choices[0].delta.tool_calls[0].function.name,'ping');
  assert.equal(events[4].choices[0].finish_reason,'tool_calls');
  assert.ok(text.endsWith('data: [DONE]\n\n'));
+});
+
+test('an intermittent status error is retried on the same job and never enqueues again',async()=>{
+ const calls=[];
+ let checks=0;
+ const api=async(path,owner,method)=>{
+  calls.push([path,owner,method]);
+  if(++checks<=2)throw new AiFailure('Temporary lookup failure',checks===1?404:503);
+  return {job:{state:'succeeded',result:{choices:[{message:{content:'Verified result'},finish_reason:'stop'}]}}};
+ };
+ const response=load(api)(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38',false,9000,true);
+ const output=await response.text();
+ assert.ok(output.includes('Verified result'));
+ assert.ok(!output.includes('error'));
+ assert.deepEqual(calls,Array.from({length:3},()=>['jobs/job','owner',undefined]));
+});
+
+test('a disconnected client cancels an unfinished job only once',async()=>{
+ const abort=new AbortController(),cancellations=[];
+ const api=async(path)=>{
+  if(path.endsWith('/cancel'))cancellations.push(path);
+  return {job:{state:'running'}};
+ };
+ const response=load(api)(new Request('https://cbgpu.com/api/ai/v1/chat/completions',{signal:abort.signal}),'owner','job','cbgpu-qwen38');
+ const reader=response.body.getReader();
+ await reader.read();
+ abort.abort();
+ await reader.cancel();
+ assert.deepEqual(cancellations,['jobs/job/cancel']);
 });
