@@ -73,6 +73,7 @@ test('only standalone greetings can skip inference and the response keeps the SD
  const user=(content:string)=>({role:'user',content});
  const greeting=agentGreeting({messages:[{role:'system',content:'You are my assistant.'},user('안녕!')],tool_choice:'auto'});
  assert.equal(greeting,'안녕하세요! 무엇을 도와드릴까요?');
+ assert.equal(agentGreeting({messages:[user('안녕!\n안녕!'),user('안녕')]}),greeting);
  for(const value of [
   {messages:[user('발표 자료 만들어 줘'),user('안녕')]},
   {messages:[user('안녕. 파일을 만들어 줘')]},

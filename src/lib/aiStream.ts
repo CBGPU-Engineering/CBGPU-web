@@ -19,8 +19,10 @@ export function agentGreeting(body:Record<string,unknown>):string|null{
   if(!message||typeof message.content!=='string'||message.tool_calls!==undefined||message.tool_call_id!==undefined)return null;
   if(message.role==='system'||message.role==='developer'||message.role==='assistant')continue;
   if(message.role!=='user')return null;
-  const content=message.content.trim();
-  reply=korean.test(content)?'안녕하세요! 무엇을 도와드릴까요?':english.test(content)?'Hello! How can I help?':null;
+  const lines=message.content.trim().split(/\r?\n/).filter(line=>line.trim());
+  if(!lines.length)return null;
+  reply=lines.every(line=>korean.test(line.trim()))?'안녕하세요! 무엇을 도와드릴까요?'
+   :lines.every(line=>english.test(line.trim()))?'Hello! How can I help?':null;
   if(!reply)return null;
  }
  return body.messages.at(-1)?.role==='user'?reply:null;
