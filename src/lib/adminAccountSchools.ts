@@ -1,5 +1,10 @@
 export type AccountSchool={membership_id?:string;school_id:string;school_name:string;status:string;membership_type:string;student_number:string|null;verified:boolean};
 export type SchoolAccount={account_status?:string;is_approved?:boolean|null;school_id?:string|null;primary_school_name?:string|null;school_affiliations?:AccountSchool[]};
+export function signupReviewState(account: Pick<SchoolAccount, 'account_status' | 'is_approved'> & {email_confirmed?: boolean}) {
+ if (account.account_status === 'SUSPENDED' || account.is_approved === false) return 'restricted';
+ if (account.is_approved === true) return 'approved';
+ return account.email_confirmed === false ? 'unconfirmed' : 'unreviewed';
+}
 export function accountSchools(account:SchoolAccount):AccountSchool[]{
  const schools=new Map<string,AccountSchool>();
  for(const entry of account.school_affiliations??[])if(entry.school_id&&entry.school_name)schools.set(entry.school_id,entry);

@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {accountSchools,accountSchoolOptions,accountMatchesSchool,accountSchoolSearch,accountSchoolState,accountStudentNumberDisplay} from '../src/lib/adminAccountSchools.ts';
+import {accountSchools,accountSchoolOptions,accountMatchesSchool,accountSchoolSearch,accountSchoolState,accountStudentNumberDisplay,signupReviewState} from '../src/lib/adminAccountSchools.ts';
 const a={school_id:'cbsh',school_name:'충북과학고등학교',status:'ACTIVE',membership_type:'STUDENT',student_number:'1101',verified:true};
 const b={...a,school_id:'other-school',school_name:'다른고등학교',status:'PENDING_VERIFICATION',student_number:'2103',verified:false};
 test('one account belongs to every actual school, preserving pending affiliations and school-specific student IDs',()=>{const account={school_id:'cbsh',primary_school_name:a.school_name,school_affiliations:[a,b]};assert.equal(accountSchools(account).length,2);assert.equal(accountMatchesSchool(account,'cbsh'),true);assert.equal(accountMatchesSchool(account,'other-school'),true);assert.equal(accountMatchesSchool(account,'none'),false);assert.deepEqual(new Set(accountSchoolSearch(account)),new Set([a.school_name,'1101',b.school_name,'2103']));assert.equal(accountSchoolState(b),'Verification pending');assert.deepEqual(accountSchoolOptions([account,{school_affiliations:[a]}]).map(x=>x.id).sort(),['cbsh','other-school'])});
@@ -9,3 +9,11 @@ test('a real known primary school remains visible without fabricating verified m
 test('student number display uses selected school membership, not a legacy global number',()=>{const account={student_id:'OLD',school_affiliations:[{...a,student_number:'A007'},{...b,student_number:'B008'}]};assert.equal(accountStudentNumberDisplay(account),'A007 · B008');assert.equal(accountStudentNumberDisplay(account,'other-school'),'B008');assert.equal(accountStudentNumberDisplay(account,'unknown-school'),'—');assert.equal(accountStudentNumberDisplay(account,'none'),'—')});
 test('empty or unknown school metadata never labels an old global number as a current school number',()=>{assert.equal(accountStudentNumberDisplay({student_id:'1101',school_affiliations:[]}),'—');assert.equal(accountStudentNumberDisplay({student_id:'1101',school_id:'other-school'}),'—');assert.equal(accountStudentNumberDisplay({student_id:'1101',school_affiliations:undefined}),'—');assert.equal(accountStudentNumberDisplay({student_id:'1101'}),'1101');assert.equal(accountStudentNumberDisplay({student_id:'1101'},'other-school'),'—')});
 test('all-school display removes duplicates, whitespace and empty numbers',()=>{assert.equal(accountStudentNumberDisplay({school_affiliations:[{...a,student_number:' A007 '},{...b,student_number:'A007'},{...b,school_id:'c',student_number:null}]}),'A007')});
+
+test('signup review is independent of school affiliation and shows only confirmed pending accounts',()=>{
+ assert.equal(signupReviewState({is_approved:null,email_confirmed:true,account_status:'PENDING_VERIFICATION'}),'unreviewed');
+ assert.equal(signupReviewState({is_approved:null,email_confirmed:false}),'unconfirmed');
+ assert.equal(signupReviewState({is_approved:true,account_status:'PENDING_VERIFICATION'}),'approved');
+ assert.equal(signupReviewState({is_approved:false,account_status:'ACTIVE'}),'restricted');
+ assert.equal(signupReviewState({is_approved:true,account_status:'SUSPENDED'}),'restricted');
+});

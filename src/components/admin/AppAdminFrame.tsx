@@ -12,7 +12,7 @@ import AppSpaceFrame,{type SpaceNavItem} from './AppSpaceFrame';
 const adminNav:SpaceNavItem[]=[
  ...(process.env.NEXT_PUBLIC_CBGPU_MULTISCHOOL_V1==='1'?[{id:'schools',href:'/admin/schools',label:'학교',Icon:Users},{id:'school-applications',href:'/admin/school-applications',label:'학교 신청',Icon:Files}]:[]),
  {id:'m',href:'/admin/m',label:'요약',Icon:LayoutDashboard},
- {id:'m:signups',href:'/admin/m?tab=signups',label:'가입 승인',Icon:UserPlus},
+ {id:'m:signups',href:'/admin/m?tab=signups',label:'가입 확인',Icon:UserPlus},
  {id:'m:gpu',href:'/admin/m?tab=gpu',label:'GPU 예약',Icon:Cpu},
  {id:'server',href:'/admin/server',label:'서버 배포',Icon:Server},
  {id:'accounts',href:'/admin/accounts',label:'계정',Icon:Users},
