@@ -7,7 +7,6 @@ import{isPublicBrowsingPath}from'./lib/publicPaths';
 import {scopedAccountMode} from './lib/deployAccess';
 import {manufacturingStorageReadPath} from './lib/manufacturingStoragePath';
 import {backendProxyTarget} from './lib/backendProxyTarget';
-import {previewProxyTarget} from './lib/previewProxyTarget';
 
 const publicPages = new Set(['/', '/services', '/contact', '/download', '/privacy']);
 const catalogueLimits = new WindowRateLimiter(60, 60_000);
@@ -32,21 +31,6 @@ export function proxy(request: NextRequest) {
   const forwardedHost=request.headers.get('x-cbgpu-public-host')||'';
   const internalHost=rawHost==='localhost'||rawHost==='127.0.0.1';
   const host=internalHost&&(workspaceForHost(forwardedHost)||['cbgpu.com','app.cbgpu.com','docs.cbgpu.com','arxiv.cbgpu.com','manufacturing.cbgpu.com','print.cbgpu.com','laser.cbgpu.com'].includes(forwardedHost))?forwardedHost:rawHost;
-  if (/^\/new(?:\/|$)/.test(path) && process.env.CBGPU_PREVIEW_ORIGIN) {
-    try {
-      const target = previewProxyTarget(host, request.method, path, request.nextUrl.search, process.env.CBGPU_PREVIEW_ORIGIN);
-      if (target) {
-        const headers = new Headers(request.headers);
-        for (const name of ['authorization', 'cookie', 'x-cbgpu-portal-gate', 'x-cbgpu-note-edge']) headers.delete(name);
-        const response = NextResponse.rewrite(target, { request: { headers } });
-        response.headers.set('Cache-Control', 'private, no-store');
-        response.headers.set('X-Robots-Tag', 'noindex, nofollow');
-        return response;
-      }
-    } catch {
-      return new NextResponse('Preview unavailable', { status: 503, headers: { 'Cache-Control': 'no-store' } });
-    }
-  }
   // Untrusted notebook HTML is available ONLY through the isolated authenticated edge.
   if(host==='notebooks.cbgpu.com')return new NextResponse('Not found',{status:404});
   if(path.startsWith('/__notebook_gateway/')){
