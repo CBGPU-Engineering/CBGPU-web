@@ -10,11 +10,11 @@ import * as crypto from 'node:crypto';
 import * as deployAccess from '../src/lib/deployAccess.ts';
 const code=ts.transpileModule(fs.readFileSync(new URL('../src/app/api/deploy/[...path]/route.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const owner='11111111-1111-4111-8111-111111111111';
-function fixture({approved=true,active=true,v2=false,compute=false,accountStatus='ACTIVE',centralMode=false,unassigned=false,sealAllowed=true,launchFails=false,serverOwner=owner}={}){
+function fixture({approved=true,active=true,v2=false,compute=false,accountStatus='ACTIVE',centralMode=false,unassigned=false,sealAllowed=true,launchFails=false,serverOwner=owner,serverCount=1}={}){
  const exports: Record<string, any> = {},backendCalls=[],filters=[],writes=[];
  let stored:Record<string,unknown>|null=null;
- const rows=[{id:'22222222-2222-4222-8222-222222222222',user_id:serverOwner,name:'Existing server',deploy_type:'docker',status:'approved',created_at:'2026-11-01',execution_mode:unassigned?'UNASSIGNED_V1':null}];
- const client={auth:{getUser:async()=>({data:{user:{id:owner,email:'owner@example.invalid',email_confirmed_at:'2026-01-01'}},error:null})},rpc:async(name,args)=>{if(name==='cbgpu_platform_cpu_service'){if(sealAllowed&&stored)stored={...stored,execution_mode:'CENTRAL_V1',allocation_school_id:args.payload.school_id};return{data:{allowed:sealAllowed},error:null}}return{data:compute,error:null}},from(table){if(table==='profiles'){const q={select(){return this},eq(){return this},maybeSingle:async()=>({data:{id:owner,is_approved:approved,account_status:accountStatus},error:null})};return q}assert.equal(table,'cpu_projects');const query={insert(v){writes.push(v);stored={id:rows[0].id,...v,deploy_actor_session_id:'private-session-not-for-client'};return this},update(v){writes.push(v);stored={...(stored||rows[0]),...v,deploy_actor_session_id:'private-session-not-for-client'};return this},single(){return Promise.resolve(launchFails&&stored?.deploy_requested_at?{data:null,error:{code:'fixture-write-outage'}}:{data:stored||{...rows[0],deploy_actor_session_id:'private-session-not-for-client'},error:null})},maybeSingle(){return Promise.resolve({data:rows[0],error:null})},select(){return this},eq(key,value){filters.push([key,value]);return this},neq(){return this},order(){return this},then(resolve){return Promise.resolve({data:rows,error:null}).then(resolve)}};return query}};
+ const rows=Array.from({length:serverCount},(_,index)=>({id:index===0?'22222222-2222-4222-8222-222222222222':crypto.randomUUID(),user_id:serverOwner,name:'Existing server',deploy_type:'docker',status:'approved',created_at:'2026-11-01',execution_mode:unassigned?'UNASSIGNED_V1':null}));
+ const client={auth:{getUser:async()=>({data:{user:{id:owner,email:'owner@example.invalid',email_confirmed_at:'2026-01-01'}},error:null})},rpc:async(name,args)=>{if(name==='cbgpu_platform_cpu_service'){if(sealAllowed&&stored)stored={...stored,execution_mode:'CENTRAL_V1',allocation_school_id:args.payload.school_id};return{data:{allowed:sealAllowed},error:null}}return{data:compute,error:null}},from(table){if(table==='profiles'){const q={select(){return this},eq(){return this},maybeSingle:async()=>({data:{id:owner,is_approved:approved,account_status:accountStatus},error:null})};return q}assert.equal(table,'cpu_projects');const query={insert(v){writes.push(v);stored={id:rows[0].id,...v,deploy_actor_session_id:'private-session-not-for-client'};return this},update(v){writes.push(v);stored={...(stored||rows[0]),...v,deploy_actor_session_id:'private-session-not-for-client'};return this},single(){return Promise.resolve(launchFails&&stored?.deploy_requested_at?{data:null,error:{code:'fixture-write-outage'}}:{data:stored||{...rows[0],deploy_actor_session_id:'private-session-not-for-client'},error:null})},maybeSingle(){return Promise.resolve({data:rows[0],error:null})},select(){return this},eq(key,value){filters.push([key,value]);return this},neq(){return this},order(){return this},then(resolve){return Promise.resolve({data:rows,count:rows.length,error:null}).then(resolve)}};return query}};
  vm.runInNewContext(code,{exports,URL,Date,Map,Buffer,AbortSignal,process:{env:{}},fetch:async(url,options)=>{assert.equal(options.headers['x-cbgpu-owner'],owner);backendCalls.push(url);return Response.json(url.endsWith('/servers')?{shared_project_ids:[]}:url.includes('/teams/')?{my_role:'owner'}:{projects:[{id:'existing-frontend',collaboration_role:'owner'}]})},require(name){
   if(name==='@/lib/centralCpuDeploy')return {...central,centralCPUEnabled:()=>centralMode,selectedCentralAllocation:async(_r,school)=>{assert.equal(school,'school-b');return school},deploymentActorSession:()=> '33333333-3333-4333-8333-333333333333'};if(name==='node:crypto')return crypto;
   if(name==='@/lib/deployAccess')return {...deployAccess,deploymentAccessV2:()=>v2};
@@ -54,6 +54,16 @@ test('server terminal reaches the private worker for an active owner session onl
  assert.equal(permitted.backendCalls.length,1);
 });
 
+test('an account with five existing server projects can create a sixth private project',async()=>{
+ const h=fixture({v2:true,compute:true,serverCount:5});
+ const list=await h.request('servers/projects');assert.equal((await list.json()).projects.length,5);
+ const response=await h.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{
+  name:'Secondary private server',deploy_type:'docker',docker_image:'nginx:alpine',container_port:80,host_port:18080,access_scope:'private',
+ }});
+ assert.equal(response.status,201);
+ assert.equal(h.writes.length,1);
+ assert.equal(h.writes[0].access_scope,'private');
+});
 test('server create and settings accept 8/16 GB but reject values above the 16 GB cap',async()=>{
  for(const memory of ['8g','16g']){
   const h=fixture();const response=await h.request('servers/projects',{method:'POST',origin:'https://researcher.cbgpu.com',body:{name:'Memory fixture',deploy_type:'docker',docker_image:'nginx:alpine',container_port:80,host_port:18080,memory_limit:memory}});assert.equal(response.status,201,JSON.stringify(await response.clone().json()));assert.equal(h.writes[0].memory_limit,memory);
