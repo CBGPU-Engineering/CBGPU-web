@@ -61,7 +61,7 @@ export function greetingResponse(model:string,content:string,stream:boolean,incl
 /** Forward real inference deltas while the private GPU job is running.
  * Tool calls are emitted only after validation; keep-alives are never answer text.
  */
-export function aiStream(request:Request,owner:string,id:string,model:string,includeUsage=false,waitMilliseconds=300_000,reportProgress=false,release=takeAiStream(owner)){
+export function aiStream(request:Request,owner:string,id:string,model:string,includeUsage=false,reportProgress=false,release=takeAiStream(owner)){
  let previous='',roleSent=false;const base={id:'chatcmpl-'+id,object:'chat.completion.chunk',created:Math.floor(Date.now()/1000),model};
  let stopped=false,finished=false,cancelSent=false;const encoder=new TextEncoder();
  const cancelJob=()=>{if(finished||cancelSent)return;cancelSent=true;void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{})};
@@ -71,8 +71,8 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
   request.signal.addEventListener('abort',stop,{once:true});let heartbeat=-Infinity,lastState='',pollErrors=0;
   try{
    if(request.signal.aborted){cancelJob();return}
-   controller.enqueue(encoder.encode(': queued\n\n'));const deadline=Date.now()+waitMilliseconds;
-   while(!stopped&&Date.now()<deadline){
+   controller.enqueue(encoder.encode(': queued\n\n'));
+   while(!stopped){
     let job;
     try{
      ({job}=await aiJson('jobs/'+id,owner));
@@ -110,7 +110,6 @@ export function aiStream(request:Request,owner:string,id:string,model:string,inc
     }
     await new Promise(r=>setTimeout(r,180));
    }
-   if(!finished&&!stopped){send({error:{message:'GPU 대기 시간이 길어졌어요. 잠시 후 다시 시도해 주세요.',type:'timeout',code:'job_timeout'}});cancelJob()}
   }catch(e){if(!stopped){send({error:{message:e instanceof Error?e.message:'Local AI failed',type:'server_error',code:'job_stream_failed'}});cancelJob()}}
   finally{release();request.signal.removeEventListener('abort',stop);if(!stopped){controller.enqueue(encoder.encode('data: [DONE]\n\n'));controller.close()}}
  },cancel(){stop();release()}});
