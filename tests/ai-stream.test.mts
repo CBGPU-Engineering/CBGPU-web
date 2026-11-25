@@ -7,14 +7,14 @@ test('client disconnect cancels only the associated private job',async()=>{const
 
 test('tokens arrive before completion without replaying the final answer',async()=>{let phase=0;const api=async()=>({job:++phase===1?{state:'running',partial:'안녕'}:phase===2?{state:'running',partial:'안녕하세요'}:{state:'succeeded',result:{choices:[{message:{content:'안녕하세요!'},finish_reason:'stop'}],usage:{total_tokens:4}}}});const response=load(api).aiStream(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-chat');const reader=response.body.getReader();let text='';while(!text.includes('안녕')){const chunk=await reader.read();text+=new TextDecoder().decode(chunk.value)}assert.equal(phase,1,'first answer text must arrive while job is running');while(true){const chunk=await reader.read();if(chunk.done)break;text+=new TextDecoder().decode(chunk.value)}const events=text.split('\n').filter(l=>l.startsWith('data: ')&&!l.includes('[DONE]')).map(l=>JSON.parse(l.slice(6)));assert.equal(events.flatMap(e=>e.choices||[]).map(c=>c.delta?.content||'').join(''),'안녕하세요!');assert.ok(events.filter(e=>e.choices?.[0]?.delta?.content).length>=3)});
 
-test('slow coding requests send observed progress as SDK-visible chunks before any validated tools',async()=>{
+test('long requests keep streaming past the former deadline and emit only validated tools',async()=>{
  let time=0,phase=0;
  const api=async()=>{
   const state=['queued','running','running','running','succeeded'][phase++];
-  time += phase===3?3000:11000;
+  time += phase===2?900_000:phase===3?3000:11000;
   return {job:{state,result:{choices:[{message:{tool_calls:[{id:'call-test',type:'function',function:{name:'ping',arguments:'{}'}}]},finish_reason:'tool_calls'}]}}};
  };
- const response=load(api,{now:()=>time}).aiStream(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38',false,720_000,true);
+ const response=load(api,{now:()=>time}).aiStream(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38',false,true);
  const text=await response.text();
  const events=text.split('\n').filter(line=>line.startsWith('data: {')).map(line=>JSON.parse(line.slice(6)));
  assert.deepEqual(events.slice(0,3).map(event=>event.cbgpu_progress.state),['queued','running','running']);
@@ -32,7 +32,7 @@ test('an intermittent status error is retried on the same job and never enqueues
   if(++checks<=2)throw new AiFailure('Temporary lookup failure',checks===1?404:503);
   return {job:{state:'succeeded',result:{choices:[{message:{content:'Verified result'},finish_reason:'stop'}]}}};
  };
- const response=load(api).aiStream(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38',false,9000,true);
+ const response=load(api).aiStream(new Request('https://cbgpu.com/api/ai/v1/chat/completions'),'owner','job','cbgpu-qwen38',false,true);
  const output=await response.text();
  assert.ok(output.includes('Verified result'));
  assert.ok(!output.includes('error'));
