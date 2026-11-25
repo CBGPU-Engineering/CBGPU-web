@@ -54,9 +54,28 @@ export async function aiIdentity(request:Request,keysAllowed=true,resourceRequir
  if(!(request.method==='GET'?reads:writes).allow(owner))throw new AiFailure('요청이 많아요. 잠시 후 다시 이용해 주세요.',429);
  return {owner,isKey,token};
 }
-export async function waitAi(owner:string,id:string,seconds=120){
- const deadline=Date.now()+seconds*1000;
- while(Date.now()<deadline){const {job}=await aiJson('jobs/'+id,owner);if(job.state==='succeeded')return job.result;if(['failed','cancelled','deleted'].includes(job.state))throw new AiFailure(job.error||'AI 작업이 중단됐어요. 작업 목록에서 확인해 주세요.',502);await new Promise(resolve=>setTimeout(resolve,1500))}
- throw new AiFailure('사용 가능한 GPU를 기다리고 있어요. /ai의 작업 목록에서 이어서 확인할 수 있어요.',503);
+export async function waitAi(owner:string,id:string,signal:AbortSignal){
+ let aborted=false;
+ const cancel=()=>{
+  if(aborted)return;
+  aborted=true;
+  void aiJson('jobs/'+id+'/cancel',owner,'POST',{}).catch(()=>{});
+ };
+ signal.addEventListener('abort',cancel,{once:true});
+ if(signal.aborted)cancel();
+ try{
+  while(!aborted){
+   const {job}=await aiJson('jobs/'+id,owner);
+   if(aborted)break;
+   if(job.state==='succeeded')return job.result;
+   if(['failed','cancelled','deleted'].includes(job.state)){
+    throw new AiFailure(job.error||'AI 작업이 중단됐어요. 작업 목록에서 확인해 주세요.',502);
+   }
+   await new Promise(resolve=>setTimeout(resolve,1500));
+  }
+  throw new AiFailure('요청이 취소됐어요.',499);
+ }finally{
+  signal.removeEventListener('abort',cancel);
+ }
 }
 export function aiUserClient(token:string){return createClient(process.env.SUPABASE_INTERNAL_URL||'http://127.0.0.1:54321',process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,{global:{headers:{Authorization:'Bearer '+token}},auth:{persistSession:false,autoRefreshToken:false}})}

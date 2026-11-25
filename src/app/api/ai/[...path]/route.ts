@@ -7,7 +7,7 @@ import {agentGreeting,aiStream,greetingResponse,takeAiStream} from '@/lib/aiStre
 import {cbgpuKnowledge} from '@/lib/cbgpuKnowledge';
 import {aiSources} from '@/lib/aiSources';
 import {readJsonBody,RequestBodyError,WindowRateLimiter} from '@/lib/requestSecurity';
-export const runtime='nodejs';export const maxDuration=780;
+export const runtime='nodejs';
 let activeUploads=0;
 const robotPairing=new WindowRateLimiter(12,60_000);
 async function audioForm(request:NextRequest){
@@ -86,16 +86,16 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
     try{
      const {job}=await aiJson('jobs',owner,'POST',{kind:'chat',input:{messages:body.messages,max_tokens:body.max_tokens??body.max_completion_tokens??defaultMaxTokens,model,effort:body.reasoning_effort||body.effort||'medium',tools:body.tools,tool_choice:body.tool_choice||'auto'},title:'API chat'});
      if(release){
-      return aiStream(request,owner,job.id,model,includeUsage,agentModel?720_000:undefined,agentModel,release);
+      return aiStream(request,owner,job.id,model,includeUsage,agentModel,release);
      }
-     return NextResponse.json(await waitAi(owner,job.id));
+     return NextResponse.json(await waitAi(owner,job.id,request.signal));
     }catch(error){
      release?.();
      throw error;
     }
    }
    if(path.join('/')==='v1/embeddings'&&request.method==='POST'){
-    if(body.model&&body.model!=='cbgpu-embeddings')throw new AiFailure('model은 cbgpu-embeddings를 사용해 주세요.');const {job}=await aiJson('jobs',owner,'POST',{kind:'embed',input:{input:body.input},title:'API embeddings'});return NextResponse.json(await waitAi(owner,job.id));
+    if(body.model&&body.model!=='cbgpu-embeddings')throw new AiFailure('model은 cbgpu-embeddings를 사용해 주세요.');const {job}=await aiJson('jobs',owner,'POST',{kind:'embed',input:{input:body.input},title:'API embeddings'});return NextResponse.json(await waitAi(owner,job.id,request.signal));
    }
    if(path.join('/')==='v1/audio/transcriptions'&&request.method==='POST'){
     if(activeUploads>=2)throw new AiFailure('다른 파일을 받고 있어요. 잠시 후 다시 시도해 주세요.',429);activeUploads++;
@@ -106,7 +106,7 @@ async function handle(request:NextRequest,context:{params:Promise<{path:string[]
       if(form.get('response_format')&&!['json','verbose_json'].includes(String(form.get('response_format'))))throw new AiFailure('현재는 JSON 전사 응답을 지원해요. SRT는 웹에서 받을 수 있어요.');
       const response=await aiInternal('uploads',owner,'POST',undefined,file.stream(),'?name='+encodeURIComponent(file.name));const data=await response.json();if(!response.ok)throw new AiFailure(data.message||'파일을 받지 못했어요.',response.status);upload=data;
     }finally{activeUploads--}
-    const {job}=await aiJson('jobs',owner,'POST',{kind:'transcribe',input:{upload_id:upload.id,language},title:'API transcription'});const result=await waitAi(owner,job.id);return NextResponse.json({text:result.text});
+    const {job}=await aiJson('jobs',owner,'POST',{kind:'transcribe',input:{upload_id:upload.id,language},title:'API transcription'});const result=await waitAi(owner,job.id,request.signal);return NextResponse.json({text:result.text});
    }
    throw new AiFailure('지원하지 않는 AI API 경로입니다.',404);
   }
