@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'https', hostname: 'i.namu.wiki' },
       { protocol: 'https', hostname: 'fclbzjlcepoaifvcoxdw.supabase.co' },
+      { protocol: 'https', hostname: 'api.dicebear.com', pathname: '/**' },
       { protocol: 'https', hostname: 'cbgpu.com', pathname: '/backend/storage/v1/object/public/**' },
       { protocol: 'https', hostname: 'i.ytimg.com' },
       { protocol: 'https', hostname: 'i.scdn.co' },

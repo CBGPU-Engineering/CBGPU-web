@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { AVATAR_PROFILE_COLUMNS } from './avatar';
 import { supabase } from '@/lib/supabase';
 import { createAccountReadFence } from '@/lib/accountReadFence';
 import {matchesPortalSession,portalAuthSessionId,reconcilePortalSession} from '@/lib/portalSession';
@@ -59,11 +60,15 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
     const current = accountReads.current.lease(userId);
     if (!current()) return;
     try {
-      const { data, error } = await supabase
+      // The avatar columns only exist once the avatar migration is applied; fall back to the plain row until then.
+      let { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`*,${AVATAR_PROFILE_COLUMNS}`)
         .eq('id', userId)
         .single();
+      if (error && /display_avatar_url|profile_image_url/.test(error.message || '')) {
+        ({ data, error } = await supabase.from('profiles').select('*').eq('id', userId).single());
+      }
 
       if (data && current()) {
         setProfile(data);
