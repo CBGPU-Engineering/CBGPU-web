@@ -15,3 +15,26 @@ export async function manufacturingManagers(client:ProfileReader,kind:'print'|'l
 export async function attachManufacturingManagers(client:ProfileReader,kind:'print'|'laser',jobs:any[],enabled=scopedProfilesEnabled()){if(!enabled)return{data:jobs,error:null};const result=await manufacturingManagers(client,kind,jobs.map(j=>j.manager_id).filter(Boolean),null,true),map=new Map((result.data||[]).map(p=>[p.id,p]));return{data:jobs.map(j=>({...j,manager:map.get(j.manager_id)||null})),error:result.error}}
 export async function studyMemberProfiles(client:ProfileReader,users:string[],enabled=scopedProfilesEnabled()):Promise<Result>{const selected=ids(users);if(!selected.length)return{data:[],error:null};return enabled?nameOnly(await client.rpc('cbgpu_study_member_profiles',{p_user_ids:selected})):await legacyStudyProfiles(client,selected)}
 async function legacyStudyProfiles(client:ProfileReader,selected:string[]):Promise<Result>{const withAvatar=await client.from('profiles').select('id, full_name, student_id, avatar_url, display_avatar_url').in('id',selected);return withAvatar.error&&/display_avatar_url/.test(withAvatar.error.message||'')?await client.from('profiles').select('id, full_name, student_id, avatar_url').in('id',selected):withAvatar}
+
+const UUID_V=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Avatars are the one thing that is shown across schools. The database function returns only {id, avatarUrl};
+ * names, student numbers and schools keep following their own school-scoped rules, so anything else in the
+ * answer is dropped here too. A failed lookup never blocks the screen: people just show without a picture.
+ */
+export async function memberAvatarUrls(client:ProfileReader,users:string[]):Promise<Map<string,string>>{
+ const ids=[...new Set(users)].filter(value=>UUID_V.test(value)),avatars=new Map<string,string>();
+ for(let start=0;start<ids.length;start+=500){
+  try{
+   const answer=await client.rpc('cbgpu_avatar_urls',{p_user_ids:ids.slice(start,start+500)}) as unknown as {data:unknown;error:unknown};
+   if(answer.error||!Array.isArray(answer.data))continue;
+   for(const row of answer.data as {id?:unknown;avatarUrl?:unknown}[])if(typeof row?.id==='string'&&typeof row.avatarUrl==='string')avatars.set(row.id,row.avatarUrl);
+  }catch{/* keep the screen working without pictures */}
+ }
+ return avatars;
+}
+/** One entry per person: the name only if the school-scoped lookup allowed it, plus the avatar for everyone. */
+export function withMemberAvatars(people:ProfileLabel[]|null,users:string[],avatars:Map<string,string>):ProfileLabel[]{
+ const named=new Map((people??[]).map(person=>[person.id,person]));
+ return[...new Set(users)].map(id=>({id,full_name:named.get(id)?.full_name??null,student_id:null,avatar_url:null,display_avatar_url:avatars.get(id)??null}));
+}

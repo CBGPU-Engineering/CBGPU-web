@@ -59,7 +59,8 @@ const nextConfig: NextConfig = {
         // read the response, not authorization, so opening it doesn't
         // weaken anything those routes already enforce.
         // Cookie-authenticated session responses must never inherit public API CORS.
-        source: '/api/:path((?!auth/shared-session(?:/|$)).*)',
+        // Avatars are public, immutable images that set their own cache headers.
+        source: '/api/:path((?!auth/shared-session(?:/|$)|avatars/).*)',
         headers: [
           { key: 'Cache-Control', value: 'private, no-store' },
           { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
