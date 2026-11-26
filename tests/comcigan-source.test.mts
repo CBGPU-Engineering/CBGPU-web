@@ -35,3 +35,14 @@ test('reads a viewer with rotated function names and alphanumeric data fields',(
  assert.equal(extractComciganWeekField(html),'MNO852');
  assert.equal(extractComciganTimesField(html),'PQR963');
 });
+
+test('reads the viewer that POSTs a text/plain body instead of a query string',()=>{
+ // Mirrors the current provider script: relative fixed path, method held in an obfuscated variable.
+ const transport="window.__HourRequestToken='aabbcc';var Q웹보호안내중=false,Qa='POST';function search9(sc,success){var s7='15565l'+encodeURIComponent(sc);    return $.ajax({        url:'./959975', method:Qa, contentType:'text/plain; charset=UTF-8',        data:encodeURIComponent(btoa(s7+'_8701')),        success:success    });}";
+ const html=wrap("f856wT('40826_',storage.sc,1,'1');",57)+wrap(transport,29);
+ assert.deepEqual(extractComciganMetadata(html),{extractCode:'/959975?15565l',scPrefix:'40826_',scSuffix:'1'});
+ assert.deepEqual(extractComciganRequest(html),{base64Search:false,token:'aabbcc',post:true});
+ // A method variable that is not POST must not switch the transport.
+ const getViewer=wrap("f856wT('40826_',storage.sc,1,'1');",57)+wrap(transport.replace("Qa='POST'","Qa='GET'"),29);
+ assert.equal(extractComciganRequest(getViewer).post,undefined);
+});

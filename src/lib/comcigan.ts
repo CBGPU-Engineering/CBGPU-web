@@ -61,8 +61,8 @@ let metaCache: { meta: SiteMeta; at: number } | null = null;
 
 
 
-async function fetchBuffer(url: string, token?:string|null): Promise<Buffer> {
-  const res = await fetch(url, { headers: { 'User-Agent': UA,...(token?{'X-Hour-Token':token}:{}) }, signal: AbortSignal.timeout(10_000) });
+async function fetchBuffer(url: string, token?:string|null,body?:string): Promise<Buffer> {
+  const res = await fetch(url, { ...(body===undefined?{}:{method:'POST',body}), headers: { 'User-Agent': UA,...(body===undefined?{}:{'Content-Type':'text/plain; charset=UTF-8'}),...(token?{'X-Hour-Token':token}:{}) }, signal: AbortSignal.timeout(10_000) });
   if (!res.ok) throw new Error(`HTTP ${res.status} (${url})`);
   if(Number(res.headers.get('content-length')||0)>8_000_000)throw Error('시간표 제공처의 응답이 너무 커요. 잠시 후 다시 조회해 주세요.');
   if(!res.body)return Buffer.alloc(0);
@@ -75,8 +75,8 @@ async function fetchEucKr(url: string): Promise<string> {
   return iconv.decode(await fetchBuffer(url), 'euc-kr');
 }
 
-async function fetchUtf8(url: string,token?:string|null): Promise<string> {
-  return (await fetchBuffer(url,token)).toString('utf-8');
+async function fetchUtf8(url: string,token?:string|null,body?:string): Promise<string> {
+  return (await fetchBuffer(url,token,body)).toString('utf-8');
 }
 
 function hexEncodeEucKr(text: string): string {
@@ -103,9 +103,10 @@ async function getMeta(forceRefresh = false): Promise<SiteMeta> {
 }
 
 async function searchSchool(meta: SiteMeta, keyword: string) {
-  const query=meta.request.base64Search?encodeURIComponent(Buffer.from(meta.extractCode.split('?')[1]+encodeURIComponent(keyword)+meta.transport.suffix).toString('base64')):null;
-  const url = meta.baseUrl + (query?meta.extractCode.split('?')[0]+'?'+query:meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix);
-  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key,meta.transport.suffix.slice(1));
+  const query=meta.request.base64Search||meta.request.post?encodeURIComponent(Buffer.from(meta.extractCode.split('?')[1]+encodeURIComponent(keyword)+meta.transport.suffix).toString('base64')):null;
+  const post=meta.request.post&&query;
+  const url = meta.baseUrl + (post?meta.extractCode.split('?')[0]:query?meta.extractCode.split('?')[0]+'?'+query:meta.extractCode + hexEncodeEucKr(keyword) + meta.transport.suffix);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token,post||undefined),meta.transport.key,meta.transport.suffix.slice(1));
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const list = JSON.parse(jsonStr)?.['학교검색'];
   if (!list?.length) throw new Error('시간표 제공처에서 학교를 찾지 못했어요. 학교 이름과 지역을 확인해 주세요.');
@@ -122,8 +123,9 @@ async function fetchRawData(meta: SiteMeta, schoolCode: number): Promise<RawData
   const path = meta.extractCode.split('?')[0];
   const payload = `${meta.scPrefix}${schoolCode}_0_${meta.scSuffix}${meta.transport.suffix}`;
   const b64 = Buffer.from(payload).toString('base64');
-  const url = meta.baseUrl + path + '?' + b64;
-  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token),meta.transport.key,meta.transport.suffix.slice(1));
+  const post=meta.request.post;
+  const url = meta.baseUrl + path + (post?'':'?' + b64);
+  const body = decodeComciganPayload(await fetchUtf8(url,meta.request.token,post?b64:undefined),meta.transport.key,meta.transport.suffix.slice(1));
   const jsonStr = body.slice(0, body.lastIndexOf('}') + 1);
   const raw = JSON.parse(jsonStr);
   for (const [alias, field] of Object.entries({ '자료481': meta.fields.base, '자료147': meta.fields.daily, '자료446': meta.fields.teachers, '자료492': meta.fields.subjects })) {

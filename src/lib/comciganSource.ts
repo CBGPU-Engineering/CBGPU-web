@@ -32,17 +32,28 @@ export function decodeComciganSource(html: string): string {
 }
 
 const modernSearch = /\burl\s*:\s*['"]\.?(\/\d+\?)['"]\s*\+\s*(?:encodeURIComponent\(\s*)?btoa\(\s*['"](\d+l)['"]\s*\+\s*encodeURIComponent\(/;
+/** Current viewer: the search/data calls POST a text/plain body to a fixed relative path (`url:'./NNN', method:<var>='POST'`). */
+function postProtocol(source:string):{path:string;code:string}|null{
+  const match=source.match(/function\s+[\w$]+\s*\(\s*sc\s*,\s*success\s*\)\s*\{\s*var\s+[\w$]+\s*=\s*['"](\d+l)['"]\s*\+\s*encodeURIComponent\(\s*sc\s*\)\s*;?\s*return\s+\$\.ajax\(\{\s*url\s*:\s*['"]\.?(\/\d+)['"]\s*,\s*method\s*:\s*([\w$]+|['"]POST['"])/);
+  if(!match)return null;
+  const method=match[3];
+  // The method may be an obfuscated variable; only accept it when that variable is the literal 'POST'.
+  const isPost=/^['"]POST['"]$/.test(method)||new RegExp('(?:^|[^\\w$])'+method.replace(/\$/g,'\\$')+'\\s*=\\s*[\'"]POST[\'"]').test(source);
+  return isPost?{path:match[2],code:match[1]}:null;
+}
+
 const viewerField = '(자료\\d{1,6}|[A-Z]{2,8}\\d{1,6}|시작일)';
 
 export function extractComciganMetadata(html: string) {
   const source = decodeComciganSource(html);
   const modern=source.match(modernSearch)
     ||source.match(/function\s+QAjaxSchool[\s\S]{0,300}?url\s*:\s*['"]\.?(\/\d+\?)['"][\s\S]{0,100}?btoa\(['"](\d+l)['"]/);
+  const post=postProtocol(source);
   const search = source.match(/function\s+school_ra\s*\(\s*sc\s*\)[\s\S]{0,200}?url\s*:\s*['"]\.?(\/\d+\?[^'"\s]+)['"]/i);
   const data = source.match(/sc_data\(\s*['"](\d+_)['"]\s*,[^,]+,\s*(\d+)/)
-    ||(modern&&source.match(/\b[A-Za-z_$][\w$]*\(\s*['"](\d+_)['"]\s*,\s*(?:storage\.)?sc\s*,\s*(\d+)\s*,\s*['"][01]['"]\s*\)/));
-  if ((!search&&!modern) || !data) throw new Error('시간표 제공처의 조회 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
-  return { extractCode: modern?modern[1]+modern[2]:search![1], scPrefix: data[1], scSuffix: data[2] };
+    ||((modern||post)&&source.match(/\b[A-Za-z_$][\w$]*\(\s*['"](\d+_)['"]\s*,\s*(?:storage\.)?sc\s*,\s*(\d+)\s*,\s*['"][01]['"]\s*\)/));
+  if ((!search&&!modern&&!post) || !data) throw new Error('시간표 제공처의 조회 정보를 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
+  return { extractCode: modern?modern[1]+modern[2]:post?post.path+'?'+post.code:search![1], scPrefix: data[1], scSuffix: data[2] };
 }
 
 /** The provider rotates data field numbers too; derive their meaning from its renderer. */
@@ -82,9 +93,9 @@ export function extractComciganTransport(html:string){
  return {suffix,key:key||null,schoolCodeDivisor:divisor};
 }
 
-export function extractComciganRequest(html:string){
+export function extractComciganRequest(html:string):{base64Search:boolean;token:string|null;post?:true}{
  const source=decodeComciganSource(html);
- return {base64Search:modernSearch.test(source)||/function\s+QAjaxSchool/.test(source),token:source.match(/window\.__HourRequestToken\s*=\s*['"]([\da-f]+)['"]/i)?.[1]||null};
+ return {base64Search:modernSearch.test(source)||/function\s+QAjaxSchool/.test(source),token:source.match(/window\.__HourRequestToken\s*=\s*['"]([\da-f]+)['"]/i)?.[1]||null,...(postProtocol(source)?{post:true as const}:{})};
 }
 
 /** Literal byte keys in the public viewer are data, never executable code. */
