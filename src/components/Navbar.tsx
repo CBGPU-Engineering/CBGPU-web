@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import { signOutEverywhere } from '@/lib/signOutEverywhere';
+import { avatarSrc } from '@/lib/avatar';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from './ThemeToggle';
 import type {WorkspaceId} from '@/lib/workspaces';
@@ -174,8 +175,8 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
               <DropdownMenuPrimitive.Root>
                 <DropdownMenuPrimitive.Trigger asChild>
                   <button aria-label="내 계정 메뉴" className="flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 ml-2 hover:bg-muted/60 transition-colors">
-                    {profile?.avatar_url ? (
-                      <Image src={profile.avatar_url} alt="" width={32} height={32} className="size-8 rounded-full object-cover ring-2 ring-background shadow-sm" />
+                    {avatarSrc(profile) ? (
+                      <Image src={avatarSrc(profile)!} alt="" width={32} height={32} className="size-8 rounded-full object-cover ring-2 ring-background shadow-sm" />
                     ) : (
                       <span className="flex items-center justify-center size-8 rounded-full bg-muted text-muted-foreground">
                         <UserCircle2 className="size-5" />
@@ -237,8 +238,8 @@ export default function Navbar({brandSuffix,navigationLinks,hideBottomNav=false,
             <>
               <div className="flex items-center justify-between pb-4 mb-3 border-b border-border/50">
                 <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3">
-                  {profile?.avatar_url && (
-                    <Image src={profile.avatar_url} alt="" width={40} height={40} className="size-10 rounded-full object-cover ring-2 ring-background shadow-sm" />
+                  {avatarSrc(profile) && (
+                    <Image src={avatarSrc(profile)!} alt="" width={40} height={40} className="size-10 rounded-full object-cover ring-2 ring-background shadow-sm" />
                   )}
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-primary leading-none">

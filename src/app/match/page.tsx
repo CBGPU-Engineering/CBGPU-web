@@ -1,5 +1,6 @@
 'use client';
 import{studyMemberProfiles}from'@/lib/scopedProfiles';
+import{avatarSrc}from'@/lib/avatar';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/useAuth';
@@ -22,7 +23,7 @@ interface StudyPost {
   tags: string[]; max_members: number; is_open: boolean;
 }
 interface Member { post_id: string; user_id: string; joined_at: string }
-interface Profile { id: string; full_name: string | null; student_id: string | null; avatar_url: string | null }
+interface Profile { id: string; full_name: string | null; student_id: string | null; avatar_url: string | null; display_avatar_url?: string | null }
 
 const SUBJECTS = ['수학', '물리', '화학', '생물', '지구과학', '정보', 'AI/ML', '프로그래밍', '영어', '국어', '기타'];
 
@@ -79,7 +80,7 @@ function PostCard({
             <p className="text-sm font-semibold text-muted-foreground">참여자 ({cnt}/{post.max_members})</p>
             <div className="flex flex-wrap gap-1.5">
               {allMemberIds.map(id => {
-                const avatar = profileMap.get(id)?.avatar_url;
+                const avatar = avatarSrc(profileMap.get(id));
                 return (
                   <span key={id} className="flex items-center gap-1.5 text-sm font-bold bg-muted pl-1 pr-2 py-1 rounded-lg">
                     {avatar ? (

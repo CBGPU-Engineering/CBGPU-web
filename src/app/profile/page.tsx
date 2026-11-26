@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useAlert } from '@/lib/alert';
 import { useAuth } from '@/lib/useAuth';
+import { avatarSrc, uploadedPhoto } from '@/lib/avatar';
 import Image from 'next/image';
 import { UserCircle2, Mail, Hash, Save, Loader2, Camera, KeyRound, Lock, ShieldAlert, Trash2, BellRing, LogOut } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -305,6 +306,29 @@ function ProfileSession() {
     }
   }
 
+  /** Clearing the photo is enough: the server falls back to the same default avatar for this account. */
+  async function handleAvatarDelete() {
+    if (!user || !uploadedPhoto(profile)) return;
+    const owner=user.id,current=operations.current.lease(owner);
+    setIsUploadingAvatar(true);
+    try {
+      await confirmedAccountSession(owner,current,()=>supabase.auth.getSession());
+      const { error: dbError } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', owner);
+      if (dbError) throw dbError;
+      // The profile no longer points at the file; removing it is best effort.
+      await supabase.storage.from('avatars').remove([`${owner}/avatar.jpg`]).catch(()=>undefined);
+      if(!current())return;
+      await refreshProfile();
+      if(!current())return;
+      showSuccess('프로필 사진을 지웠어요.');
+    } catch (error: any) {
+      if(!current())return;
+      showError(error.message || '사진을 지우지 못했어요. 다시 시도해 주세요.');
+    } finally {
+      if(current())setIsUploadingAvatar(false);
+    }
+  }
+
   if (authLoading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
       <LoadingSpinner size={56} label="프로필을 불러오고 있어요" />
@@ -328,8 +352,8 @@ function ProfileSession() {
           disabled={isUploadingAvatar}
           aria-label="프로필 사진 바꾸기" className="relative shrink-0 group active:scale-95 transition-transform"
         >
-          {profile?.avatar_url ? (
-            <Image src={profile.avatar_url} alt="프로필 사진" width={96} height={96} className="w-24 h-24 rounded-full object-cover ring-8 ring-primary/5" />
+          {avatarSrc(profile) ? (
+            <Image src={avatarSrc(profile)!} alt="프로필 사진" width={96} height={96} className="w-24 h-24 rounded-full object-cover ring-8 ring-primary/5" />
           ) : (
             <div className="bg-primary/10 p-5 rounded-full ring-8 ring-primary/5">
               <UserCircle2 className="w-14 h-14 text-primary" />
@@ -344,6 +368,11 @@ function ProfileSession() {
           <p className="break-all text-muted-foreground flex items-center justify-center md:justify-start gap-2 text-sm">
             <Mail className="size-3" /> {user.email}
           </p>
+          {uploadedPhoto(profile) && (
+            <Button type="button" variant="ghost" size="sm" onClick={handleAvatarDelete} disabled={isUploadingAvatar} className="mt-1 text-muted-foreground">
+              <Trash2 className="size-4" /> 사진 삭제
+            </Button>
+          )}
         </div>
       </div>
 
