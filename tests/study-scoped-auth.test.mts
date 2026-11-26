@@ -1,4 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';
+import * as schoolsProxySecurity from '../src/lib/schoolsProxySecurity.ts';
 const compile=(path:string)=>ts.transpileModule(fs.readFileSync(new URL('../src/lib/'+path,import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const authCode=compile('studyAuth.ts'),modeCode=compile('deployAccess.ts'),automationCode=compile('studyAutomationServer.ts');
 class StudyFailure extends Error{status:number;code?:string;constructor(message:string,status=400,code?:string){super(message);this.status=status;this.code=code}}
@@ -8,6 +9,7 @@ function fixture(env:Record<string,string>={CBGPU_MULTISCHOOL_V1:'1'}){
  const mode:Record<string,any>={};vm.runInNewContext(modeCode,{exports:mode,process:{env}});
  const exports:Record<string,any>={};const token='synthetic-caller-token';
  vm.runInNewContext(authCode,{exports,Buffer,Date,Map,AbortSignal,fetch,process:{env:{NEXT_PUBLIC_SUPABASE_ANON_KEY:'public-anon',...env}},require(name:string){
+  if(name==='./schoolsProxySecurity.ts')return schoolsProxySecurity;
   if(name==='./deployAccess')return mode;if(name==='./edusetStudent')return{StudyFailure};if(name==='./internalServiceUrl')return{trustedInternalServiceUrl:(value:string)=>new URL(value)};
   if(name==='@supabase/supabase-js')return{createClient(url:string,key:string,options:any){assert.equal(key,'public-anon');assert.equal(url,'http://127.0.0.1:54321/');assert.equal(options.global.headers.Authorization,'Bearer '+token);assert.equal(options.auth.persistSession,false);assert.equal(options.auth.autoRefreshToken,false);return{auth:{getUser:async(value:string)=>{assert.equal(value,token);authChecks++;return{data:{user:authValid?{id:uid}:null},error:null}}},from(){profiles++;throw Error('Approval/profile lookup must not grant scoped study');},rpc:async(name:string,args:unknown)=>{calls.push({name,args});if(unavailable)return{error:{code:'PGRST202'},data:null};if(name==='cbgpu_self_session_status')return{error:null,data:{valid,approved:false}};assert.equal(name,'cbgpu_can_use_resource');assert.equal(JSON.stringify(args),JSON.stringify({resource:'study',target_school:'cbsh'}));return{error:null,data:allowed}}}}};throw Error(name);
  }});
@@ -29,6 +31,7 @@ test('missing oracle, outages and malformed server flags fail503, never legacy f
 test('automation rechecks trusted stored owner before each request and never writes after mid-run revocation',async()=>{
  let allowed=true,outage=false,checks=0,sends=0;let boundary:any;
  const exports:Record<string,any>={};vm.runInNewContext(automationCode,{exports,Request,Date,process:{env:{}},require(name:string){
+  if(name==='./schoolsProxySecurity.ts')return schoolsProxySecurity;
   if(name==='server-only')return{};if(name==='./studyAuth')return{studyScopedMode:()=>true};if(name==='./preprintsServer')return{preprintsClient:()=>({rpc:async(name:string,args:any)=>{checks++;assert.equal(name,'cbgpu_service_can_use_resource');assert.equal(JSON.stringify(args),JSON.stringify({user_id:uid,resource:'study',target_school:'cbsh'}));return{data:allowed,error:outage?{code:'unavailable'}:null}}})};
   if(name==='./edusetStudent')return{StudyFailure,handleStudentStudy:async(_req:Request,deps:any)=>{boundary=deps;await deps.send('/rooms','private-personal-school-token');allowed=false;await deps.send('/selfstudy','private-personal-school-token','POST',{});return Response.json({ok:true})}};
   if(name==='./edusetStudentStore')return{savedSchoolToken:async()=> 'private-personal-school-token',forgetSchoolConnection:async()=>{throw Error('Must not delete connection on authority denial')}};
@@ -40,7 +43,7 @@ test('automation rechecks trusted stored owner before each request and never wri
 });
 
 test('CBGPU session revocation during a personal school read preserves the saved EduSet connection',async()=>{
- const exports:Record<string,any>={};vm.runInNewContext(compile('edusetStudent.ts'),{exports,Buffer,Date,Map,Set,Response,URL,require:(name:string)=>{if(name==='./requestSecurity')return{readJsonBody:async(r:Request)=>r.json()};throw Error(name)}});
+ const exports:Record<string,any>={};vm.runInNewContext(compile('edusetStudent.ts'),{exports,Buffer,Date,Map,Set,Response,URL,require:(name:string)=>{if(name==='./schoolsProxySecurity.ts')return schoolsProxySecurity;if(name==='./requestSecurity')return{readJsonBody:async(r:Request)=>r.json()};throw Error(name)}});
  let forgotten=0;
  const token='fixture.'+Buffer.from(JSON.stringify({userId:'student'})).toString('base64url')+'.signature';
  const response=await exports.handleStudentStudy(new Request('https://cbgpu.com/api/study/student',{headers:{host:'cbgpu.com'}}),{authorize:async()=>uid,limit:()=>true,getConnection:async()=>token,disconnect:async()=>{forgotten++},send:async()=>{throw new exports.StudyFailure('CBGPU session expired',401,'cbgpu_session_expired')}});

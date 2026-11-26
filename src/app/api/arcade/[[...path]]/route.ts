@@ -20,7 +20,7 @@ async function handle(request:NextRequest, context:{params:Promise<{path?:string
   const authorization = request.headers.get('authorization');
   const publicRead = false;
   if (!publicRead && !/^Bearer \S+$/i.test(authorization||'')) return fail('로그인하면 기록을 저장할 수 있어요.',401);
-  if (!get && !schoolRequestOriginAllowed(request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'',request.headers.get('origin'))) return fail('요청한 페이지를 확인할 수 없어요. 새로고침해 주세요.',403);
+  if (!get && !schoolRequestOriginAllowed(request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'',request.headers.get('origin'),request.headers)) return fail('요청한 페이지를 확인할 수 없어요. 새로고침해 주세요.',403);
   const key = request.headers.get('cf-connecting-ip') || 'local';
   if (!(get ? reads : writes).allow(key)) return fail('요청이 많아요. 잠시 후 다시 시도해 주세요.',429);
   let body:string|undefined;

@@ -1,3 +1,4 @@
+import{writeOriginAllowed}from'@/lib/schoolsProxySecurity';
 import {preprintsClient} from '@/lib/preprintsServer';
 import {requireStudyUser} from '@/lib/studyAuth';
 import {readJsonBody,WindowRateLimiter} from '@/lib/requestSecurity';
@@ -12,7 +13,7 @@ async function handle(req:Request){
  try{
   const host=req.headers.get('host')?.split(':')[0]||new URL(req.url).hostname;
   if(!hosts.has(host))return reply({message:'Not found'},404);
-  if(req.method==='POST'&&req.headers.get('origin')!=='https://'+host)return reply({message:'올바른 사이트에서 다시 시도해 주세요.'},403);
+  if(req.method==='POST'&&!writeOriginAllowed(req.headers.get('origin'),req.headers,value=>value==='https://'+host))return reply({message:'올바른 사이트에서 다시 시도해 주세요.'},403);
   const user=await requireStudyUser(req);
   if(!limits.allow(user.id))return reply({message:'잠시 후 다시 시도해 주세요.'},429);
   const db=preprintsClient();

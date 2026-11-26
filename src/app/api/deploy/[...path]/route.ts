@@ -1,3 +1,4 @@
+import{writeOriginAllowed}from'@/lib/schoolsProxySecurity';
 import{centralCPUEnabled,selectedCentralAllocation,deploymentActorSession}from'@/lib/centralCpuDeploy';
 import{randomUUID}from'node:crypto';
 import {NextRequest,NextResponse} from 'next/server';
@@ -28,7 +29,7 @@ async function deploymentUser(request:Request){if(!deploymentAccessV2())return p
 async function handle(request:NextRequest,context:{params:Promise<{path:string[]}>}){
  const host=request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'';
  if(!['researcher.cbgpu.com','developer.cbgpu.com','app.cbgpu.com','cbgpu.com','localhost:3002','127.0.0.1:3002'].includes(host))return error('Not found',404);
- if(!['GET','HEAD'].includes(request.method)&&request.headers.get('origin')!==`https://${host}`&&!host.startsWith('localhost:')&&!host.startsWith('127.0.0.1:'))return error('Invalid request origin',403);
+ if(!['GET','HEAD'].includes(request.method)&&!writeOriginAllowed(request.headers.get('origin'),request.headers,value=>value===`https://${host}`)&&!host.startsWith('localhost:')&&!host.startsWith('127.0.0.1:'))return error('Invalid request origin',403);
  if(!ipLimits.allow(request.headers.get('cf-connecting-ip')||'local'))return error('요청이 많아요. 잠시 후 다시 시도해 주세요.',429);
  let user;try{user=await deploymentUser(request)}catch{return error('Authentication unavailable',503)}if(!user)return error('로그인한 뒤 계정 승인 상태를 확인해 주세요.',401);if(!limits.allow(user.id))return error('요청이 많아요. 잠시 후 다시 시도해 주세요.',429);try{if(!await activeDeploymentSession(request,user.id))return error('로그인이 만료됐어요. 다시 로그인해 주세요.',401)}catch{return error('로그인 상태를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.',503)}
  const {path}=await context.params;if(!['projects','servers','teams','domains','compose'].includes(path[0])||path.some(part=>!/^[-a-z0-9]+$/.test(part))||path.length>4)return error('Not found',404);
