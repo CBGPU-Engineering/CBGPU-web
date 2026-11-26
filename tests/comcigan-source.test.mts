@@ -46,3 +46,15 @@ test('reads the viewer that POSTs a text/plain body instead of a query string',(
  const getViewer=wrap("f856wT('40826_',storage.sc,1,'1');",57)+wrap(transport.replace("Qa='POST'","Qa='GET'"),29);
  assert.equal(extractComciganRequest(getViewer).post,undefined);
 });
+
+test('finds the grid data when the renderer uses renamed variables passed to baSplit(daily, base, …)',()=>{
+ // Current provider shape: no 원자료/일일자료 names; baSplit's first argument is the current value, the second the original.
+ const render="function GOW774(자료,학년,반){for(var 교시=1;교시<=8;교시++){for(var 요일=1;요일<6;요일++){E6WU=Cak7(자료.NMZ366[학년][반][요일][교시]);eXF6=Cak7(자료.ODS294[학년][반][요일][교시]);var m3=자료.XPG111[학년][반][요일][교시];var ma=baSplit(eXF6,E6WU,자료.변경알림);성명=XvF8(자료.JXC344[th]);과목명=X3Ru(자료.TOX181[sb]);}}}";
+ const fields=extractComciganFields(wrap(render,77));
+ assert.deepEqual(fields,{base:'NMZ366',daily:'ODS294',teachers:'JXC344',subjects:'TOX181'});
+ // swapping the baSplit arguments swaps the meaning, so the mapping really follows the call
+ assert.deepEqual(extractComciganFields(wrap(render.replace('baSplit(eXF6,E6WU,','baSplit(E6WU,eXF6,'),77)),{base:'ODS294',daily:'NMZ366',teachers:'JXC344',subjects:'TOX181'});
+ // a classroom lookup (not wrapped in a function) or an unknown call never produces a guess
+ assert.throws(()=>extractComciganFields(wrap(render.replace(/baSplit\([^)]*\)/,'other(x)'),77)));
+ assert.throws(()=>extractComciganFields(wrap(render.replace('baSplit(eXF6,E6WU,','baSplit(eXF6,eXF6,'),77)),'identical base and daily is rejected');
+});
