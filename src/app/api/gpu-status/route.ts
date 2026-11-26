@@ -35,10 +35,25 @@ async function check(g: GpuEndpoint): Promise<Status> {
   return 'online';
 }
 
-export async function GET() {
+// Each call reads gpu_endpoints and probes every GPU (up to 4 s each when one is down). Share one result for a short
+// window and collapse concurrent callers into a single probe round so polling clients cannot multiply the work.
+const CACHE_TTL_MS = 15_000;
+type Snapshot = { gpus: { id: number; status: Status; url: string }[]; checkedAt: string };
+let cache: { at: number; value: Snapshot } | null = null;
+let inflight: Promise<Snapshot> | null = null;
+
+async function snapshot(): Promise<Snapshot> {
   const endpoints = await fetchGpuEndpoints();
-  const results = await Promise.all(
+  const gpus = await Promise.all(
     endpoints.map(async g => ({ id: g.gpu_id, status: await check(g), url: g.public_url }))
   );
-  return NextResponse.json({ gpus: results, checkedAt: new Date().toISOString() });
+  return { gpus, checkedAt: new Date().toISOString() };
+}
+
+export async function GET() {
+  if (cache && Date.now() - cache.at < CACHE_TTL_MS) return NextResponse.json(cache.value);
+  inflight ??= snapshot()
+    .then(value => { cache = { at: Date.now(), value }; return value; })
+    .finally(() => { inflight = null; });
+  return NextResponse.json(await inflight);
 }
