@@ -27,7 +27,7 @@ export async function proxyGpuRegistry(request:Request,parts:string[],device=fal
  if(!limiter.allow(key))return gpuReply({error:'RATE_LIMITED'},429);
  if(!device&&request.method!=='GET'){
   const host=request.headers.get('x-cbgpu-public-host')||request.headers.get('host')||'';
-  if(!schoolRequestOriginAllowed(host,request.headers.get('origin')))return gpuReply({error:'ORIGIN_NOT_ALLOWED'},403);
+  if(!schoolRequestOriginAllowed(host,request.headers.get('origin'),request.headers))return gpuReply({error:'ORIGIN_NOT_ALLOWED'},403);
  }
  if(process.env.CBGPU_GPU_REGISTRY_ENABLED!=='1')return gpuReply({error:'GPU_ONBOARDING_UNAVAILABLE'},503);
  let endpoint:URL;try{endpoint=trustedInternalServiceUrl(process.env.CBGPU_GPU_REGISTRY_URL||'http://127.0.0.1:3548',process.env.CBGPU_INTERNAL_NETWORK_MODE);endpoint.pathname=target;endpoint.search=adminList?query.toString():'';endpoint.hash=''}catch{return gpuReply({error:'GPU_CONFIGURATION_UNAVAILABLE'},503)}

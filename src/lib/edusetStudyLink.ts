@@ -1,3 +1,4 @@
+import{writeOriginAllowed}from'./schoolsProxySecurity.ts';
 import {randomBytes} from 'node:crypto';
 import {readJsonBody} from './requestSecurity';
 import {StudyFailure,type StudyStudent,type StudyId} from './edusetStudent';
@@ -12,7 +13,7 @@ export function createStudyLinkHandler(deps:{authorize:(request:Request)=>Promis
   const reply=(data:unknown,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'private, no-store','X-Robots-Tag':'noindex'}});
   try{
    const host=request.headers.get('host')?.split(':')[0]||new URL(request.url).hostname;
-   if(!['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host)||request.headers.get('origin')!=='https://'+host)throw new StudyFailure('올바른 사이트에서 연결해 주세요.',403);
+   if(!['cbgpu.com','www.cbgpu.com','app.cbgpu.com','student.cbgpu.com','researcher.cbgpu.com','developer.cbgpu.com'].includes(host)||!writeOriginAllowed(request.headers.get('origin'),request.headers,value=>value==='https://'+host))throw new StudyFailure('올바른 사이트에서 연결해 주세요.',403);
    const body:any=await readJsonBody(request,12000);if(!body||typeof body!=='object')throw new StudyFailure('입력을 확인해 주세요.');
    for(const [id,e]of entries)if(e.expires<=now())entries.delete(id);
    const id=normalize(body.id);

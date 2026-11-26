@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';
+import * as schoolsProxySecurity from '../src/lib/schoolsProxySecurity.ts';
 const source=fs.readFileSync(new URL('../src/app/api/study/automation/route.ts',import.meta.url),'utf8');
 function fixture({user={id:'owner'},session=true}={}){
  const owners=[],writes=[];const exports: Record<string, any> = {};
@@ -9,6 +10,7 @@ function fixture({user={id:'owner'},session=true}={}){
  const mocks={
   '@/lib/preprintsServer':{publicationUser:async()=>user,preprintsClient:()=>({from:()=>query})},
   '@/lib/deployAuth':{activeDeploymentSession:async()=>session},
+  '@/lib/schoolsProxySecurity':schoolsProxySecurity,
   '@/lib/studyAuth':{requireStudyUser:async()=>{if(!user||!session){const e=Error('Session invalid');Object.assign(e,{status:401});throw e}return user}},
   '@/lib/requestSecurity':{WindowRateLimiter:class{allow(){return true}},readJsonBody:r=>r.json()},
   '@/lib/studyAutomation':{validateAutomation(){throw Error('invalid settings')},nextAutomaticStudyDate(){return '2026-11-05'}},

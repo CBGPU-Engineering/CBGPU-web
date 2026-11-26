@@ -1,3 +1,4 @@
+import{writeOriginAllowed}from'./schoolsProxySecurity.ts';
 /** Student-only EduSet contract. No administrator/shared token is used here. */
 import { readJsonBody } from './requestSecurity';
 export type StudyId=string|number;
@@ -45,7 +46,7 @@ export async function handleStudentStudy(request:Request,deps:Dependencies){
  try{
   const raw=request.headers.get('host')?.split(':')[0]||new URL(request.url).hostname,host=['127.0.0.1','localhost'].includes(raw)?request.headers.get('x-cbgpu-public-host')||raw:raw;
   if(!safeHosts.has(host))throw new StudyFailure('Not found',404);
-  if(request.method==='POST'&&request.headers.get('origin')!=='https://'+host)throw new StudyFailure('올바른 사이트에서 다시 시도해 주세요.',403);
+  if(request.method==='POST'&&!writeOriginAllowed(request.headers.get('origin'),request.headers,value=>value==='https://'+host))throw new StudyFailure('올바른 사이트에서 다시 시도해 주세요.',403);
   const user=await deps.authorize(request);if(!user)throw new StudyFailure('승인된 CBGPU 계정으로 로그인해 주세요.',401);
   if(!deps.limit(user))throw new StudyFailure('요청이 많아요. 잠시 후 다시 시도해 주세요.',429);
   const body:any=request.method==='POST'?await readJsonBody(request,8192):{};
