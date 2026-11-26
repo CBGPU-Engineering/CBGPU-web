@@ -66,10 +66,22 @@ export function extractComciganFields(html: string) {
     subjects:new RegExp('과목명\\s*=\\s*[\\w$가-힣]+\\(\\s*자료\\.'+viewerField+'\\['),
   };
   const fields={} as Record<keyof typeof patterns,string>;
+  // Newer viewers no longer name the grid values: each cell reads `a=f(자료.X[학년][반][요일][교시]);b=f(자료.Y[…])`
+  // and passes them to `baSplit(daily,base,…)`, whose first argument is the current (daily) value and second the original.
+  let grid:{base:string;daily:string}|null=null;
+  const gridFields=()=>{
+    if(grid)return grid;
+    const byVariable=new Map<string,string>();
+    for(const m of source.matchAll(new RegExp('([\\w$]+)\\s*=\\s*[\\w$]+\\(\\s*자료\\.'+viewerField+'\\[학년\\]\\[반\\]\\[요일\\]\\[교시\\]\\s*\\)','g')))byVariable.set(m[1],m[2]);
+    const call=source.match(/baSplit\(\s*([\w$]+)\s*,\s*([\w$]+)\s*,/);
+    const daily=call&&byVariable.get(call[1]),base=call&&byVariable.get(call[2]);
+    return grid=daily&&base&&daily!==base?{base,daily}:{base:'',daily:''};
+  };
   for(const [name,pattern] of Object.entries(patterns)){
     const match=source.match(pattern);
-    if(!match)throw new Error('시간표 제공처의 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
-    fields[name as keyof typeof patterns]=match[1];
+    const field=match?match[1]:name==='base'||name==='daily'?gridFields()[name]:'';
+    if(!field)throw new Error('시간표 제공처의 응답 형식을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.');
+    fields[name as keyof typeof patterns]=field;
   }
   return fields;
 }
