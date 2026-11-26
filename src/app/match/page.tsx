@@ -1,5 +1,5 @@
 'use client';
-import{studyMemberProfiles}from'@/lib/scopedProfiles';
+import{studyMemberProfiles,memberAvatarUrls,withMemberAvatars}from'@/lib/scopedProfiles';
 import{avatarSrc}from'@/lib/avatar';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -240,10 +240,11 @@ export default function MatchPage() {
     // 등장하는 user_id들 + 글쓴이들의 프로필을 따로 가져와서 클라이언트에서 매칭한다
     const ids = [...new Set([...(m ?? []).map((x: any) => x.user_id), ...(p ?? []).map((x: any) => x.user_id)])];
     if (ids.length > 0) {
-      const { data: profs,error:profileError } = await studyMemberProfiles(supabase,ids);
+      const [{ data: profs,error:profileError },avatars] = await Promise.all([studyMemberProfiles(supabase,ids),memberAvatarUrls(supabase,ids)]);
       if (ticket !== generation.current) return;
       if(profileError)showError('참여자 표시 정보를 확인하지 못했어요.');
-      setProfileMap(new Map((profs ?? []).map((pr: any) => [pr.id, pr as Profile])));
+      // Names follow the school-scoped rules; the avatar is shown for every member, whatever their school.
+      setProfileMap(new Map(withMemberAvatars(profs,ids,avatars).map((pr: any) => [pr.id, pr as Profile])));
     }else{setProfileMap(new Map());
     }
 
