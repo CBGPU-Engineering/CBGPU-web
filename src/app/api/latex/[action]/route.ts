@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from 'next/server';
 import {readFile} from 'node:fs/promises';
 import {personalProjectUser} from '@/lib/preprintsServer';
+import {writeOriginAllowed} from '@/lib/schoolsProxySecurity';
 export const runtime='nodejs';
 export const maxDuration=180;
 const hosts=new Set(['cbgpu.com','researcher.cbgpu.com','app.cbgpu.com']);
@@ -15,7 +16,7 @@ async function handle(req:NextRequest,ctx:{params:Promise<{action:string}>}){
   const host=['127.0.0.1','localhost'].includes(raw)?forwarded:raw;
   if(!hosts.has(host))return error('Not found',404);
   if(req.method==='POST'){
-   const origin=req.headers.get('origin');if(origin!=='https://'+host)return error('요청을 확인하지 못했어요. 원래 화면에서 다시 시도해 주세요.',403);
+   if(!writeOriginAllowed(req.headers.get('origin'),req.headers,value=>value==='https://'+host))return error('요청을 확인하지 못했어요. 원래 화면에서 다시 시도해 주세요.',403);
   }
   const user=await personalProjectUser(req);if(!user)return error('로그인 후 다시 시도해 주세요.',401);
   const now=Date.now();const rate=rates.get(user.id);if(action==='upload-chunk'){}else if(rate&&rate.until>now){if(++rate.count>60)return error('요청이 많아요. 잠시 후 다시 시도해 주세요.',429)}else rates.set(user.id,{count:1,until:now+60000});if(rates.size>2000)for(const [id,r]of rates)if(r.until<now)rates.delete(id);
