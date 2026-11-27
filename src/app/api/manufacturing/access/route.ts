@@ -17,10 +17,10 @@ export async function GET(request:NextRequest){
    if(error)throw Error('Fresh equipment authority unavailable');
    if(data?.school_id!=='cbsh'||data.context_type!=='MEMBERSHIP'||data.legacy_cbsh_access!==true||data.resources?.fabrication!==true)return NextResponse.json({error:'An active verified school membership and equipment access are required.'},{status:403,headers:{'Cache-Control':'private, no-store'}});
   }
-  const client=preprintsClient();const [profile,printers]=await Promise.all([client.from('profiles').select('is_approved,is_laser_cut_manager').eq('id',user.id).single(),client.from('printer_managers').select('printer_id').eq('user_id',user.id)]);
-  if(profile.error||printers.error)throw Error('Role lookup failed');
+  const client=preprintsClient();const [profile,laserRole,printers]=await Promise.all([client.from('profiles').select('is_approved').eq('id',user.id).single(),client.rpc('cbgpu_is_laser_manager',{p_user:user.id}),client.from('printer_managers').select('printer_id').eq('user_id',user.id)]);
+  if(profile.error||laserRole.error||printers.error)throw Error('Role lookup failed');
   if(!scoped&&profile.data.is_approved===false)return NextResponse.json({error:'Your account requires approval.'},{status:403,headers:{'Cache-Control':'private, no-store'}});
-  const print=!!printers.data.length,laser=profile.data.is_laser_cut_manager===true;
+  const print=!!printers.data.length,laser=laserRole.data===true;
   if(!print&&!laser||host==='print.cbgpu.com'&&!print||host==='laser.cbgpu.com'&&!laser)return NextResponse.json({error:'This workspace is restricted to assigned equipment managers.'},{status:403,headers:{'Cache-Control':'private, no-store'}});
   return NextResponse.json({print:host==='laser.cbgpu.com'?false:print,laser:host==='print.cbgpu.com'?false:laser,printer_ids:printers.data.map(p=>p.printer_id)},{headers:{'Cache-Control':'private, no-store'}});
  }catch(error){console.error('[manufacturing/access] permission lookup failed:',error instanceof Error?error.message:error);return NextResponse.json({error:'Could not verify equipment permissions. Please try again.'},{status:503,headers:{'Cache-Control':'private, no-store'}})}

@@ -270,7 +270,7 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   }
 
   async function toggleLaserManager(id: string, current: boolean) {
-    const { error } = await supabase.from('profiles').update({ is_laser_cut_manager: !current }).eq('id', id);
+    const { error } = await supabase.rpc('cbgpu_school_fabrication', { p_action: current ? 'manager_remove' : 'manager_add', p_payload: { school_id: 'cbsh', kind: 'laser', user_id: id } });
     if (error) showError(adminNotice("Could not confirm this change. Refresh the current record before retrying."));
     else {
       showSuccess(adminNotice(!current ? t("Laser manager assigned.") : t("Laser manager removed.")));
@@ -306,12 +306,8 @@ function AdminContent({initialTab,initialReview}:{initialTab:AdminTab;initialRev
   };
 
   const fetchLaserManagers = async () => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, student_id')
-      .eq('is_laser_cut_manager', true)
-      .order('student_id');
-    if (!error) setLaserManagers(data || []);
+    const { data, error } = await supabase.rpc('cbgpu_school_fabrication', { p_action: 'overview', p_payload: { school_id: 'cbsh' } });
+    if (!error) setLaserManagers(((data?.laser_managers as any[]) || []).map(m => ({ id: m.user_id, full_name: m.full_name, student_id: m.student_number })));
   };
 
   const fetchManufactureData = async () => {

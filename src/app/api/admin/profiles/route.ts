@@ -35,9 +35,10 @@ export async function GET(request: NextRequest) {
       if(batch.length<1000)break;
     }
   }catch{return NextResponse.json({ error: '프로필 목록을 불러오지 못했습니다.' }, { status: 502, headers: { 'Cache-Control': 'private, no-store' } });}
+  const laserIds=new Set<string>((await admin.rpc('cbgpu_laser_manager_ids')).data??[]);
   let projection:Awaited<ReturnType<typeof adminAccountAffiliations>>|null=null;
   if(process.env.CBGPU_MULTISCHOOL_V1==='1')try{
     projection=await adminAccountAffiliations('Bearer '+token,{endpoint:process.env.CBGPU_SCHOOLS_API_URL||'http://127.0.0.1:3546',networkMode:process.env.CBGPU_INTERNAL_NETWORK_MODE});
   }catch{return NextResponse.json({error:'학교 소속을 확인하지 못했어요. 잠시 후 다시 조회해 주세요.'},{status:503,headers:{'Cache-Control':'private, no-store'}})}
-  return NextResponse.json({ profiles: (data || []).filter(profile => active.has(profile.id)).map(profile => ({ ...profile, ...active.get(profile.id),school_affiliations:projection?.affiliations.get(profile.id)??[],primary_school_name:(profile.school_id?projection?.schools.get(profile.school_id):null)??null })) }, { headers: { 'Cache-Control': 'private, no-store' } });
+  return NextResponse.json({ profiles: (data || []).filter(profile => active.has(profile.id)).map(profile => ({ ...profile, is_laser_cut_manager: laserIds.has(profile.id), ...active.get(profile.id),school_affiliations:projection?.affiliations.get(profile.id)??[],primary_school_name:(profile.school_id?projection?.schools.get(profile.school_id):null)??null })) }, { headers: { 'Cache-Control': 'private, no-store' } });
 }
