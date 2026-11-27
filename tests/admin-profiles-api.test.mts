@@ -14,6 +14,7 @@ function fixture(options:Options={}){
    getUser:async(token:string)=>{assert.equal(token,'synthetic-admin');return{data:{user:options.invalid?null:{id:'operator',...(options.deleted?{deleted_at:'2026-01-01'}:{})}},error:options.invalid?Error('invalid'):null}},
    admin:{listUsers:async({page,perPage}:{page:number;perPage:number})=>{calls.listUsers++;return{data:{users:users.slice((page-1)*perPage,page*perPage)},error:options.listFailure?Error('private error'):null}}}
   },
+  rpc:async(name:string)=>{assert.equal(name,'cbgpu_laser_manager_ids');return{data:[],error:null}},
   from(table:string){assert.equal(table,'profiles');calls.profiles++;return{
    select(fields:string){return fields==='is_admin'
     ?{eq:()=>({maybeSingle:async()=>({data:{is_admin:options.isAdmin!==false}})})}

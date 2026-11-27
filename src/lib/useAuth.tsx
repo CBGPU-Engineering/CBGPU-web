@@ -45,6 +45,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [managedPrinterIds, setManagedPrinterIds] = useState<number[]>([]);
+  const [laserManager, setLaserManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const accountReads = useRef(createAccountReadFence());
@@ -52,6 +53,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
     if (accountReads.current.setOwner(next?.id ?? null)) {
       setProfile(null);
       setManagedPrinterIds([]);
+      setLaserManager(false);
     }
     setUser(next);
   };
@@ -84,6 +86,8 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
     try {
       const { data } = await supabase.from('printer_managers').select('printer_id').eq('user_id', userId);
       if (current()) setManagedPrinterIds((data || []).map(r => r.printer_id));
+      const laser = await supabase.rpc('cbgpu_my_laser_manager');
+      if (current()) setLaserManager(laser.data === true);
     } catch (err) {
       console.error("Managed printers fetch error:", err);
     }
@@ -206,6 +210,7 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
       } else {
         setProfile(null);
         setManagedPrinterIds([]);
+        setLaserManager(false);
       }
 
       // Never await Supabase calls inside its auth callback (the SDK holds
@@ -262,13 +267,13 @@ export const AuthProvider = ({ children, siteHost, portalGate }: { children: Rea
     isAdmin: managementWorkspace && (profile?.is_admin || false),
     is3DPrintManager: managementWorkspace && managedPrinterIds.length > 0,
     managedPrinterIds: managementWorkspace ? managedPrinterIds : [],
-    isLaserCutManager: managementWorkspace && (profile?.is_laser_cut_manager || false),
+    isLaserCutManager: managementWorkspace && laserManager,
     isWakeupManager: managementWorkspace && (profile?.is_wakeup_manager || false),
     isApproved: profile?.is_approved !== false,
     // 앱 공간 메뉴에 "학교생활·연구개발" 아래로 관리 → 제작 → 기상송 순서로 보인다. 제작은 3D 프린팅·레이저 커팅을 하나로 묶는다.
     roleSites: [
       ...(profile?.is_admin ? [{ id: 'admin' as const, label: '관리', sub: '가입 승인 · GPU 예약 · 서버 · 계정', host: 'admin.cbgpu.com', path: '/admin/m' }] : []),
-      ...((managedPrinterIds.length > 0 || profile?.is_laser_cut_manager) ? [{ id: 'manufacturing' as const, label: '제작', sub: managedPrinterIds.length > 0 && profile?.is_laser_cut_manager ? '3D 프린팅 · 레이저 커팅' : profile?.is_laser_cut_manager ? '레이저 커팅 요청 · 재료' : '3D 프린팅 요청 · 프린터 대기열', host: 'manufacturing.cbgpu.com', path: '/manage/manufacturing' }] : []),
+      ...((managedPrinterIds.length > 0 || laserManager) ? [{ id: 'manufacturing' as const, label: '제작', sub: managedPrinterIds.length > 0 && laserManager ? '3D 프린팅 · 레이저 커팅' : profile?.is_laser_cut_manager ? '레이저 커팅 요청 · 재료' : '3D 프린팅 요청 · 프린터 대기열', host: 'manufacturing.cbgpu.com', path: '/manage/manufacturing' }] : []),
       ...((profile?.is_wakeup_manager || profile?.is_admin) ? [{ id: 'wakeup' as const, label: '기상송', sub: '신청곡 검토 · 재생', host: 'admin.cbgpu.com', path: '/admin/wakeup' }] : []),
     ],
     isLoading,
